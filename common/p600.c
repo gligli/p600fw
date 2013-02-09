@@ -3,7 +3,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
+
 #include "p600.h"
+
+#include "display.h"
+#include "scanner.h"
+#include "synth.h"
 
 void p600_init(void)
 {
@@ -11,6 +16,7 @@ void p600_init(void)
 	
 	display_init();
 	scanner_init();
+	synth_init();
 	
 	sevenSeg_setNumber(42);
 }
@@ -24,8 +30,16 @@ void p600_main(void)
 	led_set(plArpUD,1,1);
 	led_set(plArpAssign,1,1);
 	
+	uint32_t i;
+	static uint32_t tick=0;
+	
+	for(i=0;i<32;++i)
+		synth_setCV(i,i*1000+tick);
+	++tick;
+	
 	display_update();
 	scanner_update();
+	synth_update();
 }
 
 void p600_buttonEvent(p600Button_t button, int pressed)

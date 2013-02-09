@@ -4,11 +4,13 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>../common/dac.h</itemPath>
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
       <itemPath>../common/p600.h</itemPath>
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
+      <itemPath>../common/synth.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -17,10 +19,12 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
       <itemPath>../common/p600.c</itemPath>
       <itemPath>p600mockup.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
+      <itemPath>../common/synth.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"

@@ -10,8 +10,8 @@ int led_getOn(p600LED_t led);
 int led_getBlinking(p600LED_t led);
 void led_set(p600LED_t led, int on, int blinking);
 
-void display_init();
-void display_update();
+void display_init(void);
+void display_update(void);
 
 
 #endif	/* DISPLAY_H */
