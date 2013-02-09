@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc.exe
-CCC=g++.exe
-CXX=g++.exe
+CC=avr-gcc.exe
+CCC=avr-g++.exe
+CXX=avr-g++.exe
 FC=gfortran
-AS=as.exe
+AS=avr-as.exe
 
 # Macros
-CND_PLATFORM=MinGW-Windows
+CND_PLATFORM=WinAVR-Windows
 CND_DLIB_EXT=dll
 CND_CONF=Debug
 CND_DISTDIR=dist
@@ -35,8 +35,10 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/p600firmware.o \
+	${OBJECTDIR}/print.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
-	${OBJECTDIR}/p600mockup.o \
+	${OBJECTDIR}/usb_rawhid_debug.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o
 
@@ -59,31 +61,41 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ../emulator/p600mockup.${CND_DLIB_EXT}
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe
 
-../emulator/p600mockup.${CND_DLIB_EXT}: ${OBJECTFILES}
-	${MKDIR} -p ../emulator
-	${LINK.c} -shared -o ../emulator/p600mockup.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} 
+${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe: ${OBJECTFILES}
+	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/p600firmware.o: p600firmware.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600firmware.o p600firmware.c
+
+${OBJECTDIR}/print.o: print.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/print.o print.c
 
 ${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
+	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
 
-${OBJECTDIR}/p600mockup.o: p600mockup.c 
+${OBJECTDIR}/usb_rawhid_debug.o: usb_rawhid_debug.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600mockup.o p600mockup.c
+	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/usb_rawhid_debug.o usb_rawhid_debug.c
 
 ${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
+	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
 
 ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
+	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
 
 # Subprojects
 .build-subprojects:
@@ -91,7 +103,7 @@ ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ../emulator/p600mockup.${CND_DLIB_EXT}
+	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe
 
 # Subprojects
 .clean-subprojects:

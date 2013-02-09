@@ -9,6 +9,7 @@
       <itemPath>../common/p600.h</itemPath>
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
+      <itemPath>usb_rawhid_debug.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -19,8 +20,10 @@
                    projectFiles="true">
       <itemPath>../common/display.c</itemPath>
       <itemPath>../common/p600.c</itemPath>
-      <itemPath>p600mockup.c</itemPath>
+      <itemPath>p600firmware.c</itemPath>
+      <itemPath>print.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
+      <itemPath>usb_rawhid_debug.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -36,27 +39,23 @@
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
-    <conf name="Debug" type="2">
+    <conf name="Debug" type="1">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
-        <compilerSet>default</compilerSet>
+        <compilerSet>WinAVR|WinAVR</compilerSet>
       </toolsSet>
       <compileType>
         <cTool>
           <incDir>
             <pElem>../common</pElem>
-            <pElem>.</pElem>
           </incDir>
         </cTool>
-        <linkerTool>
-          <output>../emulator/p600mockup.${CND_DLIB_EXT}</output>
-        </linkerTool>
       </compileType>
     </conf>
-    <conf name="Release" type="2">
+    <conf name="Release" type="1">
       <toolsSet>
         <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
-        <compilerSet>default</compilerSet>
+        <compilerSet>WinAVR|WinAVR</compilerSet>
       </toolsSet>
       <compileType>
         <cTool>
