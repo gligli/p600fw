@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/1270477542/potmux.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/_ext/1270477542/synth.o \
 	${OBJECTDIR}/p600mockup.o \
@@ -66,6 +67,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmockup.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmockup.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
 
 ${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542

@@ -61,12 +61,20 @@ void synth_update()
 
 			if (!(mask&synth.cvsOk))
 			{
-				dmux=(i&0x07)|(~(0x08<<(i>>3))&0xf8);
+				// select current CV
 				
+				dmux=(i&0x07)|(~(0x08<<(i>>3))&0xf8);
 				io_write(0x0d,dmux);
+				
+				// write DAC
+				
 				dac_write(synth.cvs[i]);
+				wait(8);
 			}
 		}
+		
+		// unselect
+		io_write(0x0d,0xff);
 		
 		synth.cvsOk=0xffffffff;
 	}

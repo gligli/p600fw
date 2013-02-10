@@ -4,7 +4,9 @@
 
 #include "p600.h"
 
-// BEGIN EMU PART **************************************************************
+////////////////////////////////////////////////////////////////////////////////
+// Mockup implementation of low level interface that can be loaded in the emulator
+////////////////////////////////////////////////////////////////////////////////
 
 typedef __stdcall void (*emu_write_t)(uint8_t,uint16_t,uint8_t);
 typedef __stdcall uint8_t (*emu_read_t)(uint8_t,uint16_t);
@@ -79,4 +81,8 @@ __declspec(dllexport) __stdcall void emu_start(void)
 	p600_main();
 }
 
-// END EMU PART **************************************************************
+
+void wait(uint16_t cycles)
+{
+	// emu doesn't care about timing
+}

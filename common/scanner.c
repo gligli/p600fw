@@ -44,15 +44,16 @@ void scanner_update(void)
 	for(i=0;i<sizeof(scanner.stateBits);++i)
 	{
 		io_write(0x08,i);
+		wait(4);
 		uint8_t ps=io_read(0x0a);
 		
 		uint8_t pa=ps^scanner.stateBits[i];
 		
-		if (pa)
+		if(pa)
 		{
 			for(j=0;j<8;++j)
 			{
-				if (pa & (1<<j))
+				if(pa & (1<<j))
 				{
 					scanner_event(i*8+j,(ps&(1<<j))!=0);
 				}

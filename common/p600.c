@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Top level
+// Top level code
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string.h>
@@ -9,14 +9,16 @@
 #include "display.h"
 #include "scanner.h"
 #include "synth.h"
+#include "potmux.h"
 
 void p600_init(void)
 {
-	print("p600mockup\n");
+	print("p600fw\n");
 	
 	display_init();
 	scanner_init();
 	synth_init();
+	potmux_init();
 	
 	sevenSeg_setNumber(42);
 }
@@ -31,15 +33,13 @@ void p600_main(void)
 	led_set(plArpAssign,1,1);
 	
 	uint32_t i;
-	static uint32_t tick=0;
-	
 	for(i=0;i<32;++i)
-		synth_setCV(i,i*1000+tick);
-	++tick;
+		synth_setCV(i,potmux_getValue(i));
 	
 	display_update();
 	scanner_update();
 	synth_update();
+	potmux_update();
 }
 
 void p600_buttonEvent(p600Button_t button, int pressed)

@@ -71,7 +71,8 @@ type
     FFFP:Boolean;
     FFFCL:Boolean;
 
-    FDACValue,FPotMuxValue:Word;
+    FDACValue:Word;
+    FMuxedPot:TP600Pot;
     FDACDemux:Byte;
 
     FIncompleteCycles:Double;
@@ -443,7 +444,7 @@ end;
 
 function TProphet600Hardware.ADCCompare: Boolean;
 begin
-  Result:=FPotMuxValue>(65535-FDACValue);
+  Result:=FPotValues[FMuxedPot]>(65535-FDACValue);
 end;
 
 procedure TProphet600Hardware.UpdateCVs;
@@ -618,9 +619,9 @@ begin
           reg:=AValue and $0f;
 
           if AValue and $10 = 0 then
-            FPotMuxValue:=FPotValues[TP600Pot(reg)];
+            FMuxedPot:=TP600Pot(reg);
           if AValue and $20 = 0 then
-            FPotMuxValue:=FPotValues[TP600Pot(reg+$10)];
+            FMuxedPot:=TP600Pot(reg+$10);
         end;
         $05:
         begin
