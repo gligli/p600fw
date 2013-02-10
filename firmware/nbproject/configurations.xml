@@ -4,12 +4,16 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>../common/dac.h</itemPath>
       <itemPath>../common/display.h</itemPath>
+      <itemPath>../common/hardware.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
       <itemPath>../common/p600.h</itemPath>
+      <itemPath>../common/potmux.h</itemPath>
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
-      <itemPath>usb_rawhid_debug.h</itemPath>
+      <itemPath>../common/synth.h</itemPath>
+      <itemPath>usb_debug_only.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -18,12 +22,15 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
       <itemPath>../common/p600.c</itemPath>
       <itemPath>p600firmware.c</itemPath>
+      <itemPath>../common/potmux.c</itemPath>
       <itemPath>print.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
-      <itemPath>usb_rawhid_debug.c</itemPath>
+      <itemPath>../common/synth.c</itemPath>
+      <itemPath>usb_debug_only.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -48,7 +55,11 @@
         <cTool>
           <incDir>
             <pElem>../common</pElem>
+            <pElem>.</pElem>
           </incDir>
+          <preprocessorList>
+            <Elem>__AVR_AT90USB1286__</Elem>
+          </preprocessorList>
         </cTool>
       </compileType>
     </conf>

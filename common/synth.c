@@ -11,19 +11,11 @@ static struct
 {
 	uint16_t cvs[SYNTH_CV_COUNT];
 	uint8_t gateBits;
-
-	uint32_t cvsOk;
-	uint8_t gatesOk;
 } synth;
 
 void synth_setCV(p600CV_t cv,uint16_t value)
 {
-	if(synth.cvs[cv]!=value)
-	{
-		uint32_t mask=((uint32_t)1)<<cv;
-		synth.cvs[cv]=value;
-		synth.cvsOk&=~mask;
-	}
+	synth.cvs[cv]=value;
 }
 
 void synth_setGate(p600Gate_t gate,int on)
@@ -32,14 +24,6 @@ void synth_setGate(p600Gate_t gate,int on)
 	
 	synth.gateBits&=~mask;
 	if (on) synth.gateBits|=mask;
-		
-	synth.gatesOk&=~mask;
-}
-
-void synth_invalidate()
-{
-	synth.cvsOk=0;
-	synth.gatesOk=0;
 }
 
 void synth_init()
@@ -49,41 +33,26 @@ void synth_init()
 
 void synth_update()
 {
-	if(synth.cvsOk!=0xffffffff)
+	uint8_t i;
+	uint8_t dmux;
+
+	for(i=0;i<SYNTH_CV_COUNT;++i)
 	{
-		uint8_t i;
-		uint32_t mask;
-		uint8_t dmux;
+		// write DAC
+		dac_write(synth.cvs[i]);
 
-		for(i=0;i<SYNTH_CV_COUNT;++i)
-		{
-			mask=((uint32_t)1)<<i;
+		// select current CV
+		dmux=(i&0x07)|(~(0x08<<(i>>3))&0xf8);
+		io_write(0x0d,dmux);
 
-			if (!(mask&synth.cvsOk))
-			{
-				// select current CV
-				
-				dmux=(i&0x07)|(~(0x08<<(i>>3))&0xf8);
-				io_write(0x0d,dmux);
-				
-				// write DAC
-				
-				dac_write(synth.cvs[i]);
-				wait(8);
-			}
-		}
-		
+		// let S&H get correct voltage
+		wait(8);
+
 		// unselect
 		io_write(0x0d,0xff);
-		
-		synth.cvsOk=0xffffffff;
 	}
 	
-	if (synth.gatesOk!=0xff)
-	{
-		io_write(0x0b,synth.gateBits);
-		synth.gatesOk=0xff;
-	}
-	
+	// update gates
+	io_write(0x0b,synth.gateBits);
 }
 

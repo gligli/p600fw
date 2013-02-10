@@ -4,9 +4,12 @@
 
 #include "scanner.h"
 
+#define SCANNER_BYTES 16
+#define SCANNER_KEYS_START 64
+
 static struct
 {
-	uint8_t stateBits[16];
+	uint8_t stateBits[SCANNER_BYTES];
 } scanner;
 
 void scanner_init(void)
@@ -21,7 +24,7 @@ static int scanner_state(uint8_t key)
 
 int scanner_keyState(uint8_t key)
 {
-	return scanner_state(key+128);
+	return scanner_state(key+SCANNER_KEYS_START);
 }
 
 int scanner_buttonState(p600Button_t button)
@@ -31,17 +34,17 @@ int scanner_buttonState(p600Button_t button)
 
 static void scanner_event(uint8_t key, int pressed)
 {
-	if (key<128)
+	if (key<SCANNER_KEYS_START)
 		p600_buttonEvent(key,pressed);
 	else
-		p600_keyEvent(key-128,pressed);
+		p600_keyEvent(key-SCANNER_KEYS_START,pressed);
 }
 
 void scanner_update(void)
 {
-	int i,j;
-	
-	for(i=0;i<sizeof(scanner.stateBits);++i)
+	uint8_t i,j;
+
+	for(i=0;i<SCANNER_BYTES;++i)
 	{
 		io_write(0x08,i);
 		wait(4);
@@ -63,4 +66,5 @@ void scanner_update(void)
 		scanner.stateBits[i]=ps;
 	}
 }
+	
 

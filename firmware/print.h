@@ -2,7 +2,7 @@
 #define print_h__
 
 #include <avr/pgmspace.h>
-#include "usb_rawhid_debug.h"
+#include "usb_debug_only.h"
 
 // this macro allows you to write print("some text") and
 // the string is automatically placed into flash memory :)

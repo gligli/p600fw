@@ -6,8 +6,6 @@
 void synth_setCV(p600CV_t cv,uint16_t value);
 void synth_setGate(p600Gate_t gate,int on);
 
-void synth_invalidate(void); // next update will update everything
-
 void synth_init(void);
 void synth_update(void);
 

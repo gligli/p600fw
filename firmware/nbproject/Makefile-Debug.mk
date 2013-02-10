@@ -36,11 +36,14 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/p600firmware.o \
+	${OBJECTDIR}/usb_debug_only.o \
 	${OBJECTDIR}/print.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
-	${OBJECTDIR}/usb_rawhid_debug.o \
+	${OBJECTDIR}/_ext/1270477542/potmux.o \
+	${OBJECTDIR}/_ext/1270477542/synth.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
-	${OBJECTDIR}/_ext/1270477542/p600.o
+	${OBJECTDIR}/_ext/1270477542/p600.o \
+	${OBJECTDIR}/_ext/1270477542/dac.o
 
 
 # C Compiler Flags
@@ -70,32 +73,47 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe: ${OBJECTFILES}
 ${OBJECTDIR}/p600firmware.o: p600firmware.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600firmware.o p600firmware.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600firmware.o p600firmware.c
+
+${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/usb_debug_only.o usb_debug_only.c
 
 ${OBJECTDIR}/print.o: print.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/print.o print.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/print.o print.c
 
 ${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
 
-${OBJECTDIR}/usb_rawhid_debug.o: usb_rawhid_debug.c 
-	${MKDIR} -p ${OBJECTDIR}
+${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/usb_rawhid_debug.o usb_rawhid_debug.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
+
+${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
 
 ${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
 
 ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -g -I../common -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
+
+${OBJECTDIR}/_ext/1270477542/dac.o: ../common/dac.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/dac.o ../common/dac.c
 
 # Subprojects
 .build-subprojects:

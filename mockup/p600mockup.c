@@ -78,11 +78,11 @@ __declspec(dllexport) __stdcall void emu_init(emu_write_t write,emu_read_t read,
 
 __declspec(dllexport) __stdcall void emu_start(void)
 {
-	p600_main();
+	p600_update();
 }
 
 
-void wait(uint16_t cycles)
+void wait(uint8_t cycles)
 {
 	// emu doesn't care about timing
 }

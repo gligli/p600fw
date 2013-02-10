@@ -44,11 +44,14 @@ TARGET = p600firmware
 
 # List C source files here. (C dependencies are automatically generated.)
 SRC =	$(TARGET).c \
-	usb_rawhid_debug.c \
+	usb_debug_only.c \
 	print.c \
 	..\common\p600.c \
 	..\common\display.c \
 	..\common\scanner.c \
+	..\common\dac.c \
+	..\common\synth.c \
+	..\common\potmux.c
 
 # MCU name, you MUST set this to match the board you are using
 # type "make clean" after changing this, so all files will be rebuilt
@@ -74,7 +77,7 @@ FORMAT = ihex
 # Object files directory
 #     To put object files in current directory, use a dot (.), do NOT make
 #     this an empty or blank macro!
-OBJDIR = .
+OBJDIR = $(CURDIR)
 
 
 # List C++ source files here. (C dependencies are automatically generated.)
@@ -94,7 +97,7 @@ ASRC =
 # Optimization level, can be [0, 1, 2, 3, s]. 
 #     0 = turn off optimization. s = optimize for size.
 #     (Note: 3 is not always the best optimization level. See avr-libc FAQ.)
-OPT = s
+OPT = 2
 
 
 # Debugging format.
@@ -151,7 +154,7 @@ CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
-#CFLAGS += -mshort-calls
+CFLAGS += -mshort-calls
 #CFLAGS += -fno-unit-at-a-time
 #CFLAGS += -Wundef
 #CFLAGS += -Wunreachable-code
@@ -178,7 +181,7 @@ CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
 CPPFLAGS += -Wall
 CPPFLAGS += -Wundef
-#CPPFLAGS += -mshort-calls
+CPPFLAGS += -mshort-calls
 #CPPFLAGS += -fno-unit-at-a-time
 #CPPFLAGS += -Wstrict-prototypes
 #CPPFLAGS += -Wunreachable-code
