@@ -5,7 +5,7 @@
 #include "display.h"
 #include "map_to_7segment.h"
 
-#define DISPLAY_BLINK_HALF_PERIOD 1000
+#define DISPLAY_BLINK_HALF_PERIOD 200
 
 static struct
 {

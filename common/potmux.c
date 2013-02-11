@@ -12,7 +12,6 @@ static struct
 {
 	uint16_t pots[POTMUX_POT_COUNT];
 	uint8_t nextPot;
-	uint8_t rescanCount;
 } potmux;
 
 uint16_t potmux_getValue(p600Pot_t pot)

@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/1270477542/adsr.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
 	${OBJECTDIR}/_ext/1270477542/synth.o \
@@ -67,6 +68,11 @@ LDLIBSOPTIONS=
 ../emulator/p600mockup.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ../emulator
 	${LINK.c} -shared -o ../emulator/p600mockup.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
 
 ${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
