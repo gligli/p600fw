@@ -3424,7 +3424,7 @@ object MainForm: TMainForm
         0000000000000000000000000000000000000000000000000000000000000000
         000000000000000000000000000000000000
       }
-      Position = 0
+      Position = 32768
       TicksMargin = 16
       LTicks = 10
       LTicksSize = 10
@@ -3604,7 +3604,7 @@ object MainForm: TMainForm
         0000000000000000000000000000000000000000000000000000000000000000
         000000000000000000000000000000000000
       }
-      Position = 0
+      Position = 32768
       TicksMargin = 16
       LTicks = 10
       LTicksSize = 10
@@ -3784,7 +3784,7 @@ object MainForm: TMainForm
         0000000000000000000000000000000000000000000000000000000000000000
         000000000000000000000000000000000000
       }
-      Position = 65535
+      Position = 32767
       TicksMargin = 16
       LTicks = 10
       LTicksSize = 10
@@ -3964,7 +3964,7 @@ object MainForm: TMainForm
         0000000000000000000000000000000000000000000000000000000000000000
         000000000000000000000000000000000000
       }
-      Position = 0
+      Position = 32768
       TicksMargin = 16
       LTicks = 10
       LTicksSize = 10

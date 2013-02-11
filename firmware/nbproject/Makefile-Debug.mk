@@ -37,6 +37,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 OBJECTFILES= \
 	${OBJECTDIR}/p600firmware.o \
 	${OBJECTDIR}/usb_debug_only.o \
+	${OBJECTDIR}/_ext/1270477542/adsr.o \
 	${OBJECTDIR}/print.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
@@ -79,6 +80,11 @@ ${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/usb_debug_only.o usb_debug_only.c
+
+${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
 
 ${OBJECTDIR}/print.o: print.c 
 	${MKDIR} -p ${OBJECTDIR}

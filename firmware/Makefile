@@ -51,6 +51,7 @@ SRC =	$(TARGET).c \
 	..\common\scanner.c \
 	..\common\dac.c \
 	..\common\synth.c \
+	..\common\adsr.c \
 	..\common\potmux.c
 
 # MCU name, you MUST set this to match the board you are using
@@ -154,7 +155,7 @@ CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
-CFLAGS += -mshort-calls
+#CFLAGS += -mshort-calls
 #CFLAGS += -fno-unit-at-a-time
 #CFLAGS += -Wundef
 #CFLAGS += -Wunreachable-code
@@ -181,7 +182,7 @@ CPPFLAGS += -fshort-enums
 CPPFLAGS += -fno-exceptions
 CPPFLAGS += -Wall
 CPPFLAGS += -Wundef
-CPPFLAGS += -mshort-calls
+#CPPFLAGS += -mshort-calls
 #CPPFLAGS += -fno-unit-at-a-time
 #CPPFLAGS += -Wstrict-prototypes
 #CPPFLAGS += -Wunreachable-code

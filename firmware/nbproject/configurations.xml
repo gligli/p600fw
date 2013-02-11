@@ -4,6 +4,8 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>../common/adsr.h</itemPath>
+      <itemPath>../common/adsr_lookups.h</itemPath>
       <itemPath>../common/dac.h</itemPath>
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/hardware.h</itemPath>
@@ -22,6 +24,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>../common/adsr.c</itemPath>
       <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
       <itemPath>../common/p600.c</itemPath>

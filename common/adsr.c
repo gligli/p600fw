@@ -55,9 +55,9 @@ static inline uint32_t getPhaseInc(uint8_t v)
 {
 	uint32_t r=0;
 	
-	r|=phaseLookupLo[v];
-	r|=phaseLookupMid[v]<<8;
-	r|=phaseLookupHi[v]<<16;
+	r|=(uint32_t)phaseLookupLo[v];
+	r|=(uint32_t)phaseLookupMid[v]<<8;
+	r|=(uint32_t)phaseLookupHi[v]<<16;
 	
 	return r;
 }
@@ -65,7 +65,7 @@ static inline uint32_t getPhaseInc(uint8_t v)
 static inline int8_t incrementPhase(uint32_t * phase, uint32_t inc) // return true if overflowed
 {
 	*phase+=inc;
-	return *phase>=1<<20;
+	return *phase>=(uint32_t)1<<20;
 }
 
 static inline uint16_t computeOutput(uint32_t phase, uint16_t scale, uint16_t add, uint8_t lookup[], int8_t isExp, int8_t complement)
@@ -75,7 +75,7 @@ static inline uint16_t computeOutput(uint32_t phase, uint16_t scale, uint16_t ad
 	if(isExp)
 	{
 		uint8_t a,b;
-		uint16_t x;
+		uint32_t x;
 		
 		x=phase&0x0fff;
 		b=a=phase>>12;
@@ -86,7 +86,7 @@ static inline uint16_t computeOutput(uint32_t phase, uint16_t scale, uint16_t ad
 		a=lookup[a];
 		b=lookup[b];
 		
-		phase=((uint32_t)a<<12)+(uint32_t)x*(b-a);
+		phase=((uint32_t)a<<12)+x*(b-a);
 	}
 	
 	r=(phase*(scale>>4))>>16;
@@ -175,13 +175,14 @@ void adsr_update(struct adsr_s * a)
 	case sRelease:
 		overflow=incrementPhase(&a->phase,a->releaseInc);
 		break;
+	default:
+		;
 	}
 	
 	// is a timed stage done?
 	
 	if(overflow)
 	{
-		phex(a->stage);
 		a->phase=0;
 
 		++a->stage;
@@ -212,9 +213,11 @@ void adsr_update(struct adsr_s * a)
 	case sRelease:
 		o=computeOutput(a->phase,a->currentLevel,a->currentLevel,decayCurveLookup,a->expOutput,1);
 		break;
+	default:
+		;
 	}
 	
-	a->final=(a->output*a->levelCV)>>16;
+	a->final=((uint32_t)a->output*a->levelCV)>>16;
 	a->output=o;
 }
 

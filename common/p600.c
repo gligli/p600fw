@@ -36,11 +36,9 @@ void p600_init(void)
 
 void p600_update(void)
 {
-	uint32_t i;
-	for(i=0;i<32;++i)
-	{
-		synth_setCV(i,(i>16&&i<22)?0:potmux_getValue(i));
-	}
+	// must scan before displaying, because scanning clears display
+	scanner_update();
+	display_update();
 	
 	adsr_setCVs(&aenv,potmux_getValue(ppAmpAtt),potmux_getValue(ppAmpDec),potmux_getValue(ppAmpSus),potmux_getValue(ppAmpRel),UINT16_MAX);
 	adsr_setCVs(&fenv,potmux_getValue(ppFilAtt),potmux_getValue(ppFilDec),potmux_getValue(ppFilSus),potmux_getValue(ppFilRel),potmux_getValue(ppFilEnvAmt));
@@ -48,12 +46,17 @@ void p600_update(void)
 	adsr_update(&aenv);
 	adsr_update(&fenv);
 	
-	synth_setCV(pcAmp5,adsr_getOutput(&aenv));
-	synth_setCV(pcFil5,adsr_getOutput(&fenv));
+	synth_setCV(pcMVol,potmux_getValue(ppMVol));
+	synth_setCV(pcVolA,potmux_getValue(ppMixer));
+	synth_setCV(pcVolB,potmux_getValue(ppGlide));
+	synth_setCV(pcAPW,potmux_getValue(ppAPW));
+	synth_setCV(pcBPW,potmux_getValue(ppBPW));
+	synth_setCV(pcRes,potmux_getValue(ppResonance));
 	
-	// must scan before displaying, because scanning clears display
-	scanner_update();
-	display_update();
+	synth_setCV(pcOsc1A,potmux_getValue(ppFreqA));
+	synth_setCV(pcOsc1B,potmux_getValue(ppFreqB));
+	synth_setCV(pcAmp1,adsr_getOutput(&aenv));
+	synth_setCV(pcFil1,adsr_getOutput(&fenv)+potmux_getValue(ppCutoff));
 	
 	potmux_update();
 	synth_update();
@@ -64,15 +67,38 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	sevenSeg_setNumber(button);
 	led_set(plToTape,pressed,0);
 	
-	if(button==pbASqr) adsr_setShape(&fenv,pressed);
-	if(button==pbBSqr) adsr_setShape(&aenv,pressed);
-	if(button==pbFromTape) adsr_setGate(&aenv,pressed);
-	if(button==pbToTape) adsr_setGate(&fenv,pressed);
+	switch(button)
+	{
+	case pbASaw:
+		synth_setGate(pgASaw,pressed);
+		break;
+	case pbBSaw:
+		synth_setGate(pgBSaw,pressed);
+		break;
+	case pbATri:
+		synth_setGate(pgATri,pressed);
+		break;
+	case pbBTri:
+		synth_setGate(pgBTri,pressed);
+		break;
+	case pbASqr:
+		adsr_setShape(&fenv,pressed);
+		break;
+	case pbBSqr:
+		adsr_setShape(&aenv,pressed);
+		break;
+	default:
+		;
+	}
+	
 }
 
 void p600_keyEvent(uint8_t key, int pressed)
 {
 	sevenSeg_setNumber(key);
 	led_set(plFromTape,pressed,0);
+
+	adsr_setGate(&aenv,pressed);
+	adsr_setGate(&fenv,pressed);
 }
 

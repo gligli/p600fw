@@ -12,7 +12,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="74" Y="17"/>
-        <UsageCount Value="79"/>
+        <UsageCount Value="83"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit0>
       <Unit1>
@@ -22,10 +22,14 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FMain"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="94"/>
-        <CursorPos X="1" Y="246"/>
-        <UsageCount Value="79"/>
+        <CursorPos X="89" Y="144"/>
+        <UsageCount Value="83"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit1>
       <Unit2>
@@ -35,19 +39,18 @@
         <WindowIndex Value="0"/>
         <TopLine Value="4"/>
         <CursorPos X="82" Y="33"/>
-        <UsageCount Value="79"/>
+        <UsageCount Value="83"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit2>
       <Unit3>
         <Filename Value="p600emuclasses.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="p600emuclasses"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="110"/>
+        <TopLine Value="143"/>
         <CursorPos X="7" Y="157"/>
-        <UsageCount Value="79"/>
+        <UsageCount Value="83"/>
         <Bookmarks Count="1">
           <Item0 X="3" Y="485" ID="1"/>
         </Bookmarks>
@@ -61,7 +64,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="26"/>
         <CursorPos X="48" Y="72"/>
-        <UsageCount Value="62"/>
+        <UsageCount Value="66"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit4>
       <Unit5>
@@ -74,7 +77,7 @@
         <WindowIndex Value="0"/>
         <TopLine Value="1"/>
         <CursorPos X="15" Y="54"/>
-        <UsageCount Value="59"/>
+        <UsageCount Value="63"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit5>
       <Unit6>
