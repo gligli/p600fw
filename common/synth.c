@@ -13,17 +13,50 @@ static struct
 	uint8_t gateBits;
 } synth;
 
-void synth_setCV(p600CV_t cv,uint16_t value)
+static void updateGates(void)
 {
-	synth.cvs[cv]=value;
+	io_write(0x0b,synth.gateBits);
 }
 
-void synth_setGate(p600Gate_t gate,int on)
+static void updateCV(p600CV_t cv)
+{
+	uint8_t dmux;
+	
+	int_clear();
+	
+	// write DAC
+	dac_write(synth.cvs[cv]);
+
+	// select current CV
+	dmux=(cv&0x07)|(~(0x08<<(cv>>3))&0xf8);
+	io_write(0x0d,dmux);
+
+	// let S&H get correct voltage
+	wait(8);
+
+	// unselect
+	io_write(0x0d,0xff);
+	
+	int_set();
+}
+
+void synth_setCV(p600CV_t cv,uint16_t value, int8_t immediate)
+{
+	synth.cvs[cv]=value;
+	
+	if(immediate)
+		updateCV(cv);
+}
+
+void synth_setGate(p600Gate_t gate,int8_t on, int8_t immediate)
 {
 	uint8_t mask=1<<gate;
 	
 	synth.gateBits&=~mask;
 	if (on) synth.gateBits|=mask;
+	
+	if(immediate)
+		updateGates();
 }
 
 void synth_init()
@@ -34,25 +67,12 @@ void synth_init()
 void synth_update()
 {
 	uint8_t i;
-	uint8_t dmux;
 
+	// update CVs
 	for(i=0;i<SYNTH_CV_COUNT;++i)
-	{
-		// write DAC
-		dac_write(synth.cvs[i]);
-
-		// select current CV
-		dmux=(i&0x07)|(~(0x08<<(i>>3))&0xf8);
-		io_write(0x0d,dmux);
-
-		// let S&H get correct voltage
-		wait(8);
-
-		// unselect
-		io_write(0x0d,0xff);
-	}
-	
+		updateCV(i);
+		
 	// update gates
-	io_write(0x0b,synth.gateBits);
+	updateGates();
 }
 

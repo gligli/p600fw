@@ -36,6 +36,8 @@ void potmux_update(void)
 	{
 		pot=potmux.nextPot;
 
+		int_clear();
+
 		// select pot
 
 		mux=(pot&0x0f)|(~(0x10<<(pot>>4))&0x30);
@@ -67,6 +69,8 @@ void potmux_update(void)
 
 		io_write(0x0a,0xff);
 
+		int_set();
+		
 		// next pot
 
 		++pot;

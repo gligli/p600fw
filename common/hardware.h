@@ -14,5 +14,8 @@ extern uint8_t io_read(uint8_t address);
 
 extern void wait(uint8_t cycles); // active wait of a number of 4Mhz cycles
 
+extern void int_clear(void);
+extern void int_set(void);
+
 #endif	/* HARDWARE_H */
 

@@ -89,10 +89,11 @@ void display_update()
 		break;
 	}
 	
-		
+	int_clear();
 	io_write(0x09,0x00);
 	io_write(0x08,(io_read(0x08)&0x0f)|(0x10<<display.activeCol));
 	io_write(0x09,b);
+	int_set();
 	
 	display.activeCol=(display.activeCol+1)%3;
 }

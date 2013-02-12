@@ -89,6 +89,13 @@ void hardware_init(void)
 	DDRD=0b00000111;
 	DDRE=0b11100000;
 	DDRF=0b11100011;
+	
+	// prepare a 1Khz interrupt
+	
+	OCR0A=60;
+	TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
+	TCCR0B|=(1<<CS02);  //Timer 0 prescaler = 256
+	TIMSK0|=(1<<OCIE0A);//Enable overflow interrupt for Timer0 
 }
 
 FORCEINLINE void hardware_clearFlags(void)
@@ -210,6 +217,33 @@ FORCEINLINE uint8_t io_read(uint8_t address)
 	return hardware_read();
 }
 
+volatile int16_t int_clear_count=0;
+volatile int8_t int_running=0;
+
+void int_clear(void)
+{
+	if(int_running)
+		return;
+	
+	cli();
+
+	++int_clear_count;
+}
+void int_set(void)
+{
+	if(int_running)
+		return;
+	
+	--int_clear_count;
+	
+	if(int_clear_count<0)
+		print("int_clear_count problem!\n");
+	else if (int_clear_count==0)
+		sei();
+	else
+		print("CHECKME: nested int_clear\n");
+}
+
 int main(void)
 {
 	CPU_PRESCALE(CPU_16MHz);
@@ -228,13 +262,23 @@ int main(void)
 
 	print("p600firmware\n");
 	
+	cli();
+	
 	hardware_init();
 	p600_init();
+	
+	sei();
 	
 	print("loop\n");
 	for(;;)
 	{
-//		_delay_ms(50);
 		p600_update();
 	}
+}
+
+ISR(TIMER0_COMPA_vect) 
+{ 
+	int_running=1;
+	p600_interrupt();
+	int_running=0;
 }
