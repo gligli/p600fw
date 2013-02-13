@@ -25,8 +25,6 @@
 	CYCLE_WAIT \
 	if (cycles<x) return; // this test is 3 ops + nop, so that's about a 4Mhz period
 
-#define FORCEINLINE __attribute__((always_inline))
-
 void wait(uint8_t cycles)
 {
 	DO_ONE_WAIT(0x01);
@@ -90,9 +88,9 @@ void hardware_init(void)
 	DDRE=0b11100000;
 	DDRF=0b11100011;
 	
-	// prepare a 1Khz interrupt
+	// prepare a 2.5Khz interrupt
 	
-	OCR0A=60;
+	OCR0A=24;
 	TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
 	TCCR0B|=(1<<CS02);  //Timer 0 prescaler = 256
 	TIMSK0|=(1<<OCIE0A);//Enable overflow interrupt for Timer0 
@@ -246,8 +244,17 @@ void int_set(void)
 
 int main(void)
 {
-	CPU_PRESCALE(CPU_16MHz);
+	// initialize clock
+	
+	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
+	_delay_ms(1); // actual delay 256 ms when F_OSC is 16000000
+	CPU_PRESCALE(CPU_16MHz);  
 
+	// initialize firmware
+	
+	hardware_init();
+	p600_init();
+	
 	// initialize the USB, and then wait for the host
 	// to set configuration.  If the Teensy is powered
 	// without a PC connected to the USB port, this 
@@ -260,16 +267,9 @@ int main(void)
 	// be ready for input
 	_delay_ms(1000);
 
-	print("p600firmware\n");
-	
-	cli();
-	
-	hardware_init();
-	p600_init();
-	
 	sei();
 	
-	print("loop\n");
+	print("p600firmware\n");
 	for(;;)
 	{
 		p600_update();

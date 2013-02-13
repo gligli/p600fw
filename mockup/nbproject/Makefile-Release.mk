@@ -36,9 +36,9 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/adsr.o \
-	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
 	${OBJECTDIR}/_ext/1270477542/synth.o \
+	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/p600mockup.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o \
@@ -74,11 +74,6 @@ ${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c
 	${RM} $@.d
 	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
 
-${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
-	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
-
 ${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
@@ -88,6 +83,11 @@ ${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
+
+${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
 
 ${OBJECTDIR}/p600mockup.o: p600mockup.c 
 	${MKDIR} -p ${OBJECTDIR}

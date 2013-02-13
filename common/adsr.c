@@ -4,15 +4,15 @@
 
 /*
 ;  Programme fait par tom wiltshire http://www.electricdruid.com
-;  Pour module VCADSR, Programme original nommÃ© ENVGEN7.ASM (premiere version).
+;  Pour module VCADSR, Programme original nommé ENVGEN7.ASM (premiere version).
 ;  La 2ieme ver ENVGEN7B.ASM ne marchait pas.
-;  Les lignes 884 Ã  893 ont Ã©tÃ© ajoutÃ©es pour annuler l'effet
-;  du pot nommÃ© TIME CV (RC2/AN6, PIN8) qui changait toute la durÃ©e
-;  de l'envelope ADSR (Ã©tirait ou Ã©crasait.. selon voltage 0-5v
-;  prÃ©sent Ã  la patte PIN8).
-;  Les tables nommÃ©es PhaseLookupHi, PhaseLookupMid, PhaseLookupLo (lignes 1002 Ã  1074 ) 
-;  ont Ã©tÃ© modifiÃ©es pour suivre le graticule Moog des pots Attack, Decay, Release.
-;  de 2msec. Ã  10sec.
+;  Les lignes 884 à 893 ont été ajoutées pour annuler l'effet
+;  du pot nommé TIME CV (RC2/AN6, PIN8) qui changait toute la durée
+;  de l'envelope ADSR (étirait ou écrasait.. selon voltage 0-5v
+;  présent à la patte PIN8).
+;  Les tables nommées PhaseLookupHi, PhaseLookupMid, PhaseLookupLo (lignes 1002 à 1074 ) 
+;  ont été modifiées pour suivre le graticule Moog des pots Attack, Decay, Release.
+;  de 2msec. à 10sec.
 ;  Juin 2008. JPD.
 ;  ---------------------------------------------------------------------
 ;
@@ -51,7 +51,9 @@
 #include "adsr.h"
 #include "adsr_lookups.h"
 
-static inline uint32_t getPhaseInc(uint8_t v)
+#define ADSR_SPEED_SHIFT 1
+
+static uint32_t getPhaseInc(uint8_t v)
 {
 	uint32_t r=0;
 	
@@ -62,39 +64,33 @@ static inline uint32_t getPhaseInc(uint8_t v)
 	return r;
 }
 
-static inline int8_t incrementPhase(uint32_t * phase, uint32_t inc) // return true if overflowed
+static FORCEINLINE uint16_t lerp(uint16_t a,uint16_t b,uint16_t x,uint8_t x_shift)
 {
-	*phase+=inc;
-	return *phase>=(uint32_t)1<<20;
+	return a+((x*(b-a))>>x_shift);
 }
 
-static inline uint16_t computeOutput(uint32_t phase, uint16_t scale, uint16_t add, uint8_t lookup[], int8_t isExp, int8_t complement)
+static FORCEINLINE uint16_t computeOutput(uint32_t phase, uint8_t scale, uint8_t * lookup, int8_t isExp)
 {
-	uint16_t r;
-
 	if(isExp)
 	{
-		uint8_t a,b;
-		uint32_t x;
+		uint16_t ai,bi;
+		uint16_t a,b,x;
 		
-		x=phase&0x0fff;
-		b=a=phase>>12;
+		x=phase&4095;
+		bi=ai=phase>>12;
 		
-		if(a<UINT8_MAX)
-			b=a+1;
+		if(ai<UINT8_MAX)
+			bi=ai+1;
 		
-		a=lookup[a];
-		b=lookup[b];
+		a=(uint16_t)lookup[ai]*scale;
+		b=(uint16_t)lookup[bi]*scale;
 		
-		phase=((uint32_t)a<<12)+x*(b-a);
+		return lerp(a,b,x,12);
 	}
-	
-	r=(phase*(scale>>4))>>16;
-	
-	if (complement)
-		r=UINT16_MAX-r;
-
-	return r+add;
+	else
+	{
+		return (phase*scale)>>12;
+	}
 }
 
 void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
@@ -106,9 +102,9 @@ void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus,
 	adsr->decayCV=dec>>8;
 	adsr->releaseCV=rls>>8;
 
-	adsr->attackInc=getPhaseInc(adsr->attackCV);
-	adsr->decayInc=getPhaseInc(adsr->decayCV);
-	adsr->releaseInc=getPhaseInc(adsr->releaseCV);
+	adsr->attackIncrement=getPhaseInc(adsr->attackCV)>>ADSR_SPEED_SHIFT;
+	adsr->decayIncrement=getPhaseInc(adsr->decayCV)>>ADSR_SPEED_SHIFT;
+	adsr->releaseIncrement=getPhaseInc(adsr->releaseCV)>>ADSR_SPEED_SHIFT;
 }
 
 void adsr_setGate(struct adsr_s * adsr, int8_t gate)
@@ -138,15 +134,17 @@ void adsr_update(struct adsr_s * a)
 	if(a->gate!=a->nextGate)
 	{
 		a->phase=0;
-		a->currentLevel=a->output;
+		a->currentLevel=a->output>>8;
 		
 		if(a->nextGate)
 		{
 			a->stage=sAttack;
+			a->currentIncrement=a->attackIncrement;
 		}
 		else
 		{
 			a->stage=sRelease;
+			a->currentIncrement=a->releaseIncrement;
 		}
 		
 		a->gate=a->nextGate;
@@ -156,45 +154,34 @@ void adsr_update(struct adsr_s * a)
 
 	if (a->stage==sWait)
 	{
-		a->final=0;
+		a->final=a->output=0;
 		return;
 	}
 
-	// handle phase increment
+	// handle phase overflow
 	
-	int8_t overflow=0;
-	
-	switch(a->stage)
-	{
-	case sAttack:
-		overflow=incrementPhase(&a->phase,a->attackInc);
-		break;
-	case sDecay:
-		overflow=incrementPhase(&a->phase,a->decayInc);
-		break;
-	case sRelease:
-		overflow=incrementPhase(&a->phase,a->releaseInc);
-		break;
-	default:
-		;
-	}
-	
-	// is a timed stage done?
-	
-	if(overflow)
+	if(a->phase&0xfff00000) // if bit 20 or higher is set, it's an overflow -> a timed stage is done!
 	{
 		a->phase=0;
+		a->currentIncrement=0;
 
 		++a->stage;
 
-		if(a->stage>sRelease)
+		switch(a->stage)
 		{
-			a->stage=sWait;
-			a->final=0;
+		case sDecay:
+			a->currentIncrement=a->decayIncrement;
+			a->final=a->output=a->levelCV;
 			return;
+		case sDone:
+			a->stage=sWait;
+			a->final=a->output=0;
+			return;
+		default:
+			;
 		}
 	}
-	
+
 	// compute output level
 	
 	uint16_t o=0;
@@ -202,16 +189,16 @@ void adsr_update(struct adsr_s * a)
 	switch(a->stage)
 	{
 	case sAttack:
-		o=computeOutput(a->phase,UINT16_MAX-a->currentLevel,a->currentLevel,attackCurveLookup,a->expOutput,0);
+		o=computeOutput(a->phase,UINT8_MAX-a->currentLevel,attackCurveLookup,a->expOutput)+(a->currentLevel<<8);
 		break;
 	case sDecay:
-		o=computeOutput(a->phase,UINT16_MAX-a->sustainCV,0,decayCurveLookup,a->expOutput,1);
+		o=computeOutput(a->phase,UINT8_MAX-(a->sustainCV>>8),decayCurveLookup,a->expOutput)^UINT16_MAX;
 		break;
 	case sSustain:
 		o=a->sustainCV;
 		break;
 	case sRelease:
-		o=computeOutput(a->phase,a->currentLevel,a->currentLevel,decayCurveLookup,a->expOutput,1);
+		o=(computeOutput(a->phase,a->currentLevel,decayCurveLookup,a->expOutput)+((UINT8_MAX-a->currentLevel)<<8))^UINT16_MAX;
 		break;
 	default:
 		;
@@ -219,5 +206,9 @@ void adsr_update(struct adsr_s * a)
 	
 	a->final=((uint32_t)a->output*a->levelCV)>>16;
 	a->output=o;
+
+	// handle phase increment
+	
+	a->phase+=a->currentIncrement;
 }
 
