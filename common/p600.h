@@ -54,7 +54,8 @@ void p600_keyEvent(uint8_t key, int pressed);
 
 void p600_init(void);
 void p600_update(void);
-void p600_interrupt(void);
+void p600_slowInterrupt(void);
+void p600_fastInterrupt(void);
 
 #endif	/* P600_H */
 

@@ -79,7 +79,8 @@ __declspec(dllexport) __stdcall void emu_init(emu_write_t write,emu_read_t read,
 __declspec(dllexport) __stdcall void emu_start(void)
 {
 	p600_update();
-	p600_interrupt();
+	p600_fastInterrupt();
+	p600_slowInterrupt();
 }
 
 
@@ -97,4 +98,3 @@ void int_set(void)
 {
 	// no ints, done in tick
 }	
-

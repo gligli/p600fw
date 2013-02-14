@@ -5,7 +5,7 @@
 #include "display.h"
 #include "map_to_7segment.h"
 
-#define DISPLAY_BLINK_HALF_PERIOD 200
+#define DISPLAY_BLINK_HALF_PERIOD 80
 
 static struct
 {
@@ -91,7 +91,7 @@ void display_update()
 	
 	int_clear();
 	io_write(0x09,0x00);
-	io_write(0x08,(io_read(0x08)&0x0f)|(0x10<<display.activeCol));
+	io_write(0x08,0x10<<display.activeCol);
 	io_write(0x09,b);
 	int_set();
 	

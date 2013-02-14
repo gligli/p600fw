@@ -6,13 +6,17 @@
 #include "dac.h"
 
 #define POTMUX_POT_COUNT 32
-#define POTMUX_POTS_AT_A_TIME 10
 
 static struct
 {
+	uint32_t neededBits;
 	uint16_t pots[POTMUX_POT_COUNT];
-	uint8_t nextPot;
 } potmux;
+
+void potmux_setNeeded(uint32_t needed)
+{
+	potmux.neededBits|=needed;
+}
 
 uint16_t potmux_getValue(p600Pot_t pot)
 {
@@ -27,22 +31,30 @@ void potmux_init(void)
 void potmux_update(void)
 {
 	uint8_t i,j;
-	uint8_t pot,lower,mux;
+	uint8_t lower,mux;
 	uint16_t estimate;
 	uint16_t bit;
 	int32_t move;
 	
-	for(j=0;j<POTMUX_POTS_AT_A_TIME;++j)
+	for(j=0;j<POTMUX_POT_COUNT;++j)
 	{
-		pot=potmux.nextPot;
-
+		// don't update unneeded pots
+		
+		if(((potmux.neededBits>>j)&1)==0)
+			continue;
+		
+		// there's a hole in the pots enum
+		
+		if (j>ppPitchWheel && j<ppModWheel)
+			continue;
+		
 		int_clear();
 
 		// select pot
 
-		mux=(pot&0x0f)|(~(0x10<<(pot>>4))&0x30);
+		mux=(j&0x0f)|(~(0x10<<(j>>4))&0x30);
 		io_write(0x0a,mux);
-		wait(16);
+		wait(8);
 
 		// successive approximations using DAC and comparator
 
@@ -62,23 +74,15 @@ void potmux_update(void)
 			bit>>=1;
 		}
 
-		move=(int32_t)potmux.pots[pot]-(int32_t)estimate;
-		potmux.pots[pot]=estimate;
+		move=(int32_t)potmux.pots[j]-(int32_t)estimate;
+		potmux.pots[j]=estimate;
 
 		// unselect
 
 		io_write(0x0a,0xff);
 
 		int_set();
-		
-		// next pot
-
-		++pot;
-		if (pot>=POTMUX_POT_COUNT)
-			pot=0;
-		else if (pot>ppPitchWheel && pot<ppModWheel)
-			pot=ppModWheel;
-
-		potmux.nextPot=pot;
 	}
+	
+	potmux.neededBits=0;
 }

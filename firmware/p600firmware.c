@@ -22,10 +22,10 @@
 #define CYCLE_WAIT asm volatile("nop\n nop\n nop\n nop\n");
 
 #define DO_ONE_WAIT(x) \
-	CYCLE_WAIT \
+	asm volatile("nop\n"); \
 	if (cycles<x) return; // this test is 3 ops + nop, so that's about a 4Mhz period
 
-void wait(uint8_t cycles)
+void  wait(uint8_t cycles)
 {
 	DO_ONE_WAIT(0x01);
 	DO_ONE_WAIT(0x02);
@@ -61,6 +61,9 @@ void wait(uint8_t cycles)
 	DO_ONE_WAIT(0x20);
 }
 
+
+static uint8_t prevWrite=0;
+
 void hardware_init(void)
 {
 	// LSB->MSB
@@ -88,39 +91,22 @@ void hardware_init(void)
 	DDRE=0b11100000;
 	DDRF=0b11100011;
 	
-	// prepare a 2.5Khz interrupt
+	// prepare a 250hz interrupt
 	
-	OCR0A=24;
-	TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
-	TCCR0B|=(1<<CS02);  //Timer 0 prescaler = 256
-	TIMSK0|=(1<<OCIE0A);//Enable overflow interrupt for Timer0 
+	OCR1A=8000;
+	TCCR1B|=(1<<WGM12)|(1<<CS11);  //Timer 1 prescaler = 8, Clear-Timer on Compare (CTC) 
+	TIMSK1|=(1<<OCIE1A);//Enable overflow interrupt for Timer1
+
+	// prepare a 5Khz interrupt
+	
+	OCR2A=50;
+	TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
+	TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
+	TIMSK2|=(1<<OCIE2A);//Enable overflow interrupt for Timer2
 }
 
-FORCEINLINE void hardware_clearFlags(void)
+static FORCEINLINE void hardware_setDataDirection(int8_t write)
 {
-	// no r,w,mreq,ioreq for now
-
-	PORTC|=0xc0;
-	PORTF|=0xc0;
-}
-
-FORCEINLINE void hardware_prepareRW(uint16_t addr,int write, int io)
-{
-	uint8_t pb=0,pc=0,pd=0,pe=0,pf=0;
-	
-	// set address
-	
-	pb|=(addr>> 3)&0x7f;
-	pb|=(addr>> 5)&0x80;
-
-	pd|=(addr>>13)&0x07;
-	
-	pe|=(addr<< 5)&0xe0;
-	
-	PORTB=pb;
-	PORTD=(PORTD&0xf8)|pd;
-	PORTE=(PORTE&0x1f)|pe;
-
 	// set data dir
 	
 	if (write)
@@ -135,87 +121,149 @@ FORCEINLINE void hardware_prepareRW(uint16_t addr,int write, int io)
 		DDRD&=~0b11110000;
 		DDRE&=~0b00000010;
 	}
-
-	// set flags
-	
-	pc|=(io)?0x40:0x80; // MREQ,IORQ are active low
-	pf|=(write)?0x80:0x40; // RD,WR are active low
-	
-	PORTC=(PORTC&0x3f)|pc;
-	PORTF=(PORTF&0x3f)|pf;
 }
 
-FORCEINLINE void hardware_write(uint8_t data)
+static FORCEINLINE void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 {
-	uint8_t pc=0,pd=0,pe=0;
+	uint8_t b,c,d,e,f;
 	
-	pc|=(data>>7)&0x01;
-	pc|=(data<<1)&0x06;
+	// no r,w,mreq,ioreq for now
+
+	PORTF=0xc6;
+	PORTC=0xc0;
+
+	// prepare output
 	
-	pd|=(data   )&0x10;
-	pd|=(data<<2)&0x20;
-	pd|=(data<<1)&0xc0;
+	if(!prevWrite)
+		hardware_setDataDirection(1);
 	
-	pe|=(data>>1)&0x02;
+	prevWrite=1;
+
+	// flags
 	
-	PORTC=(PORTC&0xf8)|pc;
-	PORTD=(PORTD&0x0f)|pd;
-	PORTE=(PORTE&0xfd)|pe;
+	b=0x00;
+	c=(io)?0x40:0x80;
+	d=0x00;
+	e=0x00;
+	f=0x87;
+	
+	// address
+	
+	b|=(addr>> 3)&0x7f;
+	b|=(addr>> 5)&0x80;
+	
+	d|=(addr>>13)&0x07;
+
+	e|=(addr<< 5)&0xe0;
+
+	// data
+	
+	c|=(data>>7)&0x01;
+	c|=(data<<1)&0x06;
+	
+	d|=(data   )&0x10;
+	d|=(data<<2)&0x20;
+	d|=(data<<1)&0xc0;
+	
+	e|=(data>>1)&0x02;
+
+	// output it
+	
+	PORTB=b;
+	PORTC=c;
+	PORTD=d;
+	PORTE=e;
+	PORTF=f;
+	
+	// wait
+	
+	CYCLE_WAIT
 }
 
-FORCEINLINE uint8_t hardware_read(void)
+static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 {
-	uint8_t pc,pd,pe,v=0;
+	uint8_t b,c,d,e,f,v;
 	
-	pc=PINC;
-	pd=PIND;
-	pe=PINE;
+	// no r,w,mreq,ioreq for now
+
+	PORTF=0xc6;
+	PORTC=0xc0;
+
+	// prepare read
 	
-	v|=(pc<<7)&0x80;
-	v|=(pc>>1)&0x03;
+	if(prevWrite)
+		hardware_setDataDirection(0);
 	
-	v|=(pd	 )&0x10;
-	v|=(pd>>2)&0x08;
-	v|=(pd>>1)&0x60;
+	prevWrite=0;
 	
-	v|=(pe<<1)&0x04;
+	// flags
+	
+	b=0x00;
+	c=(io)?0x40:0x80;
+	d=0x00;
+	e=0x00;
+	f=0x47;
+	
+	// address
+	
+	b|=(addr>> 3)&0x7f;
+	b|=(addr>> 5)&0x80;
+	
+	d|=(addr>>13)&0x07;
+
+	e|=(addr<< 5)&0xe0;
+
+	// output it
+	
+	PORTB=b;
+	PORTC=c;
+	PORTD=d;
+	PORTE=e;
+	PORTF=f;
+
+	// wait
+	
+	CYCLE_WAIT
+	
+	// read data
+	
+	c=PINC;
+	d=PIND;
+	e=PINE;
+	
+	v =(c<<7)&0x80;
+	v|=(c>>1)&0x03;
+	
+	v|=(d	 )&0x10;
+	v|=(d>>2)&0x08;
+	v|=(d>>1)&0x60;
+	
+	v|=(e<<1)&0x04;
 	
 	return v;
 }
 
-FORCEINLINE void mem_write(uint16_t address, uint8_t value)
+void mem_write(uint16_t address, uint8_t value)
 {
-	hardware_clearFlags();
-	hardware_write(value);
-	CYCLE_WAIT;
-	hardware_prepareRW(address,1,0);
+	hardware_write(0,address,value);
 }
 
-FORCEINLINE void io_write(uint8_t address, uint8_t value)
+void io_write(uint8_t address, uint8_t value)
 {
-	hardware_clearFlags();
-	hardware_write(value);
-	CYCLE_WAIT;
-	hardware_prepareRW(address,1,1);
+	hardware_write(1,address,value);
 }
 
-FORCEINLINE uint8_t mem_read(uint16_t address)
+uint8_t mem_read(uint16_t address)
 {
-	hardware_clearFlags();
-	hardware_prepareRW(address,0,0);
-	CYCLE_WAIT;
-	return hardware_read();
+	return hardware_read(0,address);
 }
 
-FORCEINLINE uint8_t io_read(uint8_t address)
+uint8_t io_read(uint8_t address)
 {
-	hardware_clearFlags();
-	hardware_prepareRW(address,0,1);
-	CYCLE_WAIT;
-	return hardware_read();
+	return hardware_read(1,address);
 }
 
-volatile int16_t int_clear_count=0;
+volatile int8_t int_clear_count=0;
 volatile int8_t int_running=0;
 
 void int_clear(void)
@@ -234,23 +282,28 @@ void int_set(void)
 	
 	--int_clear_count;
 	
-	if(int_clear_count<0)
-		print("int_clear_count problem!\n");
-	else if (int_clear_count==0)
+	if (int_clear_count==0)
+	{
 		sei();
+	}
 	else
-		print("CHECKME: nested int_clear\n");
+	{
+		print("CHECKME: int_clear_count problem! : \n");
+		phex(int_clear_count);
+	}
 }
 
 int main(void)
 {
 	// initialize clock
 	
-	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
-	_delay_ms(1); // actual delay 256 ms when F_OSC is 16000000
+	CPU_PRESCALE(CPU_125kHz); // power supply still ramping up voltage
+	_delay_ms(1); // actual delay 128 ms when F_OSC is 16000000
 	CPU_PRESCALE(CPU_16MHz);  
 
 	// initialize firmware
+	
+	int_clear();
 	
 	hardware_init();
 	p600_init();
@@ -265,9 +318,9 @@ int main(void)
 	// wait an extra second for the PC's operating system
 	// to load drivers and do whatever it does to actually
 	// be ready for input
-	_delay_ms(1000);
+	_delay_ms(500);
 
-	sei();
+	int_set();
 	
 	print("p600firmware\n");
 	for(;;)
@@ -276,9 +329,16 @@ int main(void)
 	}
 }
 
-ISR(TIMER0_COMPA_vect) 
+ISR(TIMER1_COMPA_vect) 
 { 
 	int_running=1;
-	p600_interrupt();
+	p600_slowInterrupt();
+	int_running=0;
+}
+
+ISR(TIMER2_COMPA_vect) 
+{ 
+	int_running=1;
+	p600_fastInterrupt();
 	int_running=0;
 }
