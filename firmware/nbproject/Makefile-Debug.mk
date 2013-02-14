@@ -21,7 +21,7 @@ FC=gfortran
 AS=avr-as.exe
 
 # Macros
-CND_PLATFORM=WinAVR-Windows
+CND_PLATFORM=MHV_AVR-Windows
 CND_DLIB_EXT=dll
 CND_CONF=Debug
 CND_DISTDIR=dist

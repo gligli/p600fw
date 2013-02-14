@@ -19,49 +19,6 @@
 #define CPU_125kHz      0x07
 #define CPU_62kHz       0x08
 
-#define CYCLE_WAIT asm volatile("nop\n nop\n nop\n nop\n");
-
-#define DO_ONE_WAIT(x) \
-	asm volatile("nop\n"); \
-	if (cycles<x) return; // this test is 3 ops + nop, so that's about a 4Mhz period
-
-void  wait(uint8_t cycles)
-{
-	DO_ONE_WAIT(0x01);
-	DO_ONE_WAIT(0x02);
-	DO_ONE_WAIT(0x03);
-	DO_ONE_WAIT(0x04);
-	DO_ONE_WAIT(0x05);
-	DO_ONE_WAIT(0x06);
-	DO_ONE_WAIT(0x07);
-	DO_ONE_WAIT(0x08);
-	DO_ONE_WAIT(0x09);
-	DO_ONE_WAIT(0x0a);
-	DO_ONE_WAIT(0x0b);
-	DO_ONE_WAIT(0x0c);
-	DO_ONE_WAIT(0x0d);
-	DO_ONE_WAIT(0x0e);
-	DO_ONE_WAIT(0x0f);
-	DO_ONE_WAIT(0x10);
-	DO_ONE_WAIT(0x11);
-	DO_ONE_WAIT(0x12);
-	DO_ONE_WAIT(0x13);
-	DO_ONE_WAIT(0x14);
-	DO_ONE_WAIT(0x15);
-	DO_ONE_WAIT(0x16);
-	DO_ONE_WAIT(0x17);
-	DO_ONE_WAIT(0x18);
-	DO_ONE_WAIT(0x19);
-	DO_ONE_WAIT(0x1a);
-	DO_ONE_WAIT(0x1b);
-	DO_ONE_WAIT(0x1c);
-	DO_ONE_WAIT(0x1d);
-	DO_ONE_WAIT(0x1e);
-	DO_ONE_WAIT(0x1f);
-	DO_ONE_WAIT(0x20);
-}
-
-
 static uint8_t prevWrite=0;
 
 void hardware_init(void)
@@ -91,39 +48,21 @@ void hardware_init(void)
 	DDRE=0b11100000;
 	DDRF=0b11100011;
 	
-	// prepare a 250hz interrupt
-	
-	OCR1A=8000;
+	// prepare a 200hz interrupt
+/*	
+	OCR1A=10000;
 	TCCR1B|=(1<<WGM12)|(1<<CS11);  //Timer 1 prescaler = 8, Clear-Timer on Compare (CTC) 
 	TIMSK1|=(1<<OCIE1A);//Enable overflow interrupt for Timer1
-
-	// prepare a 5Khz interrupt
+*/
+	// prepare a 2Khz interrupt
 	
-	OCR2A=50;
+	OCR2A=125;
 	TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
 	TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
 	TIMSK2|=(1<<OCIE2A);//Enable overflow interrupt for Timer2
 }
 
-static FORCEINLINE void hardware_setDataDirection(int8_t write)
-{
-	// set data dir
-	
-	if (write)
-	{
-		DDRC|=0b00000111;
-		DDRD|=0b11110000;
-		DDRE|=0b00000010;
-	}
-	else
-	{
-		DDRC&=~0b00000111;
-		DDRD&=~0b11110000;
-		DDRE&=~0b00000010;
-	}
-}
-
-static FORCEINLINE void hardware_write(int8_t io, uint16_t addr, uint8_t data)
+static void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 {
 	uint8_t b,c,d,e,f;
 	
@@ -132,13 +71,16 @@ static FORCEINLINE void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 	PORTF=0xc6;
 	PORTC=0xc0;
 
-	// prepare output
+	// data dir
 	
 	if(!prevWrite)
-		hardware_setDataDirection(1);
+	{
+		DDRC=0b11100111;
+		DDRD=0b11110111;
+		DDRE=0b11100010;
+		prevWrite=1;
+	}		
 	
-	prevWrite=1;
-
 	// flags
 	
 	b=0x00;
@@ -174,13 +116,9 @@ static FORCEINLINE void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 	PORTD=d;
 	PORTE=e;
 	PORTF=f;
-	
-	// wait
-	
-	CYCLE_WAIT
 }
 
-static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
+static uint8_t hardware_read(int8_t io, uint16_t addr)
 {
 	uint8_t b,c,d,e,f,v;
 	
@@ -192,9 +130,12 @@ static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 	// prepare read
 	
 	if(prevWrite)
-		hardware_setDataDirection(0);
-	
-	prevWrite=0;
+	{
+		DDRC=0b11100000;
+		DDRD=0b00000111;
+		DDRE=0b11100000;
+		prevWrite=0;
+	}
 	
 	// flags
 	
@@ -223,7 +164,7 @@ static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 
 	// wait
 	
-	CYCLE_WAIT
+	CYCLE_WAIT(1)
 	
 	// read data
 	
@@ -263,36 +204,6 @@ uint8_t io_read(uint8_t address)
 	return hardware_read(1,address);
 }
 
-volatile int8_t int_clear_count=0;
-volatile int8_t int_running=0;
-
-void int_clear(void)
-{
-	if(int_running)
-		return;
-	
-	cli();
-
-	++int_clear_count;
-}
-void int_set(void)
-{
-	if(int_running)
-		return;
-	
-	--int_clear_count;
-	
-	if (int_clear_count==0)
-	{
-		sei();
-	}
-	else
-	{
-		print("CHECKME: int_clear_count problem! : \n");
-		phex(int_clear_count);
-	}
-}
-
 int main(void)
 {
 	// initialize clock
@@ -303,11 +214,12 @@ int main(void)
 
 	// initialize firmware
 	
-	int_clear();
+	cli();
 	
 	hardware_init();
 	p600_init();
-	
+
+#ifdef DEBUG
 	// initialize the USB, and then wait for the host
 	// to set configuration.  If the Teensy is powered
 	// without a PC connected to the USB port, this 
@@ -319,8 +231,9 @@ int main(void)
 	// to load drivers and do whatever it does to actually
 	// be ready for input
 	_delay_ms(500);
-
-	int_set();
+#endif
+	
+	sei();
 	
 	print("p600firmware\n");
 	for(;;)
@@ -331,14 +244,10 @@ int main(void)
 
 ISR(TIMER1_COMPA_vect) 
 { 
-	int_running=1;
 	p600_slowInterrupt();
-	int_running=0;
 }
 
 ISR(TIMER2_COMPA_vect) 
 { 
-	int_running=1;
 	p600_fastInterrupt();
-	int_running=0;
 }

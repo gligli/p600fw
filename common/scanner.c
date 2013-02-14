@@ -46,11 +46,14 @@ void scanner_update(void)
 
 	for(i=0;i<SCANNER_BYTES;++i)
 	{
-		int_clear();
-		io_write(0x08,i);
-		wait(4);
-		uint8_t ps=io_read(0x0a);
-		int_set();
+		uint8_t ps;		
+		
+		HW_ACCESS
+		{
+			io_write(0x08,i);
+			CYCLE_WAIT(8);
+			ps=io_read(0x0a);
+		}
 		
 		uint8_t pa=ps^scanner.stateBits[i];
 		

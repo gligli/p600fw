@@ -9,6 +9,7 @@
       <itemPath>../common/dac.h</itemPath>
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/hardware.h</itemPath>
+      <itemPath>hardware_impl.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
       <itemPath>../common/p600.h</itemPath>
       <itemPath>../common/potmux.h</itemPath>

@@ -12,7 +12,7 @@
 #include "potmux.h"
 #include "adsr.h"
 
-#define P600_VOICE_COUNT 2
+#define P600_VOICE_COUNT 6
 
 static struct
 {
@@ -23,6 +23,8 @@ static struct
 
 void p600_init(void)
 {
+	memset(&p600,0,sizeof(p600));
+	
 	scanner_init();
 	display_init();
 	synth_init();
@@ -55,10 +57,11 @@ void p600_update(void)
 	
 	// toggle tape out (debug)
 
-	int_clear();
-	io_write(0x0e,((frc&1)<<2)|0b00110001);
-	int_set();
-	
+	HW_ACCESS
+	{
+		io_write(0x0e,((frc&1)<<2)|0b00110001);
+	}
+
 	// which pots do we have to read?
 	
 	if((frc&0x01)==0) // 1/4 of the time, alternatively
@@ -101,32 +104,33 @@ void p600_update(void)
 
 void p600_fastInterrupt(void)
 {
-	int8_t i,v;
+	int8_t v;
 	uint16_t cut;
+
+	static uint8_t frc=0;
 	
 	cut=potmux_getValue(ppCutoff);
 	
-	v=p600.currentVoice;
-	
-	for(i=0;i<P600_VOICE_COUNT/2;++i)
+	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
-
 		adsr_update(&p600.filEnvs[v]);
 		adsr_update(&p600.ampEnvs[v]);
 
 		synth_setCV(pcFil1+v,p600.filEnvs[v].final+cut,1);
-		synth_setCV(pcAmp1+v,p600.ampEnvs[v].final,1);
-
-		v=(v+1)%P600_VOICE_COUNT;
+		synth_setCV(pcAmp1,p600.ampEnvs[v].final,1);
 	}
-			
-	p600.currentVoice=v;
+	
+	if((frc&0x07)==0) // 1/8 of the time (250hz)
+	{
+		scanner_update(); // do this first (clears display)
+		display_update();
+	}
+	
+	++frc;
 }
 
 void p600_slowInterrupt(void)
 {
-	scanner_update(); // do this first (clears display)
-	display_update();
 }
 
 void p600_buttonEvent(p600Button_t button, int pressed)

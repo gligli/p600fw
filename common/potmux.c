@@ -34,7 +34,6 @@ void potmux_update(void)
 	uint8_t lower,mux;
 	uint16_t estimate;
 	uint16_t bit;
-	int32_t move;
 	
 	for(j=0;j<POTMUX_POT_COUNT;++j)
 	{
@@ -48,40 +47,42 @@ void potmux_update(void)
 		if (j>ppPitchWheel && j<ppModWheel)
 			continue;
 		
-		int_clear();
-
-		// select pot
-
-		mux=(j&0x0f)|(~(0x10<<(j>>4))&0x30);
-		io_write(0x0a,mux);
-		wait(8);
-
-		// successive approximations using DAC and comparator
-
-		estimate=0;
-		bit=0x8000;
-
-		for(i=0;i<14;++i) // 14bit DAC
+		HW_ACCESS
 		{
-			dac_write(estimate); // update DAC
-			lower=(io_read(0x09)&0x08)!=0; // is DAC value lower than pot value?
 
-			if (lower)
-				estimate+=bit;
-			else
-				estimate-=bit;
+			// select pot
 
-			bit>>=1;
+			mux=(j&0x0f)|(~(0x10<<(j>>4))&0x30);
+			io_write(0x0a,mux);
+			CYCLE_WAIT(8);
+
+			// successive approximations using DAC and comparator
+
+			estimate=0;
+			bit=0x8000;
+
+			for(i=0;i<12;++i) // 12bit -> 4096 steps
+			{
+				// write DAC
+				mem_write(0x4000,estimate>>2);
+				mem_write(0x4001,estimate>>10);
+
+				lower=(io_read(0x09)&0x08)!=0; // is DAC value lower than pot value?
+
+				if (lower)
+					estimate+=bit;
+				else
+					estimate-=bit;
+
+				bit>>=1;
+			}
+
+			potmux.pots[j]=estimate;
+
+			// unselect
+
+			io_write(0x0a,0xff);
 		}
-
-		move=(int32_t)potmux.pots[j]-(int32_t)estimate;
-		potmux.pots[j]=estimate;
-
-		// unselect
-
-		io_write(0x0a,0xff);
-
-		int_set();
 	}
 	
 	potmux.neededBits=0;

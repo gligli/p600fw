@@ -7,6 +7,8 @@
 #include "print.h"
 #include "hardware.h"
 
+#define DEBUG
+
 #define FORCEINLINE __attribute__((always_inline))
 
 ////////////////////////////////////////////////////////////////////////////////

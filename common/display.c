@@ -13,8 +13,8 @@ static struct
 	uint8_t sevenSegs[2];
 	uint16_t ledOn;
 	uint16_t ledBlinking;
-	uint16_t blinkCounter;
-	int blinkState;
+	uint8_t blinkCounter;
+	int8_t blinkState;
 } display;
 
 static SEG7_DEFAULT_MAP(sevenSeg_map);
@@ -43,7 +43,7 @@ int led_getBlinking(p600LED_t led)
 	return !!(display.ledBlinking&mask);
 }
 
-void led_set(p600LED_t led, int on, int blinking)
+void led_set(p600LED_t led, int8_t on, int8_t blinking)
 {
 	uint16_t mask=1<<led;
 	
@@ -89,11 +89,13 @@ void display_update()
 		break;
 	}
 	
-	int_clear();
-	io_write(0x09,0x00);
-	io_write(0x08,0x10<<display.activeCol);
-	io_write(0x09,b);
-	int_set();
+	HW_ACCESS
+	{
+		io_write(0x09,0x00);
+		io_write(0x08,0x10<<display.activeCol);
+		CYCLE_WAIT(4);
+		io_write(0x09,b);
+	}
 	
 	display.activeCol=(display.activeCol+1)%3;
 }

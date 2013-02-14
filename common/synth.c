@@ -20,27 +20,29 @@ static void updateGates(void)
 
 static void updateCV(p600CV_t cv)
 {
-	uint8_t dmux;
+	uint8_t dmux,cvv0,cvv1;
 	uint16_t cvv;
 	
 	dmux=(cv&0x07)|(~(0x08<<(cv>>3))&0xf8);
 	cvv=synth.cvs[cv];
+	cvv0=cvv>>2;
+	cvv1=cvv>>10;
 
-	int_clear();
+	HW_ACCESS
+	{
+		// write DAC
+		mem_write(0x4000,cvv0);
+		mem_write(0x4001,cvv1);
 
-	// write DAC
-	dac_write(cvv);
+		// select current CV
+		io_write(0x0d,dmux);
 
-	// select current CV
-	io_write(0x0d,dmux);
+		// let S&H get correct voltage
+		CYCLE_WAIT(1);
 
-	// let S&H get correct voltage
-	wait(2);
-
-	// unselect
-	io_write(0x0d,0xff);
-	
-	int_set();
+		// unselect
+		io_write(0x0d,0xff);
+	}
 }
 
 void synth_setCV(p600CV_t cv,uint16_t value, int8_t immediate)

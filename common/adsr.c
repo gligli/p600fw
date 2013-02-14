@@ -64,12 +64,12 @@ static uint32_t getPhaseInc(uint8_t v)
 	return r;
 }
 
-static FORCEINLINE uint16_t lerp(uint16_t a,uint16_t b,uint16_t x,uint8_t x_shift)
+static uint16_t lerp(uint16_t a,uint16_t b,uint16_t x,uint8_t x_shift)
 {
 	return a+((x*(b-a))>>x_shift);
 }
 
-static FORCEINLINE uint16_t computeOutput(uint32_t phase, uint8_t scale, uint8_t * lookup, int8_t isExp)
+static uint16_t computeOutput(uint32_t phase, uint8_t scale, uint8_t * lookup, int8_t isExp)
 {
 	if(isExp)
 	{
