@@ -64,32 +64,60 @@ static uint32_t getPhaseInc(uint8_t v)
 	return r;
 }
 
-static uint16_t lerp(uint16_t a,uint16_t b,uint16_t x,uint8_t x_shift)
+static uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
 {
-	return a+((x*(b-a))>>x_shift);
+	return a+(x*((b-a)>>8));
 }
 
-static uint16_t computeOutput(uint32_t phase, uint8_t scale, uint8_t * lookup, int8_t isExp)
+static uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
 {
 	if(isExp)
 	{
-		uint16_t ai,bi;
-		uint16_t a,b,x;
+		uint8_t ai,bi,x;
+		uint16_t a,b;
 		
-		x=phase&4095;
+		x=phase>>4;
 		bi=ai=phase>>12;
 		
 		if(ai<UINT8_MAX)
 			bi=ai+1;
 		
-		a=(uint16_t)lookup[ai]*scale;
-		b=(uint16_t)lookup[bi]*scale;
+		a=lookup[ai];
+		b=lookup[bi];
 		
-		return lerp(a,b,x,12);
+		return lerp(a,b,x);
 	}
 	else
 	{
-		return (phase*scale)>>12;
+		return phase>>4; // 20bit -> 16 bit
+	}
+}
+
+static void updateStageVars(struct adsr_s * a, adsr_stage_t s)
+{
+	switch(s)
+	{
+	case sAttack:
+		a->stageAdd=((uint32_t)a->stageLevel*a->levelCV)>>16;
+		a->stageMul=((uint32_t)(UINT16_MAX-a->stageLevel)*a->levelCV)>>16;
+		a->stageIncrement=a->attackIncrement;
+		break;
+	case sDecay:
+		a->stageAdd=((uint32_t)a->sustainCV*a->levelCV)>>16;
+		a->stageMul=((uint32_t)(UINT16_MAX-a->sustainCV)*a->levelCV)>>16;
+		a->stageIncrement=a->decayIncrement;
+		break;
+	case sSustain:
+		a->stageAdd=0;
+		a->stageMul=a->levelCV;
+		break;
+	case sRelease:
+		a->stageAdd=0;
+		a->stageMul=((uint32_t)a->stageLevel*a->levelCV)>>16;
+		a->stageIncrement=a->releaseIncrement;
+		break;
+	default:
+		;
 	}
 }
 
@@ -105,6 +133,10 @@ void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus,
 	adsr->attackIncrement=getPhaseInc(adsr->attackCV)>>ADSR_SPEED_SHIFT;
 	adsr->decayIncrement=getPhaseInc(adsr->decayCV)>>ADSR_SPEED_SHIFT;
 	adsr->releaseIncrement=getPhaseInc(adsr->releaseCV)>>ADSR_SPEED_SHIFT;
+	
+	// immediate update of env settings
+	
+	updateStageVars(adsr,adsr->stage);
 }
 
 void adsr_setGate(struct adsr_s * adsr, int8_t gate)
@@ -119,7 +151,7 @@ void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
 
 uint16_t adsr_getOutput(struct adsr_s * adsr)
 {
-	return adsr->final;
+	return adsr->output;
 }
 
 void adsr_init(struct adsr_s * adsr)
@@ -134,17 +166,17 @@ void adsr_update(struct adsr_s * a)
 	if(a->gate!=a->nextGate)
 	{
 		a->phase=0;
-		a->currentLevel=a->output>>8;
+		a->stageLevel=((uint32_t)a->output<<16)/a->levelCV;
 		
 		if(a->nextGate)
 		{
 			a->stage=sAttack;
-			a->currentIncrement=a->attackIncrement;
+			updateStageVars(a,sAttack);
 		}
 		else
 		{
 			a->stage=sRelease;
-			a->currentIncrement=a->releaseIncrement;
+			updateStageVars(a,sRelease);
 		}
 		
 		a->gate=a->nextGate;
@@ -154,7 +186,7 @@ void adsr_update(struct adsr_s * a)
 
 	if (a->stage==sWait)
 	{
-		a->final=a->output=0;
+		a->output=0;
 		return;
 	}
 
@@ -163,19 +195,22 @@ void adsr_update(struct adsr_s * a)
 	if(a->phase&0xfff00000) // if bit 20 or higher is set, it's an overflow -> a timed stage is done!
 	{
 		a->phase=0;
-		a->currentIncrement=0;
+		a->stageIncrement=0;
 
 		++a->stage;
 
 		switch(a->stage)
 		{
 		case sDecay:
-			a->currentIncrement=a->decayIncrement;
-			a->final=a->output=a->levelCV;
+			a->output=a->levelCV;
+			updateStageVars(a,sDecay);
 			return;
+		case sSustain:
+			updateStageVars(a,sSustain);
+			return;			
 		case sDone:
 			a->stage=sWait;
-			a->final=a->output=0;
+			a->output=0;
 			return;
 		default:
 			;
@@ -189,26 +224,23 @@ void adsr_update(struct adsr_s * a)
 	switch(a->stage)
 	{
 	case sAttack:
-		o=computeOutput(a->phase,UINT8_MAX-a->currentLevel,attackCurveLookup,a->expOutput)+(a->currentLevel<<8);
+		o=computeOutput(a->phase,attackCurveLookup,a->expOutput);
 		break;
 	case sDecay:
-		o=computeOutput(a->phase,UINT8_MAX-(a->sustainCV>>8),decayCurveLookup,a->expOutput)^UINT16_MAX;
+	case sRelease:
+		o=UINT16_MAX-computeOutput(a->phase,decayCurveLookup,a->expOutput);
 		break;
 	case sSustain:
 		o=a->sustainCV;
-		break;
-	case sRelease:
-		o=(computeOutput(a->phase,a->currentLevel,decayCurveLookup,a->expOutput)+((UINT8_MAX-a->currentLevel)<<8))^UINT16_MAX;
 		break;
 	default:
 		;
 	}
 	
-	a->final=((uint32_t)a->output*a->levelCV)>>16;
-	a->output=o;
+	a->output=(((uint32_t)o*a->stageMul)>>16)+a->stageAdd;
 
-	// handle phase increment
+	// phase increment
 	
-	a->phase+=a->currentIncrement;
+	a->phase+=a->stageIncrement;
 }
 
