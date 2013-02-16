@@ -1,15 +1,13 @@
 #ifndef P600_H
 #define	P600_H
 
-#include <string.h>
-#include <stdint.h>
-
+#include "utils.h"
 #include "print.h"
 #include "hardware.h"
 
 #define DEBUG
 
-#define FORCEINLINE __attribute__((always_inline))
+#define P600_VOICE_COUNT 6
 
 ////////////////////////////////////////////////////////////////////////////////
 // Prophet 600 definitions

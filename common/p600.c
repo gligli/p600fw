@@ -11,14 +11,14 @@
 #include "synth.h"
 #include "potmux.h"
 #include "adsr.h"
-
-#define P600_VOICE_COUNT 6
+#include "tuner.h"
 
 static struct
 {
 	struct adsr_s filEnvs[P600_VOICE_COUNT];
 	struct adsr_s ampEnvs[P600_VOICE_COUNT];
 	int8_t currentVoice;
+	int8_t tuned;
 } p600;
 
 void p600_init(void)
@@ -30,26 +30,34 @@ void p600_init(void)
 	synth_init();
 	potmux_init();
 
+	synth_update();
+	
 	int8_t i;
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
 		adsr_init(&p600.ampEnvs[i]);
 		adsr_init(&p600.filEnvs[i]);
 	}
-	
+
 	sevenSeg_setAscii('H','i');
 	led_set(plSeq1,0,0);
 	led_set(plSeq2,1,0);
 	led_set(plArpUD,1,1);
 	led_set(plArpAssign,0,1);
-	
-	synth_update();
 }
 
 void p600_update(void)
 {
 	int8_t i;
 	static uint8_t frc=0;
+	
+	// tuning
+	
+	if(!p600.tuned)
+	{
+		tuner_tuneSynth();
+		p600.tuned=1;
+	}
 	
 	// free running counter
 	
@@ -116,8 +124,8 @@ void p600_fastInterrupt(void)
 		adsr_update(&p600.filEnvs[v]);
 		adsr_update(&p600.ampEnvs[v]);
 
-		synth_setCV(pcFil1+v,p600.filEnvs[v].final+cut,1);
-		synth_setCV(pcAmp1,p600.ampEnvs[v].final,1);
+		synth_setCV(pcFil1+v,p600.filEnvs[v].output+cut,1);
+		synth_setCV(pcAmp1,p600.ampEnvs[v].output,1);
 	}
 	
 	if((frc&0x07)==0) // 1/8 of the time (250hz)

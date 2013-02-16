@@ -38,7 +38,7 @@ static void updateCV(p600CV_t cv)
 		io_write(0x0d,dmux);
 
 		// let S&H get correct voltage
-		CYCLE_WAIT(1);
+		CYCLE_WAIT(4);
 
 		// unselect
 		io_write(0x0d,0xff);
@@ -72,8 +72,9 @@ void synth_update()
 {
 	uint8_t i;
 
-	// update CVs
 	for(i=0;i<SYNTH_CV_COUNT;++i)
 		updateCV(i);
+
+	updateGates();
 }
 

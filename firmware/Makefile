@@ -52,7 +52,9 @@ SRC =	$(TARGET).c \
 	..\common\dac.c \
 	..\common\synth.c \
 	..\common\adsr.c \
-	..\common\potmux.c
+	..\common\tuner.c \
+	..\common\potmux.c \
+	..\common\utils.c
 
 # MCU name, you MUST set this to match the board you are using
 # type "make clean" after changing this, so all files will be rebuilt
@@ -150,7 +152,6 @@ CFLAGS += $(CDEFS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
-CFLAGS += -ffunction-sections
 CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
 CFLAGS += -Wall

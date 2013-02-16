@@ -16,6 +16,8 @@
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
       <itemPath>../common/synth.h</itemPath>
+      <itemPath>../common/tuner.h</itemPath>
+      <itemPath>../common/utils.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -32,6 +34,8 @@
       <itemPath>../common/potmux.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
       <itemPath>../common/synth.c</itemPath>
+      <itemPath>../common/tuner.c</itemPath>
+      <itemPath>../common/utils.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"

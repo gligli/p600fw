@@ -164,7 +164,7 @@ static uint8_t hardware_read(int8_t io, uint16_t addr)
 
 	// wait
 	
-	CYCLE_WAIT(1)
+	CYCLE_WAIT(1);
 	
 	// read data
 	

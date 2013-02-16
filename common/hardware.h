@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "hardware_impl.h" // should implement CYCLE_WAIT(cycles) and HW_ACCESS{}
+#include "hardware_impl.h" // should implement CYCLE_WAIT(cycles) and HW_ACCESS{} and MDELAY(ms)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Low level interface, implemented by firmware or mockup
