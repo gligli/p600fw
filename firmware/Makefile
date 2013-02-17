@@ -147,15 +147,13 @@ CPPDEFS = -DF_CPU=$(F_CPU)UL
 #  -Wall...:     warning level
 #  -Wa,...:      tell GCC to pass this to the assembler.
 #    -adhlns...: create assembler listing
-CFLAGS = -g$(DEBUG) -flto -fuse-linker-plugin 
+CFLAGS = -g$(DEBUG)
 CFLAGS += $(CDEFS)
 CFLAGS += -O$(OPT)
 CFLAGS += -funsigned-char
 CFLAGS += -funsigned-bitfields
 CFLAGS += -fpack-struct
 CFLAGS += -fshort-enums
-CFLAGS += -fno-unroll-loops
-#CFLAGS += -fno-inline
 CFLAGS += -Wall
 CFLAGS += -Wstrict-prototypes
 #CFLAGS += -mshort-calls
@@ -167,6 +165,8 @@ CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 
+CFLAGS += -fno-unroll-loops -fno-inline-functions # done by hand
+CFLAGS += -flto -fuse-linker-plugin 
 
 #---------------- Compiler Options C++ ----------------
 #  -g*:          generate debugging information

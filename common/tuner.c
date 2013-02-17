@@ -56,13 +56,13 @@ static NOINLINE void whileTuning(void)
 	MDELAY(0.5);
 }
 
-static void i8253Write(uint8_t a,uint8_t v)
+static NOINLINE void i8253Write(uint8_t a,uint8_t v)
 {
 	io_write(a,v);
 	CYCLE_WAIT(8);
 }	
 
-static uint8_t i8253Read(uint8_t a)
+static NOINLINE uint8_t i8253Read(uint8_t a)
 {
 	CYCLE_WAIT(8);
 	return io_read(a);
@@ -288,7 +288,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	synth_setCV(ampCV,0,1);
 }
 
-uint16_t NOINLINE tuner_computeCVFromFrequency(float frequency,p600CV_t cv)
+uint16_t tuner_computeCVFromFrequency(float frequency,p600CV_t cv)
 {
 	float value;
 
@@ -297,7 +297,7 @@ uint16_t NOINLINE tuner_computeCVFromFrequency(float frequency,p600CV_t cv)
 	return MIN(MAX(value,0.0f),65535.0f);
 }
 
-uint16_t NOINLINE tuner_computeCVFromNote(uint8_t note,p600CV_t cv)
+uint16_t tuner_computeCVFromNote(uint8_t note,p600CV_t cv)
 {
 	float value;
 	

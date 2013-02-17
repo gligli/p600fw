@@ -6,7 +6,7 @@
 
 #define INVLOG2 3.321928095f
 
-float log2f( float n )  
+float inline log2f( float n )  
 {  
     return logf( n ) * INVLOG2;  
 }

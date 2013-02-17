@@ -62,7 +62,7 @@ void hardware_init(void)
 	TIMSK2|=(1<<OCIE2A);//Enable overflow interrupt for Timer2
 }
 
-static void hardware_write(int8_t io, uint16_t addr, uint8_t data)
+static inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 {
 	uint8_t b,c,d,e,f;
 	
@@ -118,7 +118,7 @@ static void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 	PORTF=f;
 }
 
-static uint8_t hardware_read(int8_t io, uint16_t addr)
+static inline uint8_t hardware_read(int8_t io, uint16_t addr)
 {
 	uint8_t b,c,d,e,f,v;
 	
@@ -184,22 +184,22 @@ static uint8_t hardware_read(int8_t io, uint16_t addr)
 	return v;
 }
 
-void mem_write(uint16_t address, uint8_t value)
+void inline mem_write(uint16_t address, uint8_t value)
 {
 	hardware_write(0,address,value);
 }
 
-void io_write(uint8_t address, uint8_t value)
+void inline io_write(uint8_t address, uint8_t value)
 {
 	hardware_write(1,address,value);
 }
 
-uint8_t mem_read(uint16_t address)
+uint8_t inline mem_read(uint16_t address)
 {
 	return hardware_read(0,address);
 }
 
-uint8_t io_read(uint8_t address)
+uint8_t inline io_read(uint8_t address)
 {
 	return hardware_read(1,address);
 }

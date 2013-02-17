@@ -13,12 +13,12 @@ static struct
 	uint16_t pots[POTMUX_POT_COUNT];
 } potmux;
 
-void potmux_setNeeded(uint32_t needed)
+void inline potmux_setNeeded(uint32_t needed)
 {
 	potmux.neededBits|=needed;
 }
 
-uint16_t potmux_getValue(p600Pot_t pot)
+uint16_t inline potmux_getValue(p600Pot_t pot)
 {
 	return potmux.pots[pot];
 }
@@ -63,10 +63,8 @@ void potmux_update(void)
 
 			for(i=0;i<12;++i) // 12bit -> 4096 steps
 			{
-				// write DAC
-				mem_write(0x4000,estimate>>2);
-				mem_write(0x4001,estimate>>10);
-
+				dac_write(estimate);
+				
 				lower=(io_read(0x09)&0x08)!=0; // is DAC value lower than pot value?
 
 				if (lower)

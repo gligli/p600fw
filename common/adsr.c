@@ -53,7 +53,7 @@
 
 #define ADSR_SPEED_SHIFT 1
 
-static uint32_t getPhaseInc(uint8_t v)
+static inline uint32_t getPhaseInc(uint8_t v)
 {
 	uint32_t r=0;
 	
@@ -64,12 +64,12 @@ static uint32_t getPhaseInc(uint8_t v)
 	return r;
 }
 
-static uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
+static inline uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
 {
 	return a+(x*((b-a)>>8));
 }
 
-static uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
+static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
 {
 	if(isExp)
 	{
@@ -121,7 +121,7 @@ static void updateStageVars(struct adsr_s * a, adsr_stage_t s)
 	}
 }
 
-void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
+void inline adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
 {
 	adsr->sustainCV=sus;
 	adsr->levelCV=lvl;
@@ -139,17 +139,17 @@ void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus,
 	updateStageVars(adsr,adsr->stage);
 }
 
-void adsr_setGate(struct adsr_s * adsr, int8_t gate)
+void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
 {
 	adsr->nextGate=gate;
 }
 
-void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
+void inline adsr_setShape(struct adsr_s * adsr, int8_t isExp)
 {
 	adsr->expOutput=isExp;
 }
 
-uint16_t adsr_getOutput(struct adsr_s * adsr)
+uint16_t inline adsr_getOutput(struct adsr_s * adsr)
 {
 	return adsr->output;
 }
@@ -159,7 +159,7 @@ void adsr_init(struct adsr_s * adsr)
 	memset(adsr,0,sizeof(struct adsr_s));
 }
 
-void adsr_update(struct adsr_s * a)
+void inline adsr_update(struct adsr_s * a)
 {
 	// handle gate
 	

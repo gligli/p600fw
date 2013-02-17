@@ -17,22 +17,22 @@ void scanner_init(void)
 	memset(&scanner,0,sizeof(scanner));
 }
 
-static int scanner_state(uint8_t key)
+static inline int scanner_state(uint8_t key)
 {
 	return (scanner.stateBits[key>>3]&(1<<(key&7)))!=0;
 }
 
-int scanner_keyState(uint8_t key)
+int inline scanner_keyState(uint8_t key)
 {
 	return scanner_state(key+SCANNER_KEYS_START);
 }
 
-int scanner_buttonState(p600Button_t button)
+int inline scanner_buttonState(p600Button_t button)
 {
 	return scanner_state(button);
 }
 
-static void scanner_event(uint8_t key, int pressed)
+static inline void scanner_event(uint8_t key, int pressed)
 {
 	if (key<SCANNER_KEYS_START)
 		p600_buttonEvent(key,pressed);

@@ -40,11 +40,9 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
+	p600.tuned=1; //debug
+	
 	sevenSeg_scrollText("  gligli 's P600 upgrade  ",1);
-	led_set(plSeq1,0,0);
-	led_set(plSeq2,1,0);
-	led_set(plArpUD,1,1);
-	led_set(plArpAssign,0,1);
 }
 
 void p600_update(void)
@@ -122,8 +120,8 @@ void p600_fastInterrupt(void)
 		adsr_update(&p600.filEnvs[v]);
 		adsr_update(&p600.ampEnvs[v]);
 
-		synth_setCV(pcFil1+v,p600.filEnvs[v].output+cut,1);
-		synth_setCV(pcAmp1,p600.ampEnvs[v].output,1);
+		synth_setCV(pcFil1+v,adsr_getOutput(&p600.filEnvs[v])+cut,1);
+		synth_setCV(pcAmp1,adsr_getOutput(&p600.ampEnvs[v]),1);
 	}
 	
 	if((frc&0x07)==0) // 1/8 of the time (250hz)
@@ -194,7 +192,7 @@ void p600_keyEvent(uint8_t key, int pressed)
 		if(pressed)
 		{
 			synth_setCV(pcOsc1A+i,tuner_computeCVFromNote(key+0,pcOsc1A+i),1);
-			synth_setCV(pcOsc1B+i,tuner_computeCVFromNote(key+0,pcOsc1B+i)+(potmux_getValue(ppFreqBFine)>>7)-256,1);
+			synth_setCV(pcOsc1B+i,tuner_computeCVFromNote(key+48,pcOsc1B+i)+(potmux_getValue(ppFreqBFine)>>7)-256,1);
 		}
 		adsr_setGate(&p600.ampEnvs[i],pressed);
 		adsr_setGate(&p600.filEnvs[i],pressed);
