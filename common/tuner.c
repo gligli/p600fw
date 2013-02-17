@@ -4,6 +4,7 @@
 
 #include "tuner.h"
 #include "synth.h"
+#include "display.h"
 
 #define TUNER_CV_COUNT 18
 
@@ -12,32 +13,48 @@
 #define FF_D	0x08
 #define FF_CL	0x10 // active low
 
-#define STATUS_TIMEOUT UINT16_MAX
+#define STATUS_TIMEOUT 1000
 
-#define TUNER_ACCEPTABLE_ERROR 1
-#define TUNER_TICK 2000000.0
-#define TUNER_OFFSET_HERTZ 261.63
-#define TUNER_OFFSET_TICKS (TUNER_TICK/TUNER_OFFSET_HERTZ)
+#define TUNER_TICK 2000000.0f
+#define TUNER_LOWEST_HERTZ 16.351875f
 
-#define TUNER_FIL_INIT_OFFSET 20000
+#define TUNER_ACCEPTABLE_ERROR 4.0f // 14bit DAC, 16bit values
+
+#define TUNER_SCALE_SLEW_RATE 0.5f // higher is faster, until it overshoots and becomes slower!
+#define TUNER_OFFSET_SLEW_RATE 0.66f // higher is faster, until it overshoots and becomes slower!
+
+#define TUNER_FIL_INIT_OFFSET 10000
 #define TUNER_FIL_INIT_SCALE 20
-#define TUNER_FIL_SERVO_RATIO 0.05
-#define TUNER_FIL_SCALE_NTH_C_LO 2
-#define TUNER_FIL_SCALE_NTH_C_HI 4
-#define TUNER_FIL_OFFSET_NTH_C 5
+#define TUNER_FIL_SCALE_NTH_C_LO 3
+#define TUNER_FIL_SCALE_NTH_C_HI 5
+#define TUNER_FIL_OFFSET_NTH_C 3
 
-#define TUNER_OSC_INIT_OFFSET 50
+#define TUNER_OSC_INIT_OFFSET 2000
 #define TUNER_OSC_INIT_SCALE 10
-#define TUNER_OSC_SERVO_RATIO 0.05
 #define TUNER_OSC_SCALE_NTH_C_LO 2
 #define TUNER_OSC_SCALE_NTH_C_HI 4
-#define TUNER_OSC_OFFSET_NTH_C 5
+#define TUNER_OSC_OFFSET_NTH_C 4
 
 static struct
 {
-	uint16_t scales[TUNER_CV_COUNT];
-	uint16_t offsets[TUNER_CV_COUNT];
+	float scales[TUNER_CV_COUNT];
+	float offsets[TUNER_CV_COUNT];
+	p600CV_t currentCV;
 } tuner;
+
+static NOINLINE void whileTuning(void)
+{
+	if(tuner.currentCV<pcOsc1B)
+		sevenSeg_setAscii('A','1'+tuner.currentCV-pcOsc1A);
+	else if(tuner.currentCV<pcFil1)
+		sevenSeg_setAscii('B','1'+tuner.currentCV-pcOsc1B);
+	else
+		sevenSeg_setAscii('F','1'+tuner.currentCV-pcFil1);
+	
+	display_update();
+	synth_update();
+	MDELAY(0.5);
+}
 
 static void i8253Write(uint8_t a,uint8_t v)
 {
@@ -71,6 +88,7 @@ static NOINLINE void ffWaitStatus(uint8_t status)
 	uint16_t timeout=STATUS_TIMEOUT;
 
 	do{
+		whileTuning();
 		s=io_read(0x9);
 		--timeout;
 	}while(((s>>1)&0x01)!=status && timeout);
@@ -85,7 +103,7 @@ static NOINLINE void ffWaitStatus(uint8_t status)
 	}
 }
 
-static NOINLINE uint16_t measureAudioPeriod(uint8_t periods, p600CV_t cv, uint16_t cvv) // in 2Mhz ticks
+static NOINLINE uint16_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 {
 	uint16_t c;
 	
@@ -111,28 +129,28 @@ static NOINLINE uint16_t measureAudioPeriod(uint8_t periods, p600CV_t cv, uint16
 		
 	while(periods)
 	{
-		synth_setCV(cv,cvv,0);
-		synth_update();		
-		MDELAY(2);
-		
 		ffMask(0,FF_P);
 		ffWaitStatus(0); // check
 
+		whileTuning();
+		
 		ffMask(FF_P,0);
 		ffWaitStatus(1); // wait 
+
+		whileTuning();
 
 		ffMask(FF_D,0);
 		ffWaitStatus(0); // wait
 
-		synth_setCV(cv,cvv,0);
-		synth_update();		
-		MDELAY(2);
-		
 		ffMask(0,FF_CL);
 		ffWaitStatus(1); // check
 
+		whileTuning();
+		
 		ffMask(FF_CL,0);
 		ffWaitStatus(0); // wait
+
+		whileTuning();
 
 		ffMask(0,FF_D);
 		ffWaitStatus(1); // wait
@@ -153,74 +171,94 @@ static NOINLINE uint16_t measureAudioPeriod(uint8_t periods, p600CV_t cv, uint16
 	return UINT16_MAX-c;
 }
 
-static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC,double servoRatio)
+static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC)
 {
-	uint16_t newOffset,cvv,p;
-	int16_t error;
-	double ratio;
+	uint16_t cvv;
+	double p,f,tgtf,rcv,tgtcv,newOffset;
+	
+	tgtf=TUNER_LOWEST_HERTZ*(1<<nthC);
 	
 	do
 	{
-		cvv=tuner_computeNoteCV(12*nthC,cv);
+		cvv=tuner_computeCVFromNote(12*nthC,cv);
 
-		p=measureAudioPeriod(1,cv,cvv);
+		synth_setCV(cv,cvv,0);
+		p=measureAudioPeriod(1);
 		
-		ratio=((p/TUNER_OFFSET_TICKS)-1.0)*servoRatio+1.0; // minimise overshoot
-
-		newOffset=ratio*tuner.offsets[cv];
+		f=TUNER_TICK/p;
 		
-		error=tuner.offsets[cv]-newOffset;
+		rcv=tuner_computeCVFromFrequency(f,cv);
+		tgtcv=tuner_computeCVFromFrequency(tgtf,cv);
+		
+		newOffset=powf(tgtcv/rcv,TUNER_OFFSET_SLEW_RATE)*(float)tuner.offsets[cv];
 
 #ifdef DEBUG		
+		print("cv ");
+		phex16(cv);
+		print(" per ");
 		phex16(p);
-		print("\t");
-		phex16(newOffset);
+		print(" freq ");
+		phex16(f);
+		print(" off ");
 		phex16(tuner.offsets[cv]);
-		print("\t");
-		phex16(error);
+		print(" ");
+		phex16(newOffset);
 		print("\n");
 #endif
 		
 		tuner.offsets[cv]=newOffset;
 	}
-	while(error<-TUNER_ACCEPTABLE_ERROR || error>TUNER_ACCEPTABLE_ERROR);
+	while(fabsf(p-TUNER_TICK/tgtf)>TUNER_ACCEPTABLE_ERROR);
 
 }
 
-static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi,double servoRatio)
+static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi)
 {
-	uint16_t newScale,cvl,cvh,pl,ph;
-	int16_t error;
-	double ratio;
+	uint16_t cvl,cvh;
+	float pl,ph,fl,fh,rcvl,rcvh,newScale;
 	
 	do
 	{
-		cvl=tuner_computeNoteCV(12*nthCLo,cv);
-		cvh=tuner_computeNoteCV(12*nthCHi,cv);
+		cvl=tuner_computeCVFromNote(12*nthCLo,cv);
+		cvh=tuner_computeCVFromNote(12*nthCHi,cv);
 
-		pl=measureAudioPeriod(1,cv,cvl);
-		ph=measureAudioPeriod(1<<(nthCHi-nthCLo),cv,cvh);
-		
-		ratio=((ph/pl)-1.0)*servoRatio+1.0; // minimise overshoot
+		synth_setCV(cv,cvl,0);
+		pl=measureAudioPeriod(1);
 
-		newScale=ratio*tuner.scales[cv];
+		synth_setCV(cv,cvh,0);
+		ph=measureAudioPeriod(1<<(nthCHi-nthCLo));
 		
-		error=tuner.scales[cv]-newScale;
+		fl=TUNER_TICK/pl;
+		fh=TUNER_TICK/ph;
+		
+		rcvl=tuner_computeCVFromFrequency(fl,cv);
+		rcvh=tuner_computeCVFromFrequency(fh,cv);
+		
+		newScale=powf(rcvl/rcvh,TUNER_SCALE_SLEW_RATE)*(float)tuner.scales[cv]; // higher cv too high -> rcvl/rcvh<1 -> lower scale
 		
 #ifdef DEBUG		
+		print("cvl ");
+		phex16(cvl);
+		print(" ");
+		phex16(cvh);
+		print(" per ");
 		phex16(pl);
+		print(" ");
 		phex16(ph);
-		print("\t");
-		phex16(newScale);
+		print(" freq ");
+		phex16(fl);
+		print(" ");
+		phex16(fh);
+		print(" scl ");
 		phex16(tuner.scales[cv]);
-		print("\t");
-		phex16(error);
+		print(" ");
+		phex16(newScale);
 		print("\n");
 #endif
 		
 		tuner.scales[cv]=newScale;
 	}
-	while(error<-TUNER_ACCEPTABLE_ERROR || error>TUNER_ACCEPTABLE_ERROR);
+	while(fabsf(ph-pl)>TUNER_ACCEPTABLE_ERROR);
 }
 
 static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
@@ -229,14 +267,14 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	print("\ntuning ");phex(oscCV);print("\n");
 #endif
 	int8_t isOsc,nthC;
-	double servoRatio;
 	
-	// init (should be typical values)
+	// init (should be ideal values)
+	
+	tuner.currentCV=oscCV;
 	
 	isOsc=(oscCV<pcFil1);
 	tuner.offsets[oscCV]=isOsc?TUNER_OSC_INIT_OFFSET:TUNER_FIL_INIT_OFFSET;
 	tuner.scales[oscCV]=UINT16_MAX/(isOsc?TUNER_OSC_INIT_SCALE:TUNER_FIL_INIT_SCALE);
-	servoRatio=isOsc?TUNER_OSC_SERVO_RATIO:TUNER_FIL_SERVO_RATIO;
 	nthC=isOsc?TUNER_OSC_OFFSET_NTH_C:TUNER_FIL_OFFSET_NTH_C;
 	
 	// open VCA
@@ -245,23 +283,30 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// tune
 	
-	tuneOffset(oscCV,nthC,servoRatio);
-	tuneScale(oscCV,isOsc?TUNER_OSC_SCALE_NTH_C_LO:TUNER_FIL_SCALE_NTH_C_LO,isOsc?TUNER_OSC_SCALE_NTH_C_HI:TUNER_FIL_SCALE_NTH_C_HI,servoRatio);
-	tuneOffset(oscCV,nthC,servoRatio);
+	tuneScale(oscCV,isOsc?TUNER_OSC_SCALE_NTH_C_LO:TUNER_FIL_SCALE_NTH_C_LO,isOsc?TUNER_OSC_SCALE_NTH_C_HI:TUNER_FIL_SCALE_NTH_C_HI);
+	tuneOffset(oscCV,nthC);
 
 	// close VCA
 
 	synth_setCV(ampCV,0,1);
 }
 
-uint16_t NOINLINE tuner_computeNoteCV(uint8_t note,p600CV_t cv)
+uint16_t NOINLINE tuner_computeCVFromFrequency(float frequency,p600CV_t cv)
 {
-	uint16_t offsetPart,scalePart;
+	float value;
+
+	value=log2f(frequency/TUNER_LOWEST_HERTZ)*tuner.scales[cv]+tuner.offsets[cv];
 	
-	offsetPart=tuner.offsets[cv];
-	scalePart=(uint32_t)note*tuner.scales[cv]/12UL;
+	return MIN(MAX(value,0.0f),65535.0f);
+}
+
+uint16_t NOINLINE tuner_computeCVFromNote(uint8_t note,p600CV_t cv)
+{
+	float value;
 	
-	return SADD16(offsetPart,scalePart);
+	value=((float)note/12.0f)*tuner.scales[cv]+tuner.offsets[cv];
+	
+	return MIN(MAX(value,0.0f),65535.0f);
 }
 
 void tuner_tuneSynth(void)
@@ -270,15 +315,10 @@ void tuner_tuneSynth(void)
 	
 	HW_ACCESS
 	{
-		// init 8253
-			// ch 0, mode 0, access 2 bytes, binary count
-		i8253Write(0x3,0b00110000); 
-			// ch 1, mode 0, access 2 bytes, binary count
-		i8253Write(0x3,0b01110000); 
-			// ch 2, mode 1, access 2 bytes, binary count
-		i8253Write(0x3,0b10110010); 
-
-		// init
+		// init synth
+		
+		display_clear();
+		led_set(plTune,1,0);
 		
 		synth_setCV(pcMVol,25000,0);
 
@@ -296,6 +336,14 @@ void tuner_tuneSynth(void)
 		synth_setCV(pcPModOscB,0,0);
 		synth_setCV(pcExtFil,0,0);
 		
+		// init 8253
+			// ch 0, mode 0, access 2 bytes, binary count
+		i8253Write(0x3,0b00110000); 
+			// ch 1, mode 0, access 2 bytes, binary count
+		i8253Write(0x3,0b01110000); 
+			// ch 2, mode 1, access 2 bytes, binary count
+		i8253Write(0x3,0b10110010); 
+
 		// tune oscs
 			
 			// init
@@ -336,5 +384,8 @@ void tuner_tuneSynth(void)
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcFil1+i,pcAmp1+i);
 
+		// finish
+		
+		display_clear();
 	}
 }

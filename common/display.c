@@ -54,6 +54,14 @@ void led_set(p600LED_t led, int8_t on, int8_t blinking)
 	if (blinking) display.ledBlinking|=mask;
 }
 
+void display_clear()
+{
+	display.sevenSegs[0]=0;
+	display.sevenSegs[1]=0;
+	display.ledOn=0;
+	display.ledBlinking=0;
+}
+
 void display_init()
 {
 	memset(&display,0,sizeof(display));

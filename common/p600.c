@@ -79,7 +79,7 @@ void p600_update(void)
 	
 	if((frc&0x03)==2) // 1/4 of the time, alternatively
 	{
-		potmux_need(ppMVol,ppMixer,ppGlide,ppResonance,ppFilEnvAmt,ppAPW,ppBPW);
+		potmux_need(ppMVol,ppMixer,ppGlide,ppResonance,ppFilEnvAmt,ppAPW,ppBPW,ppFreqBFine);
 	}
 
 	potmux_need(ppCutoff,ppFreqA,ppFreqB);
@@ -102,9 +102,6 @@ void p600_update(void)
 	synth_setCV(pcAPW,potmux_getValue(ppAPW),1);
 	synth_setCV(pcBPW,potmux_getValue(ppBPW),1);
 	synth_setCV(pcRes,potmux_getValue(ppResonance),1);
-	
-	synth_setCV(pcOsc1A,potmux_getValue(ppFreqA),1);
-	synth_setCV(pcOsc1B,potmux_getValue(ppFreqB),1);
 	
 	if(!frc)
 		synth_update(); // needs to be done from time to time, to keep S&Hs afloat
@@ -174,6 +171,10 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			adsr_setGate(&p600.ampEnvs[i],pressed);
 		break;
+	case pbTune:
+		if (!pressed)
+			p600.tuned=0;
+		break;
 	default:
 		;
 	}
@@ -189,6 +190,11 @@ void p600_keyEvent(uint8_t key, int pressed)
 
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
+		if(pressed)
+		{
+			synth_setCV(pcOsc1A+i,tuner_computeCVFromNote(key+0,pcOsc1A+i),1);
+			synth_setCV(pcOsc1B+i,tuner_computeCVFromNote(key+0,pcOsc1B+i)+(potmux_getValue(ppFreqBFine)>>8)-INT8_MAX,1);
+		}
 		adsr_setGate(&p600.ampEnvs[i],pressed);
 		adsr_setGate(&p600.filEnvs[i],pressed);
 	}
