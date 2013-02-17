@@ -21,19 +21,19 @@
 #define TUNER_ACCEPTABLE_ERROR 4.0f // 14bit DAC, 16bit values
 
 #define TUNER_SCALE_SLEW_RATE 0.5f // higher is faster, until it overshoots and becomes slower!
-#define TUNER_OFFSET_SLEW_RATE 0.66f // higher is faster, until it overshoots and becomes slower!
+#define TUNER_OFFSET_SLEW_RATE 0.9f // higher is faster, until it overshoots and becomes slower!
 
-#define TUNER_FIL_INIT_OFFSET 10000
-#define TUNER_FIL_INIT_SCALE 20
-#define TUNER_FIL_SCALE_NTH_C_LO 3
-#define TUNER_FIL_SCALE_NTH_C_HI 5
+#define TUNER_FIL_INIT_OFFSET 10000.0f
+#define TUNER_FIL_INIT_SCALE (65536.0f/20.0f)
+#define TUNER_FIL_SCALE_NTH_C_LO 2
+#define TUNER_FIL_SCALE_NTH_C_HI 4
 #define TUNER_FIL_OFFSET_NTH_C 3
 
-#define TUNER_OSC_INIT_OFFSET 2000
-#define TUNER_OSC_INIT_SCALE 10
+#define TUNER_OSC_INIT_OFFSET 2000.0f
+#define TUNER_OSC_INIT_SCALE (65536.0f/10.0f)
 #define TUNER_OSC_SCALE_NTH_C_LO 2
 #define TUNER_OSC_SCALE_NTH_C_HI 4
-#define TUNER_OSC_OFFSET_NTH_C 4
+#define TUNER_OSC_OFFSET_NTH_C 3
 
 static struct
 {
@@ -171,7 +171,7 @@ static NOINLINE uint16_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	return UINT16_MAX-c;
 }
 
-static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC)
+static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, float acceptableError)
 {
 	uint16_t cvv;
 	double p,f,tgtf,rcv,tgtcv,newOffset;
@@ -194,7 +194,7 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC)
 
 #ifdef DEBUG		
 		print("cv ");
-		phex16(cv);
+		phex16(cvv);
 		print(" per ");
 		phex16(p);
 		print(" freq ");
@@ -208,11 +208,11 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC)
 		
 		tuner.offsets[cv]=newOffset;
 	}
-	while(fabsf(p-TUNER_TICK/tgtf)>TUNER_ACCEPTABLE_ERROR);
+	while(fabsf(p-TUNER_TICK/tgtf)>acceptableError);
 
 }
 
-static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi)
+static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi, float acceptableError)
 {
 	uint16_t cvl,cvh;
 	float pl,ph,fl,fh,rcvl,rcvh,newScale;
@@ -237,7 +237,7 @@ static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi)
 		newScale=powf(rcvl/rcvh,TUNER_SCALE_SLEW_RATE)*(float)tuner.scales[cv]; // higher cv too high -> rcvl/rcvh<1 -> lower scale
 		
 #ifdef DEBUG		
-		print("cvl ");
+		print("cv ");
 		phex16(cvl);
 		print(" ");
 		phex16(cvh);
@@ -258,7 +258,7 @@ static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi)
 		
 		tuner.scales[cv]=newScale;
 	}
-	while(fabsf(ph-pl)>TUNER_ACCEPTABLE_ERROR);
+	while(fabsf(ph-pl)>acceptableError);
 }
 
 static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
@@ -266,25 +266,22 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 #ifdef DEBUG		
 	print("\ntuning ");phex(oscCV);print("\n");
 #endif
-	int8_t isOsc,nthC;
+	int8_t isOsc;
 	
-	// init (should be ideal values)
+	// init
 	
 	tuner.currentCV=oscCV;
-	
 	isOsc=(oscCV<pcFil1);
-	tuner.offsets[oscCV]=isOsc?TUNER_OSC_INIT_OFFSET:TUNER_FIL_INIT_OFFSET;
-	tuner.scales[oscCV]=UINT16_MAX/(isOsc?TUNER_OSC_INIT_SCALE:TUNER_FIL_INIT_SCALE);
-	nthC=isOsc?TUNER_OSC_OFFSET_NTH_C:TUNER_FIL_OFFSET_NTH_C;
-	
+
 	// open VCA
 
 	synth_setCV(ampCV,UINT16_MAX,1);
 
 	// tune
 	
-	tuneScale(oscCV,isOsc?TUNER_OSC_SCALE_NTH_C_LO:TUNER_FIL_SCALE_NTH_C_LO,isOsc?TUNER_OSC_SCALE_NTH_C_HI:TUNER_FIL_SCALE_NTH_C_HI);
-	tuneOffset(oscCV,nthC);
+	tuneOffset(oscCV,isOsc?TUNER_OSC_OFFSET_NTH_C:TUNER_FIL_OFFSET_NTH_C,256.0f); // rough estimate only
+	tuneScale(oscCV,isOsc?TUNER_OSC_SCALE_NTH_C_LO:TUNER_FIL_SCALE_NTH_C_LO,isOsc?TUNER_OSC_SCALE_NTH_C_HI:TUNER_FIL_SCALE_NTH_C_HI,TUNER_ACCEPTABLE_ERROR);
+	tuneOffset(oscCV,isOsc?TUNER_OSC_OFFSET_NTH_C:TUNER_FIL_OFFSET_NTH_C,TUNER_ACCEPTABLE_ERROR);
 
 	// close VCA
 
@@ -307,6 +304,24 @@ uint16_t NOINLINE tuner_computeCVFromNote(uint8_t note,p600CV_t cv)
 	value=((float)note/12.0f)*tuner.scales[cv]+tuner.offsets[cv];
 	
 	return MIN(MAX(value,0.0f),65535.0f);
+}
+
+void tuner_init(void)
+{
+	int8_t i;
+	
+	memset(&tuner,0,sizeof(tuner));
+	
+	for(i=0;i<P600_VOICE_COUNT;++i)
+	{
+		tuner.offsets[i+pcOsc1A]=TUNER_OSC_INIT_OFFSET;
+		tuner.offsets[i+pcOsc1B]=TUNER_OSC_INIT_OFFSET;
+		tuner.offsets[i+pcFil1]=TUNER_FIL_INIT_OFFSET;
+
+		tuner.scales[i+pcOsc1A]=TUNER_OSC_INIT_SCALE;
+		tuner.scales[i+pcOsc1B]=TUNER_OSC_INIT_SCALE;
+		tuner.scales[i+pcFil1]=TUNER_FIL_INIT_SCALE;
+	}
 }
 
 void tuner_tuneSynth(void)

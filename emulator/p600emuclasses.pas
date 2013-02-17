@@ -154,7 +154,7 @@ type
     property HW:TProphet600Hardware read FHW;
   end;
 var
-{$if 0}
+{$if 1}
   P600Emu:TProphet600Emulator;
 {$else}
   P600Emu:TProphet600Mockup;
@@ -563,8 +563,6 @@ procedure TProphet600Hardware.Write(AIsIO: Boolean; AAddress: Word; AValue: Byte
 
 var reg:Byte;
 begin
-//  debugln(['W ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(AValue,2),' (',AValue,')']);
-
   if not AIsIO then
   begin
     case AAddress of
@@ -631,6 +629,8 @@ begin
         end;
         $06:
         begin
+          debugln(['W ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(AValue,2),' (',AValue,')']);
+
           // tune
           F8253.SetGate(2,AValue and $02 <> 0); // Cntr En
 
@@ -680,6 +680,7 @@ begin
           Result:=Result or $04;
         if ADCCompare then
           Result:=Result or $08;
+        debugln(['R ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(Result,2),' (',Result,')']);
       end
       else if AAddress and $03 = $02 then // CSI1 (switch matrix)
       begin
@@ -696,7 +697,6 @@ begin
     end;
   end;
 
-//  debugln(['R ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(Result,2),' (',Result,')']);
 end;
 
 procedure TProphet600Hardware.RunCycles(ACount: Integer);

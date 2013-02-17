@@ -29,6 +29,7 @@ void p600_init(void)
 	display_init();
 	synth_init();
 	potmux_init();
+	tuner_init();
 
 	synth_update();
 	
@@ -39,7 +40,7 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-	sevenSeg_setAscii('H','i');
+	sevenSeg_scrollText("  gligli 's P600 upgrade  ",1);
 	led_set(plSeq1,0,0);
 	led_set(plSeq2,1,0);
 	led_set(plArpUD,1,1);
@@ -193,7 +194,7 @@ void p600_keyEvent(uint8_t key, int pressed)
 		if(pressed)
 		{
 			synth_setCV(pcOsc1A+i,tuner_computeCVFromNote(key+0,pcOsc1A+i),1);
-			synth_setCV(pcOsc1B+i,tuner_computeCVFromNote(key+0,pcOsc1B+i)+(potmux_getValue(ppFreqBFine)>>8)-INT8_MAX,1);
+			synth_setCV(pcOsc1B+i,tuner_computeCVFromNote(key+0,pcOsc1B+i)+(potmux_getValue(ppFreqBFine)>>7)-256,1);
 		}
 		adsr_setGate(&p600.ampEnvs[i],pressed);
 		adsr_setGate(&p600.filEnvs[i],pressed);

@@ -3,6 +3,7 @@
 
 #include "p600.h"
 
+void sevenSeg_scrollText(const char * text, int8_t times); // -1 -> infinite / 0 -> off
 void sevenSeg_setAscii(char left, char right);
 void sevenSeg_setNumber(int8_t n);
 

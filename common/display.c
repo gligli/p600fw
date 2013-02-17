@@ -6,18 +6,37 @@
 #include "map_to_7segment.h"
 
 #define DISPLAY_BLINK_HALF_PERIOD 80
+#define DISPLAY_SCROLL_RATE 50
 
 static struct
 {
-	uint8_t activeCol;
-	uint8_t sevenSegs[2];
 	uint16_t ledOn;
 	uint16_t ledBlinking;
+	uint8_t activeCol;
+	uint8_t sevenSegs[2];
 	uint8_t blinkCounter;
 	int8_t blinkState;
+	
+	uint8_t scrollCounter;
+	int8_t scrollPos;
+	int8_t scrollTimes;
+	char scrollText[50];
 } display;
 
 static SEG7_DEFAULT_MAP(sevenSeg_map);
+
+void sevenSeg_scrollText(const char * text, int8_t times)
+{
+	display.scrollTimes=0;
+	display.scrollPos=-1;
+	
+	if (text && times)
+	{
+		display.scrollTimes=times;
+		display.scrollPos=0;
+		strncpy(display.scrollText,text,sizeof(display.scrollText));
+	}
+}
 
 void sevenSeg_setAscii(char left, char right)
 {
@@ -69,12 +88,35 @@ void display_init()
 
 void display_update()
 {
+	// blinker
+	
 	display.blinkCounter++;
 	
 	if (display.blinkCounter>DISPLAY_BLINK_HALF_PERIOD)
 	{
 		display.blinkState=!display.blinkState;
 		display.blinkCounter=0;
+	}
+	
+	// scroller
+	
+	display.scrollCounter++;
+	
+	if (display.scrollCounter>DISPLAY_SCROLL_RATE &&  display.scrollTimes)
+	{
+		int8_t l,p,p2;
+
+		l=strlen(display.scrollText);
+		p=display.scrollPos;
+		p2=(display.scrollPos+1)%l;
+
+		sevenSeg_setAscii(display.scrollText[p],display.scrollText[p2]);
+
+		display.scrollPos=p2;
+		display.scrollCounter=0;
+		
+		if(p2==0 && display.scrollTimes>0)
+			--display.scrollTimes;
 	}
 	
 	// update one third of display at a time

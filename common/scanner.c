@@ -46,7 +46,7 @@ void scanner_update(void)
 
 	for(i=0;i<SCANNER_BYTES;++i)
 	{
-		uint8_t ps;		
+		uint8_t ps=0;		
 		
 		HW_ACCESS
 		{
