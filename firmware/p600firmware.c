@@ -166,6 +166,8 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 	
 	// back to default (write)
 	
+	PORTF=0xc6;
+	PORTC=0xc0;
 	setDataDir(1);
 	
 	return v;
