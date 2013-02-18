@@ -54,6 +54,7 @@ SRC =	$(TARGET).c \
 	..\common\adsr.c \
 	..\common\tuner.c \
 	..\common\potmux.c \
+	..\common\assigner.c \
 	..\common\utils.c
 
 # MCU name, you MUST set this to match the board you are using

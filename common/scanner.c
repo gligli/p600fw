@@ -48,7 +48,7 @@ void scanner_update(void)
 	{
 		uint8_t ps=0;		
 		
-		HW_ACCESS
+		BLOCK_INT
 		{
 			io_write(0x08,i);
 			CYCLE_WAIT(8);

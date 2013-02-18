@@ -93,7 +93,7 @@ static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t i
 	}
 }
 
-static void updateStageVars(struct adsr_s * a, adsr_stage_t s)
+static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 {
 	switch(s)
 	{
@@ -147,6 +147,11 @@ void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
 void inline adsr_setShape(struct adsr_s * adsr, int8_t isExp)
 {
 	adsr->expOutput=isExp;
+}
+
+adsrStage_t inline adsr_getStage(struct adsr_s * adsr)
+{
+	return adsr->stage;
 }
 
 uint16_t inline adsr_getOutput(struct adsr_s * adsr)

@@ -5,7 +5,7 @@
 #include <util/delay.h>
 
 #define CYCLE_WAIT(cycles) __builtin_avr_delay_cycles(cycles*4)
-#define HW_ACCESS ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+#define BLOCK_INT ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 #define MDELAY(ms) _delay_ms(ms)
 
 #endif	/* HARDWARE_IMPL_H */

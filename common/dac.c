@@ -4,10 +4,10 @@
 
 #include "dac.h"
 
+// CHECKME: problably unneeded now, mem_fastDacWrite does it better :)
+
 void inline dac_write(uint16_t value)
 {
 	mem_write(0x4001,value>>10);
-	CYCLE_WAIT(1);
 	mem_write(0x4000,value>>2);
-	CYCLE_WAIT(1);
 }

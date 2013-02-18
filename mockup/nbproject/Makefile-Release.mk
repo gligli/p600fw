@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/p600mockup.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
+	${OBJECTDIR}/_ext/1270477542/assigner.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o \
 	${OBJECTDIR}/_ext/1270477542/dac.o
 
@@ -110,6 +111,11 @@ ${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
+
+${OBJECTDIR}/_ext/1270477542/assigner.o: ../common/assigner.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/assigner.o ../common/assigner.c
 
 ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542

@@ -2,8 +2,8 @@
 #define	HARDWARE_IMPL_H
 
 #define CYCLE_WAIT(cycles)
-#define HW_ACCESS
-#define MDELAY
+#define BLOCK_INT
+#define MDELAY(ms)
 
 #endif	/* HARDWARE_IMPL_H */
 

@@ -19,7 +19,229 @@
 #define CPU_125kHz      0x07
 #define CPU_62kHz       0x08
 
-static uint8_t prevWrite=0;
+inline void setDataDir(int8_t write)
+{
+	if(write)
+	{
+		DDRC=0b11100111;
+		DDRD=0b11110111;
+		DDRE=0b11100010;
+	}		
+	else
+	{
+		DDRC=0b11100000;
+		DDRD=0b00000111;
+		DDRE=0b11100000;
+	}
+}
+
+inline void setAddr(uint16_t addr, uint8_t * b, uint8_t * d, uint8_t * e, int8_t io)
+{
+	uint8_t msb,lsb,vr03,vr05,vr13,vl05; // shifts
+	
+	lsb=addr;
+	
+	vr03=lsb>>3;
+	vr05=vr03>>2;
+	vl05=lsb<<5;
+
+	if(!io)
+	{
+		msb=addr>>8;
+		vr13=msb>>5;
+	
+		*b|=vr05&0x80;
+		*d|=vr13&0x07;
+	}
+	
+	*b|=vr03&0x7f;
+	*e|=vl05&0xe0;
+}
+
+inline void setData(uint8_t data, uint8_t * c, uint8_t * d, uint8_t * e)
+{
+	uint8_t vl1,vl2,vr7,vr1,v00; // shifts
+	
+	v00=data;
+	
+	vl1=v00<<1;
+	vl2=vl1<<1;
+	
+	vr1=v00>>1;
+	vr7=vr1>>6;
+			
+	*c|=vr7&0x01;
+	*c|=vl1&0x06;
+	
+	*d|=v00&0x10;
+	*d|=vl2&0x20;
+	*d|=vl1&0xc0;
+	
+	*e|=vr1&0x02;
+}
+
+inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
+{
+	uint8_t b,c,d,e;
+	
+	// back to idle
+	
+	PORTF=0xc6;
+	PORTC=0xc0;
+
+	// flags
+	
+	b=0x00;
+	c=(io)?0x40:0x80;
+	d=0x00;
+	e=0x00;
+	
+	// address
+	
+	setAddr(addr,&b,&d,&e,io);
+	
+	// data
+	
+	setData(data,&c,&d,&e);
+	
+	// output it
+	
+	PORTB=b;
+	PORTC=c;
+	PORTD=d;
+	PORTE=e;
+	PORTF=0x87;
+}
+
+inline uint8_t hardware_read(int8_t io, uint16_t addr)
+{
+	uint8_t b,c,d,e,v;
+
+	// back to idle
+	
+	PORTF=0xc6;
+	PORTC=0xc0;
+
+	// prepare read
+
+	setDataDir(0);
+
+	// flags
+	
+	b=0x00;
+	c=(io)?0x40:0x80;
+	d=0x00;
+	e=0x00;
+	
+	// address
+	
+	setAddr(addr,&b,&d,&e,io);
+
+	// output it
+	
+	PORTB=b;
+	PORTC=c;
+	PORTD=d;
+	PORTE=e;
+	PORTF=0x47;
+
+	// wait
+	
+	CYCLE_WAIT(1);
+	
+	// read data
+	
+	c=PINC;
+	d=PIND;
+	e=PINE;
+	
+	v =(c<<7)&0x80;
+	v|=(c>>1)&0x03;
+	
+	v|=(d	 )&0x10;
+	v|=(d>>2)&0x08;
+	v|=(d>>1)&0x60;
+	
+	v|=(e<<1)&0x04;
+	
+	// back to default (write)
+	
+	setDataDir(1);
+	
+	return v;
+}
+
+inline void mem_fastDacWrite(uint16_t value)
+{
+	uint8_t c,d,e;
+	uint8_t vr10,vr09,vr08,vr11; // shifts
+	
+	// back to idle
+	
+	PORTF=0xc6;
+	PORTC=0xc0;
+
+	// write upper
+
+	c=0x80;
+	d=0x02;
+	e=0x20;
+
+	vr08=value>>8;
+	vr09=vr08>>1;
+	vr10=vr09>>1;
+	vr11=vr10>>1;
+			
+	c|=vr09&0x06;
+	
+	d|=vr10&0x10;
+	d|=vr08&0x20;
+	d|=vr09&0xc0;
+	
+	e|=vr11&0x02;
+	
+	PORTC=c;
+	PORTD=d;
+	PORTE=e;
+	PORTF=0x87;
+
+    // minimalistic status change
+	
+	PORTF=0xc6;
+	
+	// write lower
+
+	c=0x80;
+	d=0x02;
+	e=0x00;
+
+	setData(value>>2,&c,&d,&e);
+	
+	PORTC=c;
+	PORTD=d;
+	PORTE=e;
+	PORTF=0x87;
+}
+
+inline void mem_write(uint16_t address, uint8_t value)
+{
+	hardware_write(0,address,value);
+}
+
+inline void io_write(uint8_t address, uint8_t value)
+{
+	hardware_write(1,address,value);
+}
+
+inline uint8_t mem_read(uint16_t address)
+{
+	return hardware_read(0,address);
+}
+
+inline uint8_t io_read(uint8_t address)
+{
+	return hardware_read(1,address);
+}
 
 void hardware_init(void)
 {
@@ -60,156 +282,14 @@ void hardware_init(void)
 	TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
 	TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
 	TIMSK2|=(1<<OCIE2A);//Enable overflow interrupt for Timer2
-}
-
-static inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
-{
-	uint8_t b,c,d,e,f;
 	
-	// no r,w,mreq,ioreq for now
-
-	PORTF=0xc6;
-	PORTC=0xc0;
-
-	// data dir
-	
-	if(!prevWrite)
-	{
-		DDRC=0b11100111;
-		DDRD=0b11110111;
-		DDRE=0b11100010;
-		prevWrite=1;
-	}		
-	
-	// flags
-	
-	b=0x00;
-	c=(io)?0x40:0x80;
-	d=0x00;
-	e=0x00;
-	f=0x87;
-	
-	// address
-	
-	b|=(addr>> 3)&0x7f;
-	b|=(addr>> 5)&0x80;
-	
-	d|=(addr>>13)&0x07;
-
-	e|=(addr<< 5)&0xe0;
-
-	// data
-	
-	c|=(data>>7)&0x01;
-	c|=(data<<1)&0x06;
-	
-	d|=(data   )&0x10;
-	d|=(data<<2)&0x20;
-	d|=(data<<1)&0xc0;
-	
-	e|=(data>>1)&0x02;
-
-	// output it
-	
-	PORTB=b;
-	PORTC=c;
-	PORTD=d;
-	PORTE=e;
-	PORTF=f;
-}
-
-static inline uint8_t hardware_read(int8_t io, uint16_t addr)
-{
-	uint8_t b,c,d,e,f,v;
-	
-	// no r,w,mreq,ioreq for now
-
-	PORTF=0xc6;
-	PORTC=0xc0;
-
-	// prepare read
-	
-	if(prevWrite)
-	{
-		DDRC=0b11100000;
-		DDRD=0b00000111;
-		DDRE=0b11100000;
-		prevWrite=0;
-	}
-	
-	// flags
-	
-	b=0x00;
-	c=(io)?0x40:0x80;
-	d=0x00;
-	e=0x00;
-	f=0x47;
-	
-	// address
-	
-	b|=(addr>> 3)&0x7f;
-	b|=(addr>> 5)&0x80;
-	
-	d|=(addr>>13)&0x07;
-
-	e|=(addr<< 5)&0xe0;
-
-	// output it
-	
-	PORTB=b;
-	PORTC=c;
-	PORTD=d;
-	PORTE=e;
-	PORTF=f;
-
-	// wait
-	
-	CYCLE_WAIT(1);
-	
-	// read data
-	
-	c=PINC;
-	d=PIND;
-	e=PINE;
-	
-	v =(c<<7)&0x80;
-	v|=(c>>1)&0x03;
-	
-	v|=(d	 )&0x10;
-	v|=(d>>2)&0x08;
-	v|=(d>>1)&0x60;
-	
-	v|=(e<<1)&0x04;
-	
-	return v;
-}
-
-void inline mem_write(uint16_t address, uint8_t value)
-{
-	hardware_write(0,address,value);
-}
-
-void inline io_write(uint8_t address, uint8_t value)
-{
-	hardware_write(1,address,value);
-}
-
-uint8_t inline mem_read(uint16_t address)
-{
-	return hardware_read(0,address);
-}
-
-uint8_t inline io_read(uint8_t address)
-{
-	return hardware_read(1,address);
+	hardware_read(0,0); // init r/w system
 }
 
 int main(void)
 {
 	// initialize clock
 	
-	CPU_PRESCALE(CPU_125kHz); // power supply still ramping up voltage
-	_delay_ms(1); // actual delay 128 ms when F_OSC is 16000000
 	CPU_PRESCALE(CPU_16MHz);  
 
 	// initialize firmware
@@ -231,11 +311,12 @@ int main(void)
 	// to load drivers and do whatever it does to actually
 	// be ready for input
 	_delay_ms(500);
+
+	print("p600firmware\n");
 #endif
 	
 	sei();
 	
-	print("p600firmware\n");
 	for(;;)
 	{
 		p600_update();

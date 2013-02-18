@@ -6,7 +6,7 @@
 #include "map_to_7segment.h"
 
 #define DISPLAY_BLINK_HALF_PERIOD 80
-#define DISPLAY_SCROLL_RATE 50
+#define DISPLAY_SCROLL_RATE 40
 
 static struct
 {
@@ -34,7 +34,8 @@ void sevenSeg_scrollText(const char * text, int8_t times)
 	{
 		display.scrollTimes=times;
 		display.scrollPos=0;
-		strncpy(display.scrollText,text,sizeof(display.scrollText));
+		strcpy(&display.scrollText[1],text);
+		strcat(display.scrollText," ");
 	}
 }
 
@@ -84,6 +85,7 @@ void display_clear()
 void display_init()
 {
 	memset(&display,0,sizeof(display));
+	display.scrollText[0]=' ';
 }
 
 void display_update()
@@ -139,7 +141,7 @@ void display_update()
 		break;
 	}
 	
-	HW_ACCESS
+	BLOCK_INT
 	{
 		io_write(0x09,0x00);
 		io_write(0x08,0x10<<display.activeCol);

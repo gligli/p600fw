@@ -38,6 +38,12 @@ uint8_t io_read(uint8_t address)
 	return emu_read(1,address);
 }
 
+void mem_fastDacWrite(uint16_t value)
+{
+	mem_write(0x4001,value>>10);
+	mem_write(0x4000,value>>2);
+}
+
 void print(const char *s)
 {
 	char c;
