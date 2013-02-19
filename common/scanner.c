@@ -22,17 +22,17 @@ static inline int scanner_state(uint8_t key)
 	return (scanner.stateBits[key>>3]&(1<<(key&7)))!=0;
 }
 
-int inline scanner_keyState(uint8_t key)
+int8_t inline scanner_keyState(uint8_t key)
 {
 	return scanner_state(key+SCANNER_KEYS_START);
 }
 
-int inline scanner_buttonState(p600Button_t button)
+int8_t inline scanner_buttonState(p600Button_t button)
 {
 	return scanner_state(button);
 }
 
-static inline void scanner_event(uint8_t key, int pressed)
+static inline void scanner_event(uint8_t key, int8_t pressed)
 {
 	if (key<SCANNER_KEYS_START)
 		p600_buttonEvent(key,pressed);
@@ -43,11 +43,10 @@ static inline void scanner_event(uint8_t key, int pressed)
 void scanner_update(void)
 {
 	uint8_t i,j;
+	uint8_t ps=0,pa;		
 
 	for(i=0;i<SCANNER_BYTES;++i)
 	{
-		uint8_t ps=0;		
-		
 		BLOCK_INT
 		{
 			io_write(0x08,i);
@@ -55,7 +54,8 @@ void scanner_update(void)
 			ps=io_read(0x0a);
 		}
 		
-		uint8_t pa=ps^scanner.stateBits[i];
+		pa=ps^scanner.stateBits[i];
+		scanner.stateBits[i]=ps;
 		
 		if(pa)
 		{
@@ -67,8 +67,6 @@ void scanner_update(void)
 				}
 			}
 		}
-		
-		scanner.stateBits[i]=ps;
 	}
 }
 	
