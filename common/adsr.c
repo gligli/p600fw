@@ -64,33 +64,12 @@ static uint32_t getPhaseInc(uint8_t v)
 	return r;
 }
 
-static inline uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
-{
-	return a+(x*((b-a)>>8));
-}
-
 static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
 {
 	if(isExp)
-	{
-		uint8_t ai,bi,x;
-		uint16_t a,b;
-		
-		x=phase>>8;
-		bi=ai=phase>>16;
-		
-		if(ai<UINT8_MAX)
-			bi=ai+1;
-		
-		a=lookup[ai];
-		b=lookup[bi];
-		
-		return lerp(a,b,x);
-	}
+		return computeShape(phase,lookup);
 	else
-	{
 		return phase>>8; // 20bit -> 16 bit
-	}
 }
 
 static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
@@ -126,13 +105,9 @@ void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus,
 	adsr->sustainCV=sus;
 	adsr->levelCV=lvl;
 	
-	adsr->attackCV=atk>>8;
-	adsr->decayCV=dec>>8;
-	adsr->releaseCV=rls>>8;
-
-	adsr->attackIncrement=getPhaseInc(adsr->attackCV)>>ADSR_SPEED_SHIFT<<4; // phase is 20 bits, from bit 4 to bit 23
-	adsr->decayIncrement=getPhaseInc(adsr->decayCV)>>ADSR_SPEED_SHIFT<<4;
-	adsr->releaseIncrement=getPhaseInc(adsr->releaseCV)>>ADSR_SPEED_SHIFT<<4;
+	adsr->attackIncrement=getPhaseInc(atk>>8)>>ADSR_SPEED_SHIFT<<4; // phase is 20 bits, from bit 4 to bit 23
+	adsr->decayIncrement=getPhaseInc(dec>>8)>>ADSR_SPEED_SHIFT<<4;
+	adsr->releaseIncrement=getPhaseInc(rls>>8)>>ADSR_SPEED_SHIFT<<4;
 	
 	// immediate update of env settings
 	

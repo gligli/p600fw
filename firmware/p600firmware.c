@@ -309,7 +309,7 @@ int main(void)
 	// wait an extra second for the PC's operating system
 	// to load drivers and do whatever it does to actually
 	// be ready for input
-	_delay_ms(100);
+	_delay_ms(500);
 
 	print("p600firmware\n");
 #endif

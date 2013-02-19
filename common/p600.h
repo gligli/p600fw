@@ -32,7 +32,7 @@ typedef enum
 	pcOsc1B=6,pcOsc2B,pcOsc3B,pcOsc4B,pcOsc5B,pcOsc6B,           
 	pcFil1=12,pcFil2,pcFil3,pcFil4,pcFil5,pcFil6,                
 	pcAmp1=18,pcAmp2,pcAmp3,pcAmp4,pcAmp5,pcAmp6,                
-	pcPModOscB=24,pcVolA,pcVolB,pcMVol,pcAPW,pcExtFil,pcRes,pcBPW
+	pcPModOscB=24,pcVolA,pcVolB,pcMVol,pcAPW,pcExtFil,pcResonance,pcBPW
 } p600CV_t;
 
 typedef enum
@@ -46,7 +46,7 @@ typedef enum
 	pb8=8,pb9,pbArpUD,pbArpAssign,pbPreset,pbRecord,pbToTape,pbFromTape,          
 	pbSeq1=16,pbSeq2,pbTune,                                                      
 	pbASqr=24,pbBSqr,pbFilFull,pbFilHalf,pbLFOShape,pbLFOFreq,pbLFOPW,pbLFOFil,   
-	pbASaw=32,pbATri,pbSync,pbBSaw,pbBTri,pbPModFA,pbPModFil,pbUnisson
+	pbASaw=32,pbATri,pbSync,pbBSaw,pbBTri,pbPModFA,pbPModFil,pbUnison
 } p600Button_t;
 
 void p600_buttonEvent(p600Button_t button, int pressed);

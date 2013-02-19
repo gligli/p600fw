@@ -11,16 +11,23 @@
 #include "synth.h"
 #include "potmux.h"
 #include "adsr.h"
+#include "lfo.h"
 #include "tuner.h"
 #include "assigner.h"
 
 #define P600_UNISON_ENV 0 // informative constant, don't change it!
+
+#define MOD_FILTER 1
+#define MOD_FREQ 2
+#define MOD_PW 4
 
 static struct
 {
 	struct adsr_s filEnvs[P600_VOICE_COUNT];
 	struct adsr_s ampEnvs[P600_VOICE_COUNT];
 
+	struct lfo_s lfo;
+	
 	uint16_t oscANoteCVRaw[P600_VOICE_COUNT];
 	uint16_t oscBNoteCVRaw[P600_VOICE_COUNT];
 	uint16_t filterNoteCVRaw[P600_VOICE_COUNT]; 
@@ -33,6 +40,10 @@ static struct
 	int8_t trackingShift;
 	int8_t tuned;
 	int8_t playingUnison;
+
+	int8_t lfoAltShapes;
+	uint8_t lfoModulations;
+	uint8_t lfoShift;
 } p600;
 
 static void adjustTunedCVs(void)
@@ -56,9 +67,9 @@ static void adjustTunedCVs(void)
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
-		p600.oscANoteCVAdj[v]=SADD16(p600.oscANoteCVRaw[v],baseAFreq);
-		p600.oscBNoteCVAdj[v]=SADD16(p600.oscBNoteCVRaw[v],baseBFreq);
-		p600.filterNoteCVAdj[v]=SADD16(p600.filterNoteCVRaw[v]>>p600.trackingShift,baseCutoff);
+		p600.oscANoteCVAdj[v]=satAddU16S32(p600.oscANoteCVRaw[v],baseAFreq);
+		p600.oscBNoteCVAdj[v]=satAddU16S32(p600.oscBNoteCVRaw[v],baseBFreq);
+		p600.filterNoteCVAdj[v]=satAddU16S32(p600.filterNoteCVRaw[v]>>p600.trackingShift,baseCutoff);
 	}
 }
 
@@ -82,6 +93,14 @@ static void refreshGates(void)
 		p600.trackingShift=0;
 	if(scanner_buttonState(pbFilFull))
 		p600.trackingShift=1;
+	
+	p600.lfoModulations=0;
+	if(scanner_buttonState(pbLFOFil))
+		p600.lfoModulations|=MOD_FILTER;
+	if(scanner_buttonState(pbLFOFreq))
+		p600.lfoModulations|=MOD_FREQ;
+	if(scanner_buttonState(pbLFOPW))
+		p600.lfoModulations|=MOD_PW;
 }
 
 void p600_init(void)
@@ -106,9 +125,15 @@ void p600_init(void)
 //	tuner_tuneSynth();
 	p600.tuned=1;
 	
-	sevenSeg_scrollText("GliGli's Prophet 600 upgrade",1);
+	lfo_init(&p600.lfo,tuner_computeCVFromFrequency(1234,pcFil1)); // not random, but good enough
+	
+	// unpressed buttons won't trigger events on start
+	
+	p600_buttonEvent(pbLFOShape,0);
 
-	refreshGates(); 
+	// a nice welcome message ;)
+	
+	sevenSeg_scrollText("GliGli's Prophet 600 upgrade",1);
 }
 
 void p600_update(void)
@@ -149,7 +174,7 @@ void p600_update(void)
 	
 	if(updatingSlow)
 	{
-		potmux_need(ppMVol,ppMTune);
+		potmux_need(ppMVol,ppMTune,ppLFOAmt,ppLFOFreq);
 	}
 	
 	if(updatingEnvs)
@@ -175,6 +200,7 @@ void p600_update(void)
 	if(updatingSlow)
 	{
 		synth_setCV(pcMVol,potmux_getValue(ppMVol),1);
+		lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),potmux_getValue(ppLFOAmt));
 	}
 	
 	if(updatingEnvs)
@@ -196,21 +222,38 @@ void p600_update(void)
 	{
 		synth_setCV(pcVolA,potmux_getValue(ppMixer),1);
 		synth_setCV(pcVolB,potmux_getValue(ppGlide),1);
-		synth_setCV(pcAPW,potmux_getValue(ppAPW),1);
-		synth_setCV(pcBPW,potmux_getValue(ppBPW),1);
-		synth_setCV(pcRes,potmux_getValue(ppResonance),1);
+		synth_setCV(pcResonance,potmux_getValue(ppResonance),1);
+		
+		if(!(p600.lfoModulations&MOD_PW))
+		{
+			synth_setCV(pcAPW,potmux_getValue(ppAPW),1);
+			synth_setCV(pcBPW,potmux_getValue(ppBPW),1);
+		}
 	}
 }
 
 void p600_fastInterrupt(void)
 {
 	int8_t v,assigned,hz250,env;
-	uint16_t envVal,filVal;
+	uint16_t envVal,va,vb,vf;
+	int16_t lfoVal;
 
 	static uint8_t frc=0;
 	
 	hz250=(frc&0x07)==0; // 1/8 of the time (250hz)
 
+	// lfo
+	
+	lfo_update(&p600.lfo);
+	
+	lfoVal=p600.lfo.output;
+	
+	if(p600.lfoModulations&MOD_PW)
+	{
+		synth_setCV(pcAPW,satAddU16S16(potmux_getValue(ppAPW),lfoVal),1);
+		synth_setCV(pcBPW,satAddU16S16(potmux_getValue(ppBPW),lfoVal),1);
+	}
+	
 	// per voice stuff
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
@@ -228,14 +271,28 @@ void p600_fastInterrupt(void)
 				env=v;
 			}
 
-			// handle CVs update
-
-			synth_setCV(pcOsc1A+v,p600.oscANoteCVAdj[v],1);
-			synth_setCV(pcOsc1B+v,p600.oscBNoteCVAdj[v],1);
+			// compute CVs
 
 			envVal=p600.filEnvs[env].output;
-			filVal=p600.filterNoteCVAdj[v];
-			synth_setCV(pcFil1+v,SADD16(envVal,filVal),1);
+
+			va=p600.oscANoteCVAdj[v];
+			vb=p600.oscBNoteCVAdj[v];
+			if(p600.lfoModulations&MOD_FREQ)
+			{
+				va=satAddU16S16(va,lfoVal);
+				vb=satAddU16S16(vb,lfoVal);
+			}
+			
+			vf=p600.filterNoteCVAdj[v];
+			vf=satAddU16U16(vf,envVal);
+			if(p600.lfoModulations&MOD_FILTER)
+				vf=satAddU16S16(vf,lfoVal);
+			
+			// apply them
+			
+			synth_setCV(pcOsc1A+v,va,1);
+			synth_setCV(pcOsc1B+v,vb,1);
+			synth_setCV(pcFil1+v,vf,1);
 			synth_setCV(pcAmp1+v,p600.ampEnvs[env].output,1);
 		}
 	}
@@ -259,16 +316,50 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 {
 	refreshGates();
 	
-	if(button==pbTune && !pressed)
+	if(pressed && button==pbTune)
 		p600.tuned=0;
 
 	if(pressed && button>=pb0 && button<=pb4)
 	{
 		assignerMode_t mode=button;
-		
+
 		assigner_setMode(mode);
 		sevenSeg_scrollText(assigner_modeName(mode),1);
 		p600.playingUnison=mode==mUnison;
+	}
+
+	if((pressed && ((button==pb5) || (button==pb6))) || button==pbLFOShape)
+	{
+		lfoShape_t shape;
+		char s[20]="";
+
+		if(scanner_buttonState(pb5))
+			p600.lfoAltShapes=1-p600.lfoAltShapes;
+
+		if(scanner_buttonState(pb6))
+			p600.lfoShift=(p600.lfoShift+1)%3;
+
+		shape=1+scanner_buttonState(pbLFOShape)+p600.lfoAltShapes*2;
+
+		lfo_setShape(&p600.lfo,shape);
+		lfo_setSpeedShift(&p600.lfo,p600.lfoShift*2);
+		
+		switch(p600.lfoShift)
+		{
+		case 0:
+			strcat(s,"Slo ");
+			break;
+		case 1:
+			strcat(s,"Mid ");
+			break;
+		case 2:
+			strcat(s,"Fast ");
+			break;
+		}
+		
+		strcat(s,lfo_shapeName(shape));
+		
+		sevenSeg_scrollText(s,1);
 	}
 }
 

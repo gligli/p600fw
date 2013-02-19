@@ -52,6 +52,7 @@ SRC =	$(TARGET).c \
 	..\common\dac.c \
 	..\common\synth.c \
 	..\common\adsr.c \
+	..\common\lfo.c \
 	..\common\tuner.c \
 	..\common\potmux.c \
 	..\common\assigner.c \

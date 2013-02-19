@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/adsr.o \
+	${OBJECTDIR}/_ext/1270477542/lfo.o \
 	${OBJECTDIR}/_ext/1270477542/tuner.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
 	${OBJECTDIR}/_ext/1270477542/synth.o \
@@ -76,6 +77,11 @@ ${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
+
+${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -I../common -I.  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/lfo.o ../common/lfo.c
 
 ${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542

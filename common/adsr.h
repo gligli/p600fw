@@ -19,7 +19,6 @@ struct adsr_s
 	uint16_t output;
 
 	int8_t expOutput,gate,nextGate,gateChanged;
-	uint8_t attackCV,decayCV,releaseCV;
 	
 	adsrStage_t stage;
 };

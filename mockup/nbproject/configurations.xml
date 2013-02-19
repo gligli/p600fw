@@ -11,6 +11,7 @@
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/hardware.h</itemPath>
       <itemPath>hardware_impl.h</itemPath>
+      <itemPath>../common/lfo.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
       <itemPath>../common/p600.h</itemPath>
       <itemPath>../common/potmux.h</itemPath>
@@ -31,6 +32,7 @@
       <itemPath>../common/assigner.c</itemPath>
       <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
+      <itemPath>../common/lfo.c</itemPath>
       <itemPath>../common/p600.c</itemPath>
       <itemPath>p600mockup.c</itemPath>
       <itemPath>../common/potmux.c</itemPath>

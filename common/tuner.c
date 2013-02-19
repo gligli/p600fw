@@ -367,7 +367,7 @@ void tuner_tuneSynth(void)
 		synth_setGate(pgPModFil,0);
 		synth_setGate(pgSync,0);
 
-		synth_setCV(pcRes,0,0);
+		synth_setCV(pcResonance,0,0);
 		synth_setCV(pcAPW,0,0);
 		synth_setCV(pcBPW,0,0);
 		synth_setCV(pcPModOscB,0,0);
@@ -385,7 +385,7 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcRes,0,0);
+		synth_setCV(pcResonance,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			synth_setCV(pcFil1+i,UINT16_MAX,0);
 	
@@ -411,7 +411,7 @@ void tuner_tuneSynth(void)
 		
 		synth_setCV(pcVolA,0,0);
 		synth_setCV(pcVolB,0,0);
-		synth_setCV(pcRes,UINT16_MAX,0);
+		synth_setCV(pcResonance,UINT16_MAX,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			synth_setCV(pcFil1+i,0,0);
