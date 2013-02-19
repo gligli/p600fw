@@ -53,7 +53,7 @@
 
 #define ADSR_SPEED_SHIFT 1
 
-static inline uint32_t getPhaseInc(uint8_t v)
+static uint32_t getPhaseInc(uint8_t v)
 {
 	uint32_t r=0;
 	
@@ -76,8 +76,8 @@ static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t i
 		uint8_t ai,bi,x;
 		uint16_t a,b;
 		
-		x=phase>>4;
-		bi=ai=phase>>12;
+		x=phase>>8;
+		bi=ai=phase>>16;
 		
 		if(ai<UINT8_MAX)
 			bi=ai+1;
@@ -89,7 +89,7 @@ static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t i
 	}
 	else
 	{
-		return phase>>4; // 20bit -> 16 bit
+		return phase>>8; // 20bit -> 16 bit
 	}
 }
 
@@ -121,7 +121,7 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 	}
 }
 
-void inline adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
+void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
 {
 	adsr->sustainCV=sus;
 	adsr->levelCV=lvl;
@@ -130,9 +130,9 @@ void inline adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16
 	adsr->decayCV=dec>>8;
 	adsr->releaseCV=rls>>8;
 
-	adsr->attackIncrement=getPhaseInc(adsr->attackCV)>>ADSR_SPEED_SHIFT;
-	adsr->decayIncrement=getPhaseInc(adsr->decayCV)>>ADSR_SPEED_SHIFT;
-	adsr->releaseIncrement=getPhaseInc(adsr->releaseCV)>>ADSR_SPEED_SHIFT;
+	adsr->attackIncrement=getPhaseInc(adsr->attackCV)>>ADSR_SPEED_SHIFT<<4; // phase is 20 bits, from bit 4 to bit 23
+	adsr->decayIncrement=getPhaseInc(adsr->decayCV)>>ADSR_SPEED_SHIFT<<4;
+	adsr->releaseIncrement=getPhaseInc(adsr->releaseCV)>>ADSR_SPEED_SHIFT<<4;
 	
 	// immediate update of env settings
 	
@@ -141,7 +141,11 @@ void inline adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16
 
 void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
 {
-	adsr->nextGate=gate;
+	if(adsr->gate!=gate)
+	{
+		adsr->nextGate=gate;
+		adsr->gateChanged=1;
+	}
 }
 
 void inline adsr_setShape(struct adsr_s * adsr, int8_t isExp)
@@ -168,7 +172,7 @@ void inline adsr_update(struct adsr_s * a)
 {
 	// handle gate
 	
-	if(a->gate!=a->nextGate)
+	if(a->gateChanged)
 	{
 		a->phase=0;
 		a->stageLevel=((uint32_t)a->output<<16)/a->levelCV;
@@ -185,6 +189,7 @@ void inline adsr_update(struct adsr_s * a)
 		}
 		
 		a->gate=a->nextGate;
+		a->gateChanged=0;
 	}
 	
 	// shortcut for inactive envelopes
@@ -197,7 +202,7 @@ void inline adsr_update(struct adsr_s * a)
 
 	// handle phase overflow
 	
-	if(a->phase&0xfff00000) // if bit 20 or higher is set, it's an overflow -> a timed stage is done!
+	if(a->phase>>24) // if bit 24 or higher is set, it's an overflow -> a timed stage is done!
 	{
 		a->phase=0;
 		a->stageIncrement=0;
@@ -224,7 +229,7 @@ void inline adsr_update(struct adsr_s * a)
 
 	// compute output level
 	
-	uint16_t o=0;
+	uint32_t o=0;
 	
 	switch(a->stage)
 	{
@@ -242,7 +247,7 @@ void inline adsr_update(struct adsr_s * a)
 		;
 	}
 	
-	a->output=(((uint32_t)o*a->stageMul)>>16)+a->stageAdd;
+	a->output=((o*a->stageMul)>>16)+a->stageAdd;
 
 	// phase increment
 	
