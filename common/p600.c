@@ -91,7 +91,7 @@ static void refreshGates(void)
 	p600.trackingShift=16; // shifting any 16bit value by 16 will clear it!
 	if(scanner_buttonState(pbFilFull))
 		p600.trackingShift=0;
-	if(scanner_buttonState(pbFilFull))
+	if(scanner_buttonState(pbFilHalf))
 		p600.trackingShift=1;
 	
 	p600.lfoModulations=0;
@@ -122,7 +122,7 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-//	tuner_tuneSynth();
+	tuner_tuneSynth();
 	p600.tuned=1;
 	
 	lfo_init(&p600.lfo,tuner_computeCVFromFrequency(1234,pcFil1)); // not random, but good enough
