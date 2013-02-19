@@ -14,7 +14,7 @@
 #include "tuner.h"
 #include "assigner.h"
 
-#define P600_UNISON_ENV 0
+#define P600_UNISON_ENV 0 // informative constant, don't change it!
 
 static struct
 {
@@ -62,6 +62,27 @@ static void adjustTunedCVs(void)
 	}
 }
 
+static void refreshGates(void)
+{
+	int8_t v;
+
+	synth_setGate(pgASaw,scanner_buttonState(pbASaw));
+	synth_setGate(pgBSaw,scanner_buttonState(pbBSaw));
+	synth_setGate(pgATri,scanner_buttonState(pbATri));
+	synth_setGate(pgBTri,scanner_buttonState(pbBTri));
+	
+	for(v=0;v<P600_VOICE_COUNT;++v)
+	{
+		adsr_setShape(&p600.filEnvs[v],scanner_buttonState(pbASqr));
+		adsr_setShape(&p600.ampEnvs[v],scanner_buttonState(pbBSqr));
+	}
+
+	p600.trackingShift=16; // shifting any 16bit value by 16 will clear it!
+	if(scanner_buttonState(pbFilFull))
+		p600.trackingShift=0;
+	if(scanner_buttonState(pbFilFull))
+		p600.trackingShift=1;
+}
 
 void p600_init(void)
 {
@@ -82,10 +103,12 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-	tuner_tuneSynth();
+//	tuner_tuneSynth();
 	p600.tuned=1;
 	
 	sevenSeg_scrollText("GliGli's Prophet 600 upgrade",1);
+
+	refreshGates(); 
 }
 
 void p600_update(void)
@@ -100,6 +123,9 @@ void p600_update(void)
 	{
 		tuner_tuneSynth();
 		p600.tuned=1;
+		
+		// tuner will change state, restore it
+		refreshGates(); 
 	}
 	
 	// free running counter
@@ -115,8 +141,8 @@ void p600_update(void)
 
 	// 
 	
-	updatingSlow=(frc&0x0f)==0; // 1/16 of the time
-	updatingEnvs=(frc&0x07)==0; // 1/8 of the time
+	updatingSlow=(frc&0x07)==0; // 1/8 of the time, alternatively
+	updatingEnvs=(frc&0x07)==4; // 1/8 of the time, alternatively
 	updatingMisc=(frc&0x03)==0; // 1/4 of the time
 	
 	// which pots do we have to read?
@@ -185,13 +211,6 @@ void p600_fastInterrupt(void)
 	
 	hz250=(frc&0x07)==0; // 1/8 of the time (250hz)
 
-	if(p600.playingUnison)
-	{
-		adsr_update(&p600.filEnvs[P600_UNISON_ENV]);
-		adsr_update(&p600.ampEnvs[P600_UNISON_ENV]);
-		env=P600_UNISON_ENV;
-	}
-	
 	// per voice stuff
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
@@ -202,7 +221,7 @@ void p600_fastInterrupt(void)
 		{
 			// handle envs update
 			
-			if(!p600.playingUnison)
+			if(!p600.playingUnison || v==P600_UNISON_ENV)
 			{
 				adsr_update(&p600.filEnvs[v]);
 				adsr_update(&p600.ampEnvs[v]);
@@ -238,49 +257,11 @@ void p600_slowInterrupt(void)
 
 void p600_buttonEvent(p600Button_t button, int pressed)
 {
-	int8_t i;
+	refreshGates();
+	
+	if(button==pbTune && !pressed)
+		p600.tuned=0;
 
-	p600.trackingShift=32; // shifting any value by 32 will clear it!
-	
-	switch(button)
-	{
-	case pbASaw:
-		synth_setGate(pgASaw,pressed);
-		break;
-	case pbBSaw:
-		synth_setGate(pgBSaw,pressed);
-		break;
-	case pbATri:
-		synth_setGate(pgATri,pressed);
-		break;
-	case pbBTri:
-		synth_setGate(pgBTri,pressed);
-		break;
-	case pbASqr:
-		for(i=0;i<P600_VOICE_COUNT;++i)
-			adsr_setShape(&p600.filEnvs[i],pressed);
-		break;
-	case pbBSqr:
-		for(i=0;i<P600_VOICE_COUNT;++i)
-			adsr_setShape(&p600.ampEnvs[i],pressed);
-		break;
-	case pbTune:
-		if (!pressed)
-			p600.tuned=0;
-		break;
-	case pbFilHalf:
-		if(pressed)
-			p600.trackingShift=1;
-		break;
-	case pbFilFull:
-		if(pressed)
-			p600.trackingShift=0;
-		else
-		break;
-	default:
-		;
-	}
-	
 	if(pressed && button>=pb0 && button<=pb4)
 	{
 		assignerMode_t mode=button;
