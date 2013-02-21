@@ -50,7 +50,7 @@ void scanner_update(void)
 		BLOCK_INT
 		{
 			io_write(0x08,i);
-			CYCLE_WAIT(8);
+			CYCLE_WAIT(2);
 			ps=io_read(0x0a);
 		}
 		

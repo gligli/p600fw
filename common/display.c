@@ -5,8 +5,8 @@
 #include "display.h"
 #include "map_to_7segment.h"
 
-#define DISPLAY_BLINK_HALF_PERIOD 80
-#define DISPLAY_SCROLL_RATE 40
+#define DISPLAY_BLINK_HALF_PERIOD 160
+#define DISPLAY_SCROLL_RATE 80
 
 static struct
 {

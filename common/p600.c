@@ -234,13 +234,13 @@ void p600_update(void)
 
 void p600_fastInterrupt(void)
 {
-	int8_t v,assigned,hz250,env;
+	int8_t v,assigned,hz500,env;
 	uint16_t envVal,va,vb,vf;
 	int16_t lfoVal;
 
 	static uint8_t frc=0;
 	
-	hz250=(frc&0x07)==0; // 1/8 of the time (250hz)
+	hz500=(frc&0x03)==0; // 1/4 of the time (500hz)
 
 	// lfo
 	
@@ -299,7 +299,7 @@ void p600_fastInterrupt(void)
 	
 	// slower updates
 	
-	if(hz250)
+	if(hz500)
 	{
 		scanner_update(); // do this first (clears display)
 		display_update();
