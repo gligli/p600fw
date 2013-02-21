@@ -40,31 +40,39 @@ static inline void scanner_event(uint8_t key, int8_t pressed)
 		p600_keyEvent(key-SCANNER_KEYS_START,pressed);
 }
 
+#define DO_ONE_SCAN(x) if(pa&1) scanner_event(i*8+(x),ps&1); pa>>=1; ps>>=1;
+
 void scanner_update(void)
 {
-	uint8_t i,j;
+	uint8_t i;
 	uint8_t ps=0,pa;		
 
-	for(i=0;i<SCANNER_BYTES;++i)
+	BLOCK_INT
 	{
-		BLOCK_INT
+		// prepare first iteration
+		io_write(0x08,0);
+		CYCLE_WAIT(16);
+		
+		for(i=0;i<SCANNER_BYTES;++i)
 		{
-			io_write(0x08,i);
-			CYCLE_WAIT(2);
 			ps=io_read(0x0a);
-		}
-		
-		pa=ps^scanner.stateBits[i];
-		scanner.stateBits[i]=ps;
-		
-		if(pa)
-		{
-			for(j=0;j<8;++j)
+			
+			// prepare next iteration
+			io_write(0x08,i+1);
+
+			pa=ps^scanner.stateBits[i];
+			scanner.stateBits[i]=ps;
+
+			if(pa)
 			{
-				if(pa & (1<<j))
-				{
-					scanner_event(i*8+j,(ps&(1<<j))!=0);
-				}
+				DO_ONE_SCAN(0);
+				DO_ONE_SCAN(1);
+				DO_ONE_SCAN(2);
+				DO_ONE_SCAN(3);
+				DO_ONE_SCAN(4);
+				DO_ONE_SCAN(5);
+				DO_ONE_SCAN(6);
+				DO_ONE_SCAN(7);
 			}
 		}
 	}
