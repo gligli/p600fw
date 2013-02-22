@@ -80,6 +80,7 @@ void display_clear()
 	display.sevenSegs[1]=0;
 	display.ledOn=0;
 	display.ledBlinking=0;
+	display.scrollTimes=0;
 }
 
 void display_init()
@@ -104,7 +105,7 @@ void display_update()
 	
 	display.scrollCounter++;
 	
-	if (display.scrollCounter>DISPLAY_SCROLL_RATE &&  display.scrollTimes)
+	if (display.scrollCounter>DISPLAY_SCROLL_RATE && display.scrollTimes)
 	{
 		int8_t l,p,p2;
 
