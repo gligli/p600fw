@@ -41,15 +41,15 @@ const char * lfo_shapeName(lfoShape_t shape)
 	switch(shape)
 	{
 	case lsOff:
-		return "Off";
+		return "off";
 	case lsPulse:
-		return "Pulse";
+		return "pulse";
 	case lsTri:
-		return "Tri";
+		return "tri";
 	case lsRand:
 		return "rand";
 	case lsSine:
-		return "Sine";
+		return "sine";
 	}
 	
 	return "";
