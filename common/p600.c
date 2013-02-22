@@ -15,7 +15,7 @@
 #include "tuner.h"
 #include "assigner.h"
 
-#define P600_UNISON_ENV 0 // informative constant, don't change it!
+#define P600_MONO_ENV 0 // informative constant, don't change it!
 
 #define MOD_FILTER 1
 #define MOD_FREQ 2
@@ -39,7 +39,7 @@ static struct
 	uint16_t filterEnvAmt;
 	int8_t trackingShift;
 	int8_t tuned;
-	int8_t playingUnison;
+	int8_t playingMono;
 
 	int8_t lfoAltShapes;
 	uint8_t lfoModulations;
@@ -122,7 +122,7 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-	tuner_tuneSynth();
+//	tuner_tuneSynth();
 	p600.tuned=1;
 	
 	lfo_init(&p600.lfo,tuner_computeCVFromFrequency(1234,pcFil1)); // not random, but good enough
@@ -213,7 +213,7 @@ void p600_update(void)
 
 		// when amp env finishes, voice is done
 
-		for(i=0;i<(p600.playingUnison?1:P600_VOICE_COUNT);++i)
+		for(i=0;i<(p600.playingMono?1:P600_VOICE_COUNT);++i)
 			if (assigner_getAssignment(i,NULL) && adsr_getStage(&p600.ampEnvs[i])==sWait)
 				assigner_voiceDone(i);
 	}
@@ -256,6 +256,15 @@ void p600_fastInterrupt(void)
 	
 	// per voice stuff
 	
+		// unison / mono modes use only 1 env
+	
+	if(p600.playingMono)
+	{
+		env=P600_MONO_ENV;
+		adsr_update(&p600.filEnvs[env]);
+		adsr_update(&p600.ampEnvs[env]);
+	}
+	
 	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
 		assigned=assigner_getAssignment(v,NULL);
@@ -264,7 +273,7 @@ void p600_fastInterrupt(void)
 		{
 			// handle envs update
 			
-			if(!p600.playingUnison || v==P600_UNISON_ENV)
+			if(!p600.playingMono)
 			{
 				adsr_update(&p600.filEnvs[v]);
 				adsr_update(&p600.ampEnvs[v]);
@@ -325,7 +334,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		assigner_setMode(mode);
 		sevenSeg_scrollText(assigner_modeName(mode),1);
-		p600.playingUnison=mode==mUnison;
+		p600.playingMono=mode!=mPoly;
 	}
 
 	if((pressed && ((button==pb5) || (button==pb6))) || button==pbLFOShape)
@@ -368,36 +377,13 @@ void p600_keyEvent(uint8_t key, int pressed)
 	sevenSeg_setNumber(key);
 	led_set(plFromTape,pressed,0);
 
-	if(pressed)
-	{
-		assigner_assignNote(key);
-	}
-	else
-	{
-		int8_t v;
-
-		v=assigner_getVoiceFromNote(key);
-		
-		if(v>=-1)
-		{
-			v=MAX(P600_UNISON_ENV,v); // unison is env 0
-
-			adsr_setGate(&p600.filEnvs[v],0);
-			adsr_setGate(&p600.ampEnvs[v],0);
-		}
-	}
+	assigner_assignNote(key,pressed);
 }
 
-void p600_assignerEvent(uint8_t note, int8_t voice)
+void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 {
 	if(note!=ASSIGNER_NO_NOTE)
 	{
-		if(!p600.playingUnison || voice==P600_UNISON_ENV)
-		{
-			adsr_setGate(&p600.filEnvs[voice],1);
-			adsr_setGate(&p600.ampEnvs[voice],1);
-		}
-
 		p600.oscANoteCVRaw[voice]=tuner_computeCVFromNote(note,pcOsc1A+voice);
 		p600.oscBNoteCVRaw[voice]=tuner_computeCVFromNote(note,pcOsc1B+voice);
 		p600.filterNoteCVRaw[voice]=tuner_computeCVFromNote(note,pcFil1+voice);
@@ -405,13 +391,20 @@ void p600_assignerEvent(uint8_t note, int8_t voice)
 	}
 	else
 	{
-		synth_setCV(pcAmp1+voice,0,1); // silence remaining notes
+		synth_setCV(pcAmp1+voice,0,1);
 	}
 
+	int env=p600.playingMono?P600_MONO_ENV:voice;
+	
+	adsr_setGate(&p600.filEnvs[env],gate);
+	adsr_setGate(&p600.ampEnvs[env],gate);
+
 #ifdef DEBUG		
-	print("assign ");
+	print("assign note ");
 	phex(note);
-	print(" ");
+	print("  gate ");
+	phex(gate);
+	print(" voice ");
 	phex(voice);
 	print("\n");
 #endif
