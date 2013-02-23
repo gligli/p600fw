@@ -21,6 +21,9 @@
 #define MOD_FREQ 2
 #define MOD_PW 4
 
+#define ENV_EXPO 1
+#define ENV_SLOW 2
+
 static struct
 {
 	struct adsr_s filEnvs[P600_VOICE_COUNT];
@@ -36,11 +39,12 @@ static struct
 	uint16_t oscBNoteCVAdj[P600_VOICE_COUNT];
 	uint16_t filterNoteCVAdj[P600_VOICE_COUNT]; 
 
-	uint16_t filterEnvAmt;
 	int8_t trackingShift;
 	int8_t tuned;
 	int8_t playingMono;
 
+	uint8_t envFlags[2]; // 0:amp / 1:fil
+	
 	int8_t lfoAltShapes;
 	uint8_t lfoModulations;
 	uint8_t lfoShift;
@@ -75,18 +79,13 @@ static void adjustTunedCVs(void)
 
 static void refreshGates(void)
 {
-	int8_t v;
-
 	synth_setGate(pgASaw,scanner_buttonState(pbASaw));
 	synth_setGate(pgBSaw,scanner_buttonState(pbBSaw));
 	synth_setGate(pgATri,scanner_buttonState(pbATri));
 	synth_setGate(pgBTri,scanner_buttonState(pbBTri));
-	
-	for(v=0;v<P600_VOICE_COUNT;++v)
-	{
-		adsr_setShape(&p600.filEnvs[v],scanner_buttonState(pbASqr));
-		adsr_setShape(&p600.ampEnvs[v],scanner_buttonState(pbBSqr));
-	}
+	synth_setGate(pgSync,scanner_buttonState(pbSync));
+	synth_setGate(pgPModFA,scanner_buttonState(pbPModFA));
+	synth_setGate(pgPModFil,scanner_buttonState(pbPModFil));
 
 	p600.trackingShift=16; // shifting any 16bit value by 16 will clear it!
 	if(scanner_buttonState(pbFilFull))
@@ -101,6 +100,80 @@ static void refreshGates(void)
 		p600.lfoModulations|=MOD_FREQ;
 	if(scanner_buttonState(pbLFOPW))
 		p600.lfoModulations|=MOD_PW;
+}
+
+static void refreshEnvSettings(int8_t type)
+{
+	char s[20]="";
+
+	uint8_t expo,shift;
+	int8_t i;
+	struct adsr_s * a;
+		
+	expo=(p600.envFlags[type]&ENV_EXPO)!=0;
+	shift=(p600.envFlags[type]&ENV_SLOW)?3:1;
+
+	for(i=0;i<P600_VOICE_COUNT;++i)
+	{
+		if(type)
+			a=&p600.filEnvs[i];
+		else
+			a=&p600.ampEnvs[i];
+
+		adsr_setShape(a,expo);
+		adsr_setSpeedShift(a,shift);
+	}
+
+	if(type)
+		strcat(s,"F ");
+	else
+		strcat(s,"A ");
+
+	switch(p600.envFlags[type])
+	{
+	case 0:
+		strcat(s,"fast lin");
+		break;
+	case 1:
+		strcat(s,"fast exp");
+		break;
+	case 2:
+		strcat(s,"slo lin");
+		break;
+	case 3:
+		strcat(s,"slo exp");
+		break;
+	}
+
+	sevenSeg_scrollText(s,1);
+}
+
+static void refreshLfoSettings(void)
+{
+	char s[20]="";
+	lfoShape_t shape;
+
+	shape=1+scanner_buttonState(pbLFOShape)+p600.lfoAltShapes*2;
+
+	lfo_setShape(&p600.lfo,shape);
+	lfo_setSpeedShift(&p600.lfo,p600.lfoShift*2);
+
+	switch(p600.lfoShift)
+	{
+	case 0:
+		strcat(s,"Slo ");
+		break;
+	case 1:
+		strcat(s,"Mid ");
+		break;
+	case 2:
+		strcat(s,"Fast ");
+		break;
+	}
+
+	strcat(s,lfo_shapeName(shape));
+
+	sevenSeg_scrollText(s,1);
 }
 
 void p600_init(void)
@@ -122,14 +195,14 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-//	tuner_tuneSynth();
+	tuner_tuneSynth();
 	p600.tuned=1;
 	
 	lfo_init(&p600.lfo,tuner_computeCVFromFrequency(1234,pcFil1)); // not random, but good enough
 	
-	// unpressed buttons won't trigger events on start
-	
-	p600_buttonEvent(pbLFOShape,0);
+	refreshLfoSettings();
+	refreshEnvSettings(0);
+	refreshEnvSettings(1);
 
 	// a nice welcome message ;)
 	
@@ -174,7 +247,7 @@ void p600_update(void)
 	
 	if(updatingSlow)
 	{
-		potmux_need(ppMVol,ppMTune,ppLFOAmt,ppLFOFreq);
+		potmux_need(ppMVol,ppMTune,ppLFOAmt,ppLFOFreq,ppPModFilEnv,ppPModOscB);
 	}
 	
 	if(updatingEnvs)
@@ -187,7 +260,7 @@ void p600_update(void)
 		potmux_need(ppMixer,ppGlide,ppResonance,ppFilEnvAmt,ppAPW,ppBPW,ppFreqBFine);
 	}
 
-	potmux_need(ppCutoff,ppFreqA,ppFreqB);
+	potmux_need(ppCutoff,ppFreqA,ppFreqB,ppPitchWheel,ppModWheel);
 	
 	// read them
 	
@@ -199,6 +272,7 @@ void p600_update(void)
 	
 	if(updatingSlow)
 	{
+		synth_setCV(pcPModOscB,potmux_getValue(ppPModOscB),1);
 		synth_setCV(pcMVol,potmux_getValue(ppMVol),1);
 		lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),potmux_getValue(ppLFOAmt));
 	}
@@ -226,8 +300,8 @@ void p600_update(void)
 		
 		if(!(p600.lfoModulations&MOD_PW))
 		{
-			synth_setCV(pcAPW,potmux_getValue(ppAPW),1);
-			synth_setCV(pcBPW,potmux_getValue(ppBPW),1);
+			synth_setCV(pcAPW,scanner_buttonState(pbASqr)?potmux_getValue(ppAPW):0,1);
+			synth_setCV(pcBPW,scanner_buttonState(pbBSqr)?potmux_getValue(ppBPW):0,1);
 		}
 	}
 }
@@ -250,8 +324,8 @@ void p600_fastInterrupt(void)
 	
 	if(p600.lfoModulations&MOD_PW)
 	{
-		synth_setCV(pcAPW,satAddU16S16(potmux_getValue(ppAPW),lfoVal),1);
-		synth_setCV(pcBPW,satAddU16S16(potmux_getValue(ppBPW),lfoVal),1);
+		synth_setCV(pcAPW,scanner_buttonState(pbASqr)?satAddU16S16(potmux_getValue(ppAPW),lfoVal):0,1);
+		synth_setCV(pcBPW,scanner_buttonState(pbBSqr)?satAddU16S16(potmux_getValue(ppBPW),lfoVal):0,1);
 	}
 	
 	// per voice stuff
@@ -325,58 +399,54 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 {
 	refreshGates();
 	
+	// tuning
+	
 	if(pressed && button==pbTune)
 		p600.tuned=0;
+	
+	// assigner
 
-	if(pressed && button>=pb0 && button<=pb4)
+	if(pressed && button==pb1)
 	{
-		assignerMode_t mode=button;
-
+		assignerMode_t mode;
+		
+		mode=(assigner_getMode()+1)%(mMonoHigh+1);
+		
 		assigner_setMode(mode);
 		sevenSeg_scrollText(assigner_modeName(mode),1);
 		p600.playingMono=mode!=mPoly;
 	}
 
-	if((pressed && ((button==pb5) || (button==pb6))) || button==pbLFOShape)
+	// lfo
+	
+	if((pressed && ((button==pb2) || (button==pb3))) || button==pbLFOShape)
 	{
-		lfoShape_t shape;
-		char s[20]="";
-
-		if(scanner_buttonState(pb5))
+		if(scanner_buttonState(pb2))
 			p600.lfoAltShapes=1-p600.lfoAltShapes;
 
-		if(scanner_buttonState(pb6))
+		if(scanner_buttonState(pb3))
 			p600.lfoShift=(p600.lfoShift+1)%3;
-
-		shape=1+scanner_buttonState(pbLFOShape)+p600.lfoAltShapes*2;
-
-		lfo_setShape(&p600.lfo,shape);
-		lfo_setSpeedShift(&p600.lfo,p600.lfoShift*2);
 		
-		switch(p600.lfoShift)
-		{
-		case 0:
-			strcat(s,"Slo ");
-			break;
-		case 1:
-			strcat(s,"Mid ");
-			break;
-		case 2:
-			strcat(s,"Fast ");
-			break;
-		}
-		
-		strcat(s,lfo_shapeName(shape));
-		
-		sevenSeg_scrollText(s,1);
+		refreshLfoSettings();
 	}
+
+	// envs
+	
+	if(pressed && ((button==pb4) || (button==pb5)))
+	{
+		uint8_t type;
+		
+		type=(button==pb5)?1:0;
+		
+		p600.envFlags[type]=(p600.envFlags[type]+1)%4;
+		
+		refreshEnvSettings(type);
+	}
+
 }
 
 void p600_keyEvent(uint8_t key, int pressed)
 {
-	sevenSeg_setNumber(key);
-	led_set(plFromTape,pressed,0);
-
 	assigner_assignNote(key,pressed);
 }
 

@@ -51,8 +51,6 @@
 #include "adsr.h"
 #include "adsr_lookups.h"
 
-#define ADSR_SPEED_SHIFT 1
-
 static uint32_t getPhaseInc(uint8_t v)
 {
 	uint32_t r=0;
@@ -62,14 +60,6 @@ static uint32_t getPhaseInc(uint8_t v)
 	r|=(uint32_t)phaseLookupHi[v]<<16;
 	
 	return r;
-}
-
-static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
-{
-	if(isExp)
-		return computeShape(phase,lookup);
-	else
-		return phase>>8; // 20bit -> 16 bit
 }
 
 static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
@@ -100,18 +90,35 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 	}
 }
 
-void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
+static void updateIncrements(struct adsr_s * adsr)
 {
-	adsr->sustainCV=sus;
-	adsr->levelCV=lvl;
-	
-	adsr->attackIncrement=getPhaseInc(atk>>8)>>ADSR_SPEED_SHIFT<<4; // phase is 20 bits, from bit 4 to bit 23
-	adsr->decayIncrement=getPhaseInc(dec>>8)>>ADSR_SPEED_SHIFT<<4;
-	adsr->releaseIncrement=getPhaseInc(rls>>8)>>ADSR_SPEED_SHIFT<<4;
+	adsr->attackIncrement=(getPhaseInc(adsr->attackCV>>8)>>adsr->speedShift)<<4; // phase is 20 bits, from bit 4 to bit 23
+	adsr->decayIncrement=(getPhaseInc(adsr->decayCV>>8)>>adsr->speedShift)<<4;
+	adsr->releaseIncrement=(getPhaseInc(adsr->releaseCV>>8)>>adsr->speedShift)<<4;
 	
 	// immediate update of env settings
 	
 	updateStageVars(adsr,adsr->stage);
+}
+
+
+static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
+{
+	if(isExp)
+		return computeShape(phase,lookup);
+	else
+		return phase>>8; // 20bit -> 16 bit
+}
+
+void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
+{
+	adsr->attackCV=atk;
+	adsr->decayCV=dec;
+	adsr->sustainCV=sus;
+	adsr->releaseCV=rls;
+	adsr->levelCV=lvl;
+
+	updateIncrements(adsr);
 }
 
 void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
@@ -126,6 +133,13 @@ void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
 void inline adsr_setShape(struct adsr_s * adsr, int8_t isExp)
 {
 	adsr->expOutput=isExp;
+}
+
+void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift)
+{
+	adsr->speedShift=shift;
+	
+	updateIncrements(adsr);
 }
 
 adsrStage_t inline adsr_getStage(struct adsr_s * adsr)

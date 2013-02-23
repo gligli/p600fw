@@ -15,17 +15,21 @@ struct adsr_s
 	uint32_t attackIncrement,decayIncrement,releaseIncrement; 
 	
 	uint16_t sustainCV,levelCV;
+	uint16_t attackCV,decayCV,releaseCV;
 	uint16_t stageLevel,stageAdd,stageMul;
 	uint16_t output;
 
 	int8_t expOutput,gate,nextGate,gateChanged;
+	uint8_t speedShift;
 	
 	adsrStage_t stage;
 };
 
 void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl);
 void adsr_setGate(struct adsr_s * adsr, int8_t gate);
+
 void adsr_setShape(struct adsr_s * adsr, int8_t isExp);
+void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift);
 
 adsrStage_t adsr_getStage(struct adsr_s * adsr);
 uint16_t adsr_getOutput(struct adsr_s * adsr);
