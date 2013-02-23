@@ -20,7 +20,8 @@ inline uint16_t satAddU16S32(uint16_t a, int32_t b) {
 	
 	int32_t r;
 
-	r=a+b;
+	r=a;
+	r+=b;
 	r=MAX(r,0);
 	r=MIN(r,UINT16_MAX);
 	
@@ -31,7 +32,8 @@ inline uint16_t satAddU16S16(uint16_t a, int16_t b) {
 	
 	int32_t r;
 
-	r=a+b;
+	r=a;
+	r+=b;
 	r=MAX(r,0);
 	r=MIN(r,UINT16_MAX);
 	
