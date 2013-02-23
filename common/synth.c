@@ -37,7 +37,7 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 	}
 }
 
-void inline synth_setCV(p600CV_t cv,uint16_t value, int8_t immediate)
+inline void synth_setCV(p600CV_t cv,uint16_t value, int8_t immediate)
 {
 	if(immediate)
 		updateCV(cv,value);
@@ -45,7 +45,15 @@ void inline synth_setCV(p600CV_t cv,uint16_t value, int8_t immediate)
 		synth.cvs[cv]=value;
 }
 
-void inline synth_setGate(p600Gate_t gate,int8_t on)
+inline void synth_setCV32Sat(p600CV_t cv,int32_t value, int8_t immediate)
+{
+	value=MAX(value,0);
+	value=MIN(value,UINT16_MAX);
+	
+	synth_setCV(cv,value,immediate);
+}
+
+inline void synth_setGate(p600Gate_t gate,int8_t on)
 {
 	uint8_t mask=1<<gate;
 	

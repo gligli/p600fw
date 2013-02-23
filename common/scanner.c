@@ -42,7 +42,7 @@ static inline void scanner_event(uint8_t key, int8_t pressed)
 
 #define DO_ONE_SCAN(x) if(pa&1) scanner_event(i*8+(x),ps&1); pa>>=1; ps>>=1;
 
-void scanner_update(void)
+void scanner_update(int8_t fullScan)
 {
 	uint8_t i;
 	uint8_t ps=0,pa;		
@@ -50,10 +50,13 @@ void scanner_update(void)
 	BLOCK_INT
 	{
 		// prepare first iteration
-		io_write(0x08,0);
+		
+		i=fullScan?0:8;
+				
+		io_write(0x08,i);
 		CYCLE_WAIT(16);
 		
-		for(i=0;i<SCANNER_BYTES;++i)
+		for(;i<SCANNER_BYTES;++i)
 		{
 			ps=io_read(0x0a);
 			

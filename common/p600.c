@@ -125,8 +125,6 @@ static void computeBenderCVs(void)
 	if(pos==p600.benderRawPosition)
 		return;
 	
-	phex16(pos);
-	
 	p600.benderRawPosition=pos;
 	
 	// compute adjusted bender amount
@@ -149,8 +147,6 @@ static void computeBenderCVs(void)
 	p600.benderAmount=MIN(MAX(amt,INT16_MIN),INT16_MAX);
 
 	// compute bends
-	
-	memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
 	
 	switch(p600.benderTarget)
 	{
@@ -179,10 +175,6 @@ static void computeBenderCVs(void)
 	default:
 		;
 	}
-	
-	// we propbably changed tuned CVs
-	
-	adjustTunedCVs();
 }
 
 static void refreshGates(void)
@@ -274,6 +266,8 @@ void p600_init(void)
 	p600.benderMiddle=UINT16_MAX/2;
 	p600.benderSemitones=5;
 	p600.benderTarget=modPitch;
+	p600.envFlags[0]=ENV_EXPO;
+	p600.envFlags[1]=ENV_EXPO;
 	
 	// init
 	
@@ -357,8 +351,6 @@ void p600_update(void)
 	{
 		synth_setCV(pcPModOscB,potmux_getValue(ppPModOscB),1);
 		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),1);
-	
-		adjustTunedCVs();
 	}
 	
 	if(updatingEnvs)
@@ -390,42 +382,59 @@ void p600_update(void)
 	}
 
 	computeBenderCVs();
+	adjustTunedCVs();
 	lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),satAddU16U16(potmux_getValue(ppLFOAmt),potmux_getValue(ppModWheel)>>p600.modwheelShift));
 }
 
 void p600_fastInterrupt(void)
 {
-	int8_t v,assigned,hz500,hz125,env;
-	uint16_t envVal,va,vb,vf;
-	int16_t lfoVal;
+	int32_t va,vb,vf;
+	uint16_t envVal;
+	int16_t pitchLfoVal,filterLfoVal,pwLfoVal;
+	int8_t v,assigned,hz500,hz63,env;
 
 	static uint8_t frc=0;
 	
 	hz500=(frc&0x03)==0; // 1/4 of the time (500hz)
-	hz125=(frc&0x0f)==0; // 1/16 of the time (125hz)
+	hz63=(frc&0x01f)==0; // 1/82 of the time (62.5hz)
 
 	// lfo
 	
 	lfo_update(&p600.lfo);
 	
-	lfoVal=p600.lfo.output;
+	pitchLfoVal=filterLfoVal=0;
+	
+	if(p600.lfoTargets&(1<<modPitch))
+		pitchLfoVal=p600.lfo.output;
+
+	if(p600.lfoTargets&(1<<modFilter))
+		filterLfoVal=p600.lfo.output;
 	
 	if(p600.lfoTargets&(1<<modPW))
 	{
-		synth_setCV(pcAPW,scanner_buttonState(pbASqr)?satAddU16S16(potmux_getValue(ppAPW),lfoVal):0,1);
-		synth_setCV(pcBPW,scanner_buttonState(pbBSqr)?satAddU16S16(potmux_getValue(ppBPW),lfoVal):0,1);
+		pwLfoVal=p600.lfo.output;
+		
+		va=vb=0;
+		
+		if (scanner_buttonState(pbASqr))
+		{
+			va=potmux_getValue(ppAPW);
+			va+=pwLfoVal;
+		}
+		
+		if (scanner_buttonState(pbBSqr))
+		{
+			vb=potmux_getValue(ppBPW);
+			vb+=pwLfoVal;
+		}
+		
+		synth_setCV(pcAPW,va,1);
+		synth_setCV(pcBPW,vb,1);
 	}
 	
 	// per voice stuff
 	
-		// unison / mono modes use only 1 env
-	
-	if(p600.playingMono)
-	{
-		env=P600_MONO_ENV;
-		adsr_update(&p600.filEnvs[env]);
-		adsr_update(&p600.ampEnvs[env]);
-	}
+	env=P600_MONO_ENV;
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
@@ -435,7 +444,7 @@ void p600_fastInterrupt(void)
 		{
 			// handle envs update
 			
-			if(!p600.playingMono)
+			if(!p600.playingMono || v==P600_MONO_ENV)
 			{
 				adsr_update(&p600.filEnvs[v]);
 				adsr_update(&p600.ampEnvs[v]);
@@ -447,23 +456,20 @@ void p600_fastInterrupt(void)
 			envVal=p600.filEnvs[env].output;
 
 			va=p600.oscANoteCV[v];
+			va+=pitchLfoVal;
+			
 			vb=p600.oscBNoteCV[v];
-			if(p600.lfoTargets&(1<<modPitch))
-			{
-				va=satAddU16S16(va,lfoVal);
-				vb=satAddU16S16(vb,lfoVal);
-			}
+			vb+=pitchLfoVal;
 			
 			vf=p600.filterNoteCV[v];
-			vf=satAddU16U16(vf,envVal);
-			if(p600.lfoTargets&(1<<modFilter))
-				vf=satAddU16S16(vf,lfoVal);
+			vf+=envVal;
+			vf+=filterLfoVal;
 			
 			// apply them
 			
-			synth_setCV(pcOsc1A+v,va,1);
-			synth_setCV(pcOsc1B+v,vb,1);
-			synth_setCV(pcFil1+v,vf,1);
+			synth_setCV32Sat(pcOsc1A+v,va,1);
+			synth_setCV32Sat(pcOsc1B+v,vb,1);
+			synth_setCV32Sat(pcFil1+v,vf,1);
 			synth_setCV(pcAmp1+v,p600.ampEnvs[env].output,1);
 		}
 	}
@@ -472,8 +478,8 @@ void p600_fastInterrupt(void)
 	
 	if(hz500)
 	{
-		scanner_update();
-		display_update(hz125);
+		scanner_update(hz63);
+		display_update(hz63);
 	}
 	
 	++frc;
@@ -499,16 +505,20 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	
 	// assigner
 
-	if((pressed && button==pb0) || button==pbUnison)
+	if((pressed && button==pb0))
 	{
-		if(button==pb0)
-			p600.assignerMonoMode=(p600.assignerMonoMode%mMonoHigh)+1;
-		
+		p600.assignerMonoMode=(p600.assignerMonoMode%mMonoHigh)+1;
+
 		refreshAssignerSettings();
-		
-		sevenSeg_scrollText(assigner_modeName(assigner_getMode()),1);
+		sevenSeg_scrollText(assigner_modeName(p600.assignerMonoMode),1);
 	}
 
+	if(button==pbUnison)
+	{
+		refreshAssignerSettings();
+		sevenSeg_scrollText(assigner_modeName(assigner_getMode()),1);
+	}
+	
 	// lfo
 	
 	if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
@@ -646,7 +656,8 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			s="Calibrated";
 		}
 		
-		// force bender CVs recompute
+		// clear bender CVs, force recompute
+		memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
 		p600.benderRawPosition=~p600.benderRawPosition;
 
 		sevenSeg_scrollText(s,1);

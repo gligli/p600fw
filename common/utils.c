@@ -12,12 +12,17 @@ inline float log2f( float n )
     return logf( n ) * INVLOG2;  
 }
 
-inline uint16_t satAddU16U16(uint16_t a, uint16_t b) {
-    return (a > UINT16_MAX - b) ? UINT16_MAX : a + b;
+inline uint16_t satAddU16U16(uint16_t a, uint16_t b)
+{
+	uint16_t r;
+
+	r =  (b > UINT16_MAX - a) ? UINT16_MAX : b + a;
+	
+	return r;
 }
 
-inline uint16_t satAddU16S32(uint16_t a, int32_t b) {
-	
+inline uint16_t satAddU16S32(uint16_t a, int32_t b)
+{
 	int32_t r;
 
 	r=a;
@@ -28,12 +33,13 @@ inline uint16_t satAddU16S32(uint16_t a, int32_t b) {
 	return (uint16_t)r;
 }
 
-inline uint16_t satAddU16S16(uint16_t a, int16_t b) {
-	
+inline uint16_t satAddU16S16(uint16_t a, int16_t b)
+{
 	int32_t r;
 
 	r=a;
 	r+=b;
+	
 	r=MAX(r,0);
 	r=MIN(r,UINT16_MAX);
 	
