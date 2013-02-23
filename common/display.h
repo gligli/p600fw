@@ -14,7 +14,7 @@ void led_set(p600LED_t led, int8_t on, int8_t blinking);
 void display_clear(void);
 
 void display_init(void);
-void display_update(void);
+void display_update(int8_t fullUpdate);
 
 
 #endif	/* DISPLAY_H */

@@ -5,21 +5,26 @@
 #include "display.h"
 #include "map_to_7segment.h"
 
-#define DISPLAY_BLINK_HALF_PERIOD 160
-#define DISPLAY_SCROLL_RATE 80
+#define DISPLAY_BLINK_HALF_PERIOD 40
+#define DISPLAY_SCROLL_RATE 20
 
 static struct
 {
 	uint16_t ledOn;
 	uint16_t ledBlinking;
-	uint8_t activeCol;
+	
 	uint8_t sevenSegs[2];
+	
 	uint8_t blinkCounter;
 	int8_t blinkState;
 	
 	uint8_t scrollCounter;
 	int8_t scrollPos;
 	int8_t scrollTimes;
+
+	uint8_t activeCol;
+	uint8_t activeRows[3];
+
 	char scrollText[50];
 } display;
 
@@ -89,67 +94,73 @@ void display_init()
 	display.scrollText[0]=' ';
 }
 
-void display_update()
+void display_update(int8_t fullUpdate)
 {
-	// blinker
-	
-	display.blinkCounter++;
-	
-	if (display.blinkCounter>DISPLAY_BLINK_HALF_PERIOD)
+	if(fullUpdate)
 	{
-		display.blinkState=!display.blinkState;
-		display.blinkCounter=0;
-	}
-	
-	// scroller
-	
-	display.scrollCounter++;
-	
-	if (display.scrollCounter>DISPLAY_SCROLL_RATE && display.scrollTimes)
-	{
-		int8_t l,p,p2;
+		// blinker
 
-		l=strlen(display.scrollText);
-		p=display.scrollPos;
-		p2=(display.scrollPos+1)%l;
+		display.blinkCounter++;
 
-		sevenSeg_setAscii(display.scrollText[p],display.scrollText[p2]);
+		if (display.blinkCounter>DISPLAY_BLINK_HALF_PERIOD)
+		{
+			display.blinkState=!display.blinkState;
+			display.blinkCounter=0;
+		}
 
-		display.scrollPos=p2;
-		display.scrollCounter=0;
+		// scroller
+
+		display.scrollCounter++;
+
+		if (display.scrollCounter>DISPLAY_SCROLL_RATE && display.scrollTimes)
+		{
+			int8_t l,p,p2;
+
+			l=strlen(display.scrollText);
+			p=display.scrollPos;
+			p2=(display.scrollPos+1)%l;
+
+			sevenSeg_setAscii(display.scrollText[p],display.scrollText[p2]);
+
+			display.scrollPos=p2;
+			display.scrollCounter=0;
+
+			if(p2==0 && display.scrollTimes>0)
+				--display.scrollTimes;
+		}
+
+		// update one third of display at a time
+
+		uint8_t b=0;
+
+		switch (display.activeCol)
+		{
+		case 0:
+			b=display.ledOn;
+			if (display.blinkState) b^=display.ledBlinking;
+			break;
+		case 1:
+			b=display.sevenSegs[0]&0x7f;
+			if (led_getOn(plDot)) b|=0x80;
+			break;
+		case 2:
+			b=display.sevenSegs[1]&0x7f;
+			if (led_getOn(plTune)) b|=0x80;
+			break;
+		}
 		
-		if(p2==0 && display.scrollTimes>0)
-			--display.scrollTimes;
-	}
-	
-	// update one third of display at a time
-	
-	uint8_t b=0;
-	
-	switch (display.activeCol)
-	{
-	case 0:
-		b=display.ledOn;
-		if (display.blinkState) b^=display.ledBlinking;
-		break;
-	case 1:
-		b=display.sevenSegs[0]&0x7f;
-		if (led_getOn(plDot)) b|=0x80;
-		break;
-	case 2:
-		b=display.sevenSegs[1]&0x7f;
-		if (led_getOn(plTune)) b|=0x80;
-		break;
+		display.activeRows[display.activeCol]=b;
 	}
 	
 	BLOCK_INT
 	{
 		io_write(0x09,0x00);
+		CYCLE_WAIT(1);
 		io_write(0x08,0x10<<display.activeCol);
-		CYCLE_WAIT(4);
-		io_write(0x09,b);
+		CYCLE_WAIT(1);
+		io_write(0x09,display.activeRows[display.activeCol]);
 	}
-	
+
 	display.activeCol=(display.activeCol+1)%3;
 }
 

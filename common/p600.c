@@ -51,7 +51,10 @@ static struct
 	int8_t modwheelShift;
 	
 	uint16_t benderMiddle;
+	int16_t benderRawPosition;
 	int16_t benderAmount;
+	int16_t benderCVs[pcFil6-pcOsc1A+1];
+	int16_t benderVolumeCV;
 	int8_t benderSemitones;
 	modulation_t benderTarget;
 } p600;
@@ -77,35 +80,58 @@ static const char * modulationName(modulation_t m)
 	}
 }
 
-static inline int16_t computeBend(p600CV_t cv)
-{
-	int32_t bend;
-	modulation_t t;
-	t=p600.benderTarget;
-
-	bend=0;
-	
-	if((cv==pcMVol && t==modVolume) || (cv>=pcFil1 && cv<=pcFil6 && t==modFilter))
-		bend=p600.benderSemitones*(UINT16_MAX/12);
-	else if(cv>=pcOsc1A && cv<=pcOsc6B && t==modPitch)
-		bend=tuner_computeCVFromNote(p600.benderSemitones*2,cv)-tuner_computeCVFromNote(0,cv);
-
-	bend*=p600.benderAmount;
-	bend/=UINT16_MAX;
-	
-	return bend;
-}
-
 static void adjustTunedCVs(void)
 {
 	int8_t v;
 	uint8_t note,baseANote,baseBNote;
 	int16_t mTune,fineBFreq;
-	int32_t baseCutoff,amt;
+	int32_t baseCutoff;
+	
+	// filters and oscs
+	
+	mTune=(potmux_getValue(ppMTune)>>8)+INT8_MIN;
+	fineBFreq=(potmux_getValue(ppFreqBFine)>>7)+INT8_MIN*2;
+	
+	baseCutoff=potmux_getValue(ppCutoff);
+	
+	baseANote=potmux_getValue(ppFreqA)>>10; // 64 semitones
+	baseBNote=potmux_getValue(ppFreqB)>>10;
+	
+	for(v=0;v<P600_VOICE_COUNT;++v)
+	{
+		if (!assigner_getAssignment(v,&note))
+			continue;
+		
+		p600.oscANoteCV[v]=satAddU16S32(tuner_computeCVFromNote(baseANote+note,pcOsc1A+v),p600.benderCVs[pcOsc1A+v]+mTune);
+		p600.oscBNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,pcOsc1B+v),p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		
+		if(p600.trackingShift>=0)
+			p600.filterNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(note,pcFil1+v)>>p600.trackingShift,p600.benderCVs[pcFil1+v]+baseCutoff);
+		else
+			p600.filterNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),p600.benderCVs[pcFil1+v]+baseCutoff);
+	}
+}
+
+static void computeBenderCVs(void)
+{
+	int32_t bend,amt;
+	uint16_t pos;
+	p600CV_t cv;
+
+	// pot didn't move -> nothing to compute
+	
+	pos=potmux_getValue(ppPitchWheel);
+	
+	if(pos==p600.benderRawPosition)
+		return;
+	
+	phex16(pos);
+	
+	p600.benderRawPosition=pos;
 	
 	// compute adjusted bender amount
 	
-	amt=potmux_getValue(ppPitchWheel);
+	amt=pos;
 	amt+=P600_BENDER_OFFSET;
 	
 	if(amt<p600.benderMiddle)
@@ -122,29 +148,41 @@ static void adjustTunedCVs(void)
 	}
 	p600.benderAmount=MIN(MAX(amt,INT16_MIN),INT16_MAX);
 
-	// filters and oscs
+	// compute bends
 	
-	mTune=(potmux_getValue(ppMTune)>>8)+INT8_MIN;
-	fineBFreq=(potmux_getValue(ppFreqBFine)>>8)+INT8_MIN;
+	memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
 	
-	baseCutoff=potmux_getValue(ppCutoff);
-	
-	baseANote=potmux_getValue(ppFreqA)>>10; // 64 semitones
-	baseBNote=potmux_getValue(ppFreqB)>>10;
-	
-	for(v=0;v<P600_VOICE_COUNT;++v)
+	switch(p600.benderTarget)
 	{
-		if (!assigner_getAssignment(v,&note))
-			continue;
-		
-		p600.oscANoteCV[v]=satAddU16S32(tuner_computeCVFromNote(baseANote+note,pcOsc1A+v),computeBend(pcOsc1A+v)+mTune);
-		p600.oscBNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,pcOsc1B+v),computeBend(pcOsc1B+v)+mTune+fineBFreq);
-		
-		if(p600.trackingShift>=0)
-			p600.filterNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(note,pcFil1+v)>>p600.trackingShift,computeBend(pcFil1+v)+baseCutoff);
-		else
-			p600.filterNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),computeBend(pcFil1+v)+baseCutoff);
+	case modPitch:
+		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
+		{
+			bend=tuner_computeCVFromNote(p600.benderSemitones*2,cv)-tuner_computeCVFromNote(0,cv);
+			bend*=p600.benderAmount;
+			bend/=UINT16_MAX;
+			p600.benderCVs[cv]=bend;
+		}
+		break;
+	case modFilter:
+		bend=p600.benderSemitones;
+		bend*=p600.benderAmount;
+		bend/=12;
+		for(cv=pcFil1;cv<=pcFil6;++cv)
+			p600.benderCVs[cv]=bend;
+		break;
+	case modVolume:
+		bend=p600.benderSemitones;
+		bend*=p600.benderAmount;
+		bend/=12;
+		p600.benderVolumeCV=bend;
+		break;
+	default:
+		;
 	}
+	
+	// we propbably changed tuned CVs
+	
+	adjustTunedCVs();
 }
 
 static void refreshGates(void)
@@ -318,7 +356,9 @@ void p600_update(void)
 	if(updatingSlow)
 	{
 		synth_setCV(pcPModOscB,potmux_getValue(ppPModOscB),1);
-		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),computeBend(pcMVol)),1);
+		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),1);
+	
+		adjustTunedCVs();
 	}
 	
 	if(updatingEnvs)
@@ -349,19 +389,20 @@ void p600_update(void)
 		}
 	}
 
-	adjustTunedCVs();
+	computeBenderCVs();
 	lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),satAddU16U16(potmux_getValue(ppLFOAmt),potmux_getValue(ppModWheel)>>p600.modwheelShift));
 }
 
 void p600_fastInterrupt(void)
 {
-	int8_t v,assigned,hz500,env;
+	int8_t v,assigned,hz500,hz125,env;
 	uint16_t envVal,va,vb,vf;
 	int16_t lfoVal;
 
 	static uint8_t frc=0;
 	
 	hz500=(frc&0x03)==0; // 1/4 of the time (500hz)
+	hz125=(frc&0x0f)==0; // 1/16 of the time (125hz)
 
 	// lfo
 	
@@ -431,8 +472,8 @@ void p600_fastInterrupt(void)
 	
 	if(hz500)
 	{
-		scanner_update(); // do this first (clears display)
-		display_update();
+		scanner_update();
+		display_update(hz125);
 	}
 	
 	++frc;
@@ -532,7 +573,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 	// envs
 	
-	if(pressed && (button==pb4 || button==pb5))
+	if(pressed && (button>=pb4 && button<=pb5))
 	{
 		char s[20]="";
 		uint8_t type;
@@ -570,11 +611,11 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	
 	// bender
 	
-	if(pressed && (button==pb7 || button==pb8))
+	if(pressed && (button>=pb7 && button<=pb9))
 	{
 		const char * s=NULL;
 		
-		if (button==pb7)
+		if(button==pb7)
 		{
 			switch(p600.benderSemitones)
 			{
@@ -593,21 +634,24 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			}
 		}
 		
-		if (button==pb8)
+		if(button==pb8)
 		{
 			p600.benderTarget=(p600.benderTarget+1)%(modVolume+1);
 			s=modulationName(p600.benderTarget);
 		}
 
+		if(button==pb9)
+		{
+			p600.benderMiddle=satAddU16S16(potmux_getValue(ppPitchWheel),P600_BENDER_OFFSET);
+			s="Calibrated";
+		}
+		
+		// force bender CVs recompute
+		p600.benderRawPosition=~p600.benderRawPosition;
+
 		sevenSeg_scrollText(s,1);
 	}
 	
-	if(pressed && button==pb9)
-	{
-		p600.benderMiddle=satAddU16S16(potmux_getValue(ppPitchWheel),P600_BENDER_OFFSET);
-
-		sevenSeg_scrollText("Calibrated",1);
-	}
 }
 
 void p600_keyEvent(uint8_t key, int pressed)

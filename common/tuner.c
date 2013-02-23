@@ -6,7 +6,7 @@
 #include "synth.h"
 #include "display.h"
 
-#define TUNER_CV_COUNT 18
+#define TUNER_CV_COUNT (pcFil6-pcOsc1A+1)
 
 #define FF_P	0x01 // active low
 #define CNTR_EN 0x02
@@ -59,7 +59,7 @@ static NOINLINE void whileTuning(void)
 		else
 			sevenSeg_setAscii('F','1'+tuner.currentCV-pcFil1);
 
-		display_update();
+		display_update(1);
 	}
 	
 	synth_update();

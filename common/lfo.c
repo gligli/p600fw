@@ -13,10 +13,13 @@ static void updateIncrement(struct lfo_s * lfo)
 
 void inline lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 {
-	lfo->speedCV=spd;
 	lfo->levelCV=lvl;
 
-	updateIncrement(lfo);
+	if(spd!=lfo->speedCV)
+	{
+		lfo->speedCV=spd;
+		updateIncrement(lfo);
+	}
 }
 
 void inline lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
