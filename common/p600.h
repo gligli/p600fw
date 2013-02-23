@@ -7,6 +7,12 @@
 
 #define DEBUG
 
+#ifndef DEBUG
+	#define VERSION "alpha "__DATE__
+#else
+	#define VERSION "debug "__DATE__
+#endif
+
 #define P600_VOICE_COUNT 6
 
 ////////////////////////////////////////////////////////////////////////////////
