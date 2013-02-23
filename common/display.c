@@ -27,10 +27,10 @@ static SEG7_DEFAULT_MAP(sevenSeg_map);
 
 void sevenSeg_scrollText(const char * text, int8_t times)
 {
-	display.scrollTimes=0;
+	display.scrollTimes=times;
 	display.scrollPos=-1;
 	
-	if (text && times)
+	if (text)
 	{
 		display.scrollTimes=times;
 		display.scrollPos=0;
