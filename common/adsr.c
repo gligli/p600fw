@@ -67,13 +67,13 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 	switch(s)
 	{
 	case sAttack:
-		a->stageAdd=((uint32_t)a->stageLevel*a->levelCV)>>16;
-		a->stageMul=((uint32_t)(UINT16_MAX-a->stageLevel)*a->levelCV)>>16;
+		a->stageAdd=scaleU16U16(a->stageLevel,a->levelCV);
+		a->stageMul=scaleU16U16(UINT16_MAX-a->stageLevel,a->levelCV);
 		a->stageIncrement=a->attackIncrement;
 		break;
 	case sDecay:
-		a->stageAdd=((uint32_t)a->sustainCV*a->levelCV)>>16;
-		a->stageMul=((uint32_t)(UINT16_MAX-a->sustainCV)*a->levelCV)>>16;
+		a->stageAdd=scaleU16U16(a->sustainCV,a->levelCV);
+		a->stageMul=scaleU16U16(UINT16_MAX-a->sustainCV,a->levelCV);
 		a->stageIncrement=a->decayIncrement;
 		break;
 	case sSustain:
@@ -82,7 +82,7 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 		break;
 	case sRelease:
 		a->stageAdd=0;
-		a->stageMul=((uint32_t)a->stageLevel*a->levelCV)>>16;
+		a->stageMul=scaleU16U16(a->stageLevel,a->levelCV);
 		a->stageIncrement=a->releaseIncrement;
 		break;
 	default:
@@ -121,7 +121,7 @@ void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus,
 	updateIncrements(adsr);
 }
 
-void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
+inline void adsr_setGate(struct adsr_s * adsr, int8_t gate)
 {
 	if(adsr->gate!=gate)
 	{
@@ -130,7 +130,7 @@ void inline adsr_setGate(struct adsr_s * adsr, int8_t gate)
 	}
 }
 
-void inline adsr_setShape(struct adsr_s * adsr, int8_t isExp)
+inline void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
 {
 	adsr->expOutput=isExp;
 }
@@ -142,12 +142,12 @@ void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift)
 	updateIncrements(adsr);
 }
 
-adsrStage_t inline adsr_getStage(struct adsr_s * adsr)
+inline adsrStage_t adsr_getStage(struct adsr_s * adsr)
 {
 	return adsr->stage;
 }
 
-uint16_t inline adsr_getOutput(struct adsr_s * adsr)
+inline uint16_t adsr_getOutput(struct adsr_s * adsr)
 {
 	return adsr->output;
 }
@@ -157,7 +157,7 @@ void adsr_init(struct adsr_s * adsr)
 	memset(adsr,0,sizeof(struct adsr_s));
 }
 
-void inline adsr_update(struct adsr_s * a)
+inline void adsr_update(struct adsr_s * a)
 {
 	// handle gate
 	
@@ -218,7 +218,7 @@ void inline adsr_update(struct adsr_s * a)
 
 	// compute output level
 	
-	uint32_t o=0;
+	uint16_t o=0;
 	
 	switch(a->stage)
 	{
@@ -236,7 +236,7 @@ void inline adsr_update(struct adsr_s * a)
 		;
 	}
 	
-	a->output=((o*a->stageMul)>>16)+a->stageAdd;
+	a->output=scaleU16U16(o,a->stageMul)+a->stageAdd;
 
 	// phase increment
 	

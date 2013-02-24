@@ -68,3 +68,47 @@ inline uint16_t computeShape(uint32_t phase, uint16_t lookup[])
 	return lerp(a,b,x);
 }
 
+#ifdef AVR
+
+#include "mult16x16.h"
+#include "mult32x16.h"
+
+inline uint16_t scaleU16U16(uint16_t a, uint16_t b)
+{
+	uint16_t r;
+	
+	MultiU16X16toH16(r,a,b);
+	
+	return r;
+}
+
+inline int16_t scaleU16S16(uint16_t a, int16_t b)
+{
+	uint16_t r;
+	
+	MultiSU16X16toH16(r,b,a);
+	
+	return r;
+}
+
+#else
+
+inline uint16_t scaleU16U16(uint16_t a, uint16_t b)
+{
+	uint16_t r;
+	
+	r=((uint32_t)a*b)>>16;
+	
+	return r;
+}
+
+inline int16_t scaleU16S16(uint16_t a, int16_t b)
+{
+	uint16_t r;
+	
+	r=((int32_t)a*b)>>16;
+	
+	return r;
+}
+
+#endif

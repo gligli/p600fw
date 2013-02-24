@@ -22,12 +22,12 @@ static inline int scanner_state(uint8_t key)
 	return (scanner.stateBits[key>>3]&(1<<(key&7)))!=0;
 }
 
-int8_t inline scanner_keyState(uint8_t key)
+inline int8_t scanner_keyState(uint8_t key)
 {
 	return scanner_state(key+SCANNER_KEYS_START);
 }
 
-int8_t inline scanner_buttonState(p600Button_t button)
+inline int8_t scanner_buttonState(p600Button_t button)
 {
 	return scanner_state(button);
 }
