@@ -49,20 +49,14 @@ void scanner_update(int8_t fullScan)
 
 	BLOCK_INT
 	{
-		// prepare first iteration
-		
-		i=fullScan?0:8;
-				
-		io_write(0x08,i);
-		CYCLE_WAIT(16);
-		
-		for(;i<SCANNER_BYTES;++i)
+		for(i=fullScan?0:(SCANNER_KEYS_START/8);i<SCANNER_BYTES;++i)
 		{
+			io_write(0x08,i);
+
+			CYCLE_WAIT(16);
+
 			ps=io_read(0x0a);
 			
-			// prepare next iteration
-			io_write(0x08,i+1);
-
 			pa=ps^scanner.stateBits[i];
 			scanner.stateBits[i]=ps;
 

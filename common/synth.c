@@ -31,6 +31,9 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 
 		// select current CV
 		io_write(0x0d,dmux);
+		
+		// let S&H get correct voltage (don't remove me!)
+		CYCLE_WAIT(1);
 
 		// unselect
 		io_write(0x0d,0xff);

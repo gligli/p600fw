@@ -38,6 +38,11 @@ static struct
 	uint16_t oscANoteCV[P600_VOICE_COUNT];
 	uint16_t oscBNoteCV[P600_VOICE_COUNT];
 	uint16_t filterNoteCV[P600_VOICE_COUNT]; 
+	
+	uint16_t oscATargetCV[P600_VOICE_COUNT];
+	uint16_t oscBTargetCV[P600_VOICE_COUNT];
+	uint16_t filterTargetCV[P600_VOICE_COUNT];
+
 
 	uint8_t envFlags[2]; // 0:amp / 1:fil
 	
@@ -59,6 +64,9 @@ static struct
 	int16_t benderVolumeCV;
 	int8_t benderSemitones;
 	modulation_t benderTarget;
+	
+	uint16_t glideAmount;
+	int8_t gliding;
 } p600;
 
 static const char * modulationName(modulation_t m)
@@ -84,10 +92,11 @@ static const char * modulationName(modulation_t m)
 
 static void adjustTunedCVs(void)
 {
-	int8_t v;
-	uint8_t note,baseANote,baseBNote;
-	int16_t mTune,fineBFreq;
 	int32_t baseCutoff;
+	uint16_t cva,cvb,cvf;
+	int16_t mTune,fineBFreq;
+	uint8_t note,baseANote,baseBNote;
+	int8_t v;
 	
 	// filters and oscs
 	
@@ -104,13 +113,25 @@ static void adjustTunedCVs(void)
 		if (!assigner_getAssignment(v,&note))
 			continue;
 		
-		p600.oscANoteCV[v]=satAddU16S32(tuner_computeCVFromNote(baseANote+note,pcOsc1A+v),p600.benderCVs[pcOsc1A+v]+mTune);
-		p600.oscBNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,pcOsc1B+v),p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,pcOsc1A+v),(int32_t)p600.benderCVs[pcOsc1A+v]+mTune);
+		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,pcOsc1B+v),(int32_t)p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
 		
 		if(p600.trackingShift>=0)
-			p600.filterNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(note,pcFil1+v)>>p600.trackingShift,p600.benderCVs[pcFil1+v]+baseCutoff);
+			cvf=satAddU16S32(tuner_computeCVFromNote(note,pcFil1+v)>>p600.trackingShift,(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff);
 		else
-			p600.filterNoteCV[v]=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),p600.benderCVs[pcFil1+v]+baseCutoff);
+			cvf=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff);
+
+		p600.oscATargetCV[v]=cva;
+		p600.oscBTargetCV[v]=cvb;
+		p600.filterTargetCV[v]=cvf;
+
+		if(!p600.gliding)
+		{
+			p600.oscANoteCV[v]=cva;
+			p600.oscBNoteCV[v]=cvb;
+			p600.filterNoteCV[v]=cvf;
+		}
+				
 	}
 }
 
@@ -176,6 +197,22 @@ static void computeBenderCVs(void)
 		break;
 	default:
 		;
+	}
+}
+
+static inline void computeGlide(uint16_t * out, const uint16_t target, const uint16_t amount)
+{
+	uint16_t diff;
+	
+	if(*out<target)
+	{
+		diff=target-*out;
+		*out+=MIN(amount,diff);
+	}
+	else if(*out>target)
+	{
+		diff=*out-target;
+		*out-=MIN(amount,diff);
 	}
 }
 
@@ -325,14 +362,14 @@ void p600_update(void)
 	if(updatingSlow)
 	{
 		potmux_need(ppFreqA,ppFreqB,ppMVol,ppMTune,ppLFOAmt,ppLFOFreq,ppPModFilEnv,ppPModOscB);
+		potmux_need(ppSpeed,ppFilEnvAmt,ppFreqBFine);
 	}
 	else
 	{
 		potmux_need(ppAmpAtt,ppAmpDec,ppAmpSus,ppAmpRel,ppFilAtt,ppFilDec,ppFilSus,ppFilRel);
 	}
 	
-	potmux_need(ppMixer,ppGlide,ppResonance,ppFilEnvAmt,ppAPW,ppBPW,ppFreqBFine,ppSpeed);
-	potmux_need(ppCutoff,ppPitchWheel,ppModWheel);
+	potmux_need(ppPitchWheel,ppModWheel,ppCutoff,ppResonance,ppMixer,ppGlide,ppAPW,ppBPW);
 	
 	// read them
 	
@@ -368,7 +405,7 @@ void p600_update(void)
 	{
 		uint16_t pa,pb;
 
-		pa=pb=0;
+		pa=pb=UINT16_MAX;
 
 		if(scanner_buttonState(pbASqr))
 			pa=potmux_getValue(ppAPW);
@@ -383,6 +420,9 @@ void p600_update(void)
 	computeBenderCVs();
 	adjustTunedCVs();
 	lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),satAddU16U16(potmux_getValue(ppLFOAmt),potmux_getValue(ppModWheel)>>p600.modwheelShift));
+
+	p600.glideAmount=(UINT16_MAX-potmux_getValue(ppSpeed))>>5; // 11bit glide
+	p600.gliding=p600.glideAmount<2000;
 }
 
 void p600_fastInterrupt(void)
@@ -390,10 +430,33 @@ void p600_fastInterrupt(void)
 	int32_t va,vb,vf;
 	uint16_t envVal;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
-	int8_t assigned,hz500,hz63,env,monoMask;
+	int8_t assigned,hz500,hz63,env,monoMul;
 
 	static uint8_t frc=0;
 	
+	// slower updates
+	
+	hz500=(frc&0x03)==0; // 1/4 of the time (500hz)
+
+	if(hz500)
+	{
+		hz63=(frc&0x01f)==0; // 1/32 of the time (62.5hz)
+		
+		if(p600.gliding)
+			for(int8_t v=0;v<P600_VOICE_COUNT;++v)
+			{
+				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
+				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
+				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount/2);
+			}
+
+		
+		scanner_update(hz63);
+		display_update(hz63);
+	}
+	
+	++frc;
+
 	// lfo
 	
 	lfo_update(&p600.lfo);
@@ -409,16 +472,16 @@ void p600_fastInterrupt(void)
 	if(p600.lfoTargets&(1<<modPW))
 	{
 		va=vb=p600.lfo.output;
+
 		va+=potmux_getValue(ppAPW);
-		vb+=potmux_getValue(ppBPW);
-		
 		if (!scanner_buttonState(pbASqr))
-			va=0;
-		
-		if (!scanner_buttonState(pbBSqr))
-			vb=0;
-		
+			va=UINT16_MAX;
 		synth_setCV32Sat(pcAPW,va,1);
+		
+
+		vb+=potmux_getValue(ppBPW);
+		if (!scanner_buttonState(pbBSqr))
+			vb=UINT16_MAX;
 		synth_setCV32Sat(pcBPW,vb,1);
 	}
 
@@ -436,11 +499,9 @@ void p600_fastInterrupt(void)
 		oscEnvAmt=va;		
 	}
 	
-	env=P600_MONO_ENV;
-	
 	// per voice stuff
 	
-	monoMask=p600.playingMono?0:0xff;
+	monoMul=p600.playingMono?0:1;
 	
 #ifdef UNROLL_VOICES	
 		// declare a nested function to unroll per-voice updates
@@ -457,27 +518,26 @@ void p600_fastInterrupt(void)
 			
 			adsr_update(&p600.filEnvs[v]);
 			adsr_update(&p600.ampEnvs[v]);
-			env=v&monoMask;
+			env=v*monoMul;
 
-			// compute CVs
-
+			// compute CVs & apply them
+			
 			envVal=p600.filEnvs[env].output;
 			
 			va=vb=pitchLfoVal;
-			vf=filterLfoVal;
-			
+
 			va+=scaleU16S16(envVal,oscEnvAmt);	
-			vf+=scaleU16S16(envVal,filEnvAmt);
-			
 			va+=p600.oscANoteCV[v];
-			vb+=p600.oscBNoteCV[v];
-			vf+=p600.filterNoteCV[v];
-			
-			// apply them
-			
 			synth_setCV32Sat(pcOsc1A+v,va,1);
+
+			vb+=p600.oscBNoteCV[v];
 			synth_setCV32Sat(pcOsc1B+v,vb,1);
+
+			vf=filterLfoVal;
+			vf+=scaleU16S16(envVal,filEnvAmt);
+			vf+=p600.filterNoteCV[v];
 			synth_setCV32Sat(pcFil1+v,vf,1);
+			
 			synth_setCV(pcAmp1+v,p600.ampEnvs[env].output,1);
 		}
 	}
@@ -492,19 +552,6 @@ void p600_fastInterrupt(void)
 	unrollVoices(5);
 #endif
 	
-	// slower updates
-	
-	hz500=(frc&0x03)==0; // 1/4 of the time (500hz)
-	hz63=(frc&0x01f)==0; // 1/32 of the time (62.5hz)
-
-	if(hz500)
-	{
-		scanner_update(hz63);
-		display_update(hz63);
-	}
-	
-	++frc;
-
 }
 
 void p600_slowInterrupt(void)
