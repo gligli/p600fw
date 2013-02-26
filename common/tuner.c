@@ -32,7 +32,7 @@
 #define TUNER_OSC_OFFSET_NTH_C 5
 
 #define TUNER_FIL_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/32)
-#define TUNER_FIL_EPSILON 2.0f
+#define TUNER_FIL_EPSILON 10.0f
 #define TUNER_FIL_INIT_OFFSET 10000.0f
 #define TUNER_FIL_INIT_SCALE (65536.0f/20.0f)
 #define TUNER_FIL_SCALE_NTH_C_LO 4
@@ -361,10 +361,10 @@ void tuner_tuneSynth(void)
 		display_clear();
 		led_set(plTune,1,0);
 		
-#ifdef DEBUG		
+#ifdef DEBUG
 		synth_setCV(pcMVol,20000,0,0);
 #else
-		synth_setCV(pcMVol,0,0);
+		synth_setCV(pcMVol,0,0,0);
 #endif
 
 		synth_setGate(pgASaw,0);

@@ -316,7 +316,11 @@ int main(void)
 	
 	// initialize synth code
 
+	cli();
+	
 	p600_init();
+	
+	sei();
 	
 	for(;;)
 	{
