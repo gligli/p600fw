@@ -49,7 +49,6 @@ static struct
 	int8_t trackingShift;
 
 	assignerMode_t assignerMonoMode;
-	int8_t playingMono;
 	
 	int8_t lfoAltShapes;
 	modulation_t lfoTargets;
@@ -119,13 +118,24 @@ static void adjustTunedCVs(void)
 		if(p600.trackingShift>=0)
 			cvf=satAddU16S32(tuner_computeCVFromNote(note,pcFil1+v)>>p600.trackingShift,(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff);
 		else
-			cvf=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff);
+			p600.filterNoteCV[v]=cvf=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff); // no glide if no tracking
 
-		p600.oscATargetCV[v]=cva;
-		p600.oscBTargetCV[v]=cvb;
-		p600.filterTargetCV[v]=cvf;
-
-		if(!p600.gliding)
+		if(p600.gliding)
+		{
+			if(assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh)
+			{
+				p600.oscATargetCV[P600_MONO_ENV]=cva;
+				p600.oscBTargetCV[P600_MONO_ENV]=cvb;
+				p600.filterTargetCV[P600_MONO_ENV]=cvf;
+			}
+			else
+			{
+				p600.oscATargetCV[v]=cva;
+				p600.oscBTargetCV[v]=cvb;
+				p600.filterTargetCV[v]=cvf;
+			}
+		}
+		else			
 		{
 			p600.oscANoteCV[v]=cva;
 			p600.oscBNoteCV[v]=cvb;
@@ -216,6 +226,19 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 	}
 }
 
+static void checkFinishedVoices(void)
+{
+	int8_t i,poly;
+	
+	poly=assigner_getMode()==mPoly;
+
+	// when amp env finishes, voice is done
+	
+	for(i=0;i<P600_VOICE_COUNT;++i)
+		if (assigner_getAssignment(i,NULL) && adsr_getStage(&p600.ampEnvs[poly?i:P600_MONO_ENV])==sWait)
+			assigner_voiceDone(i);
+}
+
 static void refreshGates(void)
 {
 	synth_setGate(pgASaw,scanner_buttonState(pbASaw));
@@ -244,9 +267,7 @@ static void refreshGates(void)
 
 static void refreshAssignerSettings(void)
 {
-	p600.playingMono=scanner_buttonState(pbUnison);
-	
-	if(p600.playingMono)
+	if(scanner_buttonState(pbUnison))
 		assigner_setMode(p600.assignerMonoMode);
 	else
 		assigner_setMode(mPoly);
@@ -357,19 +378,25 @@ void p600_update(void)
 
 	// which pots do we have to read?
 	
-	updatingSlow=frc&0x01; // 1/2 of the time, alternatively
+	updatingSlow=frc&0x03; // 1/4 of the time, alternatively
 	
-	if(updatingSlow)
+	switch(updatingSlow)
 	{
-		potmux_need(ppFreqA,ppFreqB,ppMVol,ppMTune,ppLFOAmt,ppLFOFreq,ppPModFilEnv,ppPModOscB);
-		potmux_need(ppSpeed,ppFilEnvAmt,ppFreqBFine);
-	}
-	else
-	{
+	case 0:
 		potmux_need(ppAmpAtt,ppAmpDec,ppAmpSus,ppAmpRel,ppFilAtt,ppFilDec,ppFilSus,ppFilRel);
+		break;
+	case 1:
+		potmux_need(ppSpeed,ppFilEnvAmt,ppPModFilEnv,ppPModOscB,ppMVol);
+		break;
+	case 2:
+		potmux_need(ppFreqA,ppFreqB,ppMTune,ppFreqBFine,ppAPW,ppBPW);
+		break;
+	case 3:
+		potmux_need(ppResonance,ppMixer,ppGlide,ppLFOAmt,ppLFOFreq);
+		break;
 	}
-	
-	potmux_need(ppPitchWheel,ppModWheel,ppCutoff,ppResonance,ppMixer,ppGlide,ppAPW,ppBPW);
+
+	potmux_need(ppPitchWheel,ppModWheel,ppCutoff);
 	
 	// read them
 	
@@ -377,52 +404,49 @@ void p600_update(void)
 
 	// update CVs
 
-	if(updatingSlow)
+	switch(updatingSlow)
 	{
-		synth_setCV(pcPModOscB,potmux_getValue(ppPModOscB),1);
-		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),1);
-	}
-	else
-	{
+	case 0:
 		for(i=0;i<P600_VOICE_COUNT;++i)
 		{
 			adsr_setCVs(&p600.ampEnvs[i],potmux_getValue(ppAmpAtt),potmux_getValue(ppAmpDec),potmux_getValue(ppAmpSus),potmux_getValue(ppAmpRel),UINT16_MAX);
 			adsr_setCVs(&p600.filEnvs[i],potmux_getValue(ppFilAtt),potmux_getValue(ppFilDec),potmux_getValue(ppFilSus),potmux_getValue(ppFilRel),UINT16_MAX);
 		}
+		break;
+	case 1:
+		synth_setCV(pcPModOscB,potmux_getValue(ppPModOscB),1,1);
+		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),1,1);
 
-		// when amp env finishes, voice is done
+		p600.glideAmount=(UINT16_MAX-potmux_getValue(ppSpeed))>>5; // 11bit glide
+		p600.gliding=p600.glideAmount<2000;
+		break;
+	case 2:
+		if(!(p600.lfoTargets&(1<<modPW)))
+		{
+			uint16_t pa,pb;
 
-		for(i=0;i<(p600.playingMono?1:P600_VOICE_COUNT);++i)
-			if (assigner_getAssignment(i,NULL) && adsr_getStage(&p600.ampEnvs[i])==sWait)
-				assigner_voiceDone(i);
-	}
+			pa=pb=UINT16_MAX;
 
-	synth_setCV(pcVolA,potmux_getValue(ppMixer),1);
-	synth_setCV(pcVolB,potmux_getValue(ppGlide),1);
-	synth_setCV(pcResonance,potmux_getValue(ppResonance),1);
+			if(scanner_buttonState(pbASqr))
+				pa=potmux_getValue(ppAPW);
 
-	if(!(p600.lfoTargets&(1<<modPW)))
-	{
-		uint16_t pa,pb;
+			if(scanner_buttonState(pbBSqr))
+				pb=potmux_getValue(ppBPW);
 
-		pa=pb=UINT16_MAX;
-
-		if(scanner_buttonState(pbASqr))
-			pa=potmux_getValue(ppAPW);
-
-		if(scanner_buttonState(pbBSqr))
-			pb=potmux_getValue(ppBPW);
-
-		synth_setCV(pcAPW,pa,1);
-		synth_setCV(pcBPW,pb,1);
+			synth_setCV(pcAPW,pa,1,1);
+			synth_setCV(pcBPW,pb,1,1);
+		}
+		break;
+	case 3:
+		synth_setCV(pcVolA,potmux_getValue(ppMixer),1,1);
+		synth_setCV(pcVolB,potmux_getValue(ppGlide),1,1);
+		synth_setCV(pcResonance,potmux_getValue(ppResonance),1,1);
+		break;
 	}
 
 	computeBenderCVs();
 	adjustTunedCVs();
 	lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),satAddU16U16(potmux_getValue(ppLFOAmt),potmux_getValue(ppModWheel)>>p600.modwheelShift));
-
-	p600.glideAmount=(UINT16_MAX-potmux_getValue(ppSpeed))>>5; // 11bit glide
-	p600.gliding=p600.glideAmount<2000;
 }
 
 void p600_fastInterrupt(void)
@@ -430,24 +454,23 @@ void p600_fastInterrupt(void)
 	int32_t va,vb,vf;
 	uint16_t envVal;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
-	int8_t assigned,hz500,hz63,env,monoMul;
+	int8_t assigned,hz500,hz63,polyMul,monoGlidingMul,envVoice,pitchVoice;
 
 	static uint8_t frc=0;
 	
 	// slower updates
 	
 	hz500=(frc&0x03)==0; // 1/4 of the time (500hz)
+	hz63=(frc&0x01f)==0; // 1/32 of the time (62.5hz)
 
 	if(hz500)
 	{
-		hz63=(frc&0x01f)==0; // 1/32 of the time (62.5hz)
-		
 		if(p600.gliding)
 			for(int8_t v=0;v<P600_VOICE_COUNT;++v)
 			{
 				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
 				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
-				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount/2);
+				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
 			}
 
 		
@@ -476,13 +499,13 @@ void p600_fastInterrupt(void)
 		va+=potmux_getValue(ppAPW);
 		if (!scanner_buttonState(pbASqr))
 			va=UINT16_MAX;
-		synth_setCV32Sat(pcAPW,va,1);
+		synth_setCV32Sat(pcAPW,va,1,0);
 		
 
 		vb+=potmux_getValue(ppBPW);
 		if (!scanner_buttonState(pbBSqr))
 			vb=UINT16_MAX;
-		synth_setCV32Sat(pcBPW,vb,1);
+		synth_setCV32Sat(pcBPW,vb,1,0);
 	}
 
 	// global env computations
@@ -501,8 +524,16 @@ void p600_fastInterrupt(void)
 	
 	// per voice stuff
 	
-	monoMul=p600.playingMono?0:1;
+	polyMul=(assigner_getMode()==mPoly)?1:0;
+	monoGlidingMul=((assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh) && p600.gliding)?0:1;
 	
+	if(!polyMul)
+	{
+		// handle mono modes env update
+		adsr_update(&p600.filEnvs[P600_MONO_ENV]);
+		adsr_update(&p600.ampEnvs[P600_MONO_ENV]);
+	}
+
 #ifdef UNROLL_VOICES	
 		// declare a nested function to unroll per-voice updates
 	inline void unrollVoices(int8_t v)
@@ -514,31 +545,42 @@ void p600_fastInterrupt(void)
 		
 		if(assigned)
 		{
-			// handle envs update
-			
-			adsr_update(&p600.filEnvs[v]);
-			adsr_update(&p600.ampEnvs[v]);
-			env=v*monoMul;
+			if(polyMul)
+			{
+				// handle envs update
+				adsr_update(&p600.filEnvs[v]);
+				adsr_update(&p600.ampEnvs[v]);
+			}
+		
+			envVoice=v*polyMul;
+			pitchVoice=v*monoGlidingMul;
 
 			// compute CVs & apply them
 			
-			envVal=p600.filEnvs[env].output;
+			envVal=p600.filEnvs[envVoice].output;
 			
 			va=vb=pitchLfoVal;
 
 			va+=scaleU16S16(envVal,oscEnvAmt);	
-			va+=p600.oscANoteCV[v];
-			synth_setCV32Sat(pcOsc1A+v,va,1);
+			va+=p600.oscANoteCV[pitchVoice];
+			
+			synth_setCV32Sat(pcOsc1A+v,va,1,0);
 
-			vb+=p600.oscBNoteCV[v];
-			synth_setCV32Sat(pcOsc1B+v,vb,1);
+			vb+=p600.oscBNoteCV[pitchVoice];
+			synth_setCV32Sat(pcOsc1B+v,vb,1,0);
 
 			vf=filterLfoVal;
 			vf+=scaleU16S16(envVal,filEnvAmt);
-			vf+=p600.filterNoteCV[v];
-			synth_setCV32Sat(pcFil1+v,vf,1);
+			vf+=p600.filterNoteCV[pitchVoice];
+			synth_setCV32Sat(pcFil1+v,vf,1,0);
 			
-			synth_setCV(pcAmp1+v,p600.ampEnvs[env].output,1);
+			synth_setCV(pcAmp1+v,p600.ampEnvs[envVoice].output,1,0);
+		}
+		else
+		{
+			// the voice must stay silent
+
+			synth_setCV(pcAmp1+v,0,1,0);
 		}
 	}
 	
@@ -552,6 +594,12 @@ void p600_fastInterrupt(void)
 	unrollVoices(5);
 #endif
 	
+	// handle voices that are done playing
+	
+	if(hz63)
+	{
+		checkFinishedVoices();
+	}
 }
 
 void p600_slowInterrupt(void)
@@ -741,20 +789,17 @@ void p600_keyEvent(uint8_t key, int pressed)
 
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 {
-	if(note!=ASSIGNER_NO_NOTE)
-	{
-		adjustTunedCVs();
-	}
-	else
-	{
-		synth_setCV(pcAmp1+voice,0,1);
-	}
-
-	int env=p600.playingMono?P600_MONO_ENV:voice;
+	int8_t env;
 	
+	adjustTunedCVs();
+
+	env=voice;
+	if(assigner_getMode()!=mPoly)
+		env=P600_MONO_ENV;
+
 	adsr_setGate(&p600.filEnvs[env],gate);
 	adsr_setGate(&p600.ampEnvs[env],gate);
-
+	
 #ifdef DEBUG		
 	print("assign note ");
 	phex(note);

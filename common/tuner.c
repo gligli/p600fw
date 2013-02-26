@@ -20,11 +20,11 @@
 
 #define TUNER_PRECISION 2 // 0-n, higher is preciser but slower
 
-#define TUNER_SCALE_SLEW_RATE 0.33f // higher is faster, until it overshoots and becomes slower!
+#define TUNER_SCALE_SLEW_RATE 0.3f // higher is faster, until it overshoots and becomes slower!
 #define TUNER_OFFSET_SLEW_RATE 0.8f // higher is faster, until it overshoots and becomes slower!
 
 #define TUNER_OSC_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/16)
-#define TUNER_OSC_EPSILON 1.0f
+#define TUNER_OSC_EPSILON 0.5f
 #define TUNER_OSC_INIT_OFFSET 5000.0f
 #define TUNER_OSC_INIT_SCALE (65536.0f/10.0f)
 #define TUNER_OSC_SCALE_NTH_C_LO 3
@@ -203,7 +203,7 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, float epsilon, float l
 	{
 		cvv=tuner_computeCVFromNote(12*nthC,cv);
 
-		synth_setCV(cv,cvv,0);
+		synth_setCV(cv,cvv,0,0);
 		p=measureAudioPeriod(1<<TUNER_PRECISION);
 		
 		newOffset=(float)tuner.offsets[cv]*powf((float)p/(float)tgtp,TUNER_OFFSET_SLEW_RATE);
@@ -243,10 +243,10 @@ static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi, float 
 		cvl=tuner_computeCVFromNote(12*nthCLo,cv);
 		cvh=tuner_computeCVFromNote(12*nthCHi,cv);
 
-		synth_setCV(cv,cvl,0);
+		synth_setCV(cv,cvl,0,0);
 		pl=measureAudioPeriod(1<<TUNER_PRECISION);
 
-		synth_setCV(cv,cvh,0);
+		synth_setCV(cv,cvh,0,0);
 		ph=measureAudioPeriod(1<<(nthCHi-nthCLo+TUNER_PRECISION));
 		
 		newScale=(float)tuner.scales[cv]*powf((float)ph/(float)pl,TUNER_SCALE_SLEW_RATE);
@@ -290,7 +290,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// open VCA
 
-	synth_setCV(ampCV,UINT16_MAX,0);
+	synth_setCV(ampCV,UINT16_MAX,0,0);
 	synth_update();
 
 	// tune
@@ -308,7 +308,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// close VCA
 
-	synth_setCV(ampCV,0,0);
+	synth_setCV(ampCV,0,0,0);
 	synth_update();
 }
 
@@ -362,7 +362,7 @@ void tuner_tuneSynth(void)
 		led_set(plTune,1,0);
 		
 #ifdef DEBUG		
-		synth_setCV(pcMVol,20000,0);
+		synth_setCV(pcMVol,20000,0,0);
 #else
 		synth_setCV(pcMVol,0,0);
 #endif
@@ -375,11 +375,11 @@ void tuner_tuneSynth(void)
 		synth_setGate(pgPModFil,0);
 		synth_setGate(pgSync,0);
 
-		synth_setCV(pcResonance,0,0);
-		synth_setCV(pcAPW,0,0);
-		synth_setCV(pcBPW,0,0);
-		synth_setCV(pcPModOscB,0,0);
-		synth_setCV(pcExtFil,0,0);
+		synth_setCV(pcResonance,0,0,0);
+		synth_setCV(pcAPW,0,0,0);
+		synth_setCV(pcBPW,0,0,0);
+		synth_setCV(pcPModOscB,0,0,0);
+		synth_setCV(pcExtFil,0,0,0);
 		
 		// init 8253
 			// ch 0, mode 0, access 2 bytes, binary count
@@ -393,22 +393,22 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcResonance,0,0);
+		synth_setCV(pcResonance,0,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,UINT16_MAX,0);
+			synth_setCV(pcFil1+i,UINT16_MAX,0,0);
 	
 			// A oscs
 
-		synth_setCV(pcVolA,UINT16_MAX,0);
-		synth_setCV(pcVolB,0,0);
+		synth_setCV(pcVolA,UINT16_MAX,0,0);
+		synth_setCV(pcVolB,0,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
 			// B oscs
 
-		synth_setCV(pcVolA,0,0);
-		synth_setCV(pcVolB,UINT16_MAX,0);
+		synth_setCV(pcVolA,0,0,0);
+		synth_setCV(pcVolB,UINT16_MAX,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
@@ -417,12 +417,12 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcVolA,0,0);
-		synth_setCV(pcVolB,0,0);
-		synth_setCV(pcResonance,UINT16_MAX,0);
+		synth_setCV(pcVolA,0,0,0);
+		synth_setCV(pcVolB,0,0,0);
+		synth_setCV(pcResonance,UINT16_MAX,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,0,0);
+			synth_setCV(pcFil1+i,0,0,0);
 	
 			// filters
 		
@@ -431,9 +431,9 @@ void tuner_tuneSynth(void)
 
 		// finish
 		
-		synth_setCV(pcResonance,0,0);
+		synth_setCV(pcResonance,0,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcAmp1+i,0,0);
+			synth_setCV(pcAmp1+i,0,0,0);
 		
 		synth_update();
 

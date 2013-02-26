@@ -4,14 +4,14 @@
 
 #include "assigner.h"
 
-#define ASSIGNER_NOTE_MEMORY 8
+#define LEGATO_NOTE_MEMORY 8
 
 static struct
 {
 	int8_t voiceAssigned[P600_VOICE_COUNT];
 	uint8_t voiceNote[P600_VOICE_COUNT];
 	
-	uint8_t legatoNotes[ASSIGNER_NOTE_MEMORY];
+	uint8_t legatoNotes[LEGATO_NOTE_MEMORY];
 	
 	int8_t assignInc;
 	assignerMode_t mode;
@@ -33,7 +33,7 @@ static inline void legatoGetState(int8_t * count, uint8_t * mostPrio)
 	
 	// compute legato prioritized notes and note count
 
-	for(i=0;i<ASSIGNER_NOTE_MEMORY;++i)
+	for(i=0;i<LEGATO_NOTE_MEMORY;++i)
 	{
 		n=assigner.legatoNotes[i];
 		if(n!=ASSIGNER_NO_NOTE)
@@ -51,7 +51,7 @@ static inline void legatoGetState(int8_t * count, uint8_t * mostPrio)
 
 static int8_t findOldest(uint8_t note)
 {
-	int8_t i,v=0,a,minInc=ASSIGNER_NOTE_MEMORY;
+	int8_t i,v=0,a,minInc=LEGATO_NOTE_MEMORY;
 	
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
@@ -79,14 +79,20 @@ static void setVoices(int8_t voice, int8_t assigned, uint8_t note, int8_t gate)
 	{
 		assigner.voiceAssigned[voice]=assigned;
 		assigner.voiceNote[voice]=note;
-
-		p600_assignerEvent(note,gate,voice);
 	}
 	else if(voice==-1)
 	{
-		for(voice=0;voice<P600_VOICE_COUNT;++voice)
-			setVoices(voice,assigned,note,gate);
+		int8_t v;
+		
+		for(v=0;v<P600_VOICE_COUNT;++v)
+		{
+			assigner.voiceAssigned[v]=assigned;
+			assigner.voiceNote[v]=note;
+		}
 	}
+
+	if(note!=ASSIGNER_NO_NOTE)
+		p600_assignerEvent(note,gate,voice);
 }
 
 inline int8_t assigner_getAssignment(int8_t voice, uint8_t * note)
@@ -166,7 +172,7 @@ void assigner_assignNote(uint8_t note, int8_t on)
 			
 			// assign new note
 
-			assigner.assignInc=(assigner.assignInc+1)%ASSIGNER_NOTE_MEMORY;
+			assigner.assignInc=(assigner.assignInc+1)%P600_VOICE_COUNT;
 			setVoices(nextVoice,assigner.assignInc,note,1);
 		}
 		else
@@ -179,16 +185,14 @@ void assigner_assignNote(uint8_t note, int8_t on)
 	else
 	{
 		int8_t i;
-		int8_t legatoCount;
+		int8_t legatoCount, isMono,gate;
 		uint8_t legatoMostPrio;
-		
-		curVoice=assigner.assignInc%P600_VOICE_COUNT;
-		
+	
 		if(on)
 		{
 			// add the note the list of legato notes
 			
-			for(i=0;i<ASSIGNER_NOTE_MEMORY;++i)
+			for(i=0;i<LEGATO_NOTE_MEMORY;++i)
 				if(assigner.legatoNotes[i]==ASSIGNER_NO_NOTE)
 				{
 					assigner.legatoNotes[i]=note;
@@ -199,7 +203,7 @@ void assigner_assignNote(uint8_t note, int8_t on)
 		{
 			// remove the note from the list of legato notes
 			
-			for(i=0;i<ASSIGNER_NOTE_MEMORY;++i)
+			for(i=0;i<LEGATO_NOTE_MEMORY;++i)
 				if(assigner.legatoNotes[i]==note)
 				{
 					assigner.legatoNotes[i]=ASSIGNER_NO_NOTE;
@@ -207,40 +211,35 @@ void assigner_assignNote(uint8_t note, int8_t on)
 				}
 		}
 		
+		isMono=assigner.mode==mMonoLow || assigner.mode==mMonoHigh;
+		
 		// handle legato, play prioritized note, or none if we're done
 
 		legatoGetState(&legatoCount,&legatoMostPrio);
 			
 		if(legatoCount)
 		{
-			// don't retrigger if we didn't change note (avoids sound glitches)
-			
-			note=ASSIGNER_NO_NOTE;
-			if(legatoCount>1 || !on)
-				assigner_getAssignment(curVoice,&note);
-			
-			if(note!=legatoMostPrio)
-			{
-				// deassign old voice, keeping gate on
-
-				setVoices(curVoice,-1,ASSIGNER_NO_NOTE,1);
-
-				// assign new note
-
-				assigner.assignInc=(assigner.assignInc+1)%ASSIGNER_NOTE_MEMORY;
-				
-				if(assigner.mode==mMonoHigh || assigner.mode==mMonoLow)
-					nextVoice=assigner.assignInc%P600_VOICE_COUNT;
-				
-				setVoices(nextVoice,assigner.assignInc,legatoMostPrio,1);
-			}
+			note=legatoMostPrio;
 		}
-		else
+
+		gate=legatoCount?1:0;
+			
+		if(isMono)
 		{
-			// switch off gate
+			if(legatoCount==1 && on) // detect new gate while all gates off
+			{
+				// deassign old voice
+				assigner_voiceDone(assigner.assignInc);
 
-			setVoices(curVoice,assigner_getAssignment(curVoice,NULL),note,0);
+				// change next voice
+				assigner.assignInc=(assigner.assignInc+1)%P600_VOICE_COUNT;
+			}
+			
+			nextVoice=assigner.assignInc;
 		}
+
+		// assign new note
+		setVoices(nextVoice,0,note,gate);
 	}
 }
 
@@ -256,6 +255,6 @@ void assigner_init(void)
 {
 	memset(&assigner,0,sizeof(assigner));
 	assigner_voiceDone(-1); // init all voices to 'done'
-	memset(&assigner.legatoNotes,ASSIGNER_NO_NOTE,ASSIGNER_NOTE_MEMORY);
+	memset(&assigner.legatoNotes,ASSIGNER_NO_NOTE,LEGATO_NOTE_MEMORY);
 }
 

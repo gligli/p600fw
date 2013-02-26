@@ -30,8 +30,8 @@ void potmux_init(void)
 
 void potmux_update(void)
 {
-	uint8_t i,j;
-	uint8_t lower,mux;
+	int8_t i,j,lower;
+	uint8_t mux,dacMSB,prevMSB;
 	uint16_t estimate;
 	uint16_t bit;
 	
@@ -40,7 +40,7 @@ void potmux_update(void)
 		// there's a hole in the pots enum
 		
 		if (j>ppPitchWheel && j<ppModWheel)
-			continue;
+			j=ppModWheel;
 		
 		// don't update unneeded pots
 		
@@ -49,29 +49,48 @@ void potmux_update(void)
 		
 		BLOCK_INT
 		{
+			// successive approximations using DAC and comparator
 
-			// select pot
+				// select pot
 
 			mux=(j&0x0f)|(~(0x10<<(j>>4))&0x30);
 			io_write(0x0a,mux);
-			CYCLE_WAIT(8);
-
-			// successive approximations using DAC and comparator
-
-			estimate=0;
+			
+				// init values
+			
+			estimate=UINT16_MAX;
+			prevMSB=estimate>>10;
 			bit=0x8000;
+			
+				// prepare DAC
+			
+			dac_write(estimate);
+			CYCLE_WAIT(8);
 
 			for(i=0;i<12;++i) // more than 12bit is doable, but it's almost useless because of pot noise...
 			{
-				dac_write(estimate); // mem_fastDacWrite is a bit glitchy for pot scan...
-				
-				lower=(io_read(0x09)&0x08)!=0; // is DAC value lower than pot value?
+				// update only if it changes
+				dacMSB=estimate>>10;
+				if(dacMSB!=prevMSB)
+					mem_write(0x4001,dacMSB); // DAC 6 MSBs
+				prevMSB=dacMSB;
 
+				// needs to be updated each pass
+				mem_write(0x4000,estimate>>2); // DAC 8 LSBs
+				
+				// let comparator get correct voltage (don't remove me!)
+				CYCLE_WAIT(1);
+
+				// is DAC value lower than pot value?
+  				lower=(io_read(0x09)&0x08)!=0;
+				
+				// adjust estimate
 				if (lower)
 					estimate+=bit;
 				else
 					estimate-=bit;
-
+				
+				// on to finer changes
 				bit>>=1;
 			}
 
