@@ -352,6 +352,8 @@ void p600_init(void)
 	
 	lfo_init(&p600.lfo,tuner_computeCVFromFrequency(1234,pcFil1)); // uses tuning, not random, but good enough
 	
+	scanner_update(1); // set initial state
+	
 	refreshFullState();
 	
 	// a nice welcome message ;)
