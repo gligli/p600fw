@@ -69,6 +69,11 @@ inline void synth_setGate(p600Gate_t gate,int8_t on)
 	updateGates();
 }
 
+void synth_updateCV(p600CV_t cv)
+{
+	updateCV(cv,synth.cvs[cv],1);
+}
+
 void synth_init()
 {
 	memset(&synth,0,sizeof(synth));
