@@ -20,11 +20,12 @@
 
 #define TUNER_PRECISION 2 // 0-n, higher is preciser but slower
 
-#define TUNER_SCALE_SLEW_RATE 0.3f // higher is faster, until it overshoots and becomes slower!
-#define TUNER_OFFSET_SLEW_RATE 0.8f // higher is faster, until it overshoots and becomes slower!
+#define TUNER_SCALE_SLEW_RATE 0.25f // higher is faster, until it overshoots and becomes slower!
+#define TUNER_OFFSET_SLEW_RATE 0.75f // higher is faster, until it overshoots and becomes slower!
 
 #define TUNER_OSC_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/16)
-#define TUNER_OSC_EPSILON 0.5f
+#define TUNER_OSC_SCALE_EPSILON 8.0f
+#define TUNER_OSC_OFFSET_EPSILON 1.0f
 #define TUNER_OSC_INIT_OFFSET 5000.0f
 #define TUNER_OSC_INIT_SCALE (65536.0f/10.0f)
 #define TUNER_OSC_SCALE_NTH_C_LO 3
@@ -32,7 +33,8 @@
 #define TUNER_OSC_OFFSET_NTH_C 5
 
 #define TUNER_FIL_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/32)
-#define TUNER_FIL_EPSILON 10.0f
+#define TUNER_FIL_SCALE_EPSILON 256.0f
+#define TUNER_FIL_OFFSET_EPSILON 10.0f
 #define TUNER_FIL_INIT_OFFSET 10000.0f
 #define TUNER_FIL_INIT_SCALE (65536.0f/20.0f)
 #define TUNER_FIL_SCALE_NTH_C_LO 4
@@ -50,8 +52,9 @@ static NOINLINE void whileTuning(void)
 {
 	static uint8_t frc=0;
 	
-	if((frc&0x0f)==0)
+	if((frc&0x7f)==0)
 	{
+		// display current osc
 		if(tuner.currentCV<pcOsc1B)
 			sevenSeg_setAscii('A','1'+tuner.currentCV-pcOsc1A);
 		else if(tuner.currentCV<pcFil1)
@@ -60,9 +63,12 @@ static NOINLINE void whileTuning(void)
 			sevenSeg_setAscii('F','1'+tuner.currentCV-pcFil1);
 
 		display_update(1);
+
+		// full update once in a while
+		synth_update();
 	}
 	
-	synth_update();
+	synth_updateCV(tuner.currentCV);
 	++frc;
 }
 
@@ -251,7 +257,7 @@ static NOINLINE void tuneScale(p600CV_t cv,uint8_t nthCLo,uint8_t nthCHi, float 
 		
 		newScale=(float)tuner.scales[cv]*powf((float)ph/(float)pl,TUNER_SCALE_SLEW_RATE);
 		
-		error=fabsf(tuner.scales[cv]-newScale);
+		error=fabsf(pl-ph);
 		
 #ifdef DEBUG		
 		print("cv ");
@@ -297,15 +303,15 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	if (isOsc)
 	{
-		tuneOffset(oscCV,TUNER_OSC_OFFSET_NTH_C,50.0f,TUNER_OSC_LOWEST_HERTZ); // rough estimate to ease scale tuning
-		tuneScale(oscCV,TUNER_OSC_SCALE_NTH_C_LO,TUNER_OSC_SCALE_NTH_C_HI,TUNER_OSC_EPSILON);
-		tuneOffset(oscCV,TUNER_OSC_OFFSET_NTH_C,TUNER_OSC_EPSILON,TUNER_OSC_LOWEST_HERTZ);
+		tuneOffset(oscCV,TUNER_OSC_OFFSET_NTH_C,TUNER_OSC_OFFSET_EPSILON*20.0f,TUNER_OSC_LOWEST_HERTZ); // rough estimate to ease scale tuning
+		tuneScale(oscCV,TUNER_OSC_SCALE_NTH_C_LO,TUNER_OSC_SCALE_NTH_C_HI,TUNER_OSC_SCALE_EPSILON);
+		tuneOffset(oscCV,TUNER_OSC_OFFSET_NTH_C,TUNER_OSC_OFFSET_EPSILON,TUNER_OSC_LOWEST_HERTZ);
 	}
 	else
 	{
-		tuneOffset(oscCV,TUNER_FIL_OFFSET_NTH_C,50.0f,TUNER_FIL_LOWEST_HERTZ);
-		tuneScale(oscCV,TUNER_FIL_SCALE_NTH_C_LO,TUNER_FIL_SCALE_NTH_C_HI,TUNER_FIL_EPSILON);
-		tuneOffset(oscCV,TUNER_FIL_OFFSET_NTH_C,TUNER_FIL_EPSILON,TUNER_FIL_LOWEST_HERTZ);
+		tuneOffset(oscCV,TUNER_FIL_OFFSET_NTH_C,TUNER_FIL_OFFSET_EPSILON*20.0f,TUNER_FIL_LOWEST_HERTZ);
+		tuneScale(oscCV,TUNER_FIL_SCALE_NTH_C_LO,TUNER_FIL_SCALE_NTH_C_HI,TUNER_FIL_SCALE_EPSILON);
+		tuneOffset(oscCV,TUNER_FIL_OFFSET_NTH_C,TUNER_FIL_OFFSET_EPSILON,TUNER_FIL_LOWEST_HERTZ);
 	}
 	
 	// close VCA
