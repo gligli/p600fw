@@ -207,6 +207,10 @@ inline void mem_fastDacWrite(uint16_t value)
 	PORTE=e;
 	PORTF=0x87;
 
+	// probably needed
+	
+	CYCLE_WAIT(1);
+	
     // minimalistic status change
 	
 	PORTF=0xc6;

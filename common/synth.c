@@ -32,14 +32,14 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t wait)
 		// select current CV
 		io_write(0x0d,dmux);
 		
+		// deselect it
+		io_write(0x0d,0xff);
+
 		if(wait)
 		{
-			// let S&H get very precise voltage
-			CYCLE_WAIT(4);
+			// 10 us to let S&H get very precise voltage
+			CYCLE_WAIT(40);
 		}
-
-		// unselect
-		io_write(0x0d,0xff);
 	}
 }
 

@@ -457,6 +457,7 @@ void p600_fastInterrupt(void)
 	uint16_t envVal;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
 	int8_t assigned,hz500,hz63,polyMul,monoGlidingMul,envVoice,pitchVoice;
+	int8_t silentVoice[P600_VOICE_COUNT];
 
 	static uint8_t frc=0;
 	
@@ -545,6 +546,8 @@ void p600_fastInterrupt(void)
 	{
 		assigned=assigner_getAssignment(v,NULL);
 		
+		silentVoice[v]=!assigned;
+		
 		if(assigned)
 		{
 			if(polyMul)
@@ -578,12 +581,6 @@ void p600_fastInterrupt(void)
 			
 			synth_setCV(pcAmp1+v,p600.ampEnvs[envVoice].output,1,0);
 		}
-		else
-		{
-			// the voice must stay silent
-
-			synth_setCV(pcAmp1+v,0,1,0);
-		}
 	}
 	
 #ifdef UNROLL_VOICES	
@@ -596,11 +593,17 @@ void p600_fastInterrupt(void)
 	unrollVoices(5);
 #endif
 	
+	CYCLE_WAIT(40); // 10 us to let VCAs properly follow envelopes
+	
 	// handle voices that are done playing
 	
 	if(hz63)
 	{
 		checkFinishedVoices();
+
+		for(int8_t v=0;v<P600_VOICE_COUNT;++v)
+			if(silentVoice[v])
+				synth_setCV(pcAmp1+v,0,1,1);
 	}
 }
 
@@ -714,11 +717,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		refreshEnvSettings(type);
 		
 	
-		if(type)
-			strcat(s,"F ");
-		else
-			strcat(s,"A ");
-
 		switch(p600.envFlags[type])
 		{
 		case 0:
@@ -734,6 +732,11 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			strcat(s,"slo exp");
 			break;
 		}
+
+		if(type)
+			strcat(s," fil");
+		else
+			strcat(s," amp");
 
 		sevenSeg_scrollText(s,1);
 	}
