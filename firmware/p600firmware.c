@@ -5,6 +5,7 @@
 #include <string.h>
 #include "usb_debug_only.h"
 #include "print.h"
+#include "teensy_bootloader_hack.h"
 
 #include "p600.h"
 
@@ -292,6 +293,56 @@ void hardware_init(void)
 	hardware_read(0,0); // init r/w system
 }
 
+// 32Kbytes, just before the bootloader zone
+
+uint32_t storage_addr=0x16000;
+uint32_t storage_size=0x8000;
+
+
+extern uint8_t phaseLookupLo[];
+
+#define xstr(s) str(s)
+#define str(s) #s
+
+
+void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *buf)
+{
+	uint16_t i;
+	uint8_t sreg;
+
+	// Disable interrupts.
+
+	sreg = SREG;
+	cli();
+
+	eeprom_busy_wait ();
+
+	blHack_page_erase (page);
+	boot_spm_busy_wait ();      // Wait until the memory is erased.
+
+	for (i=0; i<SPM_PAGESIZE; i+=2)
+	{
+		// Set up little-endian word.
+
+		uint16_t w = *buf++;
+		w += (*buf++) << 8;
+
+		blHack_page_fill (page + i, w);
+	}
+
+	blHack_page_write (page);     // Store buffer in flash page.
+	boot_spm_busy_wait();       // Wait until the memory is written.
+
+	// Reenable RWW-section again. We need this if we want to jump back
+	// to the application after bootloading.
+
+	blHack_rww_enable ();
+
+	// Re-enable interrupts (if they were ever enabled).
+
+	SREG = sreg;
+}
+
 int main(void)
 {
 	// initialize clock
@@ -317,7 +368,7 @@ int main(void)
 
 	print("p600firmware\n");
 #endif
-	
+
 	// initialize synth code
 
 	cli();

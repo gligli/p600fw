@@ -20,6 +20,7 @@
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
       <itemPath>../common/synth.h</itemPath>
+      <itemPath>teensy_bootloader_hack.h</itemPath>
       <itemPath>../common/tuner.h</itemPath>
       <itemPath>usb_debug_only.h</itemPath>
       <itemPath>../common/utils.h</itemPath>
@@ -138,6 +139,8 @@
       </item>
       <item path="print.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="teensy_bootloader_hack.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="usb_debug_only.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="usb_debug_only.h" ex="false" tool="3" flavor2="0">
@@ -223,6 +226,8 @@
       <item path="print.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="print.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="teensy_bootloader_hack.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="usb_debug_only.c" ex="false" tool="0" flavor2="0">
       </item>

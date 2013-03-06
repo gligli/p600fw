@@ -265,11 +265,12 @@ EXTMEMOPTS =
 #    --cref:    add cross reference to  map file
 LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
 LDFLAGS += -Wl,--relax
-LDFLAGS += -Wl,--gc-sections
+#LDFLAGS += -Wl,--gc-sections
 LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
+LDFLAGS += -Wl,--section-start=.bootloader=0x0001e000 # NRWW zone start on at90usb1286
 
 
 
