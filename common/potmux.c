@@ -69,6 +69,7 @@ void potmux_update(void)
 
 			for(i=0;i<12;++i) // more than 12bit is doable, but it's almost useless because of pot noise...
 			{
+#if 0
 				// update only if it changes
 				dacMSB=estimate>>10;
 				if(dacMSB!=prevMSB)
@@ -77,7 +78,10 @@ void potmux_update(void)
 
 				// needs to be updated each pass
 				mem_write(0x4000,estimate>>2); // DAC 8 LSBs
-				
+#else
+				mem_fastDacWrite(estimate);				
+#endif				
+
 				// let comparator get correct voltage (don't remove me!)
 				CYCLE_WAIT(1);
 
