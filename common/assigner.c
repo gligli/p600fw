@@ -179,7 +179,8 @@ void assigner_assignNote(uint8_t note, int8_t on)
 		{
 			curVoice=assigner_getVoiceFromNote(note);
 			
-			setVoices(curVoice,assigner_getAssignment(curVoice,NULL),note,0);
+			if(curVoice!=-2)
+				setVoices(curVoice,assigner_getAssignment(curVoice,NULL),note,0);
 		}
 	}
 	else
