@@ -19,7 +19,8 @@
 #define TUNER_TICK 2000000.0f
 #define TUNER_MIDDLE_C_HERTZ 261.63f
 
-#define TUNER_SLEW_RATE 0.4f // higher is faster, until it overshoots and becomes slower!
+#define TUNER_VCA_LEVEL 32768
+#define TUNER_SLEW_RATE 3.0f // higher is faster, until it overshoots and becomes slower!
 
 #define TUNER_OSC_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/16)
 #define TUNER_OSC_INIT_OFFSET 5000.0f
@@ -192,13 +193,15 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	return res;
 }
 
-static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, int8_t precision, uint16_t epsilon, float lowestFreq)
+static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, int8_t precision, uint16_t epsilon, double lowestFreq)
 {
 	uint16_t newOffset,cvv,error;
 	uint32_t p,tgtp;
-	float floatOffset;
+	double floatOffset,prevFloatOffset;
 	
 	tgtp=TUNER_TICK/lowestFreq*powf(2.0,precision);
+	
+	prevFloatOffset=tuner.tunes[nthC][cv];
 	
 	do
 	{
@@ -206,7 +209,9 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, int8_t precision, uint
 		synth_setCV(cv,cvv,0,0);
 		p=measureAudioPeriod(1<<(nthC+precision));
 		
-		floatOffset=(float)tuner.tunes[nthC][cv]*powf((float)p/(float)tgtp,TUNER_SLEW_RATE/nthC);
+		floatOffset=prevFloatOffset*powf(log2f(p)/log2f(tgtp),TUNER_SLEW_RATE/nthC);
+		prevFloatOffset=floatOffset;
+		
 		newOffset=MIN(MAX(floatOffset,0.0f),65535.0f);
 
 		error=abs(p-tgtp);
@@ -247,7 +252,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// open VCA
 
-	synth_setCV(ampCV,UINT16_MAX,0,0);
+	synth_setCV(ampCV,TUNER_VCA_LEVEL,0,0);
 	synth_update();
 
 	// tune
@@ -257,6 +262,8 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 		for(i=TUNER_OSC_NTH_C_LO;i<=TUNER_OSC_NTH_C_HI;++i)
 			tuneOffset(oscCV,i,TUNER_OSC_PRECISION,TUNER_OSC_EPSILON,TUNER_OSC_LOWEST_HERTZ);
 
+		// extrapolate for octaves that aren't directly tunable
+		
 		for(i=TUNER_OSC_NTH_C_LO-1;i>=0;--i)
 			tuner.tunes[i][oscCV]=(uint32_t)2*tuner.tunes[i+1][oscCV]-tuner.tunes[i+2][oscCV];
 
@@ -327,7 +334,7 @@ void tuner_tuneSynth(void)
 #ifdef DEBUG
 		synth_setCV(pcMVol,20000,0,0);
 #else
-		synth_setCV(pcMVol,0,0,0);
+		synth_setCV(pcMVol,20000,0,0);
 #endif
 
 		synth_setGate(pgASaw,1);
