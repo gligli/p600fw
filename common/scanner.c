@@ -53,10 +53,12 @@ void scanner_update(int8_t fullScan)
 		{
 			io_write(0x08,i);
 
-			CYCLE_WAIT(16);
+			CYCLE_WAIT(10);
 
 			ps=io_read(0x0a);
 			
+			CYCLE_WAIT(10);
+
 			pa=ps^scanner.stateBits[i];
 			scanner.stateBits[i]=ps;
 
