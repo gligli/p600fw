@@ -350,7 +350,7 @@ void p600_init(void)
 	tuner_tuneSynth();
 #endif
 	
-	lfo_init(&p600.lfo,tuner_computeCVFromFrequency(1234,pcFil1)); // uses tuning, not random, but good enough
+	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,pcFil1)); // uses tuning, not random, but good enough
 	
 	scanner_update(1); // set initial state
 	
