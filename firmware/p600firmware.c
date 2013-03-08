@@ -81,6 +81,14 @@ inline void setData(uint8_t data, uint8_t * c, uint8_t * d, uint8_t * e)
 	*e|=vr1&0x02;
 }
 
+inline void setIdle(void)
+{
+	PORTF=0xc6;
+	PORTC=0xc0;
+
+	__builtin_avr_delay_cycles(2);
+}
+
 inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 {
 	uint8_t b,c,d,e;
@@ -120,9 +128,8 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 
 	// back to idle
 	
-	PORTF=0xc6;
-	PORTC=0xc0;
-
+	setIdle();
+	
 	// prepare read
 
 	setDataDir(0);
@@ -148,7 +155,7 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 
 	// wait
 	
-	CYCLE_WAIT(1);
+	__builtin_avr_delay_cycles(8);
 	
 	// read data
 	
@@ -167,8 +174,7 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 	
 	// back to default (write)
 	
-	PORTF=0xc6;
-	PORTC=0xc0;
+	setIdle();
 	setDataDir(1);
 	
 	return v;
@@ -181,8 +187,7 @@ inline void mem_fastDacWrite(uint16_t value)
 	
 	// back to idle
 	
-	PORTF=0xc6;
-	PORTC=0xc0;
+	setIdle();
 
 	// write upper
 
@@ -208,13 +213,17 @@ inline void mem_fastDacWrite(uint16_t value)
 	PORTE=e;
 	PORTF=0x87;
 
-	// probably needed
+	// wait
 	
-	CYCLE_WAIT(1);
+	__builtin_avr_delay_cycles(2);
 	
     // minimalistic status change
 	
 	PORTF=0xc6;
+	
+	// wait
+	
+	__builtin_avr_delay_cycles(2);
 	
 	// write lower
 
