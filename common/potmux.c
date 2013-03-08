@@ -67,7 +67,7 @@ void potmux_update(void)
 			dac_write(estimate);
 			CYCLE_WAIT(8);
 
-			for(i=0;i<12;++i) // more than 12bit is doable, but it's almost useless because of pot noise...
+			for(i=0;i<=12;++i) // more than 12bit is doable, but it's almost useless because of pot noise...
 			{
 #if 0
 				// update only if it changes

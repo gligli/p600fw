@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <float.h>
 #include <math.h>
 
 #define FORCEINLINE __attribute__((always_inline))
@@ -13,6 +14,7 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 
 float log2f( float n );
+float log2( float n );
 
 uint16_t satAddU16U16(uint16_t a, uint16_t b);
 uint16_t satAddU16S32(uint16_t a, int32_t b);

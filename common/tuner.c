@@ -7,36 +7,33 @@
 #include "display.h"
 
 #define TUNER_CV_COUNT (pcFil6-pcOsc1A+1)
-#define TUNER_OCTAVE_COUNT 10
+#define TUNER_OCTAVE_COUNT 12
 
 #define FF_P	0x01 // active low
 #define CNTR_EN 0x02
 #define FF_D	0x08
 #define FF_CL	0x10 // active low
 
-#define STATUS_TIMEOUT 10000
+#define STATUS_TIMEOUT 30000
 
-#define TUNER_TICK 2000000.0f
-#define TUNER_MIDDLE_C_HERTZ 261.63f
+#define TUNER_TICK 2000000.0
+#define TUNER_MIDDLE_C_HERTZ 261.63
 
 #define TUNER_VCA_LEVEL 32768
-#define TUNER_SLEW_RATE 3.0f // higher is faster, until it overshoots and becomes slower!
 
 #define TUNER_OSC_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/16)
-#define TUNER_OSC_INIT_OFFSET 5000.0f
-#define TUNER_OSC_INIT_SCALE (65536.0f/11.0f)
+#define TUNER_OSC_INIT_OFFSET 5000.0
+#define TUNER_OSC_INIT_SCALE (65536.0/11.0)
 #define TUNER_OSC_PRECISION -2 // higher is preciser but slower
-#define TUNER_OSC_EPSILON 25
 #define TUNER_OSC_NTH_C_LO 3
 #define TUNER_OSC_NTH_C_HI 6
 
 #define TUNER_FIL_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/32)
-#define TUNER_FIL_INIT_OFFSET 10000.0f
-#define TUNER_FIL_INIT_SCALE (65536.0f/22.0f)
+#define TUNER_FIL_INIT_OFFSET 10000.0
+#define TUNER_FIL_INIT_SCALE (65536.0/22.0)
 #define TUNER_FIL_PRECISION -3 // higher is preciser but slower
-#define TUNER_FIL_EPSILON 50
 #define TUNER_FIL_NTH_C_LO 4
-#define TUNER_FIL_NTH_C_HI 7
+#define TUNER_FIL_NTH_C_HI 6
 
 static struct
 {
@@ -48,7 +45,7 @@ static NOINLINE void whileTuning(void)
 {
 	static uint8_t frc=0;
 	
-	if((frc&0x3f)==0)
+	if((frc&0x7f)==0)
 	{
 		// display current osc
 		if(tuner.currentCV<pcOsc1B)
@@ -71,12 +68,12 @@ static NOINLINE void whileTuning(void)
 static NOINLINE void i8253Write(uint8_t a,uint8_t v)
 {
 	io_write(a,v);
-	CYCLE_WAIT(8);
+	CYCLE_WAIT(4);
 }	
 
 static NOINLINE uint8_t i8253Read(uint8_t a)
 {
-	CYCLE_WAIT(8);
+	CYCLE_WAIT(4);
 	return io_read(a);
 }
 
@@ -193,49 +190,53 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	return res;
 }
 
-static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, int8_t precision, uint16_t epsilon, double lowestFreq)
+static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, int8_t precision, double lowestFreq)
 {
-	uint16_t newOffset,cvv,error;
-	uint32_t p,tgtp;
-	double floatOffset,prevFloatOffset;
+	int8_t i,relPrec;
+	uint16_t estimate,bit;
+	double p,tgtp;
 	
-	tgtp=TUNER_TICK/lowestFreq*powf(2.0,precision);
+	tgtp=TUNER_TICK/(lowestFreq*pow(2.0,nthC));
 	
-	prevFloatOffset=tuner.tunes[nthC][cv];
+	estimate=UINT16_MAX;
+	bit=0x8000;
 	
-	do
+	relPrec=precision+nthC;
+	
+	for(i=0;i<=14;++i) // 14bit dac
 	{
-		cvv=tuner_computeCVFromNote(12*nthC,cv);
-		synth_setCV(cv,cvv,0,0);
-		p=measureAudioPeriod(1<<(nthC+precision));
+		if(estimate>tuner_computeCVFromNote(lowestNote,cv))
+		{
+			synth_setCV(cv,estimate,0,0);
+			p=(double)measureAudioPeriod(1<<relPrec)*pow(2.0,-relPrec);
+		}
+		else
+		{
+			p=DBL_MAX;
+		}
 		
-		floatOffset=prevFloatOffset*powf(log2f(p)/log2f(tgtp),TUNER_SLEW_RATE/nthC);
-		prevFloatOffset=floatOffset;
-		
-		newOffset=MIN(MAX(floatOffset,0.0f),65535.0f);
+		// adjust estimate
+		if (p>tgtp)
+			estimate+=bit;
+		else
+			estimate-=bit;
 
-		error=abs(p-tgtp);
+		// on to finer changes
+		bit>>=1;
 		
-#ifdef DEBUG		
-		print("cv ");
-		phex16(cvv);
-		print(" per ");
-		phex16(p>>16);
-		phex16(p);
-		print(" ");
-		phex16(tgtp>>16);
-		phex16(tgtp);
-		print(" off ");
-		phex16(tuner.tunes[nthC][cv]);
-		print(" ");
-		phex16(newOffset);
-		print("\n");
-#endif
-		
-		tuner.tunes[nthC][cv]=newOffset;
 	}
-	while(error>epsilon);
 
+	tuner.tunes[nthC][cv]=estimate;
+
+#ifdef DEBUG		
+	print("cv ");
+	phex16(estimate);
+	print(" per ");
+	phex16(p);
+	print(" ");
+	phex16(tgtp);
+	print("\n");
+#endif
 }
 
 static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
@@ -253,14 +254,18 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	// open VCA
 
 	synth_setCV(ampCV,TUNER_VCA_LEVEL,0,0);
-	synth_update();
+	
+	// done many times, to ensure all CVs are at correct voltage
+	
+	for(i=0;i<100;++i)
+		synth_update();
 
 	// tune
 
 	if (isOsc)
 	{
 		for(i=TUNER_OSC_NTH_C_LO;i<=TUNER_OSC_NTH_C_HI;++i)
-			tuneOffset(oscCV,i,TUNER_OSC_PRECISION,TUNER_OSC_EPSILON,TUNER_OSC_LOWEST_HERTZ);
+			tuneOffset(oscCV,i,12*(TUNER_OSC_NTH_C_LO-2),TUNER_OSC_PRECISION,TUNER_OSC_LOWEST_HERTZ);
 
 		// extrapolate for octaves that aren't directly tunable
 		
@@ -273,7 +278,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	else
 	{
 		for(i=TUNER_FIL_NTH_C_LO;i<=TUNER_FIL_NTH_C_HI;++i)
-			tuneOffset(oscCV,i,TUNER_FIL_PRECISION,TUNER_FIL_EPSILON,TUNER_FIL_LOWEST_HERTZ);
+			tuneOffset(oscCV,i,12*(TUNER_FIL_NTH_C_LO-1),TUNER_FIL_PRECISION,TUNER_FIL_LOWEST_HERTZ);
 
 		for(i=TUNER_FIL_NTH_C_LO-1;i>=0;--i)
 			tuner.tunes[i][oscCV]=(uint32_t)2*tuner.tunes[i+1][oscCV]-tuner.tunes[i+2][oscCV];
@@ -290,7 +295,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 uint16_t tuner_computeCVFromNote(uint8_t note,p600CV_t cv)
 {
-	float value,semiTone;
+	double value,semiTone;
 	uint8_t loOct,hiOct;
 	uint16_t cvv;
 	
@@ -300,9 +305,9 @@ uint16_t tuner_computeCVFromNote(uint8_t note,p600CV_t cv)
 	semiTone=(note%12)/12.0f;
 	
 	value=tuner.tunes[loOct][cv]+(tuner.tunes[hiOct][cv]-tuner.tunes[loOct][cv])*semiTone;
-	cvv=roundf(value);
+	cvv=round(value);
 	
-	return cvv&~3; // lower 2 bits ignored by DAC
+	return cvv;
 }
 
 void tuner_init(void)

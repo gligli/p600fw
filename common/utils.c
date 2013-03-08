@@ -12,6 +12,11 @@ inline float log2f( float n )
     return logf( n ) * INVLOG2;  
 }
 
+inline float log2( float n )  
+{  
+    return log( n ) * INVLOG2;  
+}
+
 inline uint16_t satAddU16U16(uint16_t a, uint16_t b)
 {
 	uint16_t r;
