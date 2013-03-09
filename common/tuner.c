@@ -257,7 +257,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// done many times, to ensure all CVs are at correct voltage
 	
-	for(i=0;i<100;++i)
+	for(i=0;i<25;++i)
 		synth_update();
 
 	// tune

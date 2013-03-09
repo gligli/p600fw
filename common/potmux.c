@@ -53,16 +53,16 @@ void potmux_update(void)
 
 				// select pot
 
-			mux=(j&0x0f)|(~(0x10<<(j>>4))&0x30);
+			mux=(j&0x0f)|(0x20>>(j>>4));
 			io_write(0x0a,mux);
-			CYCLE_WAIT(16);
+			CYCLE_WAIT(8);
 			
 				// init values
 			
 			estimate=UINT16_MAX;
 			bit=0x8000;
 			
-				// prepare DAC
+				// main loop
 			
 			for(i=0;i<=12;++i) // more than 12bit is doable, but it's almost useless because of pot noise...
 			{

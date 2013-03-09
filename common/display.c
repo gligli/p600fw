@@ -50,7 +50,7 @@ void sevenSeg_setAscii(char left, char right)
 	display.sevenSegs[1]=map_to_seg7(&sevenSeg_map,right);
 }
 
-void sevenSeg_setNumber(int8_t n)
+void sevenSeg_setNumber(int32_t n)
 {
 	n%=100;
 	sevenSeg_setAscii('0'+(n/10),'0'+(n%10));

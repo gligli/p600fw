@@ -336,6 +336,7 @@ void p600_init(void)
 	synth_init();
 	potmux_init();
 	tuner_init();
+	assigner_init();
 
 	int8_t i;
 	for(i=0;i<P600_VOICE_COUNT;++i)
@@ -344,6 +345,101 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
+#if 0
+	{
+		int16_t i;
+		uint16_t e,p;
+		int8_t lower,pot;
+		uint32_t nr=0;
+		static uint16_t exc[42];
+		
+		for(i=0;i<sizeof(exc);++i)
+			exc[i]=rand();
+
+		for(;;)
+		{
+			//prepare
+			
+			for(i=0;i<sizeof(exc);++i)
+			{
+				// write
+				
+				++exc[i];
+				
+				mem_write(0x2000+i,exc[i]);
+				mem_write(0x2080+i,exc[i]>>8);
+			}
+
+			for(i=0;i<sizeof(exc);++i)
+			{
+				// read back
+				
+				e=((uint16_t)mem_read(0x2080+i))<<8;
+				e|=mem_read(0x2000+i);
+				
+				if(e!=exc[i])
+				{
+					print("m");phex16(e);phex16(exc[i]);
+					++nr;
+				}
+			}
+
+			pot=rand()%32;
+			potmux_need(pot);
+			potmux_update();
+			p=potmux_getValue(pot);
+
+			for(i=0;i<sizeof(exc);++i)
+			{
+				// test potmux & dac
+				
+				io_write(0x0a,(pot&0x0f)|(0x20>>(pot>>4)));
+
+				e=exc[i];
+
+				dac_write(e);				
+
+				// is DAC value lower than pot value?
+				lower=(io_read(0x09)&0x08)!=0;
+
+				if(lower!=(e<p))
+				{
+					print("d ");phex16(e);print(" ");phex16(p);print("     ");
+					++nr;
+				}
+			}
+
+			io_write(0x0a,0xff);
+			CYCLE_WAIT(8);
+
+			sevenSeg_setNumber(nr);
+			display_update(1);
+		}
+	}
+#endif	
+
+#if 0
+	synth_update();
+	for(;;)
+	{
+		potmux_need(ppMTune);
+		potmux_need(ppMVol,ppPitchWheel,ppModWheel,ppMixer);
+		potmux_update();
+		if(scanner_buttonState(pb1))
+			sevenSeg_setNumber((int32_t)potmux_getValue(ppMVol)>>8);
+		else if(scanner_buttonState(pb2))
+			sevenSeg_setNumber((int32_t)potmux_getValue(ppPitchWheel)>>8);
+		else if(scanner_buttonState(pb3))
+			sevenSeg_setNumber((int32_t)potmux_getValue(ppModWheel)>>8);
+		else if(scanner_buttonState(pb4))
+			sevenSeg_setNumber((int32_t)potmux_getValue(ppMixer)>>8);
+		else
+			sevenSeg_setNumber((int32_t)potmux_getValue(ppMTune)>>8);
+		scanner_update(1);
+		display_update(1);
+	}
+#endif
+	
 	// state
 	
 #ifndef DEBUG		

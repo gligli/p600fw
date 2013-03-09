@@ -20,22 +20,6 @@
 #define CPU_125kHz      0x07
 #define CPU_62kHz       0x08
 
-inline void setDataDir(int8_t write)
-{
-	if(write)
-	{
-		DDRC=0b11100111;
-		DDRD=0b11110111;
-		DDRE=0b11100010;
-	}		
-	else
-	{
-		DDRC=0b11100000;
-		DDRD=0b00000111;
-		DDRE=0b11100000;
-	}
-}
-
 inline void setAddr(uint16_t addr, uint8_t * b, uint8_t * d, uint8_t * e, int8_t io)
 {
 	uint8_t msb,lsb,vr03,vr05,vr13,vl05; // shifts
@@ -81,24 +65,35 @@ inline void setData(uint8_t data, uint8_t * c, uint8_t * d, uint8_t * e)
 	*e|=vr1&0x02;
 }
 
+inline void setDataDir(int8_t write)
+{
+	if(write)
+	{
+		DDRC=0b11100111;
+		DDRD=0b11110111;
+		DDRE=0b11100010;
+	}		
+	else
+	{
+		DDRC=0b11100000;
+		DDRD=0b00000111;
+		DDRE=0b11100000;
+	}
+}
+
 inline void setIdle(void)
 {
 	PORTF=0xc6;
-	PORTC=0xc0;
-
-	__builtin_avr_delay_cycles(2);
+	PORTC|=0xC0; // port C has data lines, we can't clear them until fully idle
 }
 
 inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 {
 	uint8_t b,c,d,e;
 	
-	// back to idle
+	// prepare write
 	
-	PORTF=0xc6;
-	PORTC=0xc0;
-
-	// flags
+	setIdle();
 	
 	b=0x00;
 	c=(io)?0x40:0x80;
@@ -119,6 +114,7 @@ inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 	PORTC=c;
 	PORTD=d;
 	PORTE=e;
+
 	PORTF=0x87;
 }
 
@@ -126,16 +122,11 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 {
 	uint8_t b,c,d,e,v;
 
-	// back to idle
-	
-	setIdle();
-	
 	// prepare read
 
+	setIdle();
 	setDataDir(0);
 
-	// flags
-	
 	b=0x00;
 	c=(io)?0x40:0x80;
 	d=0x00;
@@ -151,17 +142,24 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 	PORTC=c;
 	PORTD=d;
 	PORTE=e;
+
 	PORTF=0x47;
 
-	// wait
+	// let hardware process it
 	
-	__builtin_avr_delay_cycles(8);
+	CYCLE_WAIT(2);
 	
 	// read data
 	
 	c=PINC;
 	d=PIND;
 	e=PINE;
+	
+	// back to idle
+	
+	setIdle();
+	
+	// descramble
 	
 	v =(c<<7)&0x80;
 	v|=(c>>1)&0x03;
@@ -173,10 +171,9 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 	v|=(e<<1)&0x04;
 	
 	// back to default (write)
-	
-	setIdle();
+
 	setDataDir(1);
-	
+
 	return v;
 }
 
@@ -202,6 +199,10 @@ inline uint8_t io_read(uint8_t address)
 
 void hardware_init(void)
 {
+	// disable pullups
+	
+	MCUCR|=(1<<PUD);	
+	
 	// LSB->MSB
 	// B: A3-A9,A12
 	// C: D7,D0,D1,INT,NMI,Halt,MREQ,IORQ
