@@ -27,7 +27,7 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t wait)
 
 	BLOCK_INT
 	{
-		mem_fastDacWrite(cvv);
+		dac_write(cvv);
 
 		// select current CV
 		io_write(0x0d,dmux);

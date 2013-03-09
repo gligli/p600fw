@@ -180,65 +180,6 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 	return v;
 }
 
-inline void mem_fastDacWrite(uint16_t value)
-{
-	uint8_t c,d,e;
-	uint8_t vr10,vr09,vr08,vr11; // shifts
-	
-	// back to idle
-	
-	setIdle();
-
-	// write upper
-
-	c=0x80;
-	d=0x02;
-	e=0x20;
-
-	vr08=value>>8;
-	vr09=vr08>>1;
-	vr10=vr09>>1;
-	vr11=vr10>>1;
-			
-	c|=vr09&0x06;
-	
-	d|=vr10&0x10;
-	d|=vr08&0x20;
-	d|=vr09&0xc0;
-	
-	e|=vr11&0x02;
-	
-	PORTC=c;
-	PORTD=d;
-	PORTE=e;
-	PORTF=0x87;
-
-	// wait
-	
-	__builtin_avr_delay_cycles(2);
-	
-    // minimalistic status change
-	
-	PORTF=0xc6;
-	
-	// wait
-	
-	__builtin_avr_delay_cycles(2);
-	
-	// write lower
-
-	c=0x80;
-	d=0x02;
-	e=0x00;
-
-	setData(value>>2,&c,&d,&e);
-	
-	PORTC=c;
-	PORTD=d;
-	PORTE=e;
-	PORTF=0x87;
-}
-
 inline void mem_write(uint16_t address, uint8_t value)
 {
 	hardware_write(0,address,value);
