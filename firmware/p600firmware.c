@@ -81,10 +81,14 @@ inline void setDataDir(int8_t write)
 	}
 }
 
-inline void setIdle(void)
+inline void setIdle(int8_t fromWrite)
 {
 	PORTF=0xc6;
-	PORTC|=0xC0; // port C has data lines, we can't clear them until fully idle
+	
+	if(fromWrite)
+		PORTC|=0x40;
+	else
+		PORTC|=0x80;
 }
 
 inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
@@ -93,7 +97,7 @@ inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 	
 	// prepare write
 	
-	setIdle();
+	setIdle(1);
 	
 	b=0x00;
 	c=(io)?0x40:0x80;
@@ -124,7 +128,7 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 
 	// prepare read
 
-	setIdle();
+	setIdle(1);
 	setDataDir(0);
 
 	b=0x00;
@@ -157,7 +161,7 @@ inline uint8_t hardware_read(int8_t io, uint16_t addr)
 	
 	// back to idle
 	
-	setIdle();
+	setIdle(0);
 	
 	// descramble
 	
@@ -228,12 +232,6 @@ void hardware_init(void)
 	DDRE=0b11100000;
 	DDRF=0b11100011;
 	
-	// prepare a 200hz interrupt
-/*	
-	OCR1A=10000;
-	TCCR1B|=(1<<WGM12)|(1<<CS11);  //Timer 1 prescaler = 8, Clear-Timer on Compare (CTC) 
-	TIMSK1|=(1<<OCIE1A);//Enable overflow interrupt for Timer1
-*/
 	// prepare a 2Khz interrupt
 	
 	OCR2A=125;
@@ -332,11 +330,6 @@ int main(void)
 	{
 		p600_update();
 	}
-}
-
-ISR(TIMER1_COMPA_vect) 
-{ 
-	p600_slowInterrupt();
 }
 
 ISR(TIMER2_COMPA_vect) 
