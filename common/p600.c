@@ -66,6 +66,8 @@ static struct
 	
 	uint16_t glideAmount;
 	int8_t gliding;
+	
+	int8_t chromaticPitch;
 } p600;
 
 static const char * modulationName(modulation_t m)
@@ -89,12 +91,12 @@ static const char * modulationName(modulation_t m)
 	}
 }
 
-static void adjustTunedCVs(void)
+static void computeTunedCVs(void)
 {
 	int32_t baseCutoff;
-	uint16_t cva,cvb,cvf;
+	uint16_t cva,cvb,cvf,baseAPitch,baseBPitch;
 	int16_t mTune,fineBFreq;
-	uint8_t note,baseANote,baseBNote;
+	uint8_t note,baseCutoffNote,baseANote,baseBNote;
 	int8_t v;
 	
 	// filters and oscs
@@ -102,23 +104,39 @@ static void adjustTunedCVs(void)
 	mTune=(potmux_getValue(ppMTune)>>8)+INT8_MIN;
 	fineBFreq=(potmux_getValue(ppFreqBFine)>>7)+INT8_MIN*2;
 	
-	baseCutoff=potmux_getValue(ppCutoff);
+	baseCutoff=((uint32_t)potmux_getValue(ppCutoff)*5)>>3; // 62.5% of raw cutoff
+	baseAPitch=potmux_getValue(ppFreqA)>>2;
+	baseBPitch=potmux_getValue(ppFreqB)>>2;
+
+	baseCutoffNote=baseCutoff>>8;
+	baseANote=baseAPitch>>8; // 64 semitones
+	baseBNote=baseBPitch>>8;
 	
-	baseANote=potmux_getValue(ppFreqA)>>10; // 64 semitones
-	baseBNote=potmux_getValue(ppFreqB)>>10;
+	baseCutoff&=0xff;
+	
+	if(p600.chromaticPitch)
+	{
+		baseAPitch=0;
+		baseBPitch=0;
+	}
+	else
+	{
+		baseAPitch&=0xff;
+		baseBPitch&=0xff;
+	}
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
 		if (!assigner_getAssignment(v,&note))
 			continue;
 		
-		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,pcOsc1A+v),(int32_t)p600.benderCVs[pcOsc1A+v]+mTune);
-		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,pcOsc1B+v),(int32_t)p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)p600.benderCVs[pcOsc1A+v]+mTune);
+		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
 		
 		if(p600.trackingShift>=0)
-			cvf=satAddU16S32(tuner_computeCVFromNote(note,pcFil1+v)>>p600.trackingShift,(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff);
+			cvf=satAddU16S16(tuner_computeCVFromNote((note>>p600.trackingShift)+baseCutoffNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]);
 		else
-			p600.filterNoteCV[v]=cvf=satAddU16S32(tuner_computeCVFromNote(0,pcFil1+v),(int32_t)p600.benderCVs[pcFil1+v]+baseCutoff); // no glide if no tracking
+			p600.filterNoteCV[v]=cvf=satAddU16S16(tuner_computeCVFromNote(baseCutoffNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]); // no glide if no tracking
 
 		if(p600.gliding)
 		{
@@ -186,7 +204,7 @@ static void computeBenderCVs(void)
 	case modPitch:
 		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 		{
-			bend=tuner_computeCVFromNote(p600.benderSemitones*2,cv)-tuner_computeCVFromNote(0,cv);
+			bend=tuner_computeCVFromNote(p600.benderSemitones*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
 			bend*=p600.benderAmount;
 			bend/=UINT16_MAX;
 			p600.benderCVs[cv]=bend;
@@ -446,7 +464,7 @@ void p600_init(void)
 	tuner_tuneSynth();
 #endif
 	
-	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,pcFil1)); // uses tuning, not random, but good enough
+	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,42,pcFil1)); // uses tuning, not random, but good enough
 	
 	scanner_update(1); // set initial state
 	
@@ -487,14 +505,14 @@ void p600_update(void)
 		potmux_need(ppSpeed,ppFilEnvAmt,ppPModFilEnv,ppPModOscB,ppMVol);
 		break;
 	case 2:
-		potmux_need(ppFreqA,ppFreqB,ppMTune,ppFreqBFine,ppAPW,ppBPW);
+		potmux_need(ppMTune,ppFreqBFine,ppAPW,ppBPW);
 		break;
 	case 3:
 		potmux_need(ppResonance,ppMixer,ppGlide,ppLFOAmt,ppLFOFreq);
 		break;
 	}
 
-	potmux_need(ppPitchWheel,ppModWheel,ppCutoff);
+	potmux_need(ppFreqA,ppFreqB,ppPitchWheel,ppModWheel,ppCutoff);
 	
 	// read them
 	
@@ -543,7 +561,7 @@ void p600_update(void)
 	}
 
 	computeBenderCVs();
-	adjustTunedCVs();
+	computeTunedCVs();
 	lfo_setCVs(&p600.lfo,potmux_getValue(ppLFOFreq),satAddU16U16(potmux_getValue(ppLFOAmt),potmux_getValue(ppModWheel)>>p600.modwheelShift));
 }
 
@@ -836,6 +854,23 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		sevenSeg_scrollText(s,1);
 	}
+
+	// pitch mode
+	
+	if(pressed && button==pb6)
+	{
+		const char * s=NULL;
+		
+		p600.chromaticPitch=!p600.chromaticPitch;
+		
+		if(p600.chromaticPitch)
+			s="Chromatic";
+		else
+			s="Free";
+
+		sevenSeg_scrollText(s,1);
+	}
+
 	
 	// bender
 	
@@ -892,7 +927,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 {
 	int8_t env;
 	
-	adjustTunedCVs();
+	computeTunedCVs();
 
 	env=voice;
 	if(assigner_getMode()!=mPoly)
