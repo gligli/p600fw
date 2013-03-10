@@ -707,8 +707,6 @@ void p600_fastInterrupt(void)
 	unrollVoices(5);
 #endif
 	
-	CYCLE_WAIT(40); // 10 us to let VCAs properly follow envelopes
-	
 	// handle voices that are done playing
 	
 	if(hz63)
