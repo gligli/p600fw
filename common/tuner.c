@@ -7,7 +7,7 @@
 #include "display.h"
 
 #define TUNER_CV_COUNT (pcFil6-pcOsc1A+1)
-#define TUNER_OCTAVE_COUNT 16
+#define TUNER_OCTAVE_COUNT 12
 
 #define FF_P	0x01 // active low
 #define CNTR_EN 0x02
@@ -25,7 +25,7 @@
 
 #define TUNER_OSC_INIT_OFFSET 5000.0
 #define TUNER_OSC_INIT_SCALE (65536.0/11.0)
-#define TUNER_OSC_PRECISION -2 // higher is preciser but slower
+#define TUNER_OSC_PRECISION -3 // higher is preciser but slower
 #define TUNER_OSC_NTH_C_LO 3
 #define TUNER_OSC_NTH_C_HI 6
 
@@ -124,7 +124,7 @@ static NOINLINE uint16_t getPeriod(void)
 	i8253Write(0x1,0x00);
 	i8253Write(0x1,0x00);
 
-	return UINT16_MAX-c+10; // 10 -> helps for uppper octaves tuning, not yet sure why...
+	return UINT16_MAX-c;
 }
 
 static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
@@ -293,21 +293,27 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	synth_update();
 }
 
-uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv)
+NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv)
 {
-	float value,semiTone;
 	uint8_t loOct,hiOct;
-	uint16_t cvv;
-	
+	uint16_t value,loVal,hiVal;
+	uint32_t semiTone;
 	
 	loOct=note/12;
-	hiOct=MIN(loOct+1,TUNER_OCTAVE_COUNT-1);
-	semiTone=((note%12)+nextInterp/255.0f)/12.0f;
+	hiOct=loOct+1;
 	
-	value=tuner.tunes[loOct][cv]+(tuner.tunes[hiOct][cv]-tuner.tunes[loOct][cv])*semiTone;
-	cvv=round(value);
+	if(loOct>=TUNER_OCTAVE_COUNT)
+		return UINT16_MAX;
 	
-	return cvv;
+	loVal=tuner.tunes[loOct][cv];
+	hiVal=tuner.tunes[hiOct][cv];
+	
+	semiTone=(((uint32_t)(note%12)<<16)+((uint16_t)nextInterp<<8))/12;
+	
+	value=loVal;
+	value+=(semiTone*(hiVal-loVal))>>16;
+	
+	return value;
 }
 
 void tuner_init(void)
