@@ -302,7 +302,7 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 	loOct=note/12;
 	hiOct=loOct+1;
 	
-	if(loOct>=TUNER_OCTAVE_COUNT)
+	if(hiOct>=TUNER_OCTAVE_COUNT)
 		return UINT16_MAX;
 	
 	loVal=tuner.tunes[loOct][cv];
