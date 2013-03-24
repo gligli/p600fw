@@ -242,18 +242,6 @@ void hardware_init(void)
 	hardware_read(0,0); // init r/w system
 }
 
-// 32Kbytes, just before the bootloader zone
-
-uint32_t storage_addr=0x16000;
-uint32_t storage_size=0x8000;
-
-
-extern uint8_t phaseLookupLo[];
-
-#define xstr(s) str(s)
-#define str(s) #s
-
-
 void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *buf)
 {
 	uint16_t i;
@@ -292,6 +280,32 @@ void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *bu
 	SREG = sreg;
 }
 
+// 32Kbytes, just before the bootloader zone
+
+#define STORAGE_ADDR (0x1e000-STORAGE_SIZE)
+
+void storage_write(uint32_t pageIdx, uint8_t *buf)
+{
+	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
+	{
+		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR,buf);
+	}
+}
+
+void storage_read(uint32_t pageIdx, uint8_t *buf)
+{
+	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
+	{
+		int16_t i;
+		int32_t base=pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR;
+		
+		for(i=0;i<STORAGE_PAGE_SIZE;++i)
+		{
+			buf[i]=pgm_read_byte_far(base+i);
+		}
+	}
+}
+
 int main(void)
 {
 	// initialize clock
@@ -313,7 +327,7 @@ int main(void)
 	// wait an extra second for the PC's operating system
 	// to load drivers and do whatever it does to actually
 	// be ready for input
-	_delay_ms(500);
+	_delay_ms(1000);
 
 	print("p600firmware\n");
 #endif

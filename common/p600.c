@@ -14,6 +14,7 @@
 #include "lfo.h"
 #include "tuner.h"
 #include "assigner.h"
+#include "storage.h"
 
 #define UNROLL_VOICES // undefine this to save code size, at the expense of speed
 
@@ -457,12 +458,20 @@ void p600_init(void)
 		display_update(1);
 	}
 #endif
+
+	// load stuff from storage
+	
+	int8_t settingsOk;
+	
+	settingsOk=settings_load();
+	preset_loadCurrent(settings.currentPresetNumber);
 	
 	// state
-	
-#ifndef DEBUG		
-	tuner_tuneSynth();
-#endif
+
+	if(!settingsOk)
+	{
+		tuner_tuneSynth();
+	}
 	
 	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,42,pcFil1)); // uses tuning, not random, but good enough
 	

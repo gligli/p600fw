@@ -3,11 +3,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tuner.h"
+#include "storage.h"
 #include "synth.h"
 #include "display.h"
-
-#define TUNER_CV_COUNT (pcFil6-pcOsc1A+1)
-#define TUNER_OCTAVE_COUNT 12
+#include "storage.h"
 
 #define FF_P	0x01 // active low
 #define CNTR_EN 0x02
@@ -37,7 +36,6 @@
 
 static struct
 {
-	uint16_t tunes[TUNER_OCTAVE_COUNT][TUNER_CV_COUNT];
 	p600CV_t currentCV;
 } tuner;
 
@@ -226,7 +224,7 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, in
 		
 	}
 
-	tuner.tunes[nthC][cv]=estimate;
+	settings.tunes[nthC][cv]=estimate;
 
 #ifdef DEBUG		
 	print("cv ");
@@ -270,10 +268,10 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 		// extrapolate for octaves that aren't directly tunable
 		
 		for(i=TUNER_OSC_NTH_C_LO-1;i>=0;--i)
-			tuner.tunes[i][oscCV]=(uint32_t)2*tuner.tunes[i+1][oscCV]-tuner.tunes[i+2][oscCV];
+			settings.tunes[i][oscCV]=(uint32_t)2*settings.tunes[i+1][oscCV]-settings.tunes[i+2][oscCV];
 
 		for(i=TUNER_OSC_NTH_C_HI+1;i<TUNER_OCTAVE_COUNT;++i)
-			tuner.tunes[i][oscCV]=(uint32_t)2*tuner.tunes[i-1][oscCV]-tuner.tunes[i-2][oscCV];
+			settings.tunes[i][oscCV]=(uint32_t)2*settings.tunes[i-1][oscCV]-settings.tunes[i-2][oscCV];
 	}
 	else
 	{
@@ -281,10 +279,10 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 			tuneOffset(oscCV,i,12*(TUNER_FIL_NTH_C_LO-1),TUNER_FIL_PRECISION);
 
 		for(i=TUNER_FIL_NTH_C_LO-1;i>=0;--i)
-			tuner.tunes[i][oscCV]=(uint32_t)2*tuner.tunes[i+1][oscCV]-tuner.tunes[i+2][oscCV];
+			settings.tunes[i][oscCV]=(uint32_t)2*settings.tunes[i+1][oscCV]-settings.tunes[i+2][oscCV];
 
 		for(i=TUNER_FIL_NTH_C_HI+1;i<TUNER_OCTAVE_COUNT;++i)
-			tuner.tunes[i][oscCV]=(uint32_t)2*tuner.tunes[i-1][oscCV]-tuner.tunes[i-2][oscCV];
+			settings.tunes[i][oscCV]=(uint32_t)2*settings.tunes[i-1][oscCV]-settings.tunes[i-2][oscCV];
 	}
 	
 	// close VCA
@@ -305,8 +303,8 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 	if(hiOct>=TUNER_OCTAVE_COUNT)
 		return UINT16_MAX;
 	
-	loVal=tuner.tunes[loOct][cv];
-	hiVal=tuner.tunes[hiOct][cv];
+	loVal=settings.tunes[loOct][cv];
+	hiVal=settings.tunes[hiOct][cv];
 	
 	semiTone=(((uint32_t)(note%12)<<16)+((uint16_t)nextInterp<<8))/12;
 	
@@ -325,9 +323,9 @@ void tuner_init(void)
 	for(j=0;j<TUNER_OCTAVE_COUNT;++j)
 		for(i=0;i<P600_VOICE_COUNT;++i)
 		{
-			tuner.tunes[j][i+pcOsc1A]=TUNER_OSC_INIT_OFFSET+j*TUNER_OSC_INIT_SCALE;
-			tuner.tunes[j][i+pcOsc1B]=TUNER_OSC_INIT_OFFSET+j*TUNER_OSC_INIT_SCALE;
-			tuner.tunes[j][i+pcFil1]=TUNER_FIL_INIT_OFFSET+j*TUNER_FIL_INIT_SCALE;
+			settings.tunes[j][i+pcOsc1A]=TUNER_OSC_INIT_OFFSET+j*TUNER_OSC_INIT_SCALE;
+			settings.tunes[j][i+pcOsc1B]=TUNER_OSC_INIT_OFFSET+j*TUNER_OSC_INIT_SCALE;
+			settings.tunes[j][i+pcFil1]=TUNER_FIL_INIT_OFFSET+j*TUNER_FIL_INIT_SCALE;
 		}
 }
 
@@ -419,5 +417,7 @@ void tuner_tuneSynth(void)
 		synth_update();
 
 		display_clear();
+		
+		settings_save();
 	}
 }

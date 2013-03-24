@@ -56,6 +56,7 @@ SRC =	$(TARGET).c \
 	..\common\tuner.c \
 	..\common\potmux.c \
 	..\common\assigner.c \
+	..\common\storage.c \
 	..\common\utils.c
 
 # MCU name, you MUST set this to match the board you are using
@@ -270,7 +271,7 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-LDFLAGS += -Wl,--section-start=.bootloader=0x0001e000 # NRWW zone start on at90usb1286
+LDFLAGS += -Wl,--section-start=.bootloader=0x1f000 # 0x1e000 is NRWW zone start on at90usb1286
 
 
 

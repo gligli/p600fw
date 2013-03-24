@@ -12,7 +12,7 @@
 
 #include <avr/boot.h>
 
-#define blHack_call_SPM "rcall .bootloader+0x1e4a \n\t" // address of a SPM followed by a RET in the Teensy++ bootloader
+#define blHack_call_SPM "rcall .bootloader+0xe4a \n\t" // address of a SPM followed by a RET in the Teensy++ bootloader
 
 #define blHack_page_erase(address)      \
 (__extension__({                                 \
