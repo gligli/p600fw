@@ -32,12 +32,18 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t wait)
 		// select current CV
 		io_write(0x0d,dmux);
 		
+		if(wait)
+		{
+			// 2.5 us to let S&H get very precise voltage, some P600s need it apparently
+			CYCLE_WAIT(10);
+		}
+
 		// deselect it
 		io_write(0x0d,0xff);
 
 		if(wait)
 		{
-			// 2.5 us to let analog hardware stabilize
+			// 2.5 more us to let analog hardware stabilize
 			CYCLE_WAIT(10);
 		}
 	}
