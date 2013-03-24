@@ -12,11 +12,16 @@ static struct
 	uint32_t immediateBits;
 	uint16_t cvs[SYNTH_CV_COUNT];
 	uint8_t gateBits;
+	uint8_t lastWrittenGateBits;
 } synth;
 
 static inline void updateGates(void)
 {
-	io_write(0x0b,synth.gateBits);
+	if(synth.gateBits!=synth.lastWrittenGateBits)
+	{
+		io_write(0x0b,synth.gateBits);
+		synth.lastWrittenGateBits=synth.gateBits;
+	}
 }
 
 static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t wait)
@@ -83,6 +88,7 @@ void synth_updateCV(p600CV_t cv)
 void synth_init()
 {
 	memset(&synth,0,sizeof(synth));
+	synth.lastWrittenGateBits=UINT8_MAX;
 }
 
 void synth_update()

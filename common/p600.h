@@ -55,6 +55,11 @@ typedef enum
 	pbASaw=32,pbATri,pbSync,pbBSaw,pbBTri,pbPModFA,pbPModFil,pbUnison
 } p600Button_t;
 
+typedef enum
+{
+	modOff=0,modPitch=1,modFilter=2,modVolume=3,modPW=4,modResonance=5,modMixer=6
+} modulation_t;
+
 void p600_buttonEvent(p600Button_t button, int pressed);
 void p600_keyEvent(uint8_t key, int pressed);
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice); // -1 -> unison

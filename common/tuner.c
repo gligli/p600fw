@@ -47,11 +47,11 @@ static NOINLINE void whileTuning(void)
 	{
 		// display current osc
 		if(tuner.currentCV<pcOsc1B)
-			sevenSeg_setAscii('A','1'+tuner.currentCV-pcOsc1A);
+			sevenSeg_setAscii('a','1'+tuner.currentCV-pcOsc1A);
 		else if(tuner.currentCV<pcFil1)
-			sevenSeg_setAscii('B','1'+tuner.currentCV-pcOsc1B);
+			sevenSeg_setAscii('b','1'+tuner.currentCV-pcOsc1B);
 		else
-			sevenSeg_setAscii('F','1'+tuner.currentCV-pcFil1);
+			sevenSeg_setAscii('f','1'+tuner.currentCV-pcFil1);
 
 		display_update(1);
 

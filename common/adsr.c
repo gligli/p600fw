@@ -102,7 +102,7 @@ static void updateIncrements(struct adsr_s * adsr)
 }
 
 
-static inline uint16_t computeOutput(uint32_t phase, uint16_t lookup[], int8_t isExp)
+static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], int8_t isExp)
 {
 	if(isExp)
 		return computeShape(phase,lookup);

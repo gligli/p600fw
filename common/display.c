@@ -98,6 +98,8 @@ void display_update(int8_t fullUpdate)
 {
 	if(fullUpdate)
 	{
+		uint8_t localSevenSegs[2];
+		
 		// blinker
 
 		display.blinkCounter++;
@@ -110,23 +112,32 @@ void display_update(int8_t fullUpdate)
 
 		// scroller
 
-		display.scrollCounter++;
-
-		if (display.scrollCounter>DISPLAY_SCROLL_RATE && display.scrollTimes)
+		if(display.scrollTimes)
 		{
 			int8_t l,p,p2;
+
+			display.scrollCounter++;
 
 			l=strlen(display.scrollText);
 			p=display.scrollPos;
 			p2=(display.scrollPos+1)%l;
 
-			sevenSeg_setAscii(display.scrollText[p],display.scrollText[p2]);
+			localSevenSegs[0]=map_to_seg7(&sevenSeg_map,display.scrollText[p]);
+			localSevenSegs[1]=map_to_seg7(&sevenSeg_map,display.scrollText[p2]);
 
-			display.scrollPos=p2;
-			display.scrollCounter=0;
+			if (display.scrollCounter>DISPLAY_SCROLL_RATE)
+			{
+				display.scrollPos=p2;
+				display.scrollCounter=0;
 
-			if(p2==0 && display.scrollTimes>0)
-				--display.scrollTimes;
+				if(p2==0 && display.scrollTimes>0)
+					--display.scrollTimes;
+			}
+		}
+		else
+		{
+			localSevenSegs[0]=display.sevenSegs[0];
+			localSevenSegs[1]=display.sevenSegs[1];
 		}
 
 		// update one third of display at a time
@@ -140,11 +151,11 @@ void display_update(int8_t fullUpdate)
 			if (display.blinkState) b^=display.ledBlinking;
 			break;
 		case 1:
-			b=display.sevenSegs[0]&0x7f;
+			b=localSevenSegs[0]&0x7f;
 			if (led_getOn(plDot)) b|=0x80;
 			break;
 		case 2:
-			b=display.sevenSegs[1]&0x7f;
+			b=localSevenSegs[1]&0x7f;
 			if (led_getOn(plTune)) b|=0x80;
 			break;
 		}

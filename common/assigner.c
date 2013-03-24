@@ -147,8 +147,11 @@ int8_t assigner_getVoiceFromNote(uint8_t note)
 
 inline void assigner_setMode(assignerMode_t mode)
 {
-	assigner_init();
-	assigner.mode=mode;
+	if (mode!=assigner.mode)
+	{
+		assigner_init();
+		assigner.mode=mode;
+	}
 }
 
 inline assignerMode_t assigner_getMode(void)

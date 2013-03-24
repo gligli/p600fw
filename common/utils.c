@@ -56,7 +56,7 @@ inline uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
 	return a+(x*((b-a)>>8));
 }
 
-inline uint16_t computeShape(uint32_t phase, uint16_t lookup[])
+inline uint16_t computeShape(uint32_t phase, const uint16_t lookup[])
 {
 	uint8_t ai,bi,x;
 	uint16_t a,b;

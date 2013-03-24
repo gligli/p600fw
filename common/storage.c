@@ -36,10 +36,28 @@ static uint16_t storageRead16(void)
 	return v;
 }
 
+/*
+static int16_t storageReadS16(void)
+{
+	int16_t v;
+	v=*(int16_t*)tempPtr;
+	tempPtr+=sizeof(v);
+	return v;
+}
+*/
+
 static uint8_t storageRead8(void)
 {
 	uint8_t v;
 	v=*(uint8_t*)tempPtr;
+	tempPtr+=sizeof(v);
+	return v;
+}
+
+static int8_t storageReadS8(void)
+{
+	int8_t v;
+	v=*(int8_t*)tempPtr;
 	tempPtr+=sizeof(v);
 	return v;
 }
@@ -56,9 +74,23 @@ static void storageWrite16(uint16_t v)
 	tempPtr+=sizeof(v);
 }
 
+/*
+static void storageWriteS16(int16_t v)
+{
+	*(int16_t*)tempPtr=v;
+	tempPtr+=sizeof(v);
+}
+*/
+
 static void storageWrite8(uint8_t v)
 {
 	*(uint8_t*)tempPtr=v;
+	tempPtr+=sizeof(v);
+}
+
+static void storageWriteS8(int8_t v)
+{
+	*(int8_t*)tempPtr=v;
 	tempPtr+=sizeof(v);
 }
 
@@ -123,7 +155,9 @@ int8_t settings_load(void)
 			for(i=0;i<TUNER_CV_COUNT;++i)
 				settings.tunes[j][i]=storageRead16();
 
-		settings.currentPresetNumber=storageRead16();
+		settings.presetNumber=storageRead16();
+		settings.benderMiddle=storageRead16();
+		settings.presetMode=storageReadS8();
 		
 		if (tempVersion<2)
 			return 1;
@@ -152,7 +186,9 @@ void settings_save(void)
 			for(i=0;i<TUNER_CV_COUNT;++i)
 				storageWrite16(settings.tunes[j][i]);
 
-		storageWrite16(settings.currentPresetNumber);
+		storageWrite16(settings.presetNumber);
+		storageWrite16(settings.benderMiddle);
+		storageWriteS8(settings.presetMode);
 		
 		// v2 
 
@@ -172,9 +208,28 @@ int8_t preset_loadCurrent(uint16_t number)
 			return 0;
 
 		// v1
-
-
 		
+		currentPreset.bitParameters=storageRead32();
+		
+		continuousParameter_t cp;
+		for(cp=cpFreqA;cp<=cpGlide;++cp)
+			currentPreset.continuousParameters[cp]=storageRead16();
+
+		currentPreset.envFlags[0]=storageRead8();
+		currentPreset.envFlags[1]=storageRead8();
+
+		currentPreset.trackingShift=storageRead8();
+
+		currentPreset.assignerMonoMode=storageRead8();
+
+		currentPreset.lfoAltShapes=storageReadS8();
+		currentPreset.lfoTargets=storageRead8();
+		currentPreset.lfoShift=storageRead8();
+
+		currentPreset.modwheelShift=storageReadS8();
+
+		currentPreset.benderSemitones=storageReadS8();
+		currentPreset.benderTarget=storageRead8();
 	}
 	
 	return 1;
@@ -186,6 +241,29 @@ void preset_saveCurrent(uint16_t number)
 	{
 		storagePrepareStore();
 
+		// v1
+		
+		storageWrite32(currentPreset.bitParameters);
+		
+		continuousParameter_t cp;
+		for(cp=cpFreqA;cp<=cpGlide;++cp)
+			storageWrite16(currentPreset.continuousParameters[cp]);
+
+		storageWrite8(currentPreset.envFlags[0]);
+		storageWrite8(currentPreset.envFlags[1]);
+
+		storageWrite8(currentPreset.trackingShift);
+
+		storageWrite8(currentPreset.assignerMonoMode);
+
+		storageWriteS8(currentPreset.lfoAltShapes);
+		storageWrite8(currentPreset.lfoTargets);
+		storageWrite8(currentPreset.lfoShift);
+
+		storageWriteS8(currentPreset.modwheelShift);
+
+		storageWriteS8(currentPreset.benderSemitones);
+		storageWrite8(currentPreset.benderTarget);
 
 		storageFinishStore(number,1);
 	}
