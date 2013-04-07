@@ -291,6 +291,17 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	synth_update();
 }
 
+static uint16_t NOINLINE extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
+{
+	uint32_t v;
+	
+	v=settings.tunes[TUNER_OCTAVE_COUNT-1][cv]-settings.tunes[TUNER_OCTAVE_COUNT-2][cv];
+	
+	v=settings.tunes[TUNER_OCTAVE_COUNT-1][cv]+(oct-TUNER_OCTAVE_COUNT+1)*v;
+	
+	return MIN(v,UINT16_MAX);
+}
+
 NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv)
 {
 	uint8_t loOct,hiOct;
@@ -300,11 +311,15 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 	loOct=note/12;
 	hiOct=loOct+1;
 	
-	if(hiOct>=TUNER_OCTAVE_COUNT)
-		return UINT16_MAX;
-	
-	loVal=settings.tunes[loOct][cv];
-	hiVal=settings.tunes[hiOct][cv];
+	if(loOct<TUNER_OCTAVE_COUNT)
+		loVal=settings.tunes[loOct][cv];
+	else
+		loVal=extapolateUpperOctavesTunes(loOct,cv);
+
+	if(hiOct<TUNER_OCTAVE_COUNT)
+		hiVal=settings.tunes[hiOct][cv];
+	else
+		hiVal=extapolateUpperOctavesTunes(hiOct,cv);
 	
 	semiTone=(((uint32_t)(note%12)<<16)+((uint16_t)nextInterp<<8))/12;
 	
