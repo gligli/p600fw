@@ -14,11 +14,11 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc.exe
-CCC=g++.exe
-CXX=g++.exe
+CC=gcc
+CCC=g++
+CXX=g++
 FC=gfortran
-AS=as.exe
+AS=as
 
 # Macros
 CND_PLATFORM=MinGW-Windows
@@ -36,17 +36,18 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/adsr.o \
-	${OBJECTDIR}/_ext/1270477542/lfo.o \
-	${OBJECTDIR}/_ext/1270477542/tuner.o \
-	${OBJECTDIR}/_ext/1270477542/potmux.o \
-	${OBJECTDIR}/_ext/1270477542/synth.o \
-	${OBJECTDIR}/_ext/1270477542/utils.o \
-	${OBJECTDIR}/_ext/1270477542/scanner.o \
-	${OBJECTDIR}/p600mockup.o \
-	${OBJECTDIR}/_ext/1270477542/display.o \
 	${OBJECTDIR}/_ext/1270477542/assigner.o \
+	${OBJECTDIR}/_ext/1270477542/dac.o \
+	${OBJECTDIR}/_ext/1270477542/display.o \
+	${OBJECTDIR}/_ext/1270477542/lfo.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o \
-	${OBJECTDIR}/_ext/1270477542/dac.o
+	${OBJECTDIR}/_ext/1270477542/potmux.o \
+	${OBJECTDIR}/_ext/1270477542/scanner.o \
+	${OBJECTDIR}/_ext/1270477542/storage.o \
+	${OBJECTDIR}/_ext/1270477542/synth.o \
+	${OBJECTDIR}/_ext/1270477542/tuner.o \
+	${OBJECTDIR}/_ext/1270477542/utils.o \
+	${OBJECTDIR}/p600mockup.o
 
 
 # C Compiler Flags
@@ -71,67 +72,72 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmockup.${CND_DLIB_EXT}: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -shared -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmockup.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libmockup.${CND_DLIB_EXT} ${OBJECTFILES} ${LDLIBSOPTIONS} -shared
 
 ${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
 
-${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c 
+${OBJECTDIR}/_ext/1270477542/assigner.o: ../common/assigner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/lfo.o ../common/lfo.c
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/assigner.o ../common/assigner.c
 
-${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c 
+${OBJECTDIR}/_ext/1270477542/dac.o: ../common/dac.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/tuner.o ../common/tuner.c
-
-${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
-	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
-
-${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
-	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
-
-${OBJECTDIR}/_ext/1270477542/utils.o: ../common/utils.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
-	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/utils.o ../common/utils.c
-
-${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
-	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
-
-${OBJECTDIR}/p600mockup.o: p600mockup.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600mockup.o p600mockup.c
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/dac.o ../common/dac.c
 
 ${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
 
-${OBJECTDIR}/_ext/1270477542/assigner.o: ../common/assigner.c 
+${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/assigner.o ../common/assigner.c
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/lfo.o ../common/lfo.c
 
 ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
 
-${OBJECTDIR}/_ext/1270477542/dac.o: ../common/dac.c 
+${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/dac.o ../common/dac.c
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
+
+${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
+
+${OBJECTDIR}/_ext/1270477542/storage.o: ../common/storage.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/storage.o ../common/storage.c
+
+${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
+
+${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/tuner.o ../common/tuner.c
+
+${OBJECTDIR}/_ext/1270477542/utils.o: ../common/utils.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/utils.o ../common/utils.c
+
+${OBJECTDIR}/p600mockup.o: p600mockup.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2  -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600mockup.o p600mockup.c
 
 # Subprojects
 .build-subprojects:
