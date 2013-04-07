@@ -12,7 +12,7 @@ inline float log2f( float n )
     return logf( n ) * INVLOG2;  
 }
 
-inline float log2( float n )  
+inline double log2( double n )  
 {  
     return log( n ) * INVLOG2;  
 }
