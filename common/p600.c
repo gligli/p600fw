@@ -95,10 +95,9 @@ static const char * modulationName(modulation_t m)
 
 static void computeTunedCVs(void)
 {
-	int32_t baseCutoff;
-	uint16_t cva,cvb,cvf,baseAPitch,baseBPitch;
+	uint16_t cva,cvb,cvf,baseAPitch,baseBPitch,baseCutoff;
 	int16_t mTune,fineBFreq;
-	uint8_t note,baseCutoffNote,baseANote,baseBNote;
+	uint8_t note,baseCutoffNote,baseANote,baseBNote,trackingNote;
 	int8_t v;
 	
 	// filters and oscs
@@ -132,13 +131,21 @@ static void computeTunedCVs(void)
 		if (!assigner_getAssignment(v,&note))
 			continue;
 		
+		// oscs
+		
 		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)p600.benderCVs[pcOsc1A+v]+mTune);
 		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
 		
+		// filter
+		
+		trackingNote=baseCutoffNote;
 		if(currentPreset.trackingShift>=0)
-			cvf=satAddU16S16(tuner_computeCVFromNote((note>>currentPreset.trackingShift)+baseCutoffNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]);
-		else
-			p600.filterNoteCV[v]=cvf=satAddU16S16(tuner_computeCVFromNote(baseCutoffNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]); // no glide if no tracking
+			trackingNote+=note>>currentPreset.trackingShift;
+			
+		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]);
+		
+		if(currentPreset.trackingShift<0)
+			p600.filterNoteCV[v]=cvf; // no glide if no tracking
 
 		if(p600.gliding)
 		{
@@ -279,7 +286,7 @@ static void refreshAssignerSettings(void)
 		assigner_setMode(mPoly);
 }
 
-static void refreshEnvSettings(int8_t type)
+static void refreshEnvSettings(int8_t type, int8_t display)
 {
 	uint8_t expo,shift;
 	int8_t i;
@@ -298,16 +305,67 @@ static void refreshEnvSettings(int8_t type)
 		adsr_setShape(a,expo);
 		adsr_setSpeedShift(a,shift);
 	}
+	
+	if(display)
+	{
+		char s[20]="";
+		
+		switch(currentPreset.envFlags[type])
+		{
+		case 0:
+			strcat(s,"fast lin");
+			break;
+		case 1:
+			strcat(s,"fast exp");
+			break;
+		case 2:
+			strcat(s,"slo lin");
+			break;
+		case 3:
+			strcat(s,"slo exp");
+			break;
+		}
+
+		if(type)
+			strcat(s," fil");
+		else
+			strcat(s," amp");
+
+		sevenSeg_scrollText(s,1);
+	}
 }
 
-static void refreshLfoSettings(void)
+static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 {
+	const char * s=NULL;
 	lfoShape_t shape;
 
 	shape=1+((currentPreset.bitParameters&bpLFOShape)?1:0)+currentPreset.lfoAltShapes*2;
 
 	lfo_setShape(&p600.lfo,shape);
 	lfo_setSpeedShift(&p600.lfo,currentPreset.lfoShift*2);
+
+	if(dispShape)
+	{
+		s=lfo_shapeName(shape);
+		sevenSeg_scrollText(s,1);
+	}
+	else if(dispSpd)
+	{
+		switch(currentPreset.lfoShift)
+		{
+		case 0:
+			s="Slo";
+			break;
+		case 1:
+			s="Med";
+			break;
+		case 2:
+			s="Fast";
+			break;
+		}
+		sevenSeg_scrollText(s,1);
+	}
 }
 
 static void refreshSevenSeg(void)
@@ -338,9 +396,9 @@ static void refreshFullState(void)
 {
 	refreshGates();
 	refreshAssignerSettings();
-	refreshLfoSettings();
-	refreshEnvSettings(0);
-	refreshEnvSettings(1);
+	refreshLfoSettings(0,0);
+	refreshEnvSettings(0,0);
+	refreshEnvSettings(1,0);
 
 	refreshSevenSeg();
 }
@@ -520,23 +578,6 @@ void p600_update(void)
 		currentPreset.continuousParameters[cpGlide]=(UINT16_MAX-currentPreset.continuousParameters[cpGlide])>>5; // 11bit glide
 		p600.gliding=currentPreset.continuousParameters[cpGlide]<2000;
 		break;
-	case 2:
-		if(!(currentPreset.lfoTargets&(1<<modPW)))
-		{
-			uint16_t pa,pb;
-
-			pa=pb=UINT16_MAX;
-
-			if((currentPreset.bitParameters&bpASqr)!=0)
-				pa=currentPreset.continuousParameters[cpAPW];
-
-			if((currentPreset.bitParameters&bpBSqr)!=0)
-				pb=currentPreset.continuousParameters[cpBPW];
-
-			synth_setCV(pcAPW,pa,1,1);
-			synth_setCV(pcBPW,pb,1,1);
-		}
-		break;
 	case 3:
 		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],1,1);
 		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],1,1);
@@ -557,7 +598,7 @@ void p600_fastInterrupt(void)
 	int32_t va,vb,vf;
 	uint16_t envVal;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
-	int8_t assigned,hz500,hz63,polyMul,monoGlidingMul,envVoice,pitchVoice;
+	int8_t assigned,hz500,hz63,polyMul,monoGlidingMul,envVoice,pitchVoice,pwm;
 	int8_t silentVoice[P600_VOICE_COUNT];
 
 	static uint8_t frc=0;
@@ -570,12 +611,15 @@ void p600_fastInterrupt(void)
 	if(hz500)
 	{
 		if(p600.gliding)
-			for(int8_t v=0;v<P600_VOICE_COUNT;++v)
+		{
+			int8_t v;
+			for(v=0;v<P600_VOICE_COUNT;++v)
 			{
 				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],currentPreset.continuousParameters[cpGlide]);
 				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],currentPreset.continuousParameters[cpGlide]);
 				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],currentPreset.continuousParameters[cpGlide]);
 			}
+		}
 
 		
 		scanner_update(hz63);
@@ -596,20 +640,38 @@ void p600_fastInterrupt(void)
 	if(currentPreset.lfoTargets&(1<<modFilter))
 		filterLfoVal=p600.lfo.output;
 	
-	if(currentPreset.lfoTargets&(1<<modPW))
+	// PW
+			
+	va=vb=0;
+	pwm=currentPreset.lfoTargets&(1<<modPW);
+	
+	if(currentPreset.bitParameters&bpASqr)
 	{
-		va=vb=p600.lfo.output;
-
-		va+=currentPreset.continuousParameters[cpAPW];
-		if((currentPreset.bitParameters&bpASqr)==0)
-			va=UINT16_MAX;
-		synth_setCV32Sat(pcAPW,va,1,0);
+		va=currentPreset.continuousParameters[cpAPW];
 		
+		if(pwm)
+			va+=p600.lfo.output;
+	}
 
-		vb+=currentPreset.continuousParameters[cpBPW];
-		if((currentPreset.bitParameters&bpBSqr)==0)
-			vb=UINT16_MAX;
+	if(currentPreset.bitParameters&bpBSqr)
+	{
+		vb=currentPreset.continuousParameters[cpBPW];
+		
+		if(pwm)
+			vb+=p600.lfo.output;
+	}
+
+	if(pwm)
+	{
+		// modulated
+		synth_setCV32Sat(pcAPW,va,1,0);
 		synth_setCV32Sat(pcBPW,vb,1,0);
+	}
+	else if(hz63)
+	{
+		// no modulation, slower update, wait
+		synth_setCV32Sat(pcAPW,va,1,1);
+		synth_setCV32Sat(pcBPW,vb,1,1);
 	}
 
 	// global env computations
@@ -698,9 +760,11 @@ void p600_fastInterrupt(void)
 	
 	if(hz63)
 	{
+		int8_t v;
+		
 		checkFinishedVoices();
 
-		for(int8_t v=0;v<P600_VOICE_COUNT;++v)
+		for(v=0;v<P600_VOICE_COUNT;++v)
 			if(silentVoice[v])
 				synth_setCV(pcAmp1+v,0,1,1);
 	}
@@ -824,37 +888,25 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
 		{
-			const char * s=NULL;
+			int8_t shpA,shp,spd;
+			
+			shp=button==pbLFOShape;
+			shpA=button==pb1;
+			spd=button==pb2;
 
-			if(button==pb1 || button==pbLFOShape)
+			readManualMode();
+
+			if(shpA)
 			{
-				if(button==pb1)
-					currentPreset.lfoAltShapes=1-currentPreset.lfoAltShapes;
-
-				s=lfo_shapeName(1+((currentPreset.bitParameters&bpLFOShape)!=0)+currentPreset.lfoAltShapes*2);
+				currentPreset.lfoAltShapes=1-currentPreset.lfoAltShapes;
 			}
-
-			if(button==pb2)
+			
+			if(spd)
 			{
 				currentPreset.lfoShift=(currentPreset.lfoShift+1)%3;
-
-				switch(currentPreset.lfoShift)
-				{
-				case 0:
-					s="Slo";
-					break;
-				case 1:
-					s="Med";
-					break;
-				case 2:
-					s="Fast";
-					break;
-				}
 			}
 
-			refreshLfoSettings();
-
-			sevenSeg_scrollText(s,1);
+			refreshLfoSettings(shp||shpA,spd);
 		}
 
 		// modwheel
@@ -886,38 +938,13 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		if(pressed && (button>=pb4 && button<=pb5))
 		{
-			char s[20]="";
 			uint8_t type;
 
 			type=(button==pb5)?1:0;
 
 			currentPreset.envFlags[type]=(currentPreset.envFlags[type]+1)%4;
 
-			refreshEnvSettings(type);
-
-
-			switch(currentPreset.envFlags[type])
-			{
-			case 0:
-				strcat(s,"fast lin");
-				break;
-			case 1:
-				strcat(s,"fast exp");
-				break;
-			case 2:
-				strcat(s,"slo lin");
-				break;
-			case 3:
-				strcat(s,"slo exp");
-				break;
-			}
-
-			if(type)
-				strcat(s," fil");
-			else
-				strcat(s," amp");
-
-			sevenSeg_scrollText(s,1);
+			refreshEnvSettings(type,1);
 		}
 
 		// pitch mode

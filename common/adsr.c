@@ -90,7 +90,7 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 	}
 }
 
-static void updateIncrements(struct adsr_s * adsr)
+static NOINLINE void updateIncrements(struct adsr_s * adsr)
 {
 	adsr->attackIncrement=(getPhaseInc(adsr->attackCV>>8)>>adsr->speedShift)<<4; // phase is 20 bits, from bit 4 to bit 23
 	adsr->decayIncrement=(getPhaseInc(adsr->decayCV>>8)>>adsr->speedShift)<<4;
@@ -110,7 +110,7 @@ static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], in
 		return phase>>8; // 20bit -> 16 bit
 }
 
-void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
+NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
 {
 	adsr->attackCV=atk;
 	adsr->decayCV=dec;
