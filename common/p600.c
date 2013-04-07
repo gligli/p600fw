@@ -436,8 +436,6 @@ static void readManualMode(void)
 		currentPreset.lfoTargets|=1<<modPitch;
 	if(scanner_buttonState(pbLFOPW))
 		currentPreset.lfoTargets|=1<<modPW;
-		
-	refreshFullState();
 }
 
 void p600_init(void)
@@ -523,21 +521,18 @@ void p600_update(void)
 	
 	switch(updatingSlow)
 	{
-	case 0:
+	case 1:
 		potmux_need(ppAmpAtt,ppAmpDec,ppAmpSus,ppAmpRel,ppFilAtt,ppFilDec,ppFilSus,ppFilRel);
 		break;
-	case 1:
-		potmux_need(ppSpeed,ppFilEnvAmt,ppPModFilEnv,ppPModOscB,ppMVol);
-		break;
 	case 2:
-		potmux_need(ppMTune,ppFreqBFine,ppAPW,ppBPW);
+		potmux_need(ppSpeed,ppFilEnvAmt,ppPModFilEnv,ppPModOscB,ppMixer,ppGlide,ppLFOAmt,ppLFOFreq);
 		break;
 	case 3:
-		potmux_need(ppResonance,ppMixer,ppGlide,ppLFOAmt,ppLFOFreq);
+		potmux_need(ppFreqA,ppFreqB,ppMTune,ppFreqBFine,ppAPW,ppBPW,ppResonance,ppMVol);
 		break;
 	}
 
-	potmux_need(ppFreqA,ppFreqB,ppPitchWheel,ppModWheel,ppCutoff);
+	potmux_need(ppPitchWheel,ppModWheel,ppCutoff);
 	
 	// read them
 	
@@ -552,9 +547,8 @@ void p600_update(void)
 
 	// update CVs
 
-	switch(updatingSlow)
+	if(!updatingSlow)
 	{
-	case 0:
 		for(i=0;i<P600_VOICE_COUNT;++i)
 		{
 			adsr_setCVs(&p600.ampEnvs[i],
@@ -570,23 +564,21 @@ void p600_update(void)
 					 currentPreset.continuousParameters[cpFilRel],
 					 UINT16_MAX);
 		}
-		break;
-	case 1:
+
 		synth_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],1,1);
+		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],1,1);
+		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],1,1);
+		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],1,1);
 		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),1,1);
 
 		currentPreset.continuousParameters[cpGlide]=(UINT16_MAX-currentPreset.continuousParameters[cpGlide])>>5; // 11bit glide
 		p600.gliding=currentPreset.continuousParameters[cpGlide]<2000;
-		break;
-	case 3:
-		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],1,1);
-		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],1,1);
-		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],1,1);
-		break;
+	
+		computeTunedCVs();
 	}
 
 	computeBenderCVs();
-	computeTunedCVs();
+
 	lfo_setCVs(&p600.lfo,
 			currentPreset.continuousParameters[cpLFOFreq],
 			satAddU16U16(currentPreset.continuousParameters[cpLFOAmt],
@@ -645,33 +637,35 @@ void p600_fastInterrupt(void)
 	va=vb=0;
 	pwm=currentPreset.lfoTargets&(1<<modPW);
 	
-	if(currentPreset.bitParameters&bpASqr)
+	if(pwm || hz63)
 	{
-		va=currentPreset.continuousParameters[cpAPW];
+		int8_t sqrA=currentPreset.bitParameters&bpASqr;
+		int8_t sqrB=currentPreset.bitParameters&bpBSqr;
 		
-		if(pwm)
-			va+=p600.lfo.output;
-	}
+		if(sqrA)
+			va=currentPreset.continuousParameters[cpAPW];
 
-	if(currentPreset.bitParameters&bpBSqr)
-	{
-		vb=currentPreset.continuousParameters[cpBPW];
-		
-		if(pwm)
-			vb+=p600.lfo.output;
-	}
+		if(sqrB)
+			vb=currentPreset.continuousParameters[cpBPW];
 
-	if(pwm)
-	{
-		// modulated
-		synth_setCV32Sat(pcAPW,va,1,0);
-		synth_setCV32Sat(pcBPW,vb,1,0);
-	}
-	else if(hz63)
-	{
-		// no modulation, slower update, wait
-		synth_setCV32Sat(pcAPW,va,1,1);
-		synth_setCV32Sat(pcBPW,vb,1,1);
+		if(pwm)
+		{
+			if(sqrA)
+				va+=p600.lfo.output;
+			
+			if(sqrB)
+				vb+=p600.lfo.output;
+			
+			// modulated
+			synth_setCV32Sat(pcAPW,va,1,0);
+			synth_setCV32Sat(pcBPW,vb,1,0);
+		}
+		else if(hz63)
+		{
+			// no modulation, slower update, wait
+			synth_setCV32Sat(pcAPW,va,1,1);
+			synth_setCV32Sat(pcBPW,vb,1,1);
+		}
 	}
 
 	// global env computations
@@ -897,14 +891,10 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			readManualMode();
 
 			if(shpA)
-			{
 				currentPreset.lfoAltShapes=1-currentPreset.lfoAltShapes;
-			}
 			
 			if(spd)
-			{
 				currentPreset.lfoShift=(currentPreset.lfoShift+1)%3;
-			}
 
 			refreshLfoSettings(shp||shpA,spd);
 		}
