@@ -14,6 +14,7 @@
 #define FF_CL	0x10 // active low
 
 #define STATUS_TIMEOUT 30000
+#define STATUS_TIMEOUT_MAX_FAILURES 5
 
 #define TUNER_TICK 2000000.0
 
@@ -56,10 +57,10 @@ static NOINLINE void whileTuning(void)
 		display_update(1);
 
 		// full update once in a while
-		synth_update();
+		synth_forceUpdateAll();
 	}
 	
-	synth_updateCV(tuner.currentCV);
+	synth_forceUpdateCV(tuner.currentCV);
 	++frc;
 }
 
@@ -77,6 +78,7 @@ static NOINLINE uint8_t i8253Read(uint8_t a)
 
 static uint8_t ff_state=0;
 static uint8_t ff_step=0;
+static uint8_t ff_timeoutCount=0;
 	
 static NOINLINE void ffMask(uint8_t set,uint8_t clear)
 {
@@ -103,9 +105,12 @@ static NOINLINE void ffWaitStatus(uint8_t status)
 
 	if (!timeout)
 	{
+		++ff_timeoutCount;
 		print("bad flip flop status : ");
 		phex(ff_step);
 		phex(s);
+		print(" timeout count : ");
+		phex(ff_timeoutCount);
 		print("\n");
 	}
 }
@@ -173,6 +178,11 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 		ffMask(0,FF_D);
 		ffWaitStatus(1); // wait
 		
+		// detect untunable osc		
+
+		if (ff_timeoutCount>=STATUS_TIMEOUT_MAX_FAILURES)
+			return UINT32_MAX;
+
 		// reload fake clock
 		
 		ffMask(0,CNTR_EN);
@@ -188,12 +198,15 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	return res;
 }
 
-static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, int8_t precision)
+static NOINLINE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, int8_t precision)
 {
 	int8_t i,relPrec;
 	uint16_t estimate,bit;
 	double p,tgtp;
-	
+	uint32_t ip;
+
+	ff_timeoutCount=0;
+
 	tgtp=TUNER_TICK/(TUNER_LOWEST_HERTZ*pow(2.0,nthC));
 	
 	estimate=UINT16_MAX;
@@ -205,8 +218,13 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, in
 	{
 		if(estimate>tuner_computeCVFromNote(lowestNote,0,cv))
 		{
-			synth_setCV(cv,estimate,0,0);
-			p=(double)measureAudioPeriod(1<<relPrec)*pow(2.0,-relPrec);
+			synth_setCV(cv,estimate,0,1);
+			
+			ip=measureAudioPeriod(1<<relPrec);
+			if(ip==UINT32_MAX)
+				return -1; // filure (untunable osc)
+			
+			p=(double)ip*pow(2.0,-relPrec);
 		}
 		else
 		{
@@ -235,6 +253,8 @@ static NOINLINE void tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, in
 	phex16(tgtp);
 	print("\n");
 #endif
+	
+	return 0;
 }
 
 static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
@@ -251,19 +271,20 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// open VCA
 
-	synth_setCV(ampCV,TUNER_VCA_LEVEL,0,0);
+	synth_setCV(ampCV,TUNER_VCA_LEVEL,0,1);
 	
-	// done many times, to ensure all CVs are at correct voltage
+	// force all CVs to update //TODO: 5 times might be overkill
 	
-	for(i=0;i<25;++i)
-		synth_update();
+	for(i=0;i<5;++i)
+		synth_forceUpdateAll();
 
 	// tune
 
 	if (isOsc)
 	{
 		for(i=TUNER_OSC_NTH_C_LO;i<=TUNER_OSC_NTH_C_HI;++i)
-			tuneOffset(oscCV,i,12*(TUNER_OSC_NTH_C_LO-2),TUNER_OSC_PRECISION);
+			if (tuneOffset(oscCV,i,12*(TUNER_OSC_NTH_C_LO-2),TUNER_OSC_PRECISION))
+				break;
 
 		// extrapolate for octaves that aren't directly tunable
 		
@@ -276,7 +297,8 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	else
 	{
 		for(i=TUNER_FIL_NTH_C_LO;i<=TUNER_FIL_NTH_C_HI;++i)
-			tuneOffset(oscCV,i,12*(TUNER_FIL_NTH_C_LO-1),TUNER_FIL_PRECISION);
+			if (tuneOffset(oscCV,i,12*(TUNER_FIL_NTH_C_LO-1),TUNER_FIL_PRECISION))
+				break;
 
 		for(i=TUNER_FIL_NTH_C_LO-1;i>=0;--i)
 			settings.tunes[i][oscCV]=(uint32_t)2*settings.tunes[i+1][oscCV]-settings.tunes[i+2][oscCV];
@@ -287,8 +309,8 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// close VCA
 
-	synth_setCV(ampCV,0,0,0);
-	synth_update();
+	synth_setCV(ampCV,0,0,1);
+	synth_forceUpdateAll();
 }
 
 static uint16_t NOINLINE extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
@@ -356,9 +378,9 @@ void tuner_tuneSynth(void)
 		led_set(plTune,1,0);
 		
 #ifdef DEBUG
-		synth_setCV(pcMVol,20000,0,0);
+		synth_setCV(pcMVol,20000,0,1);
 #else
-		synth_setCV(pcMVol,20000,0,0);
+		synth_setCV(pcMVol,20000,0,1);
 #endif
 
 		synth_setGate(pgASaw,1);
@@ -369,11 +391,11 @@ void tuner_tuneSynth(void)
 		synth_setGate(pgPModFil,0);
 		synth_setGate(pgSync,0);
 
-		synth_setCV(pcResonance,0,0,0);
-		synth_setCV(pcAPW,0,0,0);
-		synth_setCV(pcBPW,0,0,0);
-		synth_setCV(pcPModOscB,0,0,0);
-		synth_setCV(pcExtFil,0,0,0);
+		synth_setCV(pcResonance,0,0,1);
+		synth_setCV(pcAPW,0,0,1);
+		synth_setCV(pcBPW,0,0,1);
+		synth_setCV(pcPModOscB,0,0,1);
+		synth_setCV(pcExtFil,0,0,1);
 		
 		// init 8253
 			// ch 0, mode 0, access 2 bytes, binary count
@@ -387,22 +409,22 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcResonance,0,0,0);
+		synth_setCV(pcResonance,0,0,1);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,UINT16_MAX,0,0);
+			synth_setCV(pcFil1+i,UINT16_MAX,0,1);
 	
 			// A oscs
 
-		synth_setCV(pcVolA,UINT16_MAX,0,0);
-		synth_setCV(pcVolB,0,0,0);
+		synth_setCV(pcVolA,UINT16_MAX,0,1);
+		synth_setCV(pcVolB,0,0,1);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
 			// B oscs
 
-		synth_setCV(pcVolA,0,0,0);
-		synth_setCV(pcVolB,UINT16_MAX,0,0);
+		synth_setCV(pcVolA,0,0,1);
+		synth_setCV(pcVolB,UINT16_MAX,0,1);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
@@ -411,13 +433,13 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcVolA,0,0,0);
-		synth_setCV(pcVolB,0,0,0);
-		synth_setCV(pcResonance,UINT16_MAX,0,0);
+		synth_setCV(pcVolA,0,0,1);
+		synth_setCV(pcVolB,0,0,1);
+		synth_setCV(pcResonance,UINT16_MAX,0,1);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,0,0,0);
-	
+			synth_setCV(pcFil1+i,0,0,1);
+		
 			// filters
 		
 		for(i=0;i<P600_VOICE_COUNT;++i)
@@ -425,11 +447,11 @@ void tuner_tuneSynth(void)
 
 		// finish
 		
-		synth_setCV(pcResonance,0,0,0);
+		synth_setCV(pcResonance,0,0,1);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcAmp1+i,0,0,0);
+			synth_setCV(pcAmp1+i,0,0,1);
 		
-		synth_update();
+		synth_forceUpdateAll();
 
 		display_clear();
 		
