@@ -16,8 +16,6 @@
 #include "assigner.h"
 #include "storage.h"
 
-#define UNROLL_VOICES // undefine this to save code size, at the expense of speed
-
 #define P600_MONO_ENV 0 // informative constant, don't change it!
 #define P600_BENDER_OFFSET -16384
 
@@ -279,7 +277,7 @@ static void refreshGates(void)
 }
 
 
-static void refreshPulseWidth(int8_t pwm)
+static inline void refreshPulseWidth(int8_t pwm)
 {
 	int32_t pa,pb;
 	
@@ -301,10 +299,15 @@ static void refreshPulseWidth(int8_t pwm)
 
 		if(sqrB)
 			pb+=p600.lfo.output;
+		
+		synth_setCV32Sat_FastPath(pcAPW,pa);
+		synth_setCV32Sat_FastPath(pcBPW,pb);
 	}
-
-	synth_setCV32Sat(pcAPW,pa,1,!pwm);
-	synth_setCV32Sat(pcBPW,pb,1,!pwm);
+	else
+	{
+		synth_setCV32Sat(pcAPW,pa,SYNTH_FLAG_IMMEDIATE);
+		synth_setCV32Sat(pcBPW,pb,SYNTH_FLAG_IMMEDIATE);
+	}	
 }
 
 static void refreshAssignerSettings(void)
@@ -583,10 +586,10 @@ void p600_update(void)
 	case 2:
 		// 'fixed' CVs
 		
-		synth_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],1,1);
-		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],1,1);
-		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],1,1);
-		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],1,1);
+		synth_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SYNTH_FLAG_IMMEDIATE);
 		
 		// gates
 		
@@ -619,7 +622,7 @@ void p600_update(void)
 
 	// volume bending
 	
-	synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),1,1);
+	synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
 	
 	// 
 
@@ -628,13 +631,58 @@ void p600_update(void)
 	checkFinishedVoices();
 }
 
-void p600_fastInterrupt(void)
+static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t poly)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
+	int8_t assigned,envVoice,pitchVoice;
+	
+	assigned=assigner_getAssignment(v,NULL);
+
+	if(assigned)
+	{
+		envVoice=P600_MONO_ENV;
+
+		if(poly)
+		{
+			// handle envs update
+			adsr_update(&p600.filEnvs[v]);
+			adsr_update(&p600.ampEnvs[v]);
+			
+			envVoice=v;
+		}
+
+		pitchVoice=v&monoGlidingMask;
+
+		// compute CVs & apply them
+
+		envVal=p600.filEnvs[envVoice].output;
+
+		va=vb=pitchLfoVal;
+
+		va+=scaleU16S16(envVal,oscEnvAmt);	
+		va+=p600.oscANoteCV[pitchVoice];
+
+		synth_setCV32Sat_FastPath(pcOsc1A+v,va);
+
+		vb+=p600.oscBNoteCV[pitchVoice];
+		synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
+
+		vf=filterLfoVal;
+		vf+=scaleU16S16(envVal,filEnvAmt);
+		vf+=p600.filterNoteCV[pitchVoice];
+		synth_setCV32Sat_FastPath(pcFil1+v,vf);
+
+		synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[envVoice].output);
+	}
+}
+
+
+void p600_fastInterrupt(void)
+{
+	int32_t va,vf;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
-	int8_t v,hz63,assigned,polyMask,monoGlidingMask,envVoice,pitchVoice;
-	static int8_t silentVoice[P600_VOICE_COUNT] = {0};
+	int8_t v,hz63,poly,monoGlidingMask;
 
 	static uint8_t frc=0;
 	
@@ -667,8 +715,8 @@ void p600_fastInterrupt(void)
 			checkFinishedVoices();
 
 			for(v=0;v<P600_VOICE_COUNT;++v)
-				if(silentVoice[v])
-					synth_setCV(pcAmp1+v,0,1,1);
+				if(!assigner_getAssignment(v,NULL))
+					synth_setCV(pcAmp1+v,0,SYNTH_FLAG_IMMEDIATE);
 		}
 		break;
 	case 3:
@@ -707,71 +755,16 @@ void p600_fastInterrupt(void)
 	
 	// per voice stuff
 	
-	polyMask=(assigner_getMode()==mPoly)?0xff:0x00;
+	poly=assigner_getMode()==mPoly;
 	monoGlidingMask=((assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh) && p600.gliding)?0x00:0xff;
 	
-	if(!polyMask)
-	{
-		// handle mono modes env update
-		adsr_update(&p600.filEnvs[P600_MONO_ENV]);
-		adsr_update(&p600.ampEnvs[P600_MONO_ENV]);
-	}
-
-#ifdef UNROLL_VOICES	
-		// declare a nested function to unroll per-voice updates
-	inline void unrollVoices(int8_t v)
-#else
-	for(int8_t v=0;v<P600_VOICE_COUNT;++v)
-#endif
-	{
-		assigned=assigner_getAssignment(v,NULL);
-		
-		silentVoice[v]=!assigned;
-		
-		if(assigned)
-		{
-			if(polyMask)
-			{
-				// handle envs update
-				adsr_update(&p600.filEnvs[v]);
-				adsr_update(&p600.ampEnvs[v]);
-			}
-		
-			envVoice=v&polyMask;
-			pitchVoice=v&monoGlidingMask;
-
-			// compute CVs & apply them
-			
-			envVal=p600.filEnvs[envVoice].output;
-			
-			va=vb=pitchLfoVal;
-
-			va+=scaleU16S16(envVal,oscEnvAmt);	
-			va+=p600.oscANoteCV[pitchVoice];
-			
-			synth_setCV32Sat(pcOsc1A+v,va,1,0);
-
-			vb+=p600.oscBNoteCV[pitchVoice];
-			synth_setCV32Sat(pcOsc1B+v,vb,1,0);
-
-			vf=filterLfoVal;
-			vf+=scaleU16S16(envVal,filEnvAmt);
-			vf+=p600.filterNoteCV[pitchVoice];
-			synth_setCV32Sat(pcFil1+v,vf,1,0);
-			
-			synth_setCV(pcAmp1+v,p600.ampEnvs[envVoice].output,1,0);
-		}
-	}
-	
-#ifdef UNROLL_VOICES	
 		// P600_VOICE_COUNT calls
-	unrollVoices(0);
-	unrollVoices(1);
-	unrollVoices(2);
-	unrollVoices(3);
-	unrollVoices(4);
-	unrollVoices(5);
-#endif
+	updateVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,1);
+	updateVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
+	updateVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
+	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
+	updateVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
+	updateVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 }
 
 void p600_slowInterrupt(void)

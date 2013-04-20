@@ -218,7 +218,7 @@ static NOINLINE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, 
 	{
 		if(estimate>tuner_computeCVFromNote(lowestNote,0,cv))
 		{
-			synth_setCV(cv,estimate,0,1);
+			synth_setCV(cv,estimate,0);
 			
 			ip=measureAudioPeriod(1<<relPrec);
 			if(ip==UINT32_MAX)
@@ -271,7 +271,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// open VCA
 
-	synth_setCV(ampCV,TUNER_VCA_LEVEL,0,1);
+	synth_setCV(ampCV,TUNER_VCA_LEVEL,0);
 	
 	// done many times, to ensure all CVs are at correct voltage
 	
@@ -309,7 +309,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// close VCA
 
-	synth_setCV(ampCV,0,0,0);
+	synth_setCV(ampCV,0,0);
 	synth_update();
 }
 
@@ -378,7 +378,7 @@ void tuner_tuneSynth(void)
 		led_set(plTune,1,0);
 		
 #ifdef DEBUG
-		synth_setCV(pcMVol,20000,0,0);
+		synth_setCV(pcMVol,20000,0);
 #else
 		synth_setCV(pcMVol,20000,0,0);
 #endif
@@ -391,11 +391,11 @@ void tuner_tuneSynth(void)
 		synth_setGate(pgPModFil,0);
 		synth_setGate(pgSync,0);
 
-		synth_setCV(pcResonance,0,0,0);
-		synth_setCV(pcAPW,0,0,0);
-		synth_setCV(pcBPW,0,0,0);
-		synth_setCV(pcPModOscB,0,0,0);
-		synth_setCV(pcExtFil,0,0,0);
+		synth_setCV(pcResonance,0,0);
+		synth_setCV(pcAPW,0,0);
+		synth_setCV(pcBPW,0,0);
+		synth_setCV(pcPModOscB,0,0);
+		synth_setCV(pcExtFil,0,0);
 		
 		// init 8253
 			// ch 0, mode 0, access 2 bytes, binary count
@@ -409,22 +409,22 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcResonance,0,0,0);
+		synth_setCV(pcResonance,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,UINT16_MAX,0,0);
+			synth_setCV(pcFil1+i,UINT16_MAX,0);
 	
 			// A oscs
 
-		synth_setCV(pcVolA,UINT16_MAX,0,0);
-		synth_setCV(pcVolB,0,0,0);
+		synth_setCV(pcVolA,UINT16_MAX,0);
+		synth_setCV(pcVolB,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
 			// B oscs
 
-		synth_setCV(pcVolA,0,0,0);
-		synth_setCV(pcVolB,UINT16_MAX,0,0);
+		synth_setCV(pcVolA,0,0);
+		synth_setCV(pcVolB,UINT16_MAX,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
@@ -433,12 +433,12 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcVolA,0,0,0);
-		synth_setCV(pcVolB,0,0,0);
-		synth_setCV(pcResonance,UINT16_MAX,0,0);
+		synth_setCV(pcVolA,0,0);
+		synth_setCV(pcVolB,0,0);
+		synth_setCV(pcResonance,UINT16_MAX,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,0,0,0);
+			synth_setCV(pcFil1+i,0,0);
 	
 			// filters
 		
@@ -447,9 +447,9 @@ void tuner_tuneSynth(void)
 
 		// finish
 		
-		synth_setCV(pcResonance,0,0,0);
+		synth_setCV(pcResonance,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcAmp1+i,0,0,0);
+			synth_setCV(pcAmp1+i,0,0);
 		
 		synth_update();
 

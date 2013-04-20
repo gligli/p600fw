@@ -22,7 +22,7 @@ static inline void updateGates(void)
 	}
 }
 
-static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t wait)
+static inline void updateCV(p600CV_t cv, uint16_t cvv)
 {
 	uint8_t dmux;
 	
@@ -34,38 +34,61 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t wait)
 
 		// select current CV
 		io_write(0x0d,dmux);
-		
-		if(wait)
-		{
-			// 2.5 us to let S&H get very precise voltage, some P600s need it apparently
-			CYCLE_WAIT(10);
-		}
+
+		// 2.5 us to let S&H get very precise voltage, some P600s need it apparently
+		CYCLE_WAIT(10);
 
 		// deselect it
 		io_write(0x0d,0xff);
 
-		if(wait)
-		{
-			// 2.5 more us to let analog hardware stabilize
-			CYCLE_WAIT(10);
-		}
+		// 2.5 more us to let analog hardware stabilize
+		CYCLE_WAIT(10);
 	}
 }
 
-inline void synth_setCV(p600CV_t cv,uint16_t value, int8_t immediate, int8_t wait)
+inline void synth_setCV(p600CV_t cv,uint16_t value, uint8_t flags)
 {
-	if(immediate)
-		updateCV(cv,value,wait);
+	if(flags&SYNTH_FLAG_IMMEDIATE)
+	{
+		updateCV(cv,value);
+	}
 	else
+	{
 		synth.cvs[cv]=value;
+	}
 }
 
-inline void synth_setCV32Sat(p600CV_t cv,int32_t value, int8_t immediate, int8_t wait)
+inline void synth_setCV32Sat(p600CV_t cv,int32_t value, uint8_t flags)
+{
+	if(value<0)
+		value=0;
+	else if (value>UINT16_MAX)
+		value=UINT16_MAX;
+
+	synth_setCV(cv,value,flags);
+}
+
+inline void synth_setCV_FastPath(p600CV_t cv,uint16_t value)
+{
+	uint8_t dmux;
+	
+	dmux=(cv&0x07)|(~(0x08<<(cv>>3))&0xf8);
+
+	dac_write(value);
+
+	// select current CV
+	io_write(0x0d,dmux);
+
+	// deselect it
+	io_write(0x0d,0xff);
+}
+
+inline void synth_setCV32Sat_FastPath(p600CV_t cv,int32_t value)
 {
 	value=MAX(value,0);
 	value=MIN(value,UINT16_MAX);
 	
-	synth_setCV(cv,value,immediate,wait);
+	synth_setCV_FastPath(cv,value);
 }
 
 inline void synth_setGate(p600Gate_t gate,int8_t on)
@@ -80,7 +103,7 @@ inline void synth_setGate(p600Gate_t gate,int8_t on)
 
 void synth_updateCV(p600CV_t cv)
 {
-	updateCV(cv,synth.cvs[cv],1);
+	updateCV(cv,synth.cvs[cv]);
 }
 
 void synth_init()
@@ -93,7 +116,7 @@ void synth_update()
 	uint8_t i;
 
 	for(i=0;i<SYNTH_CV_COUNT;++i)
-		updateCV(i,synth.cvs[i],1);
+		updateCV(i,synth.cvs[i]);
 
 	updateGates();
 }
