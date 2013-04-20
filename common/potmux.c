@@ -15,11 +15,11 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Speed*/10,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
 };
 
-#define PRIORITY_POT_COUNT 5
+#define PRIORITY_POT_COUNT 4
 
 static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
 {
-	ppCutoff,ppPitchWheel,ppModWheel,ppFreqA,ppFreqB
+	ppCutoff,ppPitchWheel,ppFreqA,ppFreqB
 };
 
 
@@ -37,50 +37,53 @@ static void updatePot(p600Pot_t pot)
 	uint16_t estimate,badMask;
 	uint16_t bit;
 
-	// successive approximations using DAC and comparator
-	
-		// select pot
-
-	mux=(pot&0x0f)|(0x20>>(pot>>4));
-	io_write(0x0a,mux);
-	CYCLE_WAIT(4);
-
-		// init values
-
-	estimate=UINT16_MAX;
-	bit=0x8000;
-	bitDepth=potBitDepth[pot];
-	badMask=16-bitDepth;
-	badMask=(UINT16_MAX>>badMask)<<badMask;
-
-
-		// main loop
-	
-	for(i=0;i<=bitDepth;++i)
+	BLOCK_INT
 	{
-		dac_write(estimate);				
+		// successive approximations using DAC and comparator
 
-		// let comparator get correct voltage (don't remove me!)
-		CYCLE_WAIT(1);
+			// select pot
 
-		// is DAC value lower than pot value?
-		lower=(io_read(0x09)&0x08)!=0;
+		mux=(pot&0x0f)|(0x20>>(pot>>4));
+		io_write(0x0a,mux);
+		CYCLE_WAIT(4);
 
-		// adjust estimate
-		if (lower)
-			estimate+=bit;
-		else
-			estimate-=bit;
+			// init values
 
-		// on to finer changes
-		bit>>=1;
+		estimate=UINT16_MAX;
+		bit=0x8000;
+		bitDepth=potBitDepth[pot];
+		badMask=16-bitDepth;
+		badMask=(UINT16_MAX>>badMask)<<badMask;
+
+
+			// main loop
+
+		for(i=0;i<=bitDepth;++i)
+		{
+			dac_write(estimate);				
+
+			// let comparator get correct voltage (don't remove me!)
+			CYCLE_WAIT(1);
+
+			// is DAC value lower than pot value?
+			lower=(io_read(0x09)&0x08)!=0;
+
+			// adjust estimate
+			if (lower)
+				estimate+=bit;
+			else
+				estimate-=bit;
+
+			// on to finer changes
+			bit>>=1;
+		}
+
+			// unselect
+
+		io_write(0x0a,0xff);
+
+		potmux.pots[pot]=estimate&badMask;
 	}
-
-		// unselect
-
-	io_write(0x0a,0xff);
-
-	potmux.pots[pot]=estimate&badMask;
 }
 
 inline uint16_t potmux_getValue(p600Pot_t pot)

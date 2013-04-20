@@ -57,10 +57,10 @@ static NOINLINE void whileTuning(void)
 		display_update(1);
 
 		// full update once in a while
-		synth_forceUpdateAll();
+		synth_update();
 	}
 	
-	synth_forceUpdateCV(tuner.currentCV);
+	synth_updateCV(tuner.currentCV);
 	++frc;
 }
 
@@ -273,10 +273,10 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	synth_setCV(ampCV,TUNER_VCA_LEVEL,0,1);
 	
-	// force all CVs to update //TODO: 5 times might be overkill
+	// done many times, to ensure all CVs are at correct voltage
 	
-	for(i=0;i<5;++i)
-		synth_forceUpdateAll();
+	for(i=0;i<25;++i)
+		synth_update();
 
 	// tune
 
@@ -309,8 +309,8 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// close VCA
 
-	synth_setCV(ampCV,0,0,1);
-	synth_forceUpdateAll();
+	synth_setCV(ampCV,0,0,0);
+	synth_update();
 }
 
 static uint16_t NOINLINE extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
@@ -378,9 +378,9 @@ void tuner_tuneSynth(void)
 		led_set(plTune,1,0);
 		
 #ifdef DEBUG
-		synth_setCV(pcMVol,20000,0,1);
+		synth_setCV(pcMVol,20000,0,0);
 #else
-		synth_setCV(pcMVol,20000,0,1);
+		synth_setCV(pcMVol,20000,0,0);
 #endif
 
 		synth_setGate(pgASaw,1);
@@ -391,11 +391,11 @@ void tuner_tuneSynth(void)
 		synth_setGate(pgPModFil,0);
 		synth_setGate(pgSync,0);
 
-		synth_setCV(pcResonance,0,0,1);
-		synth_setCV(pcAPW,0,0,1);
-		synth_setCV(pcBPW,0,0,1);
-		synth_setCV(pcPModOscB,0,0,1);
-		synth_setCV(pcExtFil,0,0,1);
+		synth_setCV(pcResonance,0,0,0);
+		synth_setCV(pcAPW,0,0,0);
+		synth_setCV(pcBPW,0,0,0);
+		synth_setCV(pcPModOscB,0,0,0);
+		synth_setCV(pcExtFil,0,0,0);
 		
 		// init 8253
 			// ch 0, mode 0, access 2 bytes, binary count
@@ -409,22 +409,22 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcResonance,0,0,1);
+		synth_setCV(pcResonance,0,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,UINT16_MAX,0,1);
+			synth_setCV(pcFil1+i,UINT16_MAX,0,0);
 	
 			// A oscs
 
-		synth_setCV(pcVolA,UINT16_MAX,0,1);
-		synth_setCV(pcVolB,0,0,1);
+		synth_setCV(pcVolA,UINT16_MAX,0,0);
+		synth_setCV(pcVolB,0,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
 			// B oscs
 
-		synth_setCV(pcVolA,0,0,1);
-		synth_setCV(pcVolB,UINT16_MAX,0,1);
+		synth_setCV(pcVolA,0,0,0);
+		synth_setCV(pcVolB,UINT16_MAX,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
@@ -433,13 +433,13 @@ void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcVolA,0,0,1);
-		synth_setCV(pcVolB,0,0,1);
-		synth_setCV(pcResonance,UINT16_MAX,0,1);
+		synth_setCV(pcVolA,0,0,0);
+		synth_setCV(pcVolB,0,0,0);
+		synth_setCV(pcResonance,UINT16_MAX,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,0,0,1);
-		
+			synth_setCV(pcFil1+i,0,0,0);
+	
 			// filters
 		
 		for(i=0;i<P600_VOICE_COUNT;++i)
@@ -447,11 +447,11 @@ void tuner_tuneSynth(void)
 
 		// finish
 		
-		synth_setCV(pcResonance,0,0,1);
+		synth_setCV(pcResonance,0,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcAmp1+i,0,0,1);
+			synth_setCV(pcAmp1+i,0,0,0);
 		
-		synth_forceUpdateAll();
+		synth_update();
 
 		display_clear();
 		
