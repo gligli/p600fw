@@ -45,27 +45,29 @@ void scanner_update(int8_t fullScan)
 	uint8_t i,j;
 	uint8_t ps=0,pa;		
 
-	BLOCK_INT
+	for(i=fullScan?0:(SCANNER_KEYS_START/8);i<SCANNER_BYTES;++i)
 	{
-		for(i=fullScan?0:(SCANNER_KEYS_START/8);i<SCANNER_BYTES;++i)
+		BLOCK_INT
 		{
 			io_write(0x08,i);
 
-			CYCLE_WAIT(20);
+			CYCLE_WAIT(10);
 
 			ps=io_read(0x0a);
-			
-			pa=ps^scanner.stateBits[i];
-			scanner.stateBits[i]=ps;
 
-			if(pa)
-				for(j=0;j<8;++j)
-				{
-					if(pa&1) scanner_event(i*8+j,ps&1);
-					pa>>=1;
-					ps>>=1;
-				}
+			CYCLE_WAIT(10);
 		}
+
+		pa=ps^scanner.stateBits[i];
+		scanner.stateBits[i]=ps;
+
+		if(pa)
+			for(j=0;j<8;++j)
+			{
+				if(pa&1) scanner_event(i*8+j,ps&1);
+				pa>>=1;
+				ps>>=1;
+			}
 	}
 }
 	

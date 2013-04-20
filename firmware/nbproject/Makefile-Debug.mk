@@ -46,6 +46,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/storage.o \
 	${OBJECTDIR}/_ext/1270477542/synth.o \
 	${OBJECTDIR}/_ext/1270477542/tuner.o \
+	${OBJECTDIR}/_ext/1270477542/uart_6850.o \
 	${OBJECTDIR}/_ext/1270477542/utils.o \
 	${OBJECTDIR}/p600firmware.o \
 	${OBJECTDIR}/print.o \
@@ -130,6 +131,11 @@ ${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/tuner.o ../common/tuner.c
+
+${OBJECTDIR}/_ext/1270477542/uart_6850.o: ../common/uart_6850.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/uart_6850.o ../common/uart_6850.c
 
 ${OBJECTDIR}/_ext/1270477542/utils.o: ../common/utils.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542

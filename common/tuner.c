@@ -380,7 +380,7 @@ void tuner_tuneSynth(void)
 #ifdef DEBUG
 		synth_setCV(pcMVol,20000,0);
 #else
-		synth_setCV(pcMVol,20000,0,0);
+		synth_setCV(pcMVol,20000,0);
 #endif
 
 		synth_setGate(pgASaw,1);

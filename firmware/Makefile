@@ -57,6 +57,7 @@ SRC =	$(TARGET).c \
 	..\common\potmux.c \
 	..\common\assigner.c \
 	..\common\storage.c \
+	..\common\uart_6850.c \
 	..\common\utils.c
 
 # MCU name, you MUST set this to match the board you are using

@@ -201,6 +201,11 @@ inline uint8_t io_read(uint8_t address)
 	return hardware_read(1,address);
 }
 
+inline int8_t hardware_getNMIState(void)
+{
+	return !!(PINC&0x10);
+}
+
 void hardware_init(void)
 {
 	// disable pullups
@@ -234,10 +239,17 @@ void hardware_init(void)
 	
 	// prepare a 2Khz interrupt
 	
-	OCR2A=125;
+	OCR0A=125;
+	TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
+	TCCR0B|=(1<<CS01) | (1<<CS00);  //Timer 0 prescaler = 64
+	TIMSK0|=(1<<OCIE0A); //Enable overflow interrupt for Timer0
+	
+	// prepare a 6.5Khz interrupt
+	
+	OCR2A=37;
 	TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
 	TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
-	TIMSK2|=(1<<OCIE2A);//Enable overflow interrupt for Timer2
+	TIMSK2|=(1<<OCIE2A); //Enable overflow interrupt for Timer2
 	
 	hardware_read(0,0); // init r/w system
 }
@@ -344,6 +356,20 @@ int main(void)
 	{
 		p600_update();
 	}
+}
+
+ISR(TIMER0_COMPA_vect) 
+{ 
+	// use nested interrupts, because we must still handle p600_fastInterrupt
+	// we need to ensure we won't try to recursively handle another p600_slowInterrupt!
+	
+	TIMSK0&=~(1<<OCIE0A); //Disable overflow interrupt for Timer0
+	sei();
+
+	p600_slowInterrupt();
+
+	cli();
+	TIMSK0|=(1<<OCIE0A); //Re-enable overflow interrupt for Timer0
 }
 
 ISR(TIMER2_COMPA_vect) 

@@ -15,6 +15,7 @@
 #include "tuner.h"
 #include "assigner.h"
 #include "storage.h"
+#include "uart_6850.h"
 
 #define P600_MONO_ENV 0 // informative constant, don't change it!
 #define P600_BENDER_OFFSET -16384
@@ -307,8 +308,11 @@ static inline void refreshPulseWidth(int8_t pwm)
 		if(sqrB)
 			pb+=p600.lfo.output;
 		
-		synth_setCV32Sat_FastPath(pcAPW,pa);
-		synth_setCV32Sat_FastPath(pcBPW,pb);
+		BLOCK_INT
+		{
+			synth_setCV32Sat_FastPath(pcAPW,pa);
+			synth_setCV32Sat_FastPath(pcBPW,pb);
+		}
 	}
 	else
 	{
@@ -502,6 +506,7 @@ void p600_init(void)
 	potmux_init();
 	tuner_init();
 	assigner_init();
+	uart_init();
 
 	int8_t i;
 	for(i=0;i<P600_VOICE_COUNT;++i)
@@ -637,7 +642,7 @@ void p600_update(void)
 	computeBenderCVs();
 }
 
-static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t updateADSR)
+static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t updateADSR)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
@@ -654,7 +659,7 @@ static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int1
 			// handle envs update
 			adsr_update(&p600.filEnvs[v]);
 			adsr_update(&p600.ampEnvs[v]);
-			
+
 			envVoice=v;
 		}
 
@@ -662,38 +667,48 @@ static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int1
 
 		// compute CVs & apply them
 
-		envVal=p600.filEnvs[envVoice].output;
+		BLOCK_INT
+		{
+			envVal=p600.filEnvs[envVoice].output;
 
-		va=vb=pitchLfoVal;
+			va=vb=pitchLfoVal;
 
-		va+=scaleU16S16(envVal,oscEnvAmt);	
-		va+=p600.oscANoteCV[pitchVoice];
+			va+=scaleU16S16(envVal,oscEnvAmt);	
+			va+=p600.oscANoteCV[pitchVoice];
 
-		synth_setCV32Sat_FastPath(pcOsc1A+v,va);
+			synth_setCV32Sat_FastPath(pcOsc1A+v,va);
 
-		vb+=p600.oscBNoteCV[pitchVoice];
-		synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
+			vb+=p600.oscBNoteCV[pitchVoice];
+			synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
-		vf=filterLfoVal;
-		vf+=scaleU16S16(envVal,filEnvAmt);
-		vf+=p600.filterNoteCV[pitchVoice];
-		synth_setCV32Sat_FastPath(pcFil1+v,vf);
+			vf=filterLfoVal;
+			vf+=scaleU16S16(envVal,filEnvAmt);
+			vf+=p600.filterNoteCV[pitchVoice];
+			synth_setCV32Sat_FastPath(pcFil1+v,vf);
 
-		synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[envVoice].output);
+			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[envVoice].output);
+		}
 	}
 }
 
 
+// 6.5Khz
 void p600_fastInterrupt(void)
+{
+	uart_update();
+}
+
+// 2Khz
+void p600_slowInterrupt(void)
 {
 	int32_t va,vf;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
 	int8_t v,hz63,poly,monoGlidingMask;
 
 	static uint8_t frc=0;
-	
+
 	// slower updates
-	
+
 	hz63=(frc&0x1c)==0;	
 
 	switch(frc&0x03) // 4 phases, each 500hz
@@ -765,10 +780,6 @@ void p600_fastInterrupt(void)
 	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
-}
-
-void p600_slowInterrupt(void)
-{
 }
 
 void p600_buttonEvent(p600Button_t button, int pressed)
@@ -1021,7 +1032,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 	adsr_setGate(&p600.filEnvs[env],gate);
 	adsr_setGate(&p600.ampEnvs[env],gate);
 	
-#ifdef DEBUG		
+#ifdef DEBUG
 	print("assign note ");
 	phex(note);
 	print("  gate ");
