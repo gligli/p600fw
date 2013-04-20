@@ -252,17 +252,24 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 	}
 }
 
-static void checkFinishedVoices(void)
+static void handleFinishedVoices(void)
 {
-	int8_t i,poly;
+	int8_t v,poly;
 	
 	poly=assigner_getMode()==mPoly;
 
 	// when amp env finishes, voice is done
 	
-	for(i=0;i<P600_VOICE_COUNT;++i)
-		if (assigner_getAssignment(i,NULL) && adsr_getStage(&p600.ampEnvs[poly?i:P600_MONO_ENV])==sWait)
-			assigner_voiceDone(i);
+	for(v=0;v<P600_VOICE_COUNT;++v)
+		if (assigner_getAssignment(v,NULL))
+		{
+			if(adsr_getStage(&p600.ampEnvs[poly?v:P600_MONO_ENV])==sWait)
+				assigner_voiceDone(v);
+		}
+		else
+		{
+			synth_setCV(pcAmp1+v,0,SYNTH_FLAG_IMMEDIATE);
+		}	
 }
 
 static void refreshGates(void)
@@ -628,10 +635,9 @@ void p600_update(void)
 
 	computeTunedCVs();
 	computeBenderCVs();
-	checkFinishedVoices();
 }
 
-static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t poly)
+static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t updateADSR)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
@@ -643,7 +649,7 @@ static inline void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int1
 	{
 		envVoice=P600_MONO_ENV;
 
-		if(poly)
+		if(updateADSR)
 		{
 			// handle envs update
 			adsr_update(&p600.filEnvs[v]);
@@ -711,13 +717,7 @@ void p600_fastInterrupt(void)
 		break;
 	case 2:
 		if(hz63)
-		{
-			checkFinishedVoices();
-
-			for(v=0;v<P600_VOICE_COUNT;++v)
-				if(!assigner_getAssignment(v,NULL))
-					synth_setCV(pcAmp1+v,0,SYNTH_FLAG_IMMEDIATE);
-		}
+			handleFinishedVoices();
 		break;
 	case 3:
 		scanner_update(hz63);
