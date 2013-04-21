@@ -1,0 +1,3 @@
+pitchbend callback should provide a channel and a 14 bit number, not 3 bytes..
+songposition callback should also provide a 14 bit number
+get sysex working for the lufa_midi implementation

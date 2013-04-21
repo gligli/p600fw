@@ -43,22 +43,32 @@
 TARGET = p600firmware
 
 # List C source files here. (C dependencies are automatically generated.)
-SRC =	$(TARGET).c \
+
+XNORMIDISRC = \
+	../xnormidi/midi.c \
+	../xnormidi/midi_device.c \
+	../xnormidi/sysex_tools.c \
+	../xnormidi/bytequeue/bytequeue.c \
+	../xnormidi/bytequeue/interrupt_setting.c
+
+SRC = \
+	$(XNORMIDISRC) \
+	$(TARGET).c \
 	usb_debug_only.c \
 	print.c \
-	..\common\p600.c \
-	..\common\display.c \
-	..\common\scanner.c \
-	..\common\dac.c \
-	..\common\synth.c \
-	..\common\adsr.c \
-	..\common\lfo.c \
-	..\common\tuner.c \
-	..\common\potmux.c \
-	..\common\assigner.c \
-	..\common\storage.c \
-	..\common\uart_6850.c \
-	..\common\utils.c
+	../common/p600.c \
+	../common/display.c \
+	../common/scanner.c \
+	../common/dac.c \
+	../common/synth.c \
+	../common/adsr.c \
+	../common/lfo.c \
+	../common/tuner.c \
+	../common/potmux.c \
+	../common/assigner.c \
+	../common/storage.c \
+	../common/uart_6850.c \
+	../common/utils.c
 
 # MCU name, you MUST set this to match the board you are using
 # type "make clean" after changing this, so all files will be rebuilt
@@ -118,7 +128,7 @@ DEBUG = dwarf-2
 #     Each directory must be seperated by a space.
 #     Use forward slashes for directory separators.
 #     For a directory that has spaces, enclose it in quotes.
-EXTRAINCDIRS = ../common
+EXTRAINCDIRS = ../common ../xnormidi
 
 
 # Compiler flag to set the C Standard level.
@@ -169,7 +179,7 @@ CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 
-CFLAGS += -fno-unroll-loops -fno-inline-functions # done by hand
+#CFLAGS += -fno-unroll-loops -fno-inline-functions # done by hand
 CFLAGS += -flto -fuse-linker-plugin 
 
 #---------------- Compiler Options C++ ----------------

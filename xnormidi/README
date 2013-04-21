@@ -1,0 +1,22 @@
+xnor midi is a library written by Alex Norman.
+
+This project used to be called avr-midi but it should be useful for other C
+projects.
+
+It is licenced with the GPL v3 licence, see the file "COPYING" for more info.
+If you'd like to use this library in a non GPL compatible project, write me an
+email and we can discuss alternatively licensing and payment.
+
+Please send me bug info, bug fixes, general improvements, etc.  alex at x37v.info
+
+This code has only been tested on a few micrcontrollers including:
+   atmega32u2, various teensy based projects, whatever is included in the missing link. [all avr based]
+
+REQUIREMENTS
+   for the lufa_usb implementation you need LUFA: http://www.fourwalledcubicle.com/LUFA.php
+   for testing you need ccpunit: http://sourceforge.net/projects/cppunit/
+      apt-get install libcppunit-dev
+
+my website is here:
+http://www.x37v.info
+
