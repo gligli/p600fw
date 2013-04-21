@@ -63,6 +63,7 @@ typedef enum
 void p600_buttonEvent(p600Button_t button, int pressed);
 void p600_keyEvent(uint8_t key, int pressed);
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice); // -1 -> unison
+void p600_uartEvent(uint8_t data);
 
 void p600_init(void);
 void p600_update(void);

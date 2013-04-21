@@ -41,6 +41,8 @@ struct settings_s
 
 	uint16_t presetNumber;
 	int8_t presetMode; // -1: manual / 0: presets 0-99 / 1: presets 100-199
+	
+	int8_t midiReceiveChannel; // -1: omni / 0-15: channel 1-16
 };
 
 struct preset_s

@@ -4,6 +4,9 @@
 
 #include <string.h>
 
+#include "../xnormidi/midi_device.h"
+#include "../xnormidi/midi.h"
+
 #include "p600.h"
 
 #include "scanner.h"
@@ -22,6 +25,11 @@
 
 #define ENV_EXPO 1
 #define ENV_SLOW 2
+
+#define MIDI_BASE_SWITCH_CC 40
+#define MIDI_BASE_COARSE_CC 64
+#define MIDI_BASE_FINE_CC 96
+#define MIDI_BASE_NOTE 12
 
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
@@ -59,6 +67,7 @@ static struct
 	uint16_t oscBTargetCV[P600_VOICE_COUNT];
 	uint16_t filterTargetCV[P600_VOICE_COUNT];
 
+	MidiDevice midi;
 
 	int16_t benderRawPosition;
 	int16_t benderAmount;
@@ -481,6 +490,138 @@ static void readManualMode(void)
 		currentPreset.lfoTargets|=1<<modPW;
 }
 
+static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t updateADSR)
+{
+	int32_t va,vb,vf;
+	uint16_t envVal;
+	int8_t assigned,envVoice,pitchVoice;
+	
+	assigned=assigner_getAssignment(v,NULL);
+
+	if(assigned)
+	{
+		envVoice=P600_MONO_ENV;
+
+		if(updateADSR)
+		{
+			// handle envs update
+			adsr_update(&p600.filEnvs[v]);
+			adsr_update(&p600.ampEnvs[v]);
+
+			envVoice=v;
+		}
+
+		pitchVoice=v&monoGlidingMask;
+
+		// compute CVs & apply them
+
+		BLOCK_INT
+		{
+			envVal=p600.filEnvs[envVoice].output;
+
+			va=vb=pitchLfoVal;
+
+			va+=scaleU16S16(envVal,oscEnvAmt);	
+			va+=p600.oscANoteCV[pitchVoice];
+
+			synth_setCV32Sat_FastPath(pcOsc1A+v,va);
+
+			vb+=p600.oscBNoteCV[pitchVoice];
+			synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
+
+			vf=filterLfoVal;
+			vf+=scaleU16S16(envVal,filEnvAmt);
+			vf+=p600.filterNoteCV[pitchVoice];
+			synth_setCV32Sat_FastPath(pcFil1+v,vf);
+
+			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[envVoice].output);
+		}
+	}
+}
+
+static int8_t midiFilterChannel(uint8_t channel)
+{
+	return settings.midiReceiveChannel<0 || (channel&MIDI_CHANMASK)==settings.midiReceiveChannel;
+}
+
+void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
+{
+	int16_t intNote;
+	
+	if(!midiFilterChannel(channel))
+		return;
+	
+#ifdef DEBUG_
+	print("midi note on  ");
+	phex(note);
+	print("\n");
+#endif
+
+	intNote=note-MIDI_BASE_NOTE;
+	intNote=MAX(0,intNote);
+	
+	assigner_assignNote(intNote,velocity!=0);
+}
+
+void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
+{
+	int16_t intNote;
+	
+	if(!midiFilterChannel(channel))
+		return;
+	
+#ifdef DEBUG_
+	print("midi note off ");
+	phex(note);
+	print("\n");
+#endif
+
+	intNote=note-MIDI_BASE_NOTE;
+	intNote=MAX(0,intNote);
+	
+	assigner_assignNote(intNote,0);
+}
+
+void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
+{
+	int16_t param;
+	
+	if(!midiFilterChannel(channel))
+		return;
+	
+#ifdef DEBUG_
+	print("midi cc ");
+	phex(control);
+	print(" value ");
+	phex(value);
+	print("\n");
+#endif
+	
+	if(control>=MIDI_BASE_COARSE_CC && control<MIDI_BASE_COARSE_CC+cpCount)
+	{
+		param=control-MIDI_BASE_COARSE_CC;
+
+		currentPreset.continuousParameters[param]&=0x01fc;
+		currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
+	}
+	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
+	{
+		param=control-MIDI_BASE_FINE_CC;
+
+		currentPreset.continuousParameters[param]&=0xfe00;
+		currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
+	}
+	else if(control>=MIDI_BASE_SWITCH_CC && control<MIDI_BASE_COARSE_CC)
+	{
+		param=control-MIDI_BASE_SWITCH_CC;
+		
+		if(value)
+			currentPreset.bitParameters|=(uint32_t)1<<param;
+		else
+			currentPreset.bitParameters&=~((uint32_t)1<<param);
+	}
+}
+
 void p600_init(void)
 {
 	memset(&p600,0,sizeof(p600));
@@ -490,6 +631,7 @@ void p600_init(void)
 	settings.presetNumber=0;
 	settings.benderMiddle=UINT16_MAX/2;
 	settings.presetMode=-1;
+	settings.midiReceiveChannel=-1;
 	currentPreset.assignerMonoMode=mUnisonLow;
 	currentPreset.benderSemitones=5;
 	currentPreset.benderTarget=modPitch;
@@ -507,7 +649,12 @@ void p600_init(void)
 	tuner_init();
 	assigner_init();
 	uart_init();
-
+	
+	midi_device_init(&p600.midi);
+	midi_register_noteon_callback(&p600.midi,midi_noteOnEvent);
+	midi_register_noteoff_callback(&p600.midi,midi_noteOffEvent);
+	midi_register_cc_callback(&p600.midi,midi_ccEvent);
+	
 	int8_t i;
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
@@ -636,63 +783,13 @@ void p600_update(void)
 	
 	synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
 	
-	// 
+	// CV computations
 
 	computeTunedCVs();
 	computeBenderCVs();
 }
 
-static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t updateADSR)
-{
-	int32_t va,vb,vf;
-	uint16_t envVal;
-	int8_t assigned,envVoice,pitchVoice;
-	
-	assigned=assigner_getAssignment(v,NULL);
-
-	if(assigned)
-	{
-		envVoice=P600_MONO_ENV;
-
-		if(updateADSR)
-		{
-			// handle envs update
-			adsr_update(&p600.filEnvs[v]);
-			adsr_update(&p600.ampEnvs[v]);
-
-			envVoice=v;
-		}
-
-		pitchVoice=v&monoGlidingMask;
-
-		// compute CVs & apply them
-
-		BLOCK_INT
-		{
-			envVal=p600.filEnvs[envVoice].output;
-
-			va=vb=pitchLfoVal;
-
-			va+=scaleU16S16(envVal,oscEnvAmt);	
-			va+=p600.oscANoteCV[pitchVoice];
-
-			synth_setCV32Sat_FastPath(pcOsc1A+v,va);
-
-			vb+=p600.oscBNoteCV[pitchVoice];
-			synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
-
-			vf=filterLfoVal;
-			vf+=scaleU16S16(envVal,filEnvAmt);
-			vf+=p600.filterNoteCV[pitchVoice];
-			synth_setCV32Sat_FastPath(pcFil1+v,vf);
-
-			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[envVoice].output);
-		}
-	}
-}
-
-
-// 6.5Khz
+// 5Khz
 void p600_fastInterrupt(void)
 {
 	uart_update();
@@ -733,6 +830,9 @@ void p600_slowInterrupt(void)
 	case 2:
 		if(hz63)
 			handleFinishedVoices();
+		
+		// MIDI processing
+		midi_device_process(&p600.midi);
 		break;
 	case 3:
 		scanner_update(hz63);
@@ -1041,4 +1141,9 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 	phex(voice);
 	print("\n");
 #endif
+}
+
+void p600_uartEvent(uint8_t data)
+{
+	midi_device_input(&p600.midi,1,&data);
 }

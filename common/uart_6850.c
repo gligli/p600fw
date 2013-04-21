@@ -19,12 +19,15 @@ void uart_init(void)
 void uart_update(void)
 {
 	if(!hardware_getNMIState())
+		return;
+	
+	BLOCK_INT
 	{
 		uint8_t data,status;
-		
+
 		status=mem_read(0xe000);
 		CYCLE_WAIT(4);
-		
+
 		if(!(status&0x80))
 		{
 			print("Error: NMI asserted, no UART IRQ\n");
@@ -39,7 +42,7 @@ void uart_update(void)
 
 		data=mem_read(0xe001);
 		CYCLE_WAIT(4);
-		
+
 		if(status&0x10)
 		{
 			print("Error: UART framing error\n");
@@ -51,8 +54,8 @@ void uart_update(void)
 		{
 			print("Warning: UART overrun\n");
 		}
-		
-		phex(data);
+
+		p600_uartEvent(data);
 	}
 }
 
