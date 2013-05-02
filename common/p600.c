@@ -490,7 +490,7 @@ static void readManualMode(void)
 		currentPreset.lfoTargets|=1<<modPW;
 }
 
-static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t updateADSR)
+static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t poly)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
@@ -502,7 +502,7 @@ static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt
 	{
 		envVoice=P600_MONO_ENV;
 
-		if(updateADSR)
+		if(poly)
 		{
 			// handle envs update
 			adsr_update(&p600.filEnvs[v]);
@@ -873,8 +873,15 @@ void p600_slowInterrupt(void)
 	poly=assigner_getMode()==mPoly;
 	monoGlidingMask=((assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh) && p600.gliding)?0x00:0xff;
 	
+	if(!poly)
+	{
+		// in any mono mode, env is always P600_MONO_ENV
+		adsr_update(&p600.filEnvs[P600_MONO_ENV]);
+		adsr_update(&p600.ampEnvs[P600_MONO_ENV]);
+	}
+	
 		// P600_VOICE_COUNT calls
-	updateVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,1);
+	updateVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
