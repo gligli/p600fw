@@ -153,10 +153,12 @@ void display_update(int8_t fullUpdate)
 		case 1:
 			b=localSevenSegs[0]&0x7f;
 			if (led_getOn(plDot)) b|=0x80;
+			if (led_getBlinking(plDot) && display.blinkState) b^=0x80;
 			break;
 		case 2:
 			b=localSevenSegs[1]&0x7f;
 			if (led_getOn(plTune)) b|=0x80;
+			if (led_getBlinking(plTune) && display.blinkState) b^=0x80;
 			break;
 		}
 		
