@@ -292,7 +292,7 @@ void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *bu
 	SREG = sreg;
 }
 
-// 32Kbytes, just before the bootloader zone
+// just before the bootloader zone
 
 #define STORAGE_ADDR (0x1e000-STORAGE_SIZE)
 
@@ -322,6 +322,8 @@ int main(void)
 {
 	// initialize clock
 	
+	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
+	_delay_ms(1); // actual delay 256 ms when F_OSC is 16000000
 	CPU_PRESCALE(CPU_16MHz);  
 
 	// initialize low level

@@ -179,7 +179,7 @@ CFLAGS += -Wa,-adhlns=$(<:%.c=$(OBJDIR)/%.lst)
 CFLAGS += $(patsubst %,-I%,$(EXTRAINCDIRS))
 CFLAGS += $(CSTANDARD)
 
-#CFLAGS += -fno-unroll-loops -fno-inline-functions # done by hand
+CFLAGS += -fno-unroll-loops -fno-inline-functions # done by hand
 CFLAGS += -flto -fuse-linker-plugin 
 
 #---------------- Compiler Options C++ ----------------
