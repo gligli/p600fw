@@ -8,12 +8,12 @@
 
 static struct
 {
-	int8_t voiceAssigned[P600_VOICE_COUNT];
+	uint32_t voiceTimestamp[P600_VOICE_COUNT];
 	uint8_t voiceNote[P600_VOICE_COUNT];
 	
 	uint8_t legatoNotes[LEGATO_NOTE_MEMORY];
 	
-	int8_t assignInc;
+	uint32_t timestamp;
 	assignerMode_t mode;
 } assigner;
 
@@ -51,21 +51,23 @@ static inline void legatoGetState(int8_t * count, uint8_t * mostPrio)
 
 static int8_t findOldest(uint8_t note)
 {
-	int8_t i,v=0,a,minInc=LEGATO_NOTE_MEMORY;
+	int8_t i,v=-2;
+	uint32_t a,minTs=UINT32_MAX;
 	
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
-		a=assigner.voiceAssigned[i];
+		a=assigner.voiceTimestamp[i];
 		
-		if(assigner.voiceNote[i]==note || a<0)
+		if(assigner.voiceNote[i]==note)
 		{
+			// playing the same note again should stay on the same voice
 			v=i;
 			break;
 		}
 		
-		if(a<minInc || a>minInc+P600_VOICE_COUNT)
+		if(a<minTs)
 		{
-			minInc=a;
+			minTs=a;
 			v=i;
 		}
 	}
@@ -73,11 +75,11 @@ static int8_t findOldest(uint8_t note)
 	return v;
 }
 
-static void setVoices(int8_t voice, int8_t assigned, uint8_t note, int8_t gate)
+static void setVoices(int8_t voice, uint32_t timestamp, uint8_t note, int8_t gate)
 {
 	if(voice>=0)
 	{
-		assigner.voiceAssigned[voice]=assigned;
+		assigner.voiceTimestamp[voice]=timestamp;
 		assigner.voiceNote[voice]=note;
 	}
 	else if(voice==-1)
@@ -86,7 +88,7 @@ static void setVoices(int8_t voice, int8_t assigned, uint8_t note, int8_t gate)
 		
 		for(v=0;v<P600_VOICE_COUNT;++v)
 		{
-			assigner.voiceAssigned[v]=assigned;
+			assigner.voiceTimestamp[v]=timestamp;
 			assigner.voiceNote[v]=note;
 		}
 	}
@@ -95,12 +97,35 @@ static void setVoices(int8_t voice, int8_t assigned, uint8_t note, int8_t gate)
 		p600_assignerEvent(note,gate,voice);
 }
 
+static int8_t getVoiceFromNote(uint8_t note)
+{
+	int8_t v;
+
+	switch(assigner.mode)
+	{
+	case mPoly:
+		for(v=0;v<P600_VOICE_COUNT;++v)
+			if(assigner.voiceNote[v]==note && assigner.voiceTimestamp[v]==UINT32_MAX)
+				return v;
+		break;
+	case mUnisonLow:
+	case mUnisonHigh:
+		return -1;
+	case mMonoLow:
+	case mMonoHigh:
+		return assigner.timestamp%P600_VOICE_COUNT;
+	}
+
+	print("Warning: assigner_getVoiceFromNote found no voice!\n"); 
+	return -2;
+}
+
 inline int8_t assigner_getAssignment(int8_t voice, uint8_t * note)
 {
 	if(note)
 		*note=assigner.voiceNote[voice];
 	
-	return assigner.voiceAssigned[voice]>=0;
+	return assigner.voiceTimestamp[voice]!=0;
 }
 
 const char * assigner_modeName(assignerMode_t mode)
@@ -122,29 +147,6 @@ const char * assigner_modeName(assignerMode_t mode)
 	return "";
 }
 
-int8_t assigner_getVoiceFromNote(uint8_t note)
-{
-	int8_t i;
-
-	switch(assigner.mode)
-	{
-	case mPoly:
-		for(i=0;i<P600_VOICE_COUNT;++i)
-			if(assigner.voiceAssigned[i]>=0 && assigner.voiceNote[i]==note)
-				return i;
-		break;
-	case mUnisonLow:
-	case mUnisonHigh:
-		return -1;
-	case mMonoLow:
-	case mMonoHigh:
-		return assigner.assignInc%P600_VOICE_COUNT;
-	}
-
-	print("Warning: assigner_getVoiceFromNote found no voice!\n"); 
-	return -2;
-}
-
 inline void assigner_setMode(assignerMode_t mode)
 {
 	if (mode!=assigner.mode)
@@ -161,29 +163,35 @@ inline assignerMode_t assigner_getMode(void)
 
 void assigner_assignNote(uint8_t note, int8_t on)
 {
-	int8_t curVoice=-2,nextVoice=-2;
+	int8_t voice=-1;
 	
 	// act depending on mode
 	
-	nextVoice=-1;
-
 	if(assigner.mode==mPoly)
 	{
 		if(on)
 		{
-			nextVoice=findOldest(note);
+			voice=findOldest(note);
 			
-			// assign new note
-
-			assigner.assignInc=(assigner.assignInc+1)%P600_VOICE_COUNT;
-			setVoices(nextVoice,assigner.assignInc,note,1);
+			// on note on, if we have less than 6 pressed notes (timestamp=UINT32_MAX), assign new note
+			
+			if (voice>=0)
+				setVoices(voice,UINT32_MAX,note,1);
 		}
 		else
 		{
-			curVoice=assigner_getVoiceFromNote(note);
+			voice=getVoiceFromNote(note);
 			
-			if(curVoice!=-2)
-				setVoices(curVoice,assigner_getAssignment(curVoice,NULL),note,0);
+			// on note off, assign a timestamp, so that oldest note in release gets stolen in case there's more than 6 still playing
+			
+			if(voice>=0)
+			{
+				// steal the voice if it's assigned
+				if(assigner_getAssignment(voice,NULL))
+					assigner_voiceDone(voice);
+
+				setVoices(voice,++assigner.timestamp,note,0);
+			}
 		}
 	}
 	else
@@ -233,26 +241,26 @@ void assigner_assignNote(uint8_t note, int8_t on)
 			if(legatoCount==1 && on) // detect new gate while all gates off
 			{
 				// deassign old voice
-				assigner_voiceDone(assigner.assignInc);
+				assigner_voiceDone(assigner.timestamp);
 
 				// change next voice
-				assigner.assignInc=(assigner.assignInc+1)%P600_VOICE_COUNT;
+				assigner.timestamp=(assigner.timestamp+1)%P600_VOICE_COUNT;
 			}
 			
-			nextVoice=assigner.assignInc;
+			voice=assigner.timestamp;
 		}
 
 		// assign new note
-		setVoices(nextVoice,0,note,gate);
+		setVoices(voice,1,note,gate);
 	}
 }
 
 void assigner_voiceDone(int8_t voice)
 {
 	if(assigner.mode!=mPoly)
-		setVoices(-1,-1,ASSIGNER_NO_NOTE,0);
+		setVoices(-1,0,ASSIGNER_NO_NOTE,0);
 	else
-		setVoices(voice,-1,ASSIGNER_NO_NOTE,0);
+		setVoices(voice,0,ASSIGNER_NO_NOTE,0);
 }
 
 void assigner_init(void)
