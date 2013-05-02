@@ -26,6 +26,7 @@ typedef enum
 
 typedef enum
 {
+	ppNone=-1,
 	ppMixer=0,ppCutoff=1,ppResonance=2,ppFilEnvAmt=3,ppFilRel=4,ppFilSus=5,
 	ppFilDec=6,ppFilAtt=7,ppAmpRel=8,ppAmpSus=9,ppAmpDec=10,ppAmpAtt=11,
 	ppGlide=12,ppBPW=13,ppMVol=14,ppMTune=15,ppPitchWheel=16,ppModWheel=22,

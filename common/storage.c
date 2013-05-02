@@ -157,7 +157,7 @@ int8_t settings_load(void)
 
 		settings.presetNumber=storageRead16();
 		settings.benderMiddle=storageRead16();
-		settings.presetMode=storageReadS8();
+		settings.presetBank=storageRead8();
 		settings.midiReceiveChannel=storageReadS8();
 		
 		if (tempVersion<2)
@@ -189,7 +189,7 @@ void settings_save(void)
 
 		storageWrite16(settings.presetNumber);
 		storageWrite16(settings.benderMiddle);
-		storageWriteS8(settings.presetMode);
+		storageWrite8(settings.presetBank);
 		storageWriteS8(settings.midiReceiveChannel);
 		
 		// v2 

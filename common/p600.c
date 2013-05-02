@@ -77,8 +77,11 @@ static struct
 	int16_t glideAmount;
 	int8_t gliding;
 	
-	int8_t presetDigit; // -1: none / 0: load decade digit / 1: store decade digit / 2: load unit digit / 3: store unit digit	
+	p600Pot_t manualDisplayedPot;
+	
+	enum {pdiNone,pdiLoadDecadeDigit,pdiStoreDecadeDigit,pdiLoadUnitDigit,pdiStoreUnitDigit} presetDigitInput;
 	int8_t presetAwaitingNumber;
+	int8_t presetModified;
 } p600;
 
 static const char * modulationName(modulation_t m)
@@ -422,14 +425,18 @@ static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 
 static void refreshSevenSeg(void)
 {
-	if(p600.presetDigit<0)
+	if(p600.presetDigitInput==pdiNone)
 	{
-		sevenSeg_setAscii(' ',' ');
-		led_set(plDot,1,0);
+		if(p600.manualDisplayedPot!=ppNone)
+		{
+			uint8_t v=potmux_getValue(p600.manualDisplayedPot)>>8; // show 8 bits
+			sevenSeg_setNumber(v);
+			led_set(plDot,v>99,v>199);
+		}
 	}
 	else
 	{
-		if(p600.presetDigit>0)
+		if(p600.presetDigitInput!=pdiLoadDecadeDigit)
 		{
 			if(p600.presetAwaitingNumber>=0)
 				sevenSeg_setAscii('0'+p600.presetAwaitingNumber,' ');
@@ -439,7 +446,7 @@ static void refreshSevenSeg(void)
 		else
 		{
 			sevenSeg_setNumber(settings.presetNumber);
-			led_set(plDot,0,0);
+			led_set(plDot,p600.presetModified,0);
 		}
 	}
 }
@@ -454,7 +461,6 @@ static void refreshFullState(void)
 
 	refreshSevenSeg();
 }
-
 
 static void readManualMode(void)
 {
@@ -489,6 +495,45 @@ static void readManualMode(void)
 	if(scanner_buttonState(pbLFOPW))
 		currentPreset.lfoTargets|=1<<modPW;
 }
+
+static inline void modifyPresetPot(p600Pot_t pot)
+{
+	continuousParameter_t cp;
+	
+	for(cp=0;cp<cpCount;++cp)
+		if(pot==continuousParameterToPot[cp])
+		{
+			currentPreset.continuousParameters[cp]=potmux_getValue(pot);
+
+			p600.presetModified=1;
+			refreshFullState();
+			break;
+		}
+
+}
+
+static inline void modifyPresetButton(p600Button_t button)
+{
+	bitParameter_t bp;
+	uint32_t mask;
+
+	for(bp=0;bp<sizeof(bitParameterToButton);++bp)	
+		if(button==bitParameterToButton[bp])
+		{
+			mask=(uint32_t)1<<bp;
+
+			if(scanner_buttonState(button))
+				currentPreset.bitParameters|=mask;
+			else
+				currentPreset.bitParameters&=~mask;
+
+			p600.presetModified=1;
+			refreshFullState();
+			break;
+		}
+
+}
+
 
 static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t poly)
 {
@@ -630,15 +675,16 @@ void p600_init(void)
 	
 	settings.presetNumber=0;
 	settings.benderMiddle=UINT16_MAX/2;
-	settings.presetMode=-1;
+	settings.presetBank=pbkManual;
 	settings.midiReceiveChannel=-1;
 	currentPreset.assignerMonoMode=mUnisonLow;
 	currentPreset.benderSemitones=5;
 	currentPreset.benderTarget=modPitch;
 	currentPreset.envFlags[0]=ENV_EXPO;
 	currentPreset.envFlags[1]=ENV_EXPO;
-	p600.presetDigit=-1;
+	p600.presetDigitInput=pdiNone;
 	p600.presetAwaitingNumber=-1;
+	p600.manualDisplayedPot=ppNone;
 	
 	// init
 	
@@ -692,6 +738,7 @@ void p600_init(void)
 void p600_update(void)
 {
 	int8_t i;
+	p600Pot_t pot=ppNone,p;
 	static uint8_t frc=0;
 	
 	// toggle tape out (debug)
@@ -702,25 +749,41 @@ void p600_update(void)
 		io_write(0x0e,((frc&1)<<2)|0b00110001);
 	}
 
-	// manual mode
+	// update pots, detecting change
 	
-	if(settings.presetMode<0) // TODO: need to detect pot changes too !
+	for(i=0;i<4;++i)
 	{
+		p=potmux_detectChange();
+		if (p!=ppNone)
+			pot=p;
+	}
+	
+	// act on pot change
+	
+	if(settings.presetBank==pbkManual)
+	{
+		if(pot!=ppNone)
+		{
+			// display last changed pot value
+			p600.manualDisplayedPot=pot;
+			refreshSevenSeg();
+		}
+		
 		readManualMode();
 	}
+	else if(pot!=ppNone)
+	{
+		modifyPresetPot(pot);
+	}
 
-	// read pots
-	
-	potmux_update(1,1);
-	potmux_update(1,1);
-	potmux_update(1,1);
-	potmux_update(1,1);
-	
 	// update CVs
 
 	switch(frc&0x03) // 4 phases
 	{
 	case 0:
+		if(pot==ppNone)
+			break;
+		
 		// amplifier envs
 		
 		for(i=0;i<P600_VOICE_COUNT;++i)
@@ -730,8 +793,7 @@ void p600_update(void)
 					 currentPreset.continuousParameters[cpAmpSus],
 					 currentPreset.continuousParameters[cpAmpRel],
 					 UINT16_MAX);
-		break;
-	case 1:
+
 		// filter envs
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
@@ -741,27 +803,31 @@ void p600_update(void)
 					 currentPreset.continuousParameters[cpFilSus],
 					 currentPreset.continuousParameters[cpFilRel],
 					 UINT16_MAX);
-		break;
-	case 2:
-		// 'fixed' CVs
-		
-		synth_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SYNTH_FLAG_IMMEDIATE);
-		
-		// gates
-		
-		refreshGates();
-		break;
-	case 3:
+
 		// lfo
 		
 		lfo_setCVs(&p600.lfo,
 				currentPreset.continuousParameters[cpLFOFreq],
 				satAddU16U16(currentPreset.continuousParameters[cpLFOAmt],
 					potmux_getValue(ppModWheel)>>currentPreset.modwheelShift));
-	
+		break;
+	case 1:
+		// 'fixed' CVs
+		
+		synth_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SYNTH_FLAG_IMMEDIATE);
+		break;
+	case 2:
+		// 'fixed' CVs
+		
+		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SYNTH_FLAG_IMMEDIATE);
+		break;
+	case 3:
+		// gates
+		
+		refreshGates();
+
 		// PW
 
 		if(!(currentPreset.lfoTargets&(1<<modPW)))
@@ -891,6 +957,10 @@ void p600_slowInterrupt(void)
 
 void p600_buttonEvent(p600Button_t button, int pressed)
 {
+	// button press might change current preset
+
+	modifyPresetButton(button);		
+
 	// tuning
 
 	if(!pressed && button==pbTune)
@@ -905,75 +975,83 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	
 	if(pressed && button==pbPreset)
 	{
-		settings.presetMode=((settings.presetMode+2)%2)-1; //TODO: second preset page, how to store?
-		
-		led_set(plPreset,settings.presetMode>=0,settings.presetMode>=1);
-		
+		settings.presetBank=(settings.presetBank+1)%2; //TODO: second preset bank, how to store?
 		settings_save();		
+
+		led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
 		
-		if(settings.presetMode>=0)
+		if(settings.presetBank!=pbkManual)
 		{
 			preset_loadCurrent(settings.presetNumber);
-			p600.presetDigit=0;
-			
+			p600.presetModified=0;
 			refreshFullState();
 		}
-		else
-		{
-			p600.presetDigit=-1;
-		}
 
+		p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
+		
 		refreshSevenSeg();
 	}
 	
 	if(pressed && button==pbRecord)
 	{
-		if(p600.presetDigit==1)
+		if(p600.presetDigitInput==pdiStoreDecadeDigit)
 		{
-			p600.presetDigit=(settings.presetMode>=0)?0:-1;
+			// cancel record
+			p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
 			led_set(plRecord,0,0);
 		}
 		else
 		{
-			p600.presetDigit=1;
+			// ask for digit
+			p600.presetDigitInput=pdiStoreDecadeDigit;
 			led_set(plRecord,1,1);
 		}
 		
 		refreshSevenSeg();
 	}
 	
-	if(p600.presetDigit>=0)
+	if(p600.presetDigitInput!=pdiNone)
 	{
+		// preset number input 
+		
 		if(pressed && button>=pb0 && button<=pb9)
 		{
-			switch(p600.presetDigit)
+			switch(p600.presetDigitInput)
 			{
-			case 0:
-			case 1:
+			case pdiLoadDecadeDigit:
 				p600.presetAwaitingNumber=button-pb0;
-				p600.presetDigit+=2;
+				p600.presetDigitInput=pdiLoadUnitDigit;
 				break;
-			case 2:
-			case 3:
+			case pdiStoreDecadeDigit:
+				p600.presetAwaitingNumber=button-pb0;
+				p600.presetDigitInput=pdiStoreUnitDigit;
+				break;
+			case pdiLoadUnitDigit:
+			case pdiStoreUnitDigit:
 				p600.presetAwaitingNumber=p600.presetAwaitingNumber*10+(button-pb0);
 
-				if(p600.presetDigit==3) // store?
+				// store?
+				if(p600.presetDigitInput==pdiStoreUnitDigit)
 				{
 					preset_saveCurrent(p600.presetAwaitingNumber);
 					led_set(plRecord,0,0);
 				}
 
+				// always try to load/reload preset
 				if(preset_loadCurrent(p600.presetAwaitingNumber))
 				{
 					settings.presetNumber=p600.presetAwaitingNumber;
+					p600.presetModified=0;
 					settings_save();		
 	
 					refreshFullState();
 				}
 
 				p600.presetAwaitingNumber=-1;
-				p600.presetDigit=(settings.presetMode>=0)?0:-1;
+				p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
 				break;
+			default:
+				;
 			}
 
 			refreshSevenSeg();
