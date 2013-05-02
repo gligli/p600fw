@@ -6,6 +6,8 @@
 #include "dac.h"
 
 #define POTMUX_POT_COUNT 32
+#define PRIORITY_POT_COUNT 4
+#define CHANGE_DETECT_MASK 0xfc00
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 {
@@ -14,8 +16,6 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
 	/*Speed*/10,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
 };
-
-#define PRIORITY_POT_COUNT 4
 
 static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
 {
@@ -96,7 +96,7 @@ void potmux_init(void)
 	memset(&potmux,0,sizeof(potmux));
 }
 
-void potmux_update(int8_t updateRegular, int8_t updatePriority)
+inline void potmux_update(int8_t updateRegular, int8_t updatePriority)
 {
 	if (updateRegular)
 	{
@@ -115,3 +115,30 @@ void potmux_update(int8_t updateRegular, int8_t updatePriority)
 		potmux.currentPriorityPotIdx=(potmux.currentPriorityPotIdx+1)%PRIORITY_POT_COUNT;
 	}
 }
+
+p600Pot_t potmux_detectChange(void)
+{
+	uint16_t old,new;
+	p600Pot_t pot,res=ppNone;
+	
+	pot=priorityPots[potmux.currentPriorityPotIdx];
+
+	old=potmux.pots[pot]&CHANGE_DETECT_MASK;
+	potmux_update(0,1);
+	new=potmux.pots[pot]&CHANGE_DETECT_MASK;
+
+	if(old!=new)
+		res=pot;
+	
+	pot=potmux.currentRegularPot;
+
+	old=potmux.pots[pot]&CHANGE_DETECT_MASK;
+	potmux_update(1,0);
+	new=potmux.pots[pot]&CHANGE_DETECT_MASK;
+
+	if(old!=new)
+		res=pot;
+
+	return res;
+}
+
