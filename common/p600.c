@@ -259,6 +259,34 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 	}
 }
 
+static void muteVoice(int8_t v,int8_t mute)
+{
+	synth_setCV(pcAmp1+v,0,SYNTH_FLAG_IMMEDIATE); // close VCA
+	
+	if(mute)
+	{
+		// closing the VCA should theoretically be enough to silence a voice
+		// but in practice it's not, so close the filter, and make oscs
+		// emit a high pitch, so that it's filtered out
+
+		// if it's not oscillating, close the filter (not too much, to avoid glitches on unmute)
+		if (currentPreset.continuousParameters[cpResonance]<UINT16_MAX/2) 
+			synth_setCV(pcFil1+v,UINT16_MAX/4,SYNTH_FLAG_IMMEDIATE);
+		
+		synth_setCV(pcOsc1A+v,UINT16_MAX,SYNTH_FLAG_IMMEDIATE); // high pitch for Osc A
+		synth_setCV(pcOsc1B+v,UINT16_MAX,SYNTH_FLAG_IMMEDIATE); // high pitch for Osc B
+	}
+	else
+	{
+		// pre-set rough pitches, to avoid tiny portamento-like glitches
+		// when the voice actually starts
+		
+		synth_setCV(pcOsc1A+v,p600.oscANoteCV[v],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcOsc1B+v,p600.oscBNoteCV[v],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcFil1+v,p600.filterNoteCV[v],SYNTH_FLAG_IMMEDIATE);
+	}
+}
+
 static void handleFinishedVoices(void)
 {
 	int8_t v,poly;
@@ -275,7 +303,7 @@ static void handleFinishedVoices(void)
 		}
 		else
 		{
-			synth_setCV(pcAmp1+v,0,SYNTH_FLAG_IMMEDIATE);
+			muteVoice(v,1);
 		}	
 }
 
@@ -774,9 +802,6 @@ void p600_update(void)
 	switch(frc&0x03) // 4 phases
 	{
 	case 0:
-		if(potmux_lastChanged()==ppNone)
-			break;
-		
 		// amplifier envs
 		
 		for(i=0;i<P600_VOICE_COUNT;++i)
@@ -885,47 +910,6 @@ void p600_timerInterrupt(void)
 
 	static uint8_t frc=0;
 
-	// slower updates
-
-	hz63=(frc&0x1c)==0;	
-
-	switch(frc&0x03) // 4 phases, each 500hz
-	{
-	case 0:
-		if(currentPreset.lfoTargets&(1<<modPW))
-		{
-			refreshPulseWidth(1);
-		}
-		break;
-	case 1:
-		if(p600.gliding)
-		{
-			for(v=0;v<P600_VOICE_COUNT;++v)
-			{
-				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
-				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
-				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
-			}
-		}
-		break;
-	case 2:
-		if(hz63)
-			handleFinishedVoices();
-		
-		// MIDI processing
-		midi_device_process(&p600.midi);
-
-		// ticker inc
-		++p600.ticker;
-		break;
-	case 3:
-		scanner_update(hz63);
-		display_update(hz63);
-		break;
-	}
-	
-	++frc;
-
 	// lfo
 	
 	lfo_update(&p600.lfo);
@@ -971,6 +955,47 @@ void p600_timerInterrupt(void)
 	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
 	updateVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
+	
+	// slower updates
+
+	hz63=(frc&0x1c)==0;	
+
+	switch(frc&0x03) // 4 phases, each 500hz
+	{
+	case 0:
+		if(currentPreset.lfoTargets&(1<<modPW))
+		{
+			refreshPulseWidth(1);
+		}
+		break;
+	case 1:
+		if(p600.gliding)
+		{
+			for(v=0;v<P600_VOICE_COUNT;++v)
+			{
+				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
+				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
+				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
+			}
+		}
+		break;
+	case 2:
+		if(hz63)
+			handleFinishedVoices();
+		
+		// MIDI processing
+		midi_device_process(&p600.midi);
+
+		// ticker inc
+		++p600.ticker;
+		break;
+	case 3:
+		scanner_update(hz63);
+		display_update(hz63);
+		break;
+	}
+	
+	++frc;
 }
 
 void p600_buttonEvent(p600Button_t button, int pressed)
@@ -1224,10 +1249,29 @@ void p600_keyEvent(uint8_t key, int pressed)
 
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 {
-	int8_t env;
+	int8_t env,v;
+	
+	// prepare CVs
 	
 	computeTunedCVs();
+	
+	// unmute voices on gate on
 
+	if(gate)
+	{
+		if(voice==-1)
+		{
+			for(v=0;v<P600_VOICE_COUNT;++v)
+				muteVoice(v,0);
+		}
+		else
+		{
+			muteVoice(voice,0);
+		}
+	}
+	
+	// set gates
+	
 	env=voice;
 	if(assigner_getMode()!=mPoly)
 		env=P600_MONO_ENV;
