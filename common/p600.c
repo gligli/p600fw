@@ -21,7 +21,6 @@
 #include "uart_6850.h"
 
 #define P600_MONO_ENV 0 // informative constant, don't change it!
-#define P600_BENDER_OFFSET -16384
 
 #define ENV_EXPO 1
 #define ENV_SLOW 2
@@ -198,7 +197,6 @@ static void computeBenderCVs(void)
 	// compute adjusted bender amount
 	
 	amt=pos;
-	amt+=P600_BENDER_OFFSET;
 	
 	if(amt<settings.benderMiddle)
 	{
@@ -210,10 +208,10 @@ static void computeBenderCVs(void)
 	{
 		amt-=settings.benderMiddle;
 		amt*=INT16_MAX;
-		amt/=(UINT16_MAX-settings.benderMiddle+P600_BENDER_OFFSET);
+		amt/=UINT16_MAX-settings.benderMiddle;
 	}
 	p600.benderAmount=MIN(MAX(amt,INT16_MIN),INT16_MAX);
-
+	
 	// compute bends
 	
 	switch(currentPreset.benderTarget)
@@ -873,14 +871,13 @@ void p600_update(void)
 	}
 }
 
-// 5Khz
-void p600_fastInterrupt(void)
+void p600_uartInterrupt(void)
 {
 	uart_update();
 }
 
 // 2Khz
-void p600_slowInterrupt(void)
+void p600_timerInterrupt(void)
 {
 	int32_t va,vf;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
@@ -1207,7 +1204,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 			if(button==pb9)
 			{
-				settings.benderMiddle=satAddU16S16(potmux_getValue(ppPitchWheel),P600_BENDER_OFFSET);
+				settings.benderMiddle=potmux_getValue(ppPitchWheel);
 				s="Calibrated";
 			}
 

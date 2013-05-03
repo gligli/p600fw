@@ -208,10 +208,6 @@ inline int8_t hardware_getNMIState(void)
 
 void hardware_init(void)
 {
-	// disable pullups
-	
-	MCUCR|=(1<<PUD);	
-	
 	// LSB->MSB
 	// B: A3-A9,A12
 	// C: D7,D0,D1,INT,NMI,Halt,MREQ,IORQ
@@ -243,13 +239,18 @@ void hardware_init(void)
 	TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
 	TCCR0B|=(1<<CS01) | (1<<CS00);  //Timer 0 prescaler = 64
 	TIMSK0|=(1<<OCIE0A); //Enable overflow interrupt for Timer0
-	
+
+#ifdef UART_USE_HW_INTERRUPT	
+	EICRB|=(1<<ISC41); // INT4 reacts on falling edge
+	EIMSK|=(1<<INT4); // enable INT4
+#else
 	// prepare a 5Khz interrupt
 	
 	OCR2A=49;
 	TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
 	TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
 	TIMSK2|=(1<<OCIE2A); //Enable overflow interrupt for Timer2
+#endif	
 	
 	hardware_read(0,0); // init r/w system
 }
@@ -326,10 +327,6 @@ int main(void)
 	_delay_ms(1); // actual delay 256 ms when F_OSC is 16000000
 	CPU_PRESCALE(CPU_16MHz);  
 
-	// initialize low level
-
-	hardware_init();
-
 #ifdef DEBUG
 	// initialize the USB, and then wait for the host
 	// to set configuration.  If the Teensy is powered
@@ -346,11 +343,19 @@ int main(void)
 	print("p600firmware\n");
 #endif
 
-	// initialize synth code
-
+	// no interrupts while we init
+	
 	cli();
 	
+	// initialize low level
+
+	hardware_init();
+
+	// initialize synth code
+
 	p600_init();
+	
+	// all inited, enable ints and do periodical updates
 	
 	sei();
 	
@@ -362,19 +367,23 @@ int main(void)
 
 ISR(TIMER0_COMPA_vect) 
 { 
-	// use nested interrupts, because we must still handle p600_fastInterrupt
-	// we need to ensure we won't try to recursively handle another p600_slowInterrupt!
+	// use nested interrupts, because we must still handle p600_uartInterrupt
+	// we need to ensure we won't try to recursively handle another p600_timerInterrupt!
 	
 	TIMSK0&=~(1<<OCIE0A); //Disable overflow interrupt for Timer0
 	sei();
 
-	p600_slowInterrupt();
+	p600_timerInterrupt();
 
 	cli();
 	TIMSK0|=(1<<OCIE0A); //Re-enable overflow interrupt for Timer0
 }
 
+#ifdef UART_USE_HW_INTERRUPT
+ISR(INT4_vect) 
+#else
 ISR(TIMER2_COMPA_vect) 
+#endif
 { 
-	p600_fastInterrupt();
+	p600_uartInterrupt();
 }

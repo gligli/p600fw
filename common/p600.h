@@ -5,7 +5,8 @@
 #include "print.h"
 #include "hardware.h"
 
-#define DEBUG
+//#define DEBUG
+#define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
 	#define VERSION "alpha "__DATE__
@@ -68,8 +69,8 @@ void p600_uartEvent(uint8_t data);
 
 void p600_init(void);
 void p600_update(void);
-void p600_slowInterrupt(void);
-void p600_fastInterrupt(void);
+void p600_timerInterrupt(void);
+void p600_uartInterrupt(void);
 
 #endif	/* P600_H */
 
