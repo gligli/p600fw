@@ -241,7 +241,6 @@ void hardware_init(void)
 	TIMSK0|=(1<<OCIE0A); //Enable overflow interrupt for Timer0
 
 #ifdef UART_USE_HW_INTERRUPT	
-	EICRB|=(1<<ISC41); // INT4 reacts on falling edge
 	EIMSK|=(1<<INT4); // enable INT4
 #else
 	// prepare a 5Khz interrupt
