@@ -766,10 +766,10 @@ void p600_update(void)
 		{
 			// display last changed pot value
 			p600.manualDisplayedPot=pot;
-			refreshSevenSeg();
 		}
 		
 		readManualMode();
+		refreshSevenSeg();
 	}
 	else if(pot!=ppNone)
 	{
