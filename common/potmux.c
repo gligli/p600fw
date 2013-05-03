@@ -25,20 +25,24 @@ static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
 
 static struct
 {
+	uint32_t potChanged;
+	uint16_t pots[POTMUX_POT_COUNT];
 	int8_t currentRegularPot;
 	int8_t currentPriorityPotIdx;
-	uint16_t pots[POTMUX_POT_COUNT];
+	p600Pot_t lastChanged;
 } potmux;
 
 static void updatePot(p600Pot_t pot)
 {
 	int8_t i,lower;
 	uint8_t mux,bitDepth;
-	uint16_t estimate,badMask;
+	uint16_t estimate,badMask,old;
 	uint16_t bit;
-
+	
 	BLOCK_INT
 	{
+		old=potmux.pots[pot];		
+
 		// successive approximations using DAC and comparator
 
 			// select pot
@@ -82,7 +86,14 @@ static void updatePot(p600Pot_t pot)
 
 		io_write(0x0a,0xff);
 
-		potmux.pots[pot]=estimate&badMask;
+		estimate&=badMask;
+		potmux.pots[pot]=estimate;
+		
+		if((old&CHANGE_DETECT_MASK)!=(estimate&CHANGE_DETECT_MASK))
+		{
+			potmux.potChanged|=(uint32_t)1<<pot;
+			potmux.lastChanged=pot;
+		}
 	}
 }
 
@@ -91,9 +102,20 @@ inline uint16_t potmux_getValue(p600Pot_t pot)
 	return potmux.pots[pot];
 }
 
-void potmux_init(void)
+inline int8_t potmux_hasChanged(p600Pot_t pot)
 {
-	memset(&potmux,0,sizeof(potmux));
+	return (potmux.potChanged&((uint32_t)1<<pot))!=0;
+}
+
+inline p600Pot_t potmux_lastChanged(void)
+{
+	return potmux.lastChanged;
+}
+
+inline void potmux_resetChanged(void)
+{
+	potmux.potChanged=0;
+	potmux.lastChanged=ppNone;
 }
 
 inline void potmux_update(int8_t updateRegular, int8_t updatePriority)
@@ -116,29 +138,8 @@ inline void potmux_update(int8_t updateRegular, int8_t updatePriority)
 	}
 }
 
-p600Pot_t potmux_detectChange(void)
+void potmux_init(void)
 {
-	uint16_t old,new;
-	p600Pot_t pot,res=ppNone;
-	
-	pot=priorityPots[potmux.currentPriorityPotIdx];
-
-	old=potmux.pots[pot]&CHANGE_DETECT_MASK;
-	potmux_update(0,1);
-	new=potmux.pots[pot]&CHANGE_DETECT_MASK;
-
-	if(old!=new)
-		res=pot;
-	
-	pot=potmux.currentRegularPot;
-
-	old=potmux.pots[pot]&CHANGE_DETECT_MASK;
-	potmux_update(1,0);
-	new=potmux.pots[pot]&CHANGE_DETECT_MASK;
-
-	if(old!=new)
-		res=pot;
-
-	return res;
+	memset(&potmux,0,sizeof(potmux));
+	potmux.lastChanged=ppNone;
 }
-

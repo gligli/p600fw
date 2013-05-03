@@ -31,6 +31,8 @@
 #define MIDI_BASE_FINE_CC 96
 #define MIDI_BASE_NOTE 12
 
+#define TICKER_1S 500
+
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
 	ppFreqA,ppMixer,ppAPW,
@@ -54,6 +56,8 @@ const p600Button_t bitParameterToButton[11]=
 
 static struct
 {
+	volatile uint32_t ticker; // 500hz
+	
 	struct adsr_s filEnvs[P600_VOICE_COUNT];
 	struct adsr_s ampEnvs[P600_VOICE_COUNT];
 
@@ -69,7 +73,6 @@ static struct
 
 	MidiDevice midi;
 
-	int16_t benderRawPosition;
 	int16_t benderAmount;
 	int16_t benderCVs[pcFil6-pcOsc1A+1];
 	int16_t benderVolumeCV;
@@ -190,14 +193,7 @@ static void computeBenderCVs(void)
 	uint16_t pos;
 	p600CV_t cv;
 
-	// pot didn't move -> nothing to compute
-	
 	pos=potmux_getValue(ppPitchWheel);
-	
-	if(pos==p600.benderRawPosition)
-		return;
-	
-	p600.benderRawPosition=pos;
 	
 	// compute adjusted bender amount
 	
@@ -496,14 +492,14 @@ static void readManualMode(void)
 		currentPreset.lfoTargets|=1<<modPW;
 }
 
-static inline void modifyPresetPot(p600Pot_t pot)
+static inline void modifyPresetPots(void)
 {
 	continuousParameter_t cp;
 	
 	for(cp=0;cp<cpCount;++cp)
-		if(pot==continuousParameterToPot[cp])
+		if(potmux_hasChanged(continuousParameterToPot[cp]))
 		{
-			currentPreset.continuousParameters[cp]=potmux_getValue(pot);
+			currentPreset.continuousParameters[cp]=potmux_getValue(continuousParameterToPot[cp]);
 
 			p600.presetModified=1;
 			refreshFullState();
@@ -737,9 +733,9 @@ void p600_init(void)
 
 void p600_update(void)
 {
-	int8_t i;
-	p600Pot_t pot=ppNone,p;
+	int8_t i,potChange;
 	static uint8_t frc=0;
+	static uint32_t bendChangeStart=INT32_MAX,tunedChangeStart=INT32_MAX; // force initial change, not UINT32_MAX to avoid overflow
 	
 	// toggle tape out (debug)
 
@@ -750,30 +746,29 @@ void p600_update(void)
 	}
 
 	// update pots, detecting change
-	
-	for(i=0;i<4;++i)
-	{
-		p=potmux_detectChange();
-		if (p!=ppNone)
-			pot=p;
-	}
+
+	potmux_resetChanged();
+	potmux_update(1,1);
+	potmux_update(1,1);
+	potmux_update(1,1);
+	potmux_update(1,1);
 	
 	// act on pot change
 	
 	if(settings.presetBank==pbkManual)
 	{
-		if(pot!=ppNone)
+		if(potmux_lastChanged()!=ppNone)
 		{
 			// display last changed pot value
-			p600.manualDisplayedPot=pot;
+			p600.manualDisplayedPot=potmux_lastChanged();
 		}
 		
 		readManualMode();
 		refreshSevenSeg();
 	}
-	else if(pot!=ppNone)
+	else if(potmux_lastChanged()!=ppNone)
 	{
-		modifyPresetPot(pot);
+		modifyPresetPots();
 	}
 
 	// update CVs
@@ -781,7 +776,7 @@ void p600_update(void)
 	switch(frc&0x03) // 4 phases
 	{
 	case 0:
-		if(pot==ppNone)
+		if(potmux_lastChanged()==ppNone)
 			break;
 		
 		// amplifier envs
@@ -822,6 +817,7 @@ void p600_update(void)
 		
 		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SYNTH_FLAG_IMMEDIATE);
 		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
 		break;
 	case 3:
 		// gates
@@ -845,14 +841,36 @@ void p600_update(void)
 		break;
 	}
 
-	// volume bending
-	
-	synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
-	
 	// CV computations
 
-	computeTunedCVs();
-	computeBenderCVs();
+		// bender
+	
+	potChange=potmux_hasChanged(ppPitchWheel);
+	
+	if(potChange || bendChangeStart+TICKER_1S>p600.ticker)
+	{
+		computeBenderCVs();
+
+		// volume bending
+		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
+		
+		if(potChange)
+			bendChangeStart=p600.ticker;
+	}
+
+		// tuned CVs
+	
+	potChange=potmux_hasChanged(ppPitchWheel) || potmux_hasChanged(ppCutoff) ||
+				potmux_hasChanged(ppFreqA) || potmux_hasChanged(ppFreqB) ||
+				potmux_hasChanged(ppFreqBFine);
+	
+	if(potChange || tunedChangeStart+TICKER_1S>p600.ticker)
+	{
+		computeTunedCVs();
+
+		if(potChange)
+			tunedChangeStart=p600.ticker;
+	}
 }
 
 // 5Khz
@@ -899,6 +917,9 @@ void p600_slowInterrupt(void)
 		
 		// MIDI processing
 		midi_device_process(&p600.midi);
+
+		// ticker inc
+		++p600.ticker;
 		break;
 	case 3:
 		scanner_update(hz63);
@@ -1192,7 +1213,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 			// clear bender CVs, force recompute
 			memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
-			p600.benderRawPosition=~p600.benderRawPosition;
+			computeBenderCVs();
 
 			sevenSeg_scrollText(s,1);
 		}
