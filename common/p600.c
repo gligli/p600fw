@@ -359,18 +359,13 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 		if(sqrB)
 			pb+=p600.lfo.output;
-		
-		BLOCK_INT
-		{
-			synth_setCV32Sat_FastPath(pcAPW,pa);
-			synth_setCV32Sat_FastPath(pcBPW,pb);
-		}
 	}
-	else
+
+	BLOCK_INT
 	{
-		synth_setCV32Sat(pcAPW,pa,SYNTH_FLAG_IMMEDIATE);
-		synth_setCV32Sat(pcBPW,pb,SYNTH_FLAG_IMMEDIATE);
-	}	
+		synth_setCV32Sat_FastPath(pcAPW,pa);
+		synth_setCV32Sat_FastPath(pcBPW,pb);
+	}
 }
 
 static void refreshAssignerSettings(void)
@@ -867,16 +862,6 @@ void p600_update(void)
 		
 		refreshGates();
 
-		// PW
-
-		if(!(currentPreset.lfoTargets&(1<<modPW)))
-		{
-			BLOCK_INT // ensure no conflict with PWM from int
-			{
-				refreshPulseWidth(0);
-			}
-		}
-
 		// glide
 		
 		p600.glideAmount=(UINT16_MAX-currentPreset.continuousParameters[cpGlide])>>5; // 11bit glide
@@ -974,10 +959,7 @@ void p600_timerInterrupt(void)
 	switch(frc&0x03) // 4 phases, each 500hz
 	{
 	case 0:
-		if(currentPreset.lfoTargets&(1<<modPW))
-		{
-			refreshPulseWidth(1);
-		}
+		refreshPulseWidth(currentPreset.lfoTargets&(1<<modPW));
 		break;
 	case 1:
 		if(p600.gliding)
