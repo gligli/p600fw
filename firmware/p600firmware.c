@@ -20,7 +20,7 @@
 #define CPU_125kHz      0x07
 #define CPU_62kHz       0x08
 
-inline void setAddr(uint16_t addr, uint8_t * b, uint8_t * d, uint8_t * e, int8_t io)
+static FORCEINLINE void setAddr(uint16_t addr, uint8_t * b, uint8_t * d, uint8_t * e, int8_t io)
 {
 	uint8_t msb,lsb,vr03,vr05,vr13,vl05; // shifts
 	
@@ -43,7 +43,7 @@ inline void setAddr(uint16_t addr, uint8_t * b, uint8_t * d, uint8_t * e, int8_t
 	*e|=vl05&0xe0;
 }
 
-inline void setData(uint8_t data, uint8_t * c, uint8_t * d, uint8_t * e)
+static FORCEINLINE void setData(uint8_t data, uint8_t * c, uint8_t * d, uint8_t * e)
 {
 	uint8_t vl1,vl2,vr7,vr1,v00; // shifts
 	
@@ -65,7 +65,7 @@ inline void setData(uint8_t data, uint8_t * c, uint8_t * d, uint8_t * e)
 	*e|=vr1&0x02;
 }
 
-inline void setDataDir(int8_t write)
+static FORCEINLINE void setDataDir(int8_t write)
 {
 	if(write)
 	{
@@ -81,7 +81,7 @@ inline void setDataDir(int8_t write)
 	}
 }
 
-inline void setIdle(int8_t fromWrite)
+static FORCEINLINE void setIdle(int8_t fromWrite)
 {
 	PORTF=0xc6;
 	
@@ -91,7 +91,7 @@ inline void setIdle(int8_t fromWrite)
 		PORTC|=0x80;
 }
 
-inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
+static FORCEINLINE void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 {
 	uint8_t b,c,d,e;
 	
@@ -122,7 +122,7 @@ inline void hardware_write(int8_t io, uint16_t addr, uint8_t data)
 	PORTF=0x87;
 }
 
-inline uint8_t hardware_read(int8_t io, uint16_t addr)
+static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 {
 	uint8_t b,c,d,e,v;
 
@@ -206,7 +206,7 @@ inline int8_t hardware_getNMIState(void)
 	return !(PINC&0x10);
 }
 
-void hardware_init(void)
+static FORCEINLINE void hardware_init(void)
 {
 	// LSB->MSB
 	// B: A3-A9,A12
@@ -252,6 +252,66 @@ void hardware_init(void)
 #endif	
 	
 	hardware_read(0,0); // init r/w system
+}
+
+void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
+{
+	int8_t needUpdate;
+	
+	// initialize clock
+	
+	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
+	_delay_ms(2); // actual delay 512 ms when F_OSC is 16000000
+	CPU_PRESCALE(CPU_2MHz);  
+
+	// no interrupts while we init
+	
+	cli();
+	
+	// initialize low level
+
+	hardware_init();
+	
+	// check if we need to go to update mode ("from tape" & "to tape" pressed)
+	
+	hardware_write(1,0x08,0x01);
+	CYCLE_WAIT(20);
+	needUpdate=(io_read(0x0a)&0xc0)==0xc0;
+	CYCLE_WAIT(20);
+	needUpdate&=(io_read(0x0a)&0xc0)==0xc0;
+	
+	if(!needUpdate)
+		return;
+	
+	// show 'U' on the 7seg
+	
+	io_write(0x08,0x40);
+	CYCLE_WAIT(4);
+	io_write(0x09,0x3e);
+	
+	for(;;);
+}
+
+// override __init function to call updater, so that we can check if we need to go to update mode.
+// if we don't, go back to the regular init process
+// this function is in the vectors section to ensure it stays in the first SPM_PAGESIZE block of flash
+void __attribute__((section(".vectors"),naked,used)) __init(void)
+{
+	asm volatile
+	(
+		// init status reg
+		"clr r1 \n\t"
+		"out 0x3f,r1 \n\t" // SREG
+		// init stack
+		"ldi r28,lo8(__stack) \n\t"
+		"ldi r29,hi8(__stack) \n\t"
+		"out 0x3e,r29 \n\t" // SPH
+		"out 0x3d,r28 \n\t" // SPL
+		// call updater
+		"call updater_main \n\t"
+		// back to regular init
+		"jmp __do_clear_bss \n\t"
+	);
 }
 
 void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *buf)
@@ -320,10 +380,6 @@ void storage_read(uint32_t pageIdx, uint8_t *buf)
 
 int main(void)
 {
-	// initialize clock
-	
-	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
-	_delay_ms(1); // actual delay 256 ms when F_OSC is 16000000
 	CPU_PRESCALE(CPU_16MHz);  
 
 #ifdef DEBUG
