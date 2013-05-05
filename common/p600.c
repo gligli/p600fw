@@ -107,22 +107,79 @@ static const char * modulationName(modulation_t m)
 	}
 }
 
-static void computeTunedCVs(void)
+static void computeTunedCVs(int8_t force)
 {
-	uint16_t cva,cvb,cvf,baseAPitch,baseBPitch,baseCutoff;
-	int16_t mTune,fineBFreq;
+	uint16_t cva,cvb,cvf,uVal;
 	uint8_t note,baseCutoffNote,baseANote,baseBNote,trackingNote;
-	int8_t v;
-	
-	// filters and oscs
-	
-	mTune=(potmux_getValue(ppMTune)>>7)+INT8_MIN*2;
-	fineBFreq=(currentPreset.continuousParameters[cpFreqBFine]>>7)+INT8_MIN*2;
-	
-	baseCutoff=((uint32_t)currentPreset.continuousParameters[cpCutoff]*5)>>3; // 62.5% of raw cutoff
-	baseAPitch=currentPreset.continuousParameters[cpFreqA]>>2;
-	baseBPitch=currentPreset.continuousParameters[cpFreqB]>>2;
+	int8_t v,vm,monoMask,bVal;
 
+	uint16_t baseAPitch,baseBPitch,baseCutoff;
+	int16_t mTune,fineBFreq;
+
+	static uint16_t baseAPitchRaw,baseBPitchRaw,baseCutoffRaw,mTuneRaw,fineBFreqRaw;
+	static int8_t track,chrom;
+	
+	// detect change & quit if none
+	
+	uVal=potmux_getValue(ppMTune);
+	if(mTuneRaw!=uVal)
+	{
+		mTuneRaw=uVal;
+		force=1;
+	}
+	
+	uVal=currentPreset.continuousParameters[cpFreqBFine];
+	if(fineBFreqRaw!=uVal)
+	{
+		fineBFreqRaw=uVal;
+		force=1;
+	}
+	
+	uVal=currentPreset.continuousParameters[cpCutoff];
+	if(baseCutoffRaw!=uVal)
+	{
+		baseCutoffRaw=uVal;
+		force=1;
+	}
+	
+	uVal=currentPreset.continuousParameters[cpFreqA];
+	if(baseAPitchRaw!=uVal)
+	{
+		baseAPitchRaw=uVal;
+		force=1;
+	}
+
+	uVal=currentPreset.continuousParameters[cpFreqB];
+	if(baseBPitchRaw!=uVal)
+	{
+		baseBPitchRaw=uVal;
+		force=1;
+	}
+	
+	if(track!=currentPreset.trackingShift)
+	{
+		track=currentPreset.trackingShift;
+		force=1;
+	}
+	
+	bVal=(currentPreset.bitParameters&bpChromaticPitch)!=0;
+	if(chrom!=bVal)
+	{
+		chrom=bVal;
+		force=1;
+	}
+	
+	if(!force)
+		return;
+
+	// compute for oscs & filters
+	
+	mTune=(mTuneRaw>>7)+INT8_MIN*2;
+	fineBFreq=(fineBFreqRaw>>7)+INT8_MIN*2;
+	baseCutoff=((uint32_t)baseCutoffRaw*5)>>3; // 62.5% of raw cutoff
+	baseAPitch=baseAPitchRaw>>2;
+	baseBPitch=baseBPitchRaw>>2;
+	
 	baseCutoffNote=baseCutoff>>8;
 	baseANote=baseAPitch>>8; // 64 semitones
 	baseBNote=baseBPitch>>8;
@@ -158,23 +215,19 @@ static void computeTunedCVs(void)
 			
 		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]);
 		
-		if(currentPreset.trackingShift<0)
-			p600.filterNoteCV[v]=cvf; // no glide if no tracking
-
+		// glide
+		
 		if(p600.gliding)
 		{
-			if(assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh)
-			{
-				p600.oscATargetCV[P600_MONO_ENV]=cva;
-				p600.oscBTargetCV[P600_MONO_ENV]=cvb;
-				p600.filterTargetCV[P600_MONO_ENV]=cvf;
-			}
-			else
-			{
-				p600.oscATargetCV[v]=cva;
-				p600.oscBTargetCV[v]=cvb;
-				p600.filterTargetCV[v]=cvf;
-			}
+			monoMask=(assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh)?0x00:0xff;
+			vm=v&monoMask;			
+
+			p600.oscATargetCV[vm]=cva;
+			p600.oscBTargetCV[vm]=cvb;
+			p600.filterTargetCV[vm]=cvf;
+
+			if(currentPreset.trackingShift<0)
+				p600.filterNoteCV[v]=cvf; // no glide if no tracking for filter
 		}
 		else			
 		{
@@ -259,34 +312,6 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 	}
 }
 
-static void muteVoice(int8_t v,int8_t mute)
-{
-	synth_setCV(pcAmp1+v,0,SYNTH_FLAG_IMMEDIATE); // close VCA
-	
-	if(mute)
-	{
-		// closing the VCA should theoretically be enough to silence a voice
-		// but in practice it's not, so close the filter, and make oscs
-		// emit a high pitch, so that it's filtered out
-
-		// if it's not oscillating, close the filter (not too much, to avoid glitches on unmute)
-		if (currentPreset.continuousParameters[cpResonance]<UINT16_MAX/2) 
-			synth_setCV(pcFil1+v,UINT16_MAX/4,SYNTH_FLAG_IMMEDIATE);
-		
-		synth_setCV(pcOsc1A+v,UINT16_MAX,SYNTH_FLAG_IMMEDIATE); // high pitch for Osc A
-		synth_setCV(pcOsc1B+v,UINT16_MAX,SYNTH_FLAG_IMMEDIATE); // high pitch for Osc B
-	}
-	else
-	{
-		// pre-set rough pitches, to avoid tiny portamento-like glitches
-		// when the voice actually starts
-		
-		synth_setCV(pcOsc1A+v,p600.oscANoteCV[v],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcOsc1B+v,p600.oscBNoteCV[v],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcFil1+v,p600.filterNoteCV[v],SYNTH_FLAG_IMMEDIATE);
-	}
-}
-
 static void handleFinishedVoices(void)
 {
 	int8_t v,poly;
@@ -296,15 +321,8 @@ static void handleFinishedVoices(void)
 	// when amp env finishes, voice is done
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
-		if (assigner_getAssignment(v,NULL))
-		{
-			if(adsr_getStage(&p600.ampEnvs[poly?v:P600_MONO_ENV])==sWait)
-				assigner_voiceDone(v);
-		}
-		else
-		{
-			muteVoice(v,1);
-		}	
+		if(assigner_getAssignment(v,NULL) && adsr_getStage(&p600.ampEnvs[poly?v:P600_MONO_ENV])==sWait)
+			assigner_voiceDone(v);
 }
 
 static void refreshGates(void)
@@ -323,7 +341,7 @@ static inline void refreshPulseWidth(int8_t pwm)
 {
 	int32_t pa,pb;
 	
-	pa=pb=0;
+	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
 
 	int8_t sqrA=currentPreset.bitParameters&bpASqr;
 	int8_t sqrB=currentPreset.bitParameters&bpBSqr;
@@ -557,33 +575,31 @@ static inline void modifyPresetButton(p600Button_t button)
 }
 
 
-static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t poly)
+static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t polyMask)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
 	int8_t assigned,envVoice,pitchVoice;
 	
+	envVoice=v&polyMask;
+
 	assigned=assigner_getAssignment(v,NULL);
-
-	if(assigned)
+	
+	BLOCK_INT
 	{
-		envVoice=P600_MONO_ENV;
-
-		if(poly)
+		if(assigned)
 		{
-			// handle envs update
-			adsr_update(&p600.filEnvs[v]);
-			adsr_update(&p600.ampEnvs[v]);
+			if(polyMask)
+			{
+				// handle envs update
+				adsr_update(&p600.filEnvs[v]);
+				adsr_update(&p600.ampEnvs[v]);
+			}
 
-			envVoice=v;
-		}
+			pitchVoice=v&monoGlidingMask;
 
-		pitchVoice=v&monoGlidingMask;
+			// compute CVs & apply them
 
-		// compute CVs & apply them
-
-		BLOCK_INT
-		{
 			envVal=p600.filEnvs[envVoice].output;
 
 			va=vb=pitchLfoVal;
@@ -602,6 +618,10 @@ static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt
 			synth_setCV32Sat_FastPath(pcFil1+v,vf);
 
 			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[envVoice].output);
+		}
+		else
+		{
+			synth_setCV_FastPath(pcAmp1+v,0);
 		}
 	}
 }
@@ -759,9 +779,9 @@ void p600_init(void)
 
 void p600_update(void)
 {
-	int8_t i,potChange;
+	int8_t i,wheelChange,wheelUpdate;
 	static uint8_t frc=0;
-	static uint32_t bendChangeStart=INT32_MAX,tunedChangeStart=INT32_MAX; // force initial change, not UINT32_MAX to avoid overflow
+	static uint32_t bendChangeStart=INT32_MAX; // force initial change, not UINT32_MAX to avoid overflow
 	
 	// toggle tape out (debug)
 
@@ -868,32 +888,23 @@ void p600_update(void)
 
 		// bender
 	
-	potChange=potmux_hasChanged(ppPitchWheel);
+	wheelChange=potmux_hasChanged(ppPitchWheel);
+	wheelUpdate=wheelChange || bendChangeStart+TICKER_1S>p600.ticker;
 	
-	if(potChange || bendChangeStart+TICKER_1S>p600.ticker)
+	if(wheelUpdate)
 	{
 		computeBenderCVs();
 
 		// volume bending
 		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
 		
-		if(potChange)
+		if(wheelChange)
 			bendChangeStart=p600.ticker;
 	}
 
 		// tuned CVs
-	
-	potChange=potmux_hasChanged(ppPitchWheel) || potmux_hasChanged(ppCutoff) ||
-				potmux_hasChanged(ppFreqA) || potmux_hasChanged(ppFreqB) ||
-				potmux_hasChanged(ppFreqBFine);
-	
-	if(potChange || tunedChangeStart+TICKER_1S>p600.ticker)
-	{
-		computeTunedCVs();
 
-		if(potChange)
-			tunedChangeStart=p600.ticker;
-	}
+	computeTunedCVs(wheelUpdate);
 }
 
 void p600_uartInterrupt(void)
@@ -906,7 +917,7 @@ void p600_timerInterrupt(void)
 {
 	int32_t va,vf;
 	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
-	int8_t v,hz63,poly,monoGlidingMask;
+	int8_t v,hz63,polyMask,monoGlidingMask;
 
 	static uint8_t frc=0;
 
@@ -938,10 +949,10 @@ void p600_timerInterrupt(void)
 	
 	// per voice stuff
 	
-	poly=assigner_getMode()==mPoly;
+	polyMask=(assigner_getMode()==mPoly)?0xff:0x00;
 	monoGlidingMask=((assigner_getMode()==mMonoLow || assigner_getMode()==mMonoHigh) && p600.gliding)?0x00:0xff;
 	
-	if(!poly)
+	if(!polyMask)
 	{
 		// in any mono mode, env is always P600_MONO_ENV
 		adsr_update(&p600.filEnvs[P600_MONO_ENV]);
@@ -949,12 +960,12 @@ void p600_timerInterrupt(void)
 	}
 	
 		// P600_VOICE_COUNT calls
-	updateVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
-	updateVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
-	updateVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
-	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
-	updateVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
-	updateVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,poly);
+	updateVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	updateVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	updateVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	updateVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	updateVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
 	
 	// slower updates
 
@@ -1249,25 +1260,22 @@ void p600_keyEvent(uint8_t key, int pressed)
 
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 {
-	int8_t env,v;
+	int8_t env;
 	
 	// prepare CVs
 	
-	computeTunedCVs();
+	computeTunedCVs(1);
 	
-	// unmute voices on gate on
+	// prepare voices on gate on
 
-	if(gate)
+	if(gate && voice>=0)
 	{
-		if(voice==-1)
-		{
-			for(v=0;v<P600_VOICE_COUNT;++v)
-				muteVoice(v,0);
-		}
-		else
-		{
-			muteVoice(voice,0);
-		}
+		// pre-set rough pitches, to avoid tiny portamento-like glitches
+		// when the voice actually starts
+
+		synth_setCV(pcOsc1A+voice,p600.oscANoteCV[voice],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcOsc1B+voice,p600.oscBNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcFil1+voice,p600.filterNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
 	}
 	
 	// set gates
