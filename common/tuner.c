@@ -106,12 +106,14 @@ static NOINLINE void ffWaitStatus(uint8_t status)
 	if (!timeout)
 	{
 		++ff_timeoutCount;
+#ifdef DEBUG
 		print("bad flip flop status : ");
 		phex(ff_step);
 		phex(s);
 		print(" timeout count : ");
 		phex(ff_timeoutCount);
 		print("\n");
+#endif	
 	}
 }
 

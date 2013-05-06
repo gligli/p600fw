@@ -30,13 +30,17 @@ void uart_update(void)
 
 		if(!(status&0x80))
 		{
+#ifdef DEBUG
 			print("Error: NMI asserted, no UART IRQ\n");
+#endif	
 			return;
 		}
 
 		if(!(status&0x01))
 		{
+#ifdef DEBUG
 			print("Error: UART IRQ without data\n");
+#endif	
 			return;
 		}
 
@@ -45,14 +49,18 @@ void uart_update(void)
 
 		if(status&0x10)
 		{
+#ifdef DEBUG
 			print("Error: UART framing error\n");
+#endif	
 			uart_init();
 			return;
 		}
 
 		if(status&0x20)
 		{
+#ifdef DEBUG
 			print("Warning: UART overrun\n");
+#endif	
 		}
 
 		p600_uartEvent(data);

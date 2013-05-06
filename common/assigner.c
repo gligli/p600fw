@@ -116,7 +116,9 @@ static int8_t getVoiceFromNote(uint8_t note)
 		return assigner.timestamp%P600_VOICE_COUNT;
 	}
 
+#ifdef DEBUG
 	print("Warning: assigner_getVoiceFromNote found no voice!\n"); 
+#endif	
 	return -2;
 }
 

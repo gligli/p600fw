@@ -106,7 +106,9 @@ static void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 
 	if(storageRead32()!=STORAGE_MAGIC)
 	{
+#ifdef DEBUG
 		print("Error: bad page !\n"); 
+#endif	
 		memset(temp,0,sizeof(temp));
 		return;
 	}
@@ -128,7 +130,9 @@ static void storageFinishStore(uint16_t pageIdx, uint8_t pageCount)
 {
 	if((tempPtr-temp)>sizeof(temp))
 	{
+#ifdef DEBUG
 		print("Error: writing too much data to storage !\n"); 
+#endif	
 		return;
 	}
 	
