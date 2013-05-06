@@ -75,7 +75,7 @@ static int8_t findOldest(uint8_t note)
 	return v;
 }
 
-static void setVoices(int8_t voice, uint32_t timestamp, uint8_t note, int8_t gate)
+static void setVoices(int8_t voice, uint32_t timestamp, uint8_t note, int8_t gate, uint16_t velocity)
 {
 	if(voice>=0)
 	{
@@ -94,7 +94,7 @@ static void setVoices(int8_t voice, uint32_t timestamp, uint8_t note, int8_t gat
 	}
 
 	if(note!=ASSIGNER_NO_NOTE)
-		p600_assignerEvent(note,gate,voice);
+		p600_assignerEvent(note,gate,voice,velocity);
 }
 
 static int8_t getVoiceFromNote(uint8_t note)
@@ -163,7 +163,7 @@ inline assignerMode_t assigner_getMode(void)
 	return assigner.mode;
 }
 
-void assigner_assignNote(uint8_t note, int8_t on)
+void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity)
 {
 	int8_t voice=-1;
 	
@@ -178,7 +178,7 @@ void assigner_assignNote(uint8_t note, int8_t on)
 			// on note on, if we have less than 6 pressed notes (timestamp=UINT32_MAX), assign new note
 			
 			if (voice>=0)
-				setVoices(voice,UINT32_MAX,note,1);
+				setVoices(voice,UINT32_MAX,note,1,velocity);
 		}
 		else
 		{
@@ -192,7 +192,7 @@ void assigner_assignNote(uint8_t note, int8_t on)
 				if(assigner_getAssignment(voice,NULL))
 					assigner_voiceDone(voice);
 
-				setVoices(voice,++assigner.timestamp,note,0);
+				setVoices(voice,++assigner.timestamp,note,0,velocity);
 			}
 		}
 	}
@@ -253,16 +253,16 @@ void assigner_assignNote(uint8_t note, int8_t on)
 		}
 
 		// assign new note
-		setVoices(voice,1,note,gate);
+		setVoices(voice,1,note,gate,velocity);
 	}
 }
 
 void assigner_voiceDone(int8_t voice)
 {
 	if(assigner.mode!=mPoly)
-		setVoices(-1,0,ASSIGNER_NO_NOTE,0);
+		setVoices(-1,0,ASSIGNER_NO_NOTE,0,0);
 	else
-		setVoices(voice,0,ASSIGNER_NO_NOTE,0);
+		setVoices(voice,0,ASSIGNER_NO_NOTE,0,0);
 }
 
 void assigner_init(void)

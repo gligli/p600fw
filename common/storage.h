@@ -15,6 +15,7 @@ typedef enum
 	cpPModFilEnv=18,cpPModOscB=19,
 	cpLFOFreq=20,cpLFOAmt=21,
 	cpGlide=22,
+	cpAmpVelocity=23,cpFilVelocity=24,
 
 	// /!\ this must stay last
 	cpCount

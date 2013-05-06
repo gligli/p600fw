@@ -218,7 +218,7 @@ int8_t preset_loadCurrent(uint16_t number)
 		currentPreset.bitParameters=storageRead32();
 		
 		continuousParameter_t cp;
-		for(cp=cpFreqA;cp<=cpGlide;++cp)
+		for(cp=cpFreqA;cp<=cpFilVelocity;++cp)
 			currentPreset.continuousParameters[cp]=storageRead16();
 
 		currentPreset.envFlags[0]=storageRead8();
@@ -252,7 +252,7 @@ void preset_saveCurrent(uint16_t number)
 		storageWrite32(currentPreset.bitParameters);
 		
 		continuousParameter_t cp;
-		for(cp=cpFreqA;cp<=cpGlide;++cp)
+		for(cp=cpFreqA;cp<=cpFilVelocity;++cp)
 			storageWrite16(currentPreset.continuousParameters[cp]);
 
 		storageWrite8(currentPreset.envFlags[0]);

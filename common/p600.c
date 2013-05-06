@@ -642,7 +642,7 @@ void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,velocity!=0);
+	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1);
 }
 
 void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -661,7 +661,7 @@ void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,0);
+	assigner_assignNote(intNote,0,0);
 }
 
 void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -678,6 +678,9 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 	phex(value);
 	print("\n");
 #endif
+	
+	if(settings.presetBank==pbkManual) // in manual mode CC changes would only conflict with pot scans...
+		return;
 	
 	if(control>=MIDI_BASE_COARSE_CC && control<MIDI_BASE_COARSE_CC+cpCount)
 	{
@@ -701,6 +704,8 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 			currentPreset.bitParameters|=(uint32_t)1<<param;
 		else
 			currentPreset.bitParameters&=~((uint32_t)1<<param);
+		
+		refreshFullState();
 	}
 }
 
@@ -719,6 +724,8 @@ void p600_init(void)
 	currentPreset.benderTarget=modPitch;
 	currentPreset.envFlags[0]=ENV_EXPO;
 	currentPreset.envFlags[1]=ENV_EXPO;
+	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX;
+	currentPreset.continuousParameters[cpFilVelocity]=0;
 	p600.presetDigitInput=pdiNone;
 	p600.presetAwaitingNumber=-1;
 	p600.manualDisplayedPot=ppNone;
@@ -756,7 +763,7 @@ void p600_init(void)
 
 	if(!settingsOk)
 	{
-#ifndef DEBUG
+#ifndef DEBUG_
 		tuner_tuneSynth();
 #endif		
 	}
@@ -825,7 +832,7 @@ void p600_update(void)
 					 currentPreset.continuousParameters[cpAmpDec],
 					 currentPreset.continuousParameters[cpAmpSus],
 					 currentPreset.continuousParameters[cpAmpRel],
-					 UINT16_MAX);
+					 0,0x0f);
 
 		// filter envs
 
@@ -835,7 +842,7 @@ void p600_update(void)
 					 currentPreset.continuousParameters[cpFilDec],
 					 currentPreset.continuousParameters[cpFilSus],
 					 currentPreset.continuousParameters[cpFilRel],
-					 UINT16_MAX);
+					 0,0x0f);
 
 		// lfo
 		
@@ -1237,12 +1244,13 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 void p600_keyEvent(uint8_t key, int pressed)
 {
-	assigner_assignNote(key,pressed);
+	assigner_assignNote(key,pressed,UINT16_MAX);
 }
 
-void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
+void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity)
 {
 	int8_t env;
+	uint16_t velAmt;
 	
 	// prepare CVs
 	
@@ -1269,6 +1277,14 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 	adsr_setGate(&p600.filEnvs[env],gate);
 	adsr_setGate(&p600.ampEnvs[env],gate);
 	
+	if(gate)
+	{
+		velAmt=currentPreset.continuousParameters[cpFilVelocity];
+		adsr_setCVs(&p600.filEnvs[env],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
+		velAmt=currentPreset.continuousParameters[cpAmpVelocity];
+		adsr_setCVs(&p600.ampEnvs[env],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
+	}
+	
 #ifdef DEBUG
 	print("assign note ");
 	phex(note);
@@ -1276,6 +1292,8 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice)
 	phex(gate);
 	print(" voice ");
 	phex(voice);
+	print(" velocity ");
+	phex16(velocity);
 	print("\n");
 #endif
 }

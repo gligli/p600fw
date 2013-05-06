@@ -25,7 +25,7 @@ struct adsr_s
 	adsrStage_t stage;
 };
 
-void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl);
+void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl, uint8_t mask);
 void adsr_setGate(struct adsr_s * adsr, int8_t gate);
 
 void adsr_setShape(struct adsr_s * adsr, int8_t isExp);

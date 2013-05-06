@@ -110,13 +110,22 @@ static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], in
 		return phase>>8; // 20bit -> 16 bit
 }
 
-NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl)
+NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl, uint8_t mask)
 {
-	adsr->attackCV=atk;
-	adsr->decayCV=dec;
-	adsr->sustainCV=sus;
-	adsr->releaseCV=rls;
-	adsr->levelCV=lvl;
+	if(mask&0x01)
+		adsr->attackCV=atk;
+	
+	if(mask&0x02)
+		adsr->decayCV=dec;
+	
+	if(mask&0x04)
+		adsr->sustainCV=sus;
+	
+	if(mask&0x08)
+		adsr->releaseCV=rls;
+	
+	if(mask&0x10)
+		adsr->levelCV=lvl;
 
 	updateIncrements(adsr);
 }
