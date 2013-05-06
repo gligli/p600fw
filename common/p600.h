@@ -11,7 +11,7 @@
 #ifndef DEBUG
 	#define VERSION "alpha "__DATE__
 #else
-	#define VERSION "debug "__DATE__
+	#define VERSION "debug "__DATE__ " " __TIME__
 #endif
 
 #define P600_VOICE_COUNT 6

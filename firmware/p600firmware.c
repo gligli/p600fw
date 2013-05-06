@@ -2,6 +2,7 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <util/crc16.h>
 #include <string.h>
 #include "usb_debug_only.h"
 #include "print.h"
@@ -206,7 +207,7 @@ inline int8_t hardware_getNMIState(void)
 	return !(PINC&0x10);
 }
 
-static FORCEINLINE void hardware_init(void)
+static FORCEINLINE void hardware_init(int8_t ints)
 {
 	// LSB->MSB
 	// B: A3-A9,A12
@@ -233,85 +234,28 @@ static FORCEINLINE void hardware_init(void)
 	DDRE=0b11100000;
 	DDRF=0b11100011;
 	
-	// prepare a 2Khz interrupt
-	
-	OCR0A=124;
-	TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
-	TCCR0B|=(1<<CS01) | (1<<CS00);  //Timer 0 prescaler = 64
-	TIMSK0|=(1<<OCIE0A); //Enable overflow interrupt for Timer0
+	if(ints)
+	{
+		// prepare a 2Khz interrupt
+
+		OCR0A=124;
+		TCCR0A|=(1<<WGM01); //Timer 0 Clear-Timer on Compare (CTC) 
+		TCCR0B|=(1<<CS01) | (1<<CS00);  //Timer 0 prescaler = 64
+		TIMSK0|=(1<<OCIE0A); //Enable overflow interrupt for Timer0
 
 #ifdef UART_USE_HW_INTERRUPT	
-	EIMSK|=(1<<INT4); // enable INT4
+		EIMSK|=(1<<INT4); // enable INT4
 #else
-	// prepare a 5Khz interrupt
-	
-	OCR2A=49;
-	TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
-	TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
-	TIMSK2|=(1<<OCIE2A); //Enable overflow interrupt for Timer2
+		// prepare a 5Khz interrupt
+
+		OCR2A=49;
+		TCCR2A|=(1<<WGM21); //Timer 2 Clear-Timer on Compare (CTC) 
+		TCCR2B|=(1<<CS22);  //Timer 2 prescaler = 64
+		TIMSK2|=(1<<OCIE2A); //Enable overflow interrupt for Timer2
 #endif	
+	}
 	
 	hardware_read(0,0); // init r/w system
-}
-
-void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
-{
-	int8_t needUpdate;
-	
-	// initialize clock
-	
-	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
-	_delay_ms(2); // actual delay 512 ms when F_OSC is 16000000
-	CPU_PRESCALE(CPU_2MHz);  
-
-	// no interrupts while we init
-	
-	cli();
-	
-	// initialize low level
-
-	hardware_init();
-	
-	// check if we need to go to update mode ("from tape" & "to tape" pressed)
-	
-	hardware_write(1,0x08,0x01);
-	CYCLE_WAIT(20);
-	needUpdate=(io_read(0x0a)&0xc0)==0xc0;
-	CYCLE_WAIT(20);
-	needUpdate&=(io_read(0x0a)&0xc0)==0xc0;
-	
-	if(!needUpdate)
-		return;
-	
-	// show 'U' on the 7seg
-	
-	io_write(0x08,0x40);
-	CYCLE_WAIT(4);
-	io_write(0x09,0x3e);
-	
-	for(;;);
-}
-
-// override __init function to call updater, so that we can check if we need to go to update mode.
-// if we don't, go back to the regular init process
-// this function is in the vectors section to ensure it stays in the first SPM_PAGESIZE block of flash
-void __attribute__((section(".vectors"),naked,used)) __init(void)
-{
-	asm volatile
-	(
-		// init status reg
-		"clr r1 \n\t"
-		"out 0x3f,r1 \n\t" // SREG
-		// init stack
-		"ldi r28,lo8(__stack) \n\t"
-		"ldi r29,hi8(__stack) \n\t"
-		"out 0x3e,r29 \n\t" // SPH
-		"out 0x3d,r28 \n\t" // SPL
-		// call updater
-		"call updater_main \n\t"
-		// back to regular init
-		"jmp __do_clear_bss \n\t"
-	);
 }
 
 void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *buf)
@@ -350,6 +294,202 @@ void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *bu
 	// Re-enable interrupts (if they were ever enabled).
 
 	SREG = sreg;
+}
+
+static int16_t NOINLINE BOOTLOADER_SECTION getMidiByte(void)
+{
+	uint8_t data,status;
+
+	CYCLE_WAIT(4);
+
+	while(PINC&0x10) // wait for NMI
+		CYCLE_WAIT(1);
+	
+	status=hardware_read(0,0xe000); // read UART status
+	CYCLE_WAIT(4);
+
+	if ((status&0b10110001)!=0b10000001) // detect errors
+		return -1;
+
+	data=hardware_read(0,0xe001); // get byte
+	CYCLE_WAIT(4);
+	
+	return data;
+}
+
+#define UPDATER_GET_BYTE { b=getMidiByte(); if(b<0) break; }
+#define UPDATER_WAIT_BYTE(waited) { UPDATER_GET_BYTE; if(b!=(waited)) break; }
+#define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=_crc_xmodem_update(crc,b); }
+
+void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
+{
+	int8_t i,needUpdate,success=0;
+	uint8_t frc=0;
+	int16_t b;
+	uint16_t crc,pageIdx,pageSize,crcSent,byteIdx;
+	static uint8_t page[SPM_PAGESIZE];
+	uint8_t awaiting[4];
+	
+	// initialize clock
+	
+	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
+	_delay_ms(2); // actual delay 512 ms
+	CPU_PRESCALE(CPU_4MHz);  
+	_delay_ms(25); // actual delay 100 ms
+
+	// no interrupts while we update
+	
+	cli();
+	
+	// initialize low level
+
+	hardware_init(0);
+	
+	// check if we need to go to update mode ("from tape" & "to tape" pressed)
+	
+	hardware_write(1,0x08,0x01);
+	CYCLE_WAIT(10);
+	needUpdate=(hardware_read(1,0x0a)&0xc0)==0xc0;
+	CYCLE_WAIT(10);
+	needUpdate&=(hardware_read(1,0x0a)&0xc0)==0xc0;
+	CYCLE_WAIT(10);
+	
+	if(!needUpdate)
+		return;
+	
+	// select left 7seg 
+	
+	hardware_write(1,0x08,0x20);
+	CYCLE_WAIT(8);
+	
+	// init 6850
+	
+	hardware_write(0,0x6000,0b00000011); // master reset
+	MDELAY(1);
+	
+	hardware_write(0,0x6000,0b10010101); // clock/16 - 8N1 - receive int
+	CYCLE_WAIT(8);
+	
+	hardware_read(0,0xe000); // read status to start the device
+	CYCLE_WAIT(8);
+	
+	// main loop
+	
+	for(;;)
+	{
+		// init
+		crc=0;
+		
+		// show 'U' with blinking dot on the 7seg
+		hardware_write(1,0x09,0x3e|((frc&1)?0x80:0x00));
+		CYCLE_WAIT(8);
+		
+		// wait for sysex begin
+		UPDATER_GET_BYTE;
+		if(b!=0xf0)
+			continue;
+		
+		// check for my ID (0x006116)
+		UPDATER_WAIT_BYTE(0x00)
+		UPDATER_WAIT_BYTE(0x61) 
+		UPDATER_WAIT_BYTE(0x16) 
+		
+		// check for update command
+		UPDATER_WAIT_BYTE(0x6b) 
+		
+		// get page size, 0 indicates end of transmission
+		UPDATER_CRC_BYTE
+		pageSize=(b&0x7f)<<7;
+		UPDATER_CRC_BYTE
+		pageSize|=b&0x7f;
+		
+		if(pageSize!=SPM_PAGESIZE)
+		{
+			success=pageSize==0;
+			break;
+		}
+		
+		// get page ID
+		UPDATER_CRC_BYTE
+		pageIdx=(b&0x7f)<<7;
+		UPDATER_CRC_BYTE
+		pageIdx|=b&0x7f;
+		
+		// get data
+		byteIdx=0;
+		for(i=0;i<SPM_PAGESIZE/sizeof(awaiting);++i)
+		{
+			// get low 7bits of 4 bytes
+			UPDATER_CRC_BYTE
+			awaiting[0]=b&0x7f;
+			UPDATER_CRC_BYTE
+			awaiting[1]=b&0x7f;
+			UPDATER_CRC_BYTE
+			awaiting[2]=b&0x7f;
+			UPDATER_CRC_BYTE
+			awaiting[3]=b&0x7f;
+
+			// msbs of 4 bytes
+			UPDATER_CRC_BYTE
+			awaiting[0]|=(b&1)<<7;
+			awaiting[1]|=(b&2)<<6;
+			awaiting[2]|=(b&4)<<5;
+			awaiting[3]|=(b&8)<<4;
+
+			// copy to page
+			page[byteIdx++]=awaiting[0];
+			page[byteIdx++]=awaiting[1];
+			page[byteIdx++]=awaiting[2];
+			page[byteIdx++]=awaiting[3];
+		}
+		
+		// check crc
+		UPDATER_GET_BYTE
+		crcSent=(b&0x7f)<<9;
+		UPDATER_GET_BYTE
+		crcSent|=(b&0x7f)<<2;
+		UPDATER_GET_BYTE
+		crcSent|=b&0x03;
+		
+		if(crcSent!=crc)
+			break;
+		
+		// sysex termination
+		UPDATER_WAIT_BYTE(0xf7)
+		
+		// program page
+		blHack_program_page(pageIdx*SPM_PAGESIZE,page);
+		
+		++frc;
+	}
+	
+	// show 'S' or 'E' on the 7seg, depending on success or error
+	hardware_write(1,0x09,(success)?0x6d:0x79);
+
+	// loop infinitely
+	for(;;);
+}
+
+// override __init function to call updater, so that we can check if we need to go to update mode.
+// if we don't, go back to the regular init process
+// this function is in the vectors section to ensure it stays in the first SPM_PAGESIZE block of flash
+void __attribute__((section(".vectors"),naked,used)) __init(void)
+{
+	asm volatile
+	(
+		// init status reg
+		"clr r1 \n\t"
+		"out 0x3f,r1 \n\t" // SREG
+		// init stack
+		"ldi r28,lo8(__stack) \n\t"
+		"ldi r29,hi8(__stack) \n\t"
+		"out 0x3e,r29 \n\t" // SPH
+		"out 0x3d,r28 \n\t" // SPL
+		// call updater
+		"call updater_main \n\t"
+		// back to regular init
+		"jmp __do_clear_bss \n\t"
+	);
 }
 
 // just before the bootloader zone
@@ -404,7 +544,7 @@ int main(void)
 	
 	// initialize low level
 
-	hardware_init();
+	hardware_init(1);
 
 	// initialize synth code
 
