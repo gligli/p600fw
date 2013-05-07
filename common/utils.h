@@ -7,7 +7,7 @@
 #include <float.h>
 #include <math.h>
 
-#define FORCEINLINE __attribute__((always_inline))
+#define FORCEINLINE inline __attribute__((always_inline))
 #define NOINLINE __attribute__ ((noinline)) 
 
 #define MAX(a,b) (((a)>(b))?(a):(b))

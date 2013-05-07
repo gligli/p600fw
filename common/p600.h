@@ -5,7 +5,7 @@
 #include "print.h"
 #include "hardware.h"
 
-//#define DEBUG
+#define DEBUG
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
@@ -62,9 +62,14 @@ typedef enum
 	modOff=0,modPitch=1,modFilter=2,modVolume=3,modPW=4,modResonance=5,modMixer=6
 } modulation_t;
 
+typedef enum
+{
+	mtNone=0,mtPitch=1,mtPW=2,mtFilter=4
+} modulationTarget_t;
+
 void p600_buttonEvent(p600Button_t button, int pressed);
 void p600_keyEvent(uint8_t key, int pressed);
-void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice); // -1 -> unison
+void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity); // voice -1 is unison
 void p600_uartEvent(uint8_t data);
 
 void p600_init(void);

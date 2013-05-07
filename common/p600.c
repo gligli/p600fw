@@ -22,10 +22,7 @@
 
 #define P600_MONO_ENV 0 // informative constant, don't change it!
 
-#define ENV_EXPO 1
-#define ENV_SLOW 2
-
-#define MIDI_BASE_SWITCH_CC 40
+#define MIDI_BASE_STEPPED_CC 32
 #define MIDI_BASE_COARSE_CC 64
 #define MIDI_BASE_FINE_CC 96
 #define MIDI_BASE_NOTE 12
@@ -42,15 +39,6 @@ const p600Pot_t continuousParameterToPot[cpCount]=
 	ppPModFilEnv,ppPModOscB,
 	ppLFOFreq,ppLFOAmt,
 	ppSpeed,
-};
-
-const p600Button_t bitParameterToButton[11]=
-{
-	pbASaw,pbATri,pbASqr,pbSync,
-	pbBSaw,pbBTri,pbBSqr,
-	pbPModFA,pbPModFil,
-	pbLFOShape,
-	pbUnison,
 };
 
 static struct
@@ -111,13 +99,13 @@ static void computeTunedCVs(int8_t force)
 {
 	uint16_t cva,cvb,cvf,uVal;
 	uint8_t note,baseCutoffNote,baseANote,baseBNote,trackingNote;
-	int8_t v,vm,monoMask,bVal;
+	int8_t v,vm,monoMask;
 
 	uint16_t baseAPitch,baseBPitch,baseCutoff;
 	int16_t mTune,fineBFreq;
 
 	static uint16_t baseAPitchRaw,baseBPitchRaw,baseCutoffRaw,mTuneRaw,fineBFreqRaw;
-	static int8_t track,chrom;
+	static uint8_t track,chrom;
 	
 	// detect change & quit if none
 	
@@ -156,16 +144,15 @@ static void computeTunedCVs(int8_t force)
 		force=1;
 	}
 	
-	if(track!=currentPreset.trackingShift)
+	if(track!=currentPreset.steppedParameters[spTrackingShift])
 	{
-		track=currentPreset.trackingShift;
+		track=currentPreset.steppedParameters[spTrackingShift];
 		force=1;
 	}
 	
-	bVal=(currentPreset.bitParameters&bpChromaticPitch)!=0;
-	if(chrom!=bVal)
+	if(chrom!=currentPreset.steppedParameters[spChromaticPitch])
 	{
-		chrom=bVal;
+		chrom=currentPreset.steppedParameters[spChromaticPitch];
 		force=1;
 	}
 	
@@ -186,7 +173,7 @@ static void computeTunedCVs(int8_t force)
 	
 	baseCutoff&=0xff;
 	
-	if(currentPreset.bitParameters&bpChromaticPitch)
+	if(chrom)
 	{
 		baseAPitch=0;
 		baseBPitch=0;
@@ -210,8 +197,8 @@ static void computeTunedCVs(int8_t force)
 		// filter
 		
 		trackingNote=baseCutoffNote;
-		if(currentPreset.trackingShift>=0)
-			trackingNote+=note>>currentPreset.trackingShift;
+		if(track)
+			trackingNote+=note>>(2-track);
 			
 		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]);
 		
@@ -226,7 +213,7 @@ static void computeTunedCVs(int8_t force)
 			p600.oscBTargetCV[vm]=cvb;
 			p600.filterTargetCV[vm]=cvf;
 
-			if(currentPreset.trackingShift<0)
+			if(!track)
 				p600.filterNoteCV[v]=cvf; // no glide if no tracking for filter
 		}
 		else			
@@ -267,26 +254,26 @@ static void computeBenderCVs(void)
 	
 	// compute bends
 	
-	switch(currentPreset.benderTarget)
+	switch(currentPreset.steppedParameters[spBenderTarget])
 	{
 	case modPitch:
 		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 		{
-			bend=tuner_computeCVFromNote(currentPreset.benderSemitones*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
+			bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
 			bend*=p600.benderAmount;
 			bend/=UINT16_MAX;
 			p600.benderCVs[cv]=bend;
 		}
 		break;
 	case modFilter:
-		bend=currentPreset.benderSemitones;
+		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=p600.benderAmount;
 		bend/=12;
 		for(cv=pcFil1;cv<=pcFil6;++cv)
 			p600.benderCVs[cv]=bend;
 		break;
 	case modVolume:
-		bend=currentPreset.benderSemitones;
+		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=p600.benderAmount;
 		bend/=12;
 		p600.benderVolumeCV=bend;
@@ -327,13 +314,13 @@ static void handleFinishedVoices(void)
 
 static void refreshGates(void)
 {
-	synth_setGate(pgASaw,(currentPreset.bitParameters&bpASaw)!=0);
-	synth_setGate(pgBSaw,(currentPreset.bitParameters&bpBSaw)!=0);
-	synth_setGate(pgATri,(currentPreset.bitParameters&bpATri)!=0);
-	synth_setGate(pgBTri,(currentPreset.bitParameters&bpBTri)!=0);
-	synth_setGate(pgSync,(currentPreset.bitParameters&bpSync)!=0);
-	synth_setGate(pgPModFA,(currentPreset.bitParameters&bpPModFA)!=0);
-	synth_setGate(pgPModFil,(currentPreset.bitParameters&bpPModFil)!=0);
+	synth_setGate(pgASaw,currentPreset.steppedParameters[spASaw]);
+	synth_setGate(pgBSaw,currentPreset.steppedParameters[spBSaw]);
+	synth_setGate(pgATri,currentPreset.steppedParameters[spATri]);
+	synth_setGate(pgBTri,currentPreset.steppedParameters[spBTri]);
+	synth_setGate(pgSync,currentPreset.steppedParameters[spSync]);
+	synth_setGate(pgPModFA,currentPreset.steppedParameters[spPModFA]);
+	synth_setGate(pgPModFil,currentPreset.steppedParameters[spPModFil]);
 }
 
 
@@ -343,8 +330,8 @@ static inline void refreshPulseWidth(int8_t pwm)
 	
 	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
 
-	int8_t sqrA=currentPreset.bitParameters&bpASqr;
-	int8_t sqrB=currentPreset.bitParameters&bpBSqr;
+	uint8_t sqrA=currentPreset.steppedParameters[spASqr];
+	uint8_t sqrB=currentPreset.steppedParameters[spBSqr];
 
 	if(sqrA)
 		pa=currentPreset.continuousParameters[cpAPW];
@@ -370,20 +357,20 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 static void refreshAssignerSettings(void)
 {
-	if((currentPreset.bitParameters&bpUnison)!=0)
-		assigner_setMode(currentPreset.assignerMonoMode);
+	if(currentPreset.steppedParameters[spUnison])
+		assigner_setMode(currentPreset.steppedParameters[spAssignerMonoMode]);
 	else
 		assigner_setMode(mPoly);
 }
 
 static void refreshEnvSettings(int8_t type, int8_t display)
 {
-	uint8_t expo,shift;
+	uint8_t expo,slow;
 	int8_t i;
 	struct adsr_s * a;
 		
-	expo=(currentPreset.envFlags[type]&ENV_EXPO)!=0;
-	shift=(currentPreset.envFlags[type]&ENV_SLOW)?3:1;
+	expo=currentPreset.steppedParameters[(type)?spFilEnvExpo:spAmpEnvExpo];
+	slow=currentPreset.steppedParameters[(type)?spFilEnvSlow:spAmpEnvSlow];
 
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
@@ -393,33 +380,16 @@ static void refreshEnvSettings(int8_t type, int8_t display)
 			a=&p600.ampEnvs[i];
 
 		adsr_setShape(a,expo);
-		adsr_setSpeedShift(a,shift);
+		adsr_setSpeedShift(a,(slow)?3:1);
 	}
 	
 	if(display)
 	{
-		char s[20]="";
+		char s[20];
 		
-		switch(currentPreset.envFlags[type])
-		{
-		case 0:
-			strcat(s,"fast lin");
-			break;
-		case 1:
-			strcat(s,"fast exp");
-			break;
-		case 2:
-			strcat(s,"slo lin");
-			break;
-		case 3:
-			strcat(s,"slo exp");
-			break;
-		}
-
-		if(type)
-			strcat(s," fil");
-		else
-			strcat(s," amp");
+		strcpy(s,(slow)?"slo":"fast");
+		strcat(s,(expo)?" exp":" lin");
+		strcat(s,(type)?" fil":" amp");
 
 		sevenSeg_scrollText(s,1);
 	}
@@ -427,34 +397,24 @@ static void refreshEnvSettings(int8_t type, int8_t display)
 
 static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 {
-	const char * s=NULL;
+	const char * s[3]={"Slo","Med","Fast"};
+	
 	lfoShape_t shape;
+	uint8_t shift;
 
-	shape=1+((currentPreset.bitParameters&bpLFOShape)?1:0)+currentPreset.lfoAltShapes*2;
+	shape=currentPreset.steppedParameters[spLFOShape];
+	shift=currentPreset.steppedParameters[spLFOShift];
 
 	lfo_setShape(&p600.lfo,shape);
-	lfo_setSpeedShift(&p600.lfo,currentPreset.lfoShift*2);
+	lfo_setSpeedShift(&p600.lfo,shift*2);
 
 	if(dispShape)
 	{
-		s=lfo_shapeName(shape);
-		sevenSeg_scrollText(s,1);
+		sevenSeg_scrollText(lfo_shapeName(shape),1);
 	}
-	else if(dispSpd)
+	else if(dispSpd && shift<=2)
 	{
-		switch(currentPreset.lfoShift)
-		{
-		case 0:
-			s="Slo";
-			break;
-		case 1:
-			s="Med";
-			break;
-		case 2:
-			s="Fast";
-			break;
-		}
-		sevenSeg_scrollText(s,1);
+		sevenSeg_scrollText(s[shift],1);
 	}
 }
 
@@ -484,6 +444,9 @@ static void refreshSevenSeg(void)
 			led_set(plDot,p600.presetModified,0);
 		}
 	}
+	
+	led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
+	led_set(plRecord,p600.presetDigitInput==pdiStoreDecadeDigit,p600.presetDigitInput==pdiStoreDecadeDigit);
 }
 
 static void refreshFullState(void)
@@ -497,80 +460,88 @@ static void refreshFullState(void)
 	refreshSevenSeg();
 }
 
-static void readManualMode(void)
-{
-	continuousParameter_t cp;
-	bitParameter_t bp;
-	uint32_t mask;
-	
-	for(cp=0;cp<cpCount;++cp)	
-		currentPreset.continuousParameters[cp]=potmux_getValue(continuousParameterToPot[cp]);
-
-	for(bp=0;bp<sizeof(bitParameterToButton);++bp)	
-	{
-		mask=(uint32_t)1<<bp;
-		
-		if(scanner_buttonState(bitParameterToButton[bp]))
-			currentPreset.bitParameters|=mask;
-		else
-			currentPreset.bitParameters&=~mask;
-	}
-	
-	currentPreset.trackingShift=-1;
-	if(scanner_buttonState(pbFilFull))
-		currentPreset.trackingShift=0;
-	if(scanner_buttonState(pbFilHalf))
-		currentPreset.trackingShift=1;
-	
-	currentPreset.lfoTargets=0;
-	if(scanner_buttonState(pbLFOFil))
-		currentPreset.lfoTargets|=1<<modFilter;
-	if(scanner_buttonState(pbLFOFreq))
-		currentPreset.lfoTargets|=1<<modPitch;
-	if(scanner_buttonState(pbLFOPW))
-		currentPreset.lfoTargets|=1<<modPW;
-}
-
-static inline void modifyPresetPots(void)
+static void refreshPresetPots(int8_t force)
 {
 	continuousParameter_t cp;
 	
 	for(cp=0;cp<cpCount;++cp)
-		if(potmux_hasChanged(continuousParameterToPot[cp]))
+		if(force || potmux_hasChanged(continuousParameterToPot[cp]))
 		{
 			currentPreset.continuousParameters[cp]=potmux_getValue(continuousParameterToPot[cp]);
-
 			p600.presetModified=1;
-			refreshFullState();
-			break;
 		}
-
 }
 
-static inline void modifyPresetButton(p600Button_t button)
+static void refreshPresetButton(p600Button_t button)
 {
-	bitParameter_t bp;
-	uint32_t mask;
-
-	for(bp=0;bp<sizeof(bitParameterToButton);++bp)	
-		if(button==bitParameterToButton[bp])
-		{
-			mask=(uint32_t)1<<bp;
-
-			if(scanner_buttonState(button))
-				currentPreset.bitParameters|=mask;
-			else
-				currentPreset.bitParameters&=~mask;
-
-			p600.presetModified=1;
-			refreshFullState();
-			break;
-		}
-
+	uint8_t bitState;
+	int8_t change=1;
+	
+	bitState=scanner_buttonState(button)?1:0;
+	
+	switch(button)
+	{
+	case pbASaw:
+		currentPreset.steppedParameters[spASaw]=bitState;
+		break;
+	case pbATri:
+		currentPreset.steppedParameters[spATri]=bitState;
+		break;
+	case pbASqr:
+		currentPreset.steppedParameters[spASqr]=bitState;
+		break;
+	case pbBSaw:
+		currentPreset.steppedParameters[spBSaw]=bitState;
+		break;
+	case pbBTri:
+		currentPreset.steppedParameters[spBTri]=bitState;
+		break;
+	case pbBSqr:
+		currentPreset.steppedParameters[spBSqr]=bitState;
+		break;
+	case pbSync:
+		currentPreset.steppedParameters[spSync]=bitState;
+		break;
+	case pbPModFA:
+		currentPreset.steppedParameters[spPModFA]=bitState;
+		break;
+	case pbPModFil:
+		currentPreset.steppedParameters[spPModFil]=bitState;
+		break;
+	case pbUnison:
+		currentPreset.steppedParameters[spUnison]=bitState;
+		break;
+	case pbLFOShape:
+		currentPreset.steppedParameters[spLFOShape]&=~1;
+		currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
+		break;
+	case pbLFOFreq:
+	case pbLFOPW:
+	case pbLFOFil:
+		currentPreset.steppedParameters[spLFOTargets]=
+			(scanner_buttonState(pbLFOFreq)?mtPitch:0) +
+			(scanner_buttonState(pbLFOPW)?mtPW:0) +
+			(scanner_buttonState(pbLFOFil)?mtFilter:0);
+		break;
+	case pbFilFull:
+	case pbFilHalf:
+		currentPreset.steppedParameters[spTrackingShift]=
+			(scanner_buttonState(pbFilHalf)?1:0) +
+			(scanner_buttonState(pbFilFull)?2:0);
+		break;
+	default:
+		change=0;
+	}
+	
+	if(change)
+	{
+		p600.presetModified=1;
+		refreshFullState();
+	}
 }
 
 
-static FORCEINLINE void updateVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t polyMask)
+static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t polyMask)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
@@ -688,6 +659,7 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 
 		currentPreset.continuousParameters[param]&=0x01fc;
 		currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
+		p600.presetModified=1;	
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
 	{
@@ -695,40 +667,42 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 
 		currentPreset.continuousParameters[param]&=0xfe00;
 		currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
+		p600.presetModified=1;	
 	}
-	else if(control>=MIDI_BASE_SWITCH_CC && control<MIDI_BASE_COARSE_CC)
+	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
 	{
-		param=control-MIDI_BASE_SWITCH_CC;
+		param=control-MIDI_BASE_STEPPED_CC;
 		
-		if(value)
-			currentPreset.bitParameters|=(uint32_t)1<<param;
-		else
-			currentPreset.bitParameters&=~((uint32_t)1<<param);
-		
-		refreshFullState();
+		currentPreset.steppedParameters[param]=value>>(7-steppedParametersBits[param]);
+		phex(param);phex(currentPreset.steppedParameters[param]);print("\n");
+		p600.presetModified=1;	
 	}
+
+	if(p600.presetModified)
+		refreshFullState();
 }
 
 void p600_init(void)
 {
 	memset(&p600,0,sizeof(p600));
+	memset(&settings,0,sizeof(settings));
+	memset(&currentPreset,0,sizeof(currentPreset));
 	
 	// defaults
 	
-	settings.presetNumber=0;
-	settings.benderMiddle=UINT16_MAX/2;
-	settings.presetBank=pbkManual;
-	settings.midiReceiveChannel=-1;
-	currentPreset.assignerMonoMode=mUnisonLow;
-	currentPreset.benderSemitones=5;
-	currentPreset.benderTarget=modPitch;
-	currentPreset.envFlags[0]=ENV_EXPO;
-	currentPreset.envFlags[1]=ENV_EXPO;
-	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX;
-	currentPreset.continuousParameters[cpFilVelocity]=0;
 	p600.presetDigitInput=pdiNone;
 	p600.presetAwaitingNumber=-1;
 	p600.manualDisplayedPot=ppNone;
+	settings.benderMiddle=UINT16_MAX/2;
+	settings.presetBank=pbkManual;
+	settings.midiReceiveChannel=-1;
+	currentPreset.steppedParameters[spAssignerMonoMode]=mUnisonLow;
+	currentPreset.steppedParameters[spBenderSemitones]=5;
+	currentPreset.steppedParameters[spBenderTarget]=modPitch;
+	currentPreset.steppedParameters[spFilEnvExpo]=1;
+	currentPreset.steppedParameters[spAmpEnvExpo]=1;
+	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
+	currentPreset.continuousParameters[cpFilVelocity]=0;
 	
 	// init
 	
@@ -752,29 +726,39 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-	// load stuff from storage
+	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,42,pcFil1)); // uses tuning, not random, but good enough
+
+	// state
+		
+		// initial input state
+	
+	scanner_update(1);
+	
+	for(p600Pot_t p=ppMixer;p<=ppFreqBFine;++p)
+		potmux_update(1,1);
+
+		// load stuff from storage
 	
 	int8_t settingsOk;
-	
 	settingsOk=settings_load();
-	preset_loadCurrent(settings.presetNumber);
-	
-	// state
 
-	if(!settingsOk)
+	if(settings.presetBank!=pbkManual)
 	{
-#ifndef DEBUG_
-		tuner_tuneSynth();
-#endif		
+		p600.presetDigitInput=pdiLoadDecadeDigit;
+		p600.presetModified=0;
+		preset_loadCurrent(settings.presetNumber);
 	}
+		
+		// tune when settings are bad
 	
-	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,42,pcFil1)); // uses tuning, not random, but good enough
-	
-	scanner_update(1); // set initial state
+	if(!settingsOk)
+		tuner_tuneSynth();
+
+		// yep
 	
 	refreshFullState();
 	
-	// a nice welcome message ;)
+	// a nice welcome message, and we're ready to go :)
 	
 	sevenSeg_scrollText("GliGli's P600 upgrade "VERSION,1);
 }
@@ -803,20 +787,13 @@ void p600_update(void)
 	
 	// act on pot change
 	
-	if(settings.presetBank==pbkManual)
+	refreshPresetPots(settings.presetBank==pbkManual);
+
+	if(potmux_lastChanged()!=ppNone)
 	{
-		if(potmux_lastChanged()!=ppNone)
-		{
-			// display last changed pot value
-			p600.manualDisplayedPot=potmux_lastChanged();
-		}
-		
-		readManualMode();
+		// display last changed pot value
+		p600.manualDisplayedPot=potmux_lastChanged();
 		refreshSevenSeg();
-	}
-	else if(potmux_lastChanged()!=ppNone)
-	{
-		modifyPresetPots();
 	}
 
 	// update CVs
@@ -849,7 +826,7 @@ void p600_update(void)
 		lfo_setCVs(&p600.lfo,
 				currentPreset.continuousParameters[cpLFOFreq],
 				satAddU16U16(currentPreset.continuousParameters[cpLFOAmt],
-					potmux_getValue(ppModWheel)>>currentPreset.modwheelShift));
+					potmux_getValue(ppModWheel)>>currentPreset.steppedParameters[spModwheelShift]));
 		break;
 	case 1:
 		// 'fixed' CVs
@@ -919,10 +896,10 @@ void p600_timerInterrupt(void)
 	
 	pitchLfoVal=filterLfoVal=0;
 	
-	if(currentPreset.lfoTargets&(1<<modPitch))
+	if(currentPreset.steppedParameters[spLFOTargets]&mtPitch)
 		pitchLfoVal=p600.lfo.output;
 
-	if(currentPreset.lfoTargets&(1<<modFilter))
+	if(currentPreset.steppedParameters[spLFOTargets]&mtFilter)
 		filterLfoVal=p600.lfo.output;
 	
 	// global env computations
@@ -932,7 +909,7 @@ void p600_timerInterrupt(void)
 	filEnvAmt=vf;
 	
 	oscEnvAmt=0;
-	if((currentPreset.bitParameters&bpPModFA)!=0)
+	if(currentPreset.steppedParameters[spPModFA])
 	{
 		va=currentPreset.continuousParameters[cpPModFilEnv];
 		va+=INT16_MIN;
@@ -952,12 +929,12 @@ void p600_timerInterrupt(void)
 	}
 	
 		// P600_VOICE_COUNT calls
-	updateVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
-	updateVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
-	updateVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
-	updateVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
-	updateVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
-	updateVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	refreshVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	refreshVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	refreshVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	refreshVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	refreshVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
+	refreshVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal,monoGlidingMask,polyMask);
 	
 	// slower updates
 
@@ -966,7 +943,7 @@ void p600_timerInterrupt(void)
 	switch(frc&0x03) // 4 phases, each 500hz
 	{
 	case 0:
-		refreshPulseWidth(currentPreset.lfoTargets&(1<<modPW));
+		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
 	case 1:
 		if(p600.gliding)
@@ -1002,7 +979,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 {
 	// button press might change current preset
 
-	modifyPresetButton(button);		
+	refreshPresetButton(button);		
 
 	// tuning
 
@@ -1021,8 +998,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		settings.presetBank=(settings.presetBank+1)%2; //TODO: second preset bank, how to store?
 		settings_save();		
 
-		led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
-		
 		if(settings.presetBank!=pbkManual)
 		{
 			preset_loadCurrent(settings.presetNumber);
@@ -1041,13 +1016,11 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		{
 			// cancel record
 			p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
-			led_set(plRecord,0,0);
 		}
 		else
 		{
 			// ask for digit
 			p600.presetDigitInput=pdiStoreDecadeDigit;
-			led_set(plRecord,1,1);
 		}
 		
 		refreshSevenSeg();
@@ -1077,7 +1050,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 				if(p600.presetDigitInput==pdiStoreUnitDigit)
 				{
 					preset_saveCurrent(p600.presetAwaitingNumber);
-					led_set(plRecord,0,0);
 				}
 
 				// always try to load/reload preset
@@ -1106,17 +1078,14 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		if((pressed && button==pb0))
 		{
-			currentPreset.assignerMonoMode=(currentPreset.assignerMonoMode%mMonoHigh)+1;
+			currentPreset.steppedParameters[spAssignerMonoMode]=(currentPreset.steppedParameters[spAssignerMonoMode]+1)%(mMonoHigh+1);
 
 			refreshAssignerSettings();
-			sevenSeg_scrollText(assigner_modeName(currentPreset.assignerMonoMode),1);
+			sevenSeg_scrollText(assigner_modeName(currentPreset.steppedParameters[spAssignerMonoMode]),1);
 		}
 
 		if(button==pbUnison)
 		{
-			readManualMode();
-			
-			refreshAssignerSettings();
 			sevenSeg_scrollText(assigner_modeName(assigner_getMode()),1);
 		}
 
@@ -1124,19 +1093,17 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
 		{
-			int8_t shpA,shp,spd;
+			uint8_t shpA,shp,spd;
 			
 			shp=button==pbLFOShape;
 			shpA=button==pb1;
 			spd=button==pb2;
 
-			readManualMode();
-
 			if(shpA)
-				currentPreset.lfoAltShapes=1-currentPreset.lfoAltShapes;
+				currentPreset.steppedParameters[spLFOShape]^=2;
 			
 			if(spd)
-				currentPreset.lfoShift=(currentPreset.lfoShift+1)%3;
+				currentPreset.steppedParameters[spLFOShift]=(currentPreset.steppedParameters[spLFOShift]+1)%3;
 
 			refreshLfoSettings(shp||shpA,spd);
 		}
@@ -1145,54 +1112,37 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		if((pressed && button==pb3))
 		{
-			const char * s=NULL;
-
-			currentPreset.modwheelShift=(currentPreset.modwheelShift+2)%6;
-
-			switch(currentPreset.modwheelShift)
-			{
-			case 0:
-				s="Full";
-				break;
-			case 2:
-				s="Half";
-				break;
-			case 4:
-				s="Min";
-				break;
-			}
-
-			sevenSeg_scrollText(s,1);
+			const char * s[6]={"Full","","Half","","Min",""};
+			currentPreset.steppedParameters[spModwheelShift]=(currentPreset.steppedParameters[spModwheelShift]+2)%6;
+			sevenSeg_scrollText(s[currentPreset.steppedParameters[spModwheelShift]],1);
 		}
-
 
 		// envs
 
 		if(pressed && (button>=pb4 && button<=pb5))
 		{
-			uint8_t type;
+			steppedParameter_t param;
+			uint8_t merged;
 
-			type=(button==pb5)?1:0;
+			param=(button==pb5)?spFilEnvExpo:spAmpEnvExpo;
+			
+			merged=currentPreset.steppedParameters[param]+currentPreset.steppedParameters[param+1]*2;
+			
+			merged=(merged+1)%4;
+			
+			currentPreset.steppedParameters[param]=merged&1;
+			currentPreset.steppedParameters[param+1]=(merged>>1)&1;
 
-			currentPreset.envFlags[type]=(currentPreset.envFlags[type]+1)%4;
-
-			refreshEnvSettings(type,1);
+			refreshEnvSettings(param==spFilEnvExpo,1);
 		}
 
 		// pitch mode
 
 		if(pressed && button==pb6)
 		{
-			const char * s=NULL;
-
-			currentPreset.bitParameters^=bpChromaticPitch;
-
-			if(currentPreset.bitParameters&bpChromaticPitch)
-				s="Chromatic";
-			else
-				s="Free";
-
-			sevenSeg_scrollText(s,1);
+			const char * s[2]={"Free","Chromatic"};
+			currentPreset.steppedParameters[spChromaticPitch]^=1;
+			sevenSeg_scrollText(s[currentPreset.steppedParameters[spChromaticPitch]],1);
 		}
 
 
@@ -1204,18 +1154,18 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 			if(button==pb7)
 			{
-				switch(currentPreset.benderSemitones)
+				switch(currentPreset.steppedParameters[spBenderSemitones])
 				{
 				case 3:
-					currentPreset.benderSemitones=5;
+					currentPreset.steppedParameters[spBenderSemitones]=5;
 					s="5th";
 					break;
 				case 5:
-					currentPreset.benderSemitones=12;
+					currentPreset.steppedParameters[spBenderSemitones]=12;
 					s="Oct";
 					break;
 				case 12:
-					currentPreset.benderSemitones=3;
+					currentPreset.steppedParameters[spBenderSemitones]=3;
 					s="3rd";
 					break;
 				}
@@ -1223,8 +1173,8 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 			if(button==pb8)
 			{
-				currentPreset.benderTarget=(currentPreset.benderTarget+1)%(modVolume+1);
-				s=modulationName(currentPreset.benderTarget);
+				currentPreset.steppedParameters[spBenderTarget]=(currentPreset.steppedParameters[spBenderTarget]+1)%(modVolume+1);
+				s=modulationName(currentPreset.steppedParameters[spBenderTarget]);
 			}
 
 			if(button==pb9)

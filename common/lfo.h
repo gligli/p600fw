@@ -5,7 +5,7 @@
 
 typedef enum
 {
-	lsOff=0,lsPulse=1,lsTri=2,lsRand=3,lsSine=4
+	lsPulse=0,lsTri=1,lsRand=2,lsSine=3
 } lfoShape_t;
 
 struct lfo_s

@@ -43,8 +43,6 @@ const char * lfo_shapeName(lfoShape_t shape)
 {
 	switch(shape)
 	{
-	case lsOff:
-		return "off";
 	case lsPulse:
 		return "pulse";
 	case lsTri:
@@ -71,14 +69,6 @@ void lfo_init(struct lfo_s * lfo, unsigned int randSeed)
 
 void lfo_update(struct lfo_s * l)
 {
-	// shortcut for inactive lfo
-
-	if (l->shape==lsOff)
-	{
-		l->output=0;
-		return;
-	}
-
 	// handle phase overflow
 	
 	if(l->phase>>24) // if bit 24 or higher is set, it's an overflow -> a half period is done!

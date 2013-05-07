@@ -7,7 +7,7 @@
 
 typedef enum
 {
-	mPoly=0,mUnisonLow=1,mUnisonHigh=2,mMonoLow=3,mMonoHigh=4
+	mUnisonLow=0,mUnisonHigh=1,mMonoLow=2,mMonoHigh=3,mPoly=15,
 } assignerMode_t;
 
 

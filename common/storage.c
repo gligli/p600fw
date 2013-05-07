@@ -13,6 +13,33 @@
 #define SETTINGS_PAGE_COUNT 4
 #define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-SETTINGS_PAGE_COUNT)
 
+const uint8_t steppedParametersBits[spCount] = 
+{
+	/*ASaw*/1,
+	/*ATri*/1,
+	/*ASqr*/1,
+	/*BSaw*/1,
+	/*BTri*/1,
+	/*BSqr*/1,
+	/*Sync*/1,
+	/*PModFA*/1,
+	/*PModFil*/1,
+	/*LFOShape*/2,
+	/*LFOShift*/2,
+	/*LFOTargets*/3,
+	/*TrackingShift*/2,
+	/*FilEnvExpo*/1,
+	/*FilEnvSlow*/1,
+	/*AmpEnvExpo*/1,
+	/*AmpEnvSlow*/1,
+	/*Unison*/1,
+	/*AssignerMonoMode*/2,
+	/*BenderSemitones*/4,
+	/*BenderTarget*/2,
+	/*ModwheelShift*/3,
+	/*ChromaticPitch*/1,
+};
+
 struct settings_s settings;
 struct preset_s currentPreset;
 
@@ -215,27 +242,13 @@ int8_t preset_loadCurrent(uint16_t number)
 
 		// v1
 		
-		currentPreset.bitParameters=storageRead32();
-		
 		continuousParameter_t cp;
 		for(cp=cpFreqA;cp<=cpFilVelocity;++cp)
 			currentPreset.continuousParameters[cp]=storageRead16();
 
-		currentPreset.envFlags[0]=storageRead8();
-		currentPreset.envFlags[1]=storageRead8();
-
-		currentPreset.trackingShift=storageRead8();
-
-		currentPreset.assignerMonoMode=storageRead8();
-
-		currentPreset.lfoAltShapes=storageReadS8();
-		currentPreset.lfoTargets=storageRead8();
-		currentPreset.lfoShift=storageRead8();
-
-		currentPreset.modwheelShift=storageReadS8();
-
-		currentPreset.benderSemitones=storageReadS8();
-		currentPreset.benderTarget=storageRead8();
+		steppedParameter_t sp;
+		for(sp=spASaw;sp<=spChromaticPitch;++sp)
+			currentPreset.steppedParameters[sp]=storageRead8();
 	}
 	
 	return 1;
@@ -249,28 +262,16 @@ void preset_saveCurrent(uint16_t number)
 
 		// v1
 		
-		storageWrite32(currentPreset.bitParameters);
-		
 		continuousParameter_t cp;
 		for(cp=cpFreqA;cp<=cpFilVelocity;++cp)
 			storageWrite16(currentPreset.continuousParameters[cp]);
 
-		storageWrite8(currentPreset.envFlags[0]);
-		storageWrite8(currentPreset.envFlags[1]);
-
-		storageWrite8(currentPreset.trackingShift);
-
-		storageWrite8(currentPreset.assignerMonoMode);
-
-		storageWriteS8(currentPreset.lfoAltShapes);
-		storageWrite8(currentPreset.lfoTargets);
-		storageWrite8(currentPreset.lfoShift);
-
-		storageWriteS8(currentPreset.modwheelShift);
-
-		storageWriteS8(currentPreset.benderSemitones);
-		storageWrite8(currentPreset.benderTarget);
-
+		steppedParameter_t sp;
+		for(sp=spASaw;sp<=spChromaticPitch;++sp)
+			storageWrite8(currentPreset.steppedParameters[sp]);
+		
+		// this must stay last
+		
 		storageFinishStore(number,1);
 	}
 }

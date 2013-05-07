@@ -23,16 +23,28 @@ typedef enum
 
 typedef enum
 {
-	bpASaw=1,bpATri=2,bpASqr=4,bpSync=8,
-	bpBSaw=16,bpBTri=32,bpBSqr=64,
-	bpPModFA=128,bpPModFil=256,
-	bpLFOShape=512,
-	bpUnison=1024,
-	bpChromaticPitch=2048,
+	spASaw=0,spATri=1,spASqr=2,
+	spBSaw=3,spBTri=4,spBSqr=5,
+			
+	spSync=6,spPModFA=7,spPModFil=8,
+			
+	spLFOShape=9,spLFOShift=10,spLFOTargets=11,
+
+	spTrackingShift=12,
+	spFilEnvExpo=13,spFilEnvSlow=14,
+	spAmpEnvExpo=15,spAmpEnvSlow=16,
+			
+	spUnison=17,
+	spAssignerMonoMode=18,
+			
+	spBenderSemitones=19,spBenderTarget=20,
+	spModwheelShift=21,
+
+	spChromaticPitch=22,
 
 	// /!\ this must stay last
-	bpForce32=UINT32_MAX
-} bitParameter_t;
+	spCount
+} steppedParameter_t;
 
 struct settings_s
 {
@@ -48,27 +60,13 @@ struct settings_s
 
 struct preset_s
 {
-	uint8_t envFlags[2]; // 0:amp / 1:fil
-	
-	int8_t trackingShift;
-
-	assignerMode_t assignerMonoMode;
-	
-	int8_t lfoAltShapes;
-	modulation_t lfoTargets;
-	uint8_t lfoShift;
-	
-	int8_t modwheelShift;
-	
-	int8_t benderSemitones;
-	modulation_t benderTarget;
-	
-	uint32_t bitParameters;
+	uint8_t steppedParameters[spCount];
 	uint16_t continuousParameters[cpCount];
 };
 
 extern struct settings_s settings;
 extern struct preset_s currentPreset;
+extern const uint8_t steppedParametersBits[spCount];
 
 int8_t settings_load(void);
 void settings_save(void);
