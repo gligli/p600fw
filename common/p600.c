@@ -1206,18 +1206,6 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 	
 	computeTunedCVs(1);
 	
-	// prepare voices on gate on
-
-	if(gate && voice>=0)
-	{
-		// pre-set rough pitches, to avoid tiny portamento-like glitches
-		// when the voice actually starts
-
-		synth_setCV(pcOsc1A+voice,p600.oscANoteCV[voice],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcOsc1B+voice,p600.oscBNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcFil1+voice,p600.filterNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
-	}
-	
 	// set gates
 	
 	env=voice;
@@ -1233,6 +1221,23 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 		adsr_setCVs(&p600.filEnvs[env],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 		velAmt=currentPreset.continuousParameters[cpAmpVelocity];
 		adsr_setCVs(&p600.ampEnvs[env],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
+	}
+	
+	// prepare voices on gate on
+
+	if(gate && voice>=0)
+	{
+		// pre-set rough pitches, to avoid tiny portamento-like glitches
+		// when the voice actually starts
+
+		synth_setCV(pcOsc1A+voice,p600.oscANoteCV[voice],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcOsc1B+voice,p600.oscBNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
+		synth_setCV(pcFil1+voice,p600.filterNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
+		
+		// kick-start the VCA, in case we need a sharp attack
+		
+		if(p600.ampEnvs[env].attackCV<4)
+			synth_setCV(pcAmp1+voice,UINT16_MAX,SYNTH_FLAG_IMMEDIATE);
 	}
 	
 #ifdef DEBUG
