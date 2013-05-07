@@ -767,7 +767,7 @@ void p600_update(void)
 {
 	int8_t i,wheelChange,wheelUpdate;
 	static uint8_t frc=0;
-	static uint32_t bendChangeStart=INT32_MAX; // force initial change, not UINT32_MAX to avoid overflow
+	static uint32_t bendChangeStart=0;
 	
 	// toggle tape out (debug)
 
@@ -793,8 +793,10 @@ void p600_update(void)
 	{
 		// display last changed pot value
 		p600.manualDisplayedPot=potmux_lastChanged();
-		refreshSevenSeg();
 	}
+
+	// has to stay outside of previous if, so that finer pot values changes can also be displayed
+	refreshSevenSeg();
 
 	// update CVs
 
@@ -1236,7 +1238,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 		
 		// kick-start the VCA, in case we need a sharp attack
 		
-		if(p600.ampEnvs[env].attackCV<4)
+		if(p600.ampEnvs[env].attackCV<512)
 			synth_setCV(pcAmp1+voice,UINT16_MAX,SYNTH_FLAG_IMMEDIATE);
 	}
 	
