@@ -67,7 +67,7 @@ static void updatePot(p600Pot_t pot)
 			dac_write(estimate);				
 
 			// let comparator get correct voltage (don't remove me!)
-			CYCLE_WAIT(1);
+			CYCLE_WAIT(2);
 
 			// is DAC value lower than pot value?
 			lower=(io_read(0x09)&0x08)!=0;
@@ -85,6 +85,7 @@ static void updatePot(p600Pot_t pot)
 			// unselect
 
 		io_write(0x0a,0xff);
+		CYCLE_WAIT(4);
 
 		estimate&=badMask;
 		potmux.pots[pot]=estimate;
