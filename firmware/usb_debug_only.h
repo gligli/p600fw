@@ -8,6 +8,11 @@ uint8_t usb_configured(void);		// is the USB port configured
 
 int8_t usb_debug_putchar(uint8_t c);	// transmit a character
 void usb_debug_flush_output(void);	// immediately transmit any buffered output
+
+void usb_com_int(void);
+void usb_gen_int(void);
+
+
 #define USB_DEBUG_HID
 
 

@@ -582,3 +582,18 @@ ISR(TIMER2_COMPA_vect)
 { 
 	p600_uartInterrupt();
 }
+
+
+ISR(USB_GEN_vect)
+{
+#ifdef DEBUG
+	usb_gen_int();
+#endif
+}
+
+ISR(USB_COM_vect)
+{
+#ifdef DEBUG
+	usb_com_int();
+#endif
+}

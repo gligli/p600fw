@@ -334,7 +334,7 @@ void usb_debug_flush_output(void)
 // USB Device Interrupt - handle all device-level events
 // the transmit buffer flushing is triggered by the start of frame
 //
-ISR(USB_GEN_vect)
+void usb_gen_int(void)
 {
 	uint8_t intbits, t;
 
@@ -390,7 +390,7 @@ static inline void usb_ack_out(void)
 // other endpoints are manipulated by the user-callable
 // functions, and the start-of-frame interrupt.
 //
-ISR(USB_COM_vect)
+void usb_com_int(void)
 {
         uint8_t intbits;
 	const uint8_t *list;
