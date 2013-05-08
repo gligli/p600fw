@@ -36,6 +36,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/adsr.o \
+	${OBJECTDIR}/_ext/1270477542/arp.o \
 	${OBJECTDIR}/_ext/1270477542/assigner.o \
 	${OBJECTDIR}/_ext/1270477542/dac.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
@@ -81,6 +82,11 @@ ${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
+
+${OBJECTDIR}/_ext/1270477542/arp.o: ../common/arp.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/arp.o ../common/arp.c
 
 ${OBJECTDIR}/_ext/1270477542/assigner.o: ../common/assigner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542

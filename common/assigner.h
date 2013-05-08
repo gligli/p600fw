@@ -17,7 +17,7 @@ void assigner_setMode(assignerMode_t mode);
 assignerMode_t assigner_getMode(void);
 const char * assigner_modeName(assignerMode_t mode);
 
-void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity);
+void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t explicitOff); // set 'explicitOff' when there will be an assigner_assignNote call for note off
 void assigner_voiceDone(int8_t voice); // -1 -> all voices finished
 
 void assigner_init(void);

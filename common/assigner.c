@@ -163,7 +163,7 @@ inline assignerMode_t assigner_getMode(void)
 	return assigner.mode;
 }
 
-void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity)
+void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t explicitOff)
 {
 	int8_t voice=-1;
 	
@@ -176,9 +176,25 @@ void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity)
 			voice=findOldest(note);
 			
 			// on note on, if we have less than 6 pressed notes (timestamp=UINT32_MAX), assign new note
-			
+
 			if (voice>=0)
-				setVoices(voice,UINT32_MAX,note,1,velocity);
+			{
+				uint32_t ts=UINT32_MAX;
+				
+				if(!explicitOff)
+				{
+					// we have to simulate note off in that case
+					setVoices(voice,0,0,0,0);
+
+					// asign a timestamp
+					ts=++assigner.timestamp;
+				}
+				
+				// steal the voice if it's assigned
+				assigner_voiceDone(voice);
+
+				setVoices(voice,ts,note,1,velocity);
+			}
 		}
 		else
 		{
@@ -188,10 +204,6 @@ void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity)
 			
 			if(voice>=0)
 			{
-				// steal the voice if it's assigned
-				if(assigner_getAssignment(voice,NULL))
-					assigner_voiceDone(voice);
-
 				setVoices(voice,++assigner.timestamp,note,0,velocity);
 			}
 		}
@@ -204,6 +216,12 @@ void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity)
 	
 		if(on)
 		{
+			// no legato in that case, assume only one note pressed at a time
+
+			if(!explicitOff)
+				for(i=0;i<LEGATO_NOTE_MEMORY;++i)
+					assigner.legatoNotes[i]=ASSIGNER_NO_NOTE;
+
 			// add the note the list of legato notes
 			
 			for(i=0;i<LEGATO_NOTE_MEMORY;++i)

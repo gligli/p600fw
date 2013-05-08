@@ -17,6 +17,7 @@
 #include "lfo.h"
 #include "tuner.h"
 #include "assigner.h"
+#include "arp.h"
 #include "storage.h"
 #include "uart_6850.h"
 
@@ -448,9 +449,22 @@ static void refreshSevenSeg(void)
 			led_set(plDot,p600.presetModified,0);
 		}
 	}
-	
+
 	led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
-	led_set(plRecord,p600.presetDigitInput==pdiStoreDecadeDigit,p600.presetDigitInput==pdiStoreDecadeDigit);
+	
+	if(arp_getMode()!=amOff)
+	{
+		led_set(plRecord,arp_getHold(),0);
+		led_set(plArpUD,arp_getMode()==amUpDown,0);
+		led_set(plArpAssign,arp_getMode()!=amUpDown,arp_getMode()==amRandom);
+	}
+	else
+	{
+		led_set(plRecord,p600.presetDigitInput==pdiStoreDecadeDigit,p600.presetDigitInput==pdiStoreDecadeDigit);
+		led_set(plArpUD,0,0);
+		led_set(plArpAssign,0,0);
+	}
+	
 }
 
 static void refreshFullState(void)
@@ -617,7 +631,7 @@ void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1);
+	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1,1);
 }
 
 void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -636,7 +650,7 @@ void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,0,0);
+	assigner_assignNote(intNote,0,0,1);
 }
 
 void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -717,6 +731,7 @@ void p600_init(void)
 	tuner_init();
 	assigner_init();
 	uart_init();
+	arp_init();
 	
 	midi_device_init(&p600.midi);
 	midi_register_noteon_callback(&p600.midi,midi_noteOnEvent);
@@ -856,6 +871,13 @@ void p600_update(void)
 		
 		p600.glideAmount=(UINT16_MAX-currentPreset.continuousParameters[cpGlide])>>5; // 11bit glide
 		p600.gliding=p600.glideAmount<2000;
+		
+		// arp
+		
+		arp_setSpeed(potmux_getValue(ppSpeed));
+		if (arp_getMode()!=amOff)
+			p600.gliding=0;
+		
 		break;
 	}
 
@@ -952,7 +974,11 @@ void p600_timerInterrupt(void)
 		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
 	case 1:
-		if(p600.gliding)
+		if(arp_getMode()!=amOff)
+		{
+			arp_update();
+		}
+		else if(p600.gliding)
 		{
 			for(v=0;v<P600_VOICE_COUNT;++v)
 			{
@@ -996,7 +1022,36 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		// tuner will thrash state
 		refreshFullState();
 	}
-
+	
+	// arp
+	
+	if(pressed && button==pbArpUD)
+	{
+		arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
+	}
+	else if(pressed && button==pbArpAssign)
+	{
+		switch(arp_getMode())
+		{
+		case amOff:
+		case amUpDown:
+			arp_setMode(amAssign,arp_getHold());
+			break;
+		case amAssign:
+			arp_setMode(amRandom,arp_getHold());
+			break;
+		case amRandom:
+			arp_setMode(amOff,arp_getHold());
+			break;
+		}
+	}
+	
+	if(arp_getMode()!=amOff && pressed && button==pbRecord)
+	{
+		arp_setMode(arp_getMode(),!arp_getHold());
+		return; // override normal record action
+	}
+	
 	// preset mode
 	
 	if(pressed && button==pbPreset)
@@ -1012,8 +1067,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		}
 
 		p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
-		
-		refreshSevenSeg();
 	}
 	
 	if(pressed && button==pbRecord)
@@ -1028,8 +1081,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			// ask for digit
 			p600.presetDigitInput=pdiStoreDecadeDigit;
 		}
-		
-		refreshSevenSeg();
 	}
 	
 	if(p600.presetDigitInput!=pdiNone)
@@ -1074,8 +1125,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			default:
 				;
 			}
-
-			refreshSevenSeg();
 		}
 	}
 	else
@@ -1208,7 +1257,14 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 void p600_keyEvent(uint8_t key, int pressed)
 {
-	assigner_assignNote(key,pressed,UINT16_MAX);
+	if(arp_getMode()==amOff)
+	{
+		assigner_assignNote(key,pressed,UINT16_MAX,1);
+	}
+	else
+	{
+		arp_assignNote(key,pressed);
+	}
 }
 
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity)
@@ -1226,8 +1282,15 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 	if(assigner_getMode()!=mPoly)
 		env=P600_MONO_ENV;
 
-	adsr_setGate(&p600.filEnvs[env],gate);
-	adsr_setGate(&p600.ampEnvs[env],gate);
+	// don't retrigger gate, unless we're arpeggiating
+	
+	if(p600.ampEnvs[env].gate!=gate || arp_getMode()!=amOff)
+	{
+		adsr_setGate(&p600.filEnvs[env],gate);
+		adsr_setGate(&p600.ampEnvs[env],gate);
+	}
+
+	// handle velocity
 	
 	if(gate)
 	{

@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>../common/adsr.h</itemPath>
       <itemPath>../common/adsr_lookups.h</itemPath>
+      <itemPath>../common/arp.h</itemPath>
       <itemPath>../common/assigner.h</itemPath>
       <itemPath>../common/dac.h</itemPath>
       <itemPath>../common/display.h</itemPath>
@@ -35,6 +36,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>../common/adsr.c</itemPath>
+      <itemPath>../common/arp.c</itemPath>
       <itemPath>../common/assigner.c</itemPath>
       <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
@@ -88,6 +90,10 @@
       <item path="../common/adsr.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/adsr_lookups.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/arp.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/arp.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/assigner.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -186,6 +192,10 @@
       <item path="../common/adsr.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/adsr_lookups.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/arp.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/arp.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/assigner.c" ex="false" tool="0" flavor2="0">
       </item>

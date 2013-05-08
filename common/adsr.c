@@ -132,11 +132,8 @@ NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint
 
 inline void adsr_setGate(struct adsr_s * adsr, int8_t gate)
 {
-	if(adsr->gate!=gate)
-	{
-		adsr->nextGate=gate;
-		adsr->gateChanged=1;
-	}
+	adsr->nextGate=gate;
+	adsr->gateChanged=1;
 }
 
 inline void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
