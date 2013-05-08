@@ -43,7 +43,7 @@ static inline void scanner_event(uint8_t key, int8_t pressed)
 void scanner_update(int8_t fullScan)
 {
 	uint8_t i,j;
-	uint8_t ps=0,pa;		
+	uint8_t pps,ps,pa;		
 
 	for(i=fullScan?0:(SCANNER_KEYS_START/8);i<SCANNER_BYTES;++i)
 	{
@@ -53,9 +53,15 @@ void scanner_update(int8_t fullScan)
 
 			CYCLE_WAIT(10);
 
-			ps=io_read(0x0a);
-
-			CYCLE_WAIT(10);
+			// debounce (wait for a stable read)
+			ps=scanner.stateBits[i];
+			do
+			{
+				pps=ps;
+				ps=io_read(0x0a);
+				CYCLE_WAIT(10);
+			}
+			while(ps!=pps);
 		}
 
 		pa=ps^scanner.stateBits[i];
