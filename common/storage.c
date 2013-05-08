@@ -7,7 +7,7 @@
 // increment this each time the binary format is changed
 #define STORAGE_VERSION 1
 
-#define STORAGE_MAGIC 0x611600a5
+#define STORAGE_MAGIC 0x006116a5
 #define STORAGE_MAX_SIZE 1024
 
 #define SETTINGS_PAGE_COUNT 4
@@ -123,7 +123,7 @@ static void storageWriteS8(int8_t v)
 
 static void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 {
-	int i;
+	uint16_t i;
 	
 	for (i=0;i<pageCount;++i)
 		storage_read(pageIdx+i,&temp[STORAGE_PAGE_SIZE*i]);
@@ -163,7 +163,7 @@ static void storageFinishStore(uint16_t pageIdx, uint8_t pageCount)
 		return;
 	}
 	
-	int i;
+	uint16_t i;
 	
 	for (i=0;i<pageCount;++i)
 		storage_write(pageIdx+i,&temp[STORAGE_PAGE_SIZE*i]);
@@ -227,6 +227,7 @@ void settings_save(void)
 
 		// ...
 
+		// this must stay last
 		storageFinishStore(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
 	}
 }
@@ -271,7 +272,6 @@ void preset_saveCurrent(uint16_t number)
 			storageWrite8(currentPreset.steppedParameters[sp]);
 		
 		// this must stay last
-		
 		storageFinishStore(number,1);
 	}
 }
