@@ -55,9 +55,9 @@ static uint32_t getPhaseInc(uint8_t v)
 {
 	uint32_t r=0;
 	
-	r|=(uint32_t)phaseLookupLo[v];
-	r|=(uint32_t)phaseLookupMid[v]<<8;
-	r|=(uint32_t)phaseLookupHi[v]<<16;
+	r|=(uint32_t)pgm_read_byte(&phaseLookupLo[v]);
+	r|=(uint32_t)pgm_read_byte(&phaseLookupMid[v])<<8;
+	r|=(uint32_t)pgm_read_byte(&phaseLookupHi[v])<<16;
 	
 	return r;
 }
