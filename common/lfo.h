@@ -5,7 +5,7 @@
 
 typedef enum
 {
-	lsPulse=0,lsTri=1,lsRand=2,lsSine=3
+	lsPulse=0,lsTri=1,lsRand=2,lsSine=3,lsNoise=4,lsSaw=5
 } lfoShape_t;
 
 struct lfo_s
@@ -30,7 +30,7 @@ void lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift);
 int16_t lfo_getOutput(struct lfo_s * lfo);
 const char * lfo_shapeName(lfoShape_t shape);
 
-void lfo_init(struct lfo_s * lfo, unsigned int randSeed);
+void lfo_init(struct lfo_s * lfo);
 void lfo_update(struct lfo_s * lfo);
 
 #endif	/* LFO_H */

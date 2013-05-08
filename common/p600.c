@@ -405,6 +405,10 @@ static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 	shape=currentPreset.steppedParameters[spLFOShape];
 	shift=currentPreset.steppedParameters[spLFOShift];
 
+	// set random seed for random-based shapes
+	if(shape==lsRand || shape==lsNoise)
+		srand(p600.ticker);
+	
 	lfo_setShape(&p600.lfo,shape);
 	lfo_setSpeedShift(&p600.lfo,shift*2);
 
@@ -726,7 +730,7 @@ void p600_init(void)
 		adsr_init(&p600.filEnvs[i]);
 	}
 
-	lfo_init(&p600.lfo,tuner_computeCVFromNote(69,42,pcFil1)); // uses tuning, not random, but good enough
+	lfo_init(&p600.lfo);
 
 	// state
 		
@@ -742,7 +746,7 @@ void p600_init(void)
 	int8_t settingsOk;
 	settingsOk=settings_load();
 
-	if(settings.presetBank!=pbkManual)
+	if(settingsOk && settings.presetBank!=pbkManual)
 	{
 		p600.presetDigitInput=pdiLoadDecadeDigit;
 		p600.presetModified=0;
@@ -1095,14 +1099,22 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 
 		if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
 		{
-			uint8_t shpA,shp,spd;
+			uint8_t shpA,shp,spd,vA,v;
 			
 			shp=button==pbLFOShape;
 			shpA=button==pb1;
 			spd=button==pb2;
 
 			if(shpA)
-				currentPreset.steppedParameters[spLFOShape]^=2;
+			{
+				v=currentPreset.steppedParameters[spLFOShape];
+
+				vA=v>>1;
+				v&=1;
+				vA=(vA+1)%3;
+				
+				currentPreset.steppedParameters[spLFOShape]=(vA<<1)|v;
+			}
 			
 			if(spd)
 				currentPreset.steppedParameters[spLFOShift]=(currentPreset.steppedParameters[spLFOShift]+1)%3;

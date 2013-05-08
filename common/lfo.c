@@ -51,17 +51,20 @@ const char * lfo_shapeName(lfoShape_t shape)
 		return "rand";
 	case lsSine:
 		return "sine";
+	case lsNoise:
+		return "noise";
+	case lsSaw:
+		return "saw";
 	}
 	
 	return "";
 }
 
-void lfo_init(struct lfo_s * lfo, unsigned int randSeed)
+void lfo_init(struct lfo_s * lfo)
 {
 	int16_t i;
 	
 	memset(lfo,0,sizeof(struct lfo_s));
-	srand(randSeed);
 	
 	for(i=0;i<256;++i)
 		sineShape[i]=(cosf((i/255.0f+1.0f)*M_PI)+1.0f)/2.0f*65535.0f;
@@ -100,6 +103,14 @@ void lfo_update(struct lfo_s * l)
 		break;
 	case lsSine:
 		l->rawOutput=computeShape(l->phase,sineShape);
+		break;
+	case lsNoise:
+		l->rawOutput=rand();
+		break;
+	case lsSaw:
+		l->rawOutput=l->phase>>9;
+		if(l->halfPeriod)
+			l->rawOutput=UINT16_MAX-l->rawOutput;
 		break;
 	default:
 		;

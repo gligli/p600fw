@@ -24,7 +24,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*Sync*/1,
 	/*PModFA*/1,
 	/*PModFil*/1,
-	/*LFOShape*/2,
+	/*LFOShape*/3,
 	/*LFOShift*/2,
 	/*LFOTargets*/3,
 	/*TrackingShift*/2,
