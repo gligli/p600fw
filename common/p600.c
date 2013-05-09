@@ -563,6 +563,17 @@ static void refreshPresetButton(p600Button_t button)
 	}
 }
 
+static void refreshPresetMode(void)
+{
+	if(settings.presetBank!=pbkManual)
+	{
+		preset_loadCurrent(settings.presetNumber);
+		p600.presetModified=0;
+		refreshFullState();
+	}
+
+	p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
+}
 
 static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t polyMask)
 {
@@ -672,6 +683,14 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 	phex(value);
 	print("\n");
 #endif
+
+	if(control==0 && value<=pbkA && settings.presetBank!=value) // coarse bank #
+	{
+		settings.presetBank=value;
+		settings_save();
+		refreshPresetMode();
+		refreshSevenSeg();
+	}
 	
 	if(settings.presetBank==pbkManual) // in manual mode CC changes would only conflict with pot scans...
 		return;
@@ -703,6 +722,23 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 
 	if(p600.presetModified)
 		refreshFullState();
+}
+
+void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
+{
+	if(!midiFilterChannel(channel))
+		return;
+
+	if(settings.presetBank!=pbkManual && program<100  && program!=settings.presetNumber)
+	{
+		if(preset_loadCurrent(program))
+		{
+			settings.presetNumber=program;
+			p600.presetModified=0;
+			settings_save();		
+			refreshFullState();
+		}
+	}
 }
 
 void p600_init(void)
@@ -742,6 +778,7 @@ void p600_init(void)
 	midi_register_noteon_callback(&p600.midi,midi_noteOnEvent);
 	midi_register_noteoff_callback(&p600.midi,midi_noteOffEvent);
 	midi_register_cc_callback(&p600.midi,midi_ccEvent);
+	midi_register_progchange_callback(&p600.midi,midi_progChangeEvent);
 	
 	int8_t i;
 	for(i=0;i<P600_VOICE_COUNT;++i)
@@ -1062,16 +1099,8 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	if(pressed && button==pbPreset)
 	{
 		settings.presetBank=(settings.presetBank+1)%2; //TODO: second preset bank, how to store?
-		settings_save();		
-
-		if(settings.presetBank!=pbkManual)
-		{
-			preset_loadCurrent(settings.presetNumber);
-			p600.presetModified=0;
-			refreshFullState();
-		}
-
-		p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
+		settings_save();
+		refreshPresetMode();
 	}
 	
 	if(pressed && button==pbRecord)
