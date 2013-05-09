@@ -716,7 +716,6 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 		param=control-MIDI_BASE_STEPPED_CC;
 		
 		currentPreset.steppedParameters[param]=value>>(7-steppedParametersBits[param]);
-		phex(param);phex(currentPreset.steppedParameters[param]);print("\n");
 		p600.presetModified=1;	
 	}
 
