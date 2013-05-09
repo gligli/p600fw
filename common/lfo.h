@@ -10,6 +10,8 @@ typedef enum
 
 struct lfo_s
 {
+	uint32_t noise;
+	
 	uint32_t phase;
 	int32_t increment;	
 	

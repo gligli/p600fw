@@ -25,6 +25,7 @@ void inline lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 void inline lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
 {
 	lfo->shape=shape;
+	lfo->noise=random();
 }
 
 void lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift)
@@ -87,7 +88,7 @@ void lfo_update(struct lfo_s * l)
 			l->rawOutput=l->halfPeriod*UINT16_MAX;
 			break;
 		case lsRand:
-			l->rawOutput=rand();
+			l->rawOutput=random();
 			break;
 		default:
 			;
@@ -105,7 +106,8 @@ void lfo_update(struct lfo_s * l)
 		l->rawOutput=computeShape(l->phase,sineShape);
 		break;
 	case lsNoise:
-		l->rawOutput=rand();
+		l->noise=lfsr(l->noise,(l->speedCV>>12)+1);
+		l->rawOutput=l->noise;
 		break;
 	case lsSaw:
 		l->rawOutput=l->phase>>9;

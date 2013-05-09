@@ -408,7 +408,7 @@ static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 
 	// set random seed for random-based shapes
 	if(shape==lsRand || shape==lsNoise)
-		srand(p600.ticker);
+		srandom(p600.ticker);
 	
 	lfo_setShape(&p600.lfo,shape);
 	lfo_setSpeedShift(&p600.lfo,shift*2);

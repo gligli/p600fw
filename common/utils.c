@@ -117,3 +117,18 @@ inline int16_t scaleU16S16(uint16_t a, int16_t b)
 }
 
 #endif
+
+inline uint32_t lfsr(uint32_t v, uint8_t taps)
+{
+	uint8_t b24;
+	
+	while(taps--)
+	{
+		b24=v>>24;
+		
+		v<<=1;
+		v|=((b24>>7)^(b24>>5)^(b24>>1)^b24)&1;
+	}
+	
+	return v;
+}

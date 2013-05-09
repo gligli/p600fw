@@ -174,7 +174,7 @@ void arp_update(void)
 		
 	case amRandom:
 		do
-			arp.noteIndex=rand()%ARP_NOTE_MEMORY;
+			arp.noteIndex=random()%ARP_NOTE_MEMORY;
 		while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
 
 		note=arp.notes[arp.noteIndex];
