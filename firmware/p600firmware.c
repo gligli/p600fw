@@ -258,7 +258,9 @@ static FORCEINLINE void hardware_init(int8_t ints)
 	hardware_read(0,0); // init r/w system
 }
 
-void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *buf)
+#define NRWW_SECTION(sec) __attribute__((section (sec))) __attribute__((noinline)) __attribute__((optimize ("O1"))) __attribute__((used))
+
+void NRWW_SECTION(".bootloader") blHack_program_page (uint32_t page, uint8_t *buf)
 {
 	uint16_t i;
 	uint8_t sreg;
@@ -296,7 +298,8 @@ void NOINLINE BOOTLOADER_SECTION blHack_program_page (uint32_t page, uint8_t *bu
 	SREG = sreg;
 }
 
-static int16_t NOINLINE BOOTLOADER_SECTION getMidiByte(void)
+
+static int16_t NRWW_SECTION(".nrww_misc") getMidiByte(void)
 {
 	uint8_t data,status;
 
@@ -321,21 +324,18 @@ static int16_t NOINLINE BOOTLOADER_SECTION getMidiByte(void)
 #define UPDATER_WAIT_BYTE(waited) { UPDATER_GET_BYTE; if(b!=(waited)) break; }
 #define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=_crc_xmodem_update(crc,b); }
 
-void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
+void NRWW_SECTION(".updater") updater_main(void)
 {
 	int8_t i,needUpdate,success=0;
-	uint8_t frc=0;
+	uint8_t seg=1;
 	int16_t b;
 	uint16_t crc,pageIdx,pageSize,crcSent,byteIdx;
-	static uint8_t page[SPM_PAGESIZE];
 	uint8_t awaiting[4];
+	static uint8_t page[SPM_PAGESIZE];
 	
-	// initialize clock
+	// power supply still ramping up voltage	
 	
-	CPU_PRESCALE(CPU_62kHz); // power supply still ramping up voltage
-	_delay_ms(2); // actual delay 512 ms
-	CPU_PRESCALE(CPU_4MHz);  
-	_delay_ms(25); // actual delay 100 ms
+	_delay_ms(100); // actual delay 800 ms
 
 	// no interrupts while we update
 	
@@ -362,6 +362,10 @@ void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
 	hardware_write(1,0x08,0x20);
 	CYCLE_WAIT(8);
 	
+	// show 'U'
+	hardware_write(1,0x09,0x3e);
+	CYCLE_WAIT(8);
+	
 	// init 6850
 	
 	hardware_write(0,0x6000,0b00000011); // master reset
@@ -370,8 +374,10 @@ void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
 	hardware_write(0,0x6000,0b10010101); // clock/16 - 8N1 - receive int
 	CYCLE_WAIT(8);
 	
-	hardware_read(0,0xe000); // read status to start the device
-	CYCLE_WAIT(8);
+	hardware_read(0,0xe000); // read status & data to start the device
+	CYCLE_WAIT(4);
+	hardware_read(0,0xe001);
+	CYCLE_WAIT(4);
 	
 	// main loop
 	
@@ -379,10 +385,6 @@ void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
 	{
 		// init
 		crc=0;
-		
-		// show 'U' with blinking dot on the 7seg
-		hardware_write(1,0x09,0x3e|((frc&1)?0x80:0x00));
-		CYCLE_WAIT(8);
 		
 		// wait for sysex begin
 		UPDATER_GET_BYTE;
@@ -457,10 +459,17 @@ void NOINLINE BOOTLOADER_SECTION __attribute__((used)) updater_main(void)
 		// sysex termination
 		UPDATER_WAIT_BYTE(0xf7)
 		
+		// spinning 7seg
+		
+		seg<<=1;
+		if(seg>=0x40)
+			seg=1;
+		
+		hardware_write(1,0x09,seg);
+		CYCLE_WAIT(8);
+
 		// program page
 		blHack_program_page(pageIdx*SPM_PAGESIZE,page);
-		
-		++frc;
 	}
 	
 	// show 'S' or 'E' on the 7seg, depending on success or error
@@ -486,13 +495,13 @@ void __attribute__((section(".vectors"),naked,used)) __init(void)
 		"out 0x3e,r29 \n\t" // SPH
 		"out 0x3d,r28 \n\t" // SPL
 		// call updater
-		"call updater_main \n\t"
+		"call 0x1e000 \n\t"
 		// back to regular init
 		"jmp __do_clear_bss \n\t"
 	);
 }
 
-// just before the bootloader zone
+// just before the nrww zone
 
 #define STORAGE_ADDR (0x1e000-STORAGE_SIZE)
 

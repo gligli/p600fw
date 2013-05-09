@@ -5,7 +5,6 @@ import optparse
 import os
 import struct
 import sys
-import intelhex
 from itertools import repeat
 
 page_size = 0x100
@@ -60,7 +59,7 @@ def encode32(value):
 	return res
 
 if __name__ == "__main__":
-	print 'hex2syx v1 (p600fw MIDI sysex firmware update builder)'
+	print 'fw2syx v1 (p600fw MIDI sysex firmware update builder)'
 	
 	parser = optparse.OptionParser()
 
@@ -74,20 +73,25 @@ if __name__ == "__main__":
 
 	options, args = parser.parse_args()
 	if len(args) != 1:
-		logging.fatal('Specify one, and only one firmware .hex file!')
+		logging.fatal('Specify one, and only one firmware .bin file!')
 		sys.exit(1)
 
-	ih = intelhex.IntelHex(file(args[0]))
-	data = ih[slice(0,firmware_max_size)].tobinarray()
+	data = []
+	
+	f = file(args[0],"rb")
+	f = f.read()
+
+	for c in f:
+		data += [ord(c)]
 
 	if not data:
-		logging.fatal('Error while loading .hex file')
+		logging.fatal('Error while loading .bin file')
 		sys.exit(2)
 
 	output_file = options.output_file
 	if not output_file:
 		if '.hex' in args[0]:
-			output_file = args[0].replace('.hex', '.syx')
+			output_file = args[0].replace('.bin', '.syx')
 		else:
 			output_file = args[0] + '.syx'
 

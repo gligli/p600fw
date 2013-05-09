@@ -283,9 +283,11 @@ LDFLAGS += $(EXTMEMOPTS)
 LDFLAGS += $(patsubst %,-L%,$(EXTRALIBDIRS))
 LDFLAGS += $(PRINTF_LIB) $(SCANF_LIB) $(MATH_LIB)
 #LDFLAGS += -T linker_script.x
-LDFLAGS += -Wl,--section-start=.bootloader=0x1f000 # 0x1e000 is NRWW zone start on at90usb1286
 
-
+# 0x1e000 is NRWW zone start on at90usb1286
+LDFLAGS += -Wl,--section-start=.updater=0x1e000
+LDFLAGS += -Wl,--section-start=.nrww_misc=0x1ec00
+LDFLAGS += -Wl,--section-start=.bootloader=0x1f000
 
 #---------------- Programming Options (avrdude) ----------------
 
@@ -418,12 +420,14 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 all: begin gccversion sizebefore build sizeafter end
 
 # Change the build target to build a HEX file or a library.
-build: elf hex eep lss sym
+build: elf hex syx lss
 #build: lib
 
 
 elf: $(TARGET).elf
 hex: $(TARGET).hex
+bin: $(TARGET).bin
+syx: $(TARGET).syx
 eep: $(TARGET).eep
 lss: $(TARGET).lss
 sym: $(TARGET).sym
@@ -523,11 +527,19 @@ extcoff: $(TARGET).elf
 
 
 
-# Create final output files (.hex, .eep) from ELF output file.
+# Create final output files (.hex, .bin, .eep) from ELF output file.
 %.hex: %.elf
 	@echo
 	@echo $(MSG_FLASH) $@
 	$(OBJCOPY) -O $(FORMAT) -R .eeprom -R .fuse -R .lock -R .signature $< $@
+
+%.bin: %.elf
+	@echo
+	@echo $(MSG_FLASH) $@
+	$(OBJCOPY) -O binary -R .eeprom -R .fuse -R .lock -R .signature -R .updater -R .nrww_misc -R .bootloader $< $@
+
+%.syx: %.bin
+	$(PYTHONPATH)/python ../fw2syx/fw2syx.py $< -o $@
 
 %.eep: %.elf
 	@echo
@@ -634,5 +646,5 @@ $(shell mkdir $(OBJDIR) 2>/dev/null)
 
 # Listing of phony targets.
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
-build elf hex eep lss sym coff extcoff \
+build elf hex bin syx eep lss sym coff extcoff \
 clean clean_list program debug gdb-config

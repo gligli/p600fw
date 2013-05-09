@@ -2,7 +2,7 @@
     <type>org.netbeans.modules.python.project</type>
     <configuration>
         <data xmlns="http://nbpython.dev.java.net/ns/php-project/1">
-            <name>hex2syx</name>
+            <name>fw2syx</name>
             <sources>
                 <root id="src.hex2syx.dir" name="root"/>
             </sources>
