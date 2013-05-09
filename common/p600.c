@@ -776,7 +776,7 @@ void p600_init(void)
 		// tune when settings are bad
 	
 	if(!settingsOk)
-	;//	tuner_tuneSynth();
+		tuner_tuneSynth();
 
 		// yep
 	
@@ -1119,8 +1119,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 				{
 					settings.presetNumber=p600.presetAwaitingNumber;
 					p600.presetModified=0;
-					settings_save();
-					settings_load();
+					settings_save();		
 	
 					refreshFullState();
 				}
