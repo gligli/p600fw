@@ -631,7 +631,7 @@ void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1,1);
+	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1,0);
 }
 
 void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -650,7 +650,7 @@ void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,0,0,1);
+	assigner_assignNote(intNote,0,0,0);
 }
 
 void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -1259,7 +1259,7 @@ void p600_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
-		assigner_assignNote(key,pressed,UINT16_MAX,1);
+		assigner_assignNote(key,pressed,UINT16_MAX,0);
 	}
 	else
 	{
@@ -1282,7 +1282,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 	if(assigner_getMode()!=mPoly)
 		env=P600_MONO_ENV;
 
-	// don't retrigger gate, unless we're arpeggiating
+		// don't retrigger gate, unless we're arpeggiating
 	
 	if(p600.ampEnvs[env].gate!=gate || arp_getMode()!=amOff)
 	{

@@ -163,7 +163,7 @@ inline assignerMode_t assigner_getMode(void)
 	return assigner.mode;
 }
 
-void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t explicitOff)
+void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t fromArp)
 {
 	int8_t voice=-1;
 	
@@ -171,6 +171,16 @@ void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t expl
 	
 	if(assigner.mode==mPoly)
 	{
+		// handle arp note (assume only one note pressed at a time)
+
+		if(fromArp)
+			for(voice=0;voice<P600_VOICE_COUNT;++voice)
+				if(assigner.voiceNote[voice]!=ASSIGNER_NO_NOTE)
+				{
+					p600_assignerEvent(assigner.voiceNote[voice],0,voice,0);
+					assigner.voiceTimestamp[voice]=++assigner.timestamp;
+				}
+
 		if(on)
 		{
 			voice=findOldest(note);
@@ -179,21 +189,10 @@ void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t expl
 
 			if (voice>=0)
 			{
-				uint32_t ts=UINT32_MAX;
-				
-				if(!explicitOff)
-				{
-					// we have to simulate note off in that case
-					setVoices(voice,0,0,0,0);
-
-					// asign a timestamp
-					ts=++assigner.timestamp;
-				}
-				
 				// steal the voice if it's assigned
 				assigner_voiceDone(voice);
 
-				setVoices(voice,ts,note,1,velocity);
+				setVoices(voice,UINT32_MAX,note,1,velocity);
 			}
 		}
 		else
@@ -214,14 +213,18 @@ void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t expl
 		int8_t legatoCount, isMono,gate;
 		uint8_t legatoMostPrio;
 	
+		// handle arp note (no legato in that case)
+
+		if(fromArp)
+		{
+			p600_assignerEvent(assigner.voiceNote[0],0,-1,0);
+
+			for(i=0;i<LEGATO_NOTE_MEMORY;++i)
+				assigner.legatoNotes[i]=ASSIGNER_NO_NOTE;
+		}
+
 		if(on)
 		{
-			// no legato in that case, assume only one note pressed at a time
-
-			if(!explicitOff)
-				for(i=0;i<LEGATO_NOTE_MEMORY;++i)
-					assigner.legatoNotes[i]=ASSIGNER_NO_NOTE;
-
 			// add the note the list of legato notes
 			
 			for(i=0;i<LEGATO_NOTE_MEMORY;++i)

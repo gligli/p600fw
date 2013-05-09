@@ -130,10 +130,23 @@ NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint
 	updateIncrements(adsr);
 }
 
-inline void adsr_setGate(struct adsr_s * adsr, int8_t gate)
+void adsr_setGate(struct adsr_s * a, int8_t gate)
 {
-	adsr->nextGate=gate;
-	adsr->gateChanged=1;
+	a->phase=0;
+	a->stageLevel=((uint32_t)a->output<<16)/a->levelCV;
+
+	if(gate)
+	{
+		a->stage=sAttack;
+		updateStageVars(a,sAttack);
+	}
+	else
+	{
+		a->stage=sRelease;
+		updateStageVars(a,sRelease);
+	}
+
+	a->gate=gate;
 }
 
 inline void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
@@ -165,28 +178,6 @@ void adsr_init(struct adsr_s * adsr)
 
 inline void adsr_update(struct adsr_s * a)
 {
-	// handle gate
-	
-	if(a->gateChanged)
-	{
-		a->phase=0;
-		a->stageLevel=((uint32_t)a->output<<16)/a->levelCV;
-		
-		if(a->nextGate)
-		{
-			a->stage=sAttack;
-			updateStageVars(a,sAttack);
-		}
-		else
-		{
-			a->stage=sRelease;
-			updateStageVars(a,sRelease);
-		}
-		
-		a->gate=a->nextGate;
-		a->gateChanged=0;
-	}
-	
 	// shortcut for inactive envelopes
 
 	if (a->stage==sWait)

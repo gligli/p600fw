@@ -19,7 +19,7 @@ struct adsr_s
 	uint16_t stageLevel,stageAdd,stageMul;
 	uint16_t output;
 
-	int8_t expOutput,gate,nextGate,gateChanged;
+	int8_t expOutput,gate;
 	uint8_t speedShift;
 	
 	adsrStage_t stage;

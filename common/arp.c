@@ -32,19 +32,24 @@ static int8_t isEmpty(void)
 	return 1;
 }
 
+static void killAllNotes(void)
+{
+	int16_t i;
+
+	for(i=0;i<ARP_NOTE_MEMORY;++i)
+		arp.notes[i]=ASSIGNER_NO_NOTE;
+
+	arp.noteIndex=-1;
+	
+	assigner_assignNote(ASSIGNER_NO_NOTE,0,0,1);
+}
+
 inline void arp_setMode(arpMode_t mode, int8_t hold)
 {
 	// stop previous assigned notes
 	
 	if(arp.mode!=mode || !hold)
-	{
-		int16_t i;
-	
-		for(i=0;i<ARP_NOTE_MEMORY;++i)
-			arp.notes[i]=ASSIGNER_NO_NOTE;
-
-		arp.noteIndex=-1;
-	}
+		killAllNotes();
 	
 	arp.mode=mode;
 	arp.hold=hold;
@@ -71,7 +76,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 	
 	if(on)
 	{
-		// if this is the first note, make sure the arp will start as as soon as we update
+		// if this is the first note, make sure the arp will start on it as as soon as we update
 		
 		if(isEmpty())
 			arp.counter=INT16_MAX; // not UINT16_MAX, to avoid overflow
@@ -102,7 +107,6 @@ void arp_assignNote(uint8_t note, int8_t on)
 			for(i=0;i<ARP_NOTE_MEMORY;++i)
 				if(arp.notes[i]==note)
 				{
-					assigner_assignNote(arp.notes[i],0,0,0);
 					arp.notes[i]=ASSIGNER_NO_NOTE;
 					break;
 				}
@@ -112,11 +116,11 @@ void arp_assignNote(uint8_t note, int8_t on)
 			arp.notes[note]=ASSIGNER_NO_NOTE;
 			arp.notes[ARP_LAST_NOTE-note]=ASSIGNER_NO_NOTE;
 		}
-
-		// if this is the last note
+		
+		//
 		
 		if(isEmpty())
-			arp.noteIndex=-1;
+			killAllNotes();
 	}
 }
 
@@ -181,6 +185,6 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(note,1,UINT16_MAX,0);
+	assigner_assignNote(note,1,UINT16_MAX,1);
 }
 
