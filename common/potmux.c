@@ -5,7 +5,6 @@
 #include "potmux.h"
 #include "dac.h"
 
-#define POTMUX_POT_COUNT 32
 #define PRIORITY_POT_COUNT 4
 #define CHANGE_DETECT_MASK 0xfc00
 
@@ -28,7 +27,6 @@ static struct
 	uint32_t potChanged;
 	uint16_t pots[POTMUX_POT_COUNT];
 	int8_t currentRegularPot;
-	int8_t currentPriorityPotIdx;
 	p600Pot_t lastChanged;
 } potmux;
 
@@ -119,9 +117,11 @@ inline void potmux_resetChanged(void)
 	potmux.lastChanged=ppNone;
 }
 
-inline void potmux_update(int8_t updateRegular, int8_t updatePriority)
+inline void potmux_update(uint8_t regularPotCount)
 {
-	if (updateRegular)
+	int16_t i;
+	
+	for(i=0;i<regularPotCount;++i)
 	{
 		updatePot(potmux.currentRegularPot);
 
@@ -131,12 +131,8 @@ inline void potmux_update(int8_t updateRegular, int8_t updatePriority)
 			potmux.currentRegularPot=(potmux.currentRegularPot+1)%POTMUX_POT_COUNT;
 	}
 
-	if(updatePriority)
-	{
-		updatePot(priorityPots[potmux.currentPriorityPotIdx]);
-
-		potmux.currentPriorityPotIdx=(potmux.currentPriorityPotIdx+1)%PRIORITY_POT_COUNT;
-	}
+	for(i=0;i<PRIORITY_POT_COUNT;++i)
+		updatePot(priorityPots[i]);
 }
 
 void potmux_init(void)

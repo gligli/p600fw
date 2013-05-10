@@ -69,6 +69,7 @@ static struct
 	int8_t gliding;
 	
 	p600Pot_t manualDisplayedPot;
+	uint8_t manualDisplayedValue;
 	
 	enum {pdiNone,pdiLoadDecadeDigit,pdiStoreDecadeDigit,pdiLoadUnitDigit,pdiStoreUnitDigit} presetDigitInput;
 	int8_t presetAwaitingNumber;
@@ -427,17 +428,9 @@ static void refreshSevenSeg(void)
 {
 	if(p600.presetDigitInput==pdiNone)
 	{
-		if(p600.manualDisplayedPot!=ppNone)
-		{
-			uint8_t v=potmux_getValue(p600.manualDisplayedPot)>>8; // show 8 bits
-			sevenSeg_setNumber(v);
-			led_set(plDot,v>99,v>199);
-		}
-		else
-		{
-			sevenSeg_setAscii(' ',' ');
-			led_set(plDot,0,0);
-		}
+		uint8_t v=p600.manualDisplayedValue;
+		sevenSeg_setNumber(v);
+		led_set(plDot,v>99,v>199);
 	}
 	else
 	{
@@ -793,9 +786,7 @@ void p600_init(void)
 		// initial input state
 	
 	scanner_update(1);
-	
-	for(p600Pot_t p=ppMixer;p<=ppFreqBFine;++p)
-		potmux_update(1,1);
+	potmux_update(POTMUX_POT_COUNT);
 
 		// load stuff from storage
 	
@@ -826,6 +817,7 @@ void p600_init(void)
 void p600_update(void)
 {
 	int8_t i,wheelChange,wheelUpdate;
+	uint8_t potVal;
 	static uint8_t frc=0;
 	static uint32_t bendChangeStart=0;
 	
@@ -840,10 +832,7 @@ void p600_update(void)
 	// update pots, detecting change
 
 	potmux_resetChanged();
-	potmux_update(1,1);
-	potmux_update(1,1);
-	potmux_update(1,1);
-	potmux_update(1,1);
+	potmux_update(4);
 	
 	// act on pot change
 	
@@ -856,7 +845,13 @@ void p600_update(void)
 	}
 
 	// has to stay outside of previous if, so that finer pot values changes can also be displayed
-	refreshSevenSeg();
+	
+	potVal=potmux_getValue(p600.manualDisplayedPot)>>8;
+	if(potVal!=p600.manualDisplayedValue)
+	{
+		p600.manualDisplayedValue=potVal;
+		refreshSevenSeg();
+	}
 
 	// update CVs
 
@@ -1059,9 +1054,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	if(!pressed && button==pbTune)
 	{
 		tuner_tuneSynth();
-
-		// tuner will thrash state
-		refreshFullState();
 	}
 	
 	// arp
@@ -1148,8 +1140,6 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 					settings.presetNumber=p600.presetAwaitingNumber;
 					p600.presetModified=0;
 					settings_save();		
-	
-					refreshFullState();
 				}
 
 				p600.presetAwaitingNumber=-1;
@@ -1286,6 +1276,10 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 			sevenSeg_scrollText(s,1);
 		}
 	}
+	
+	// we might have changed state
+	
+	refreshFullState();
 }
 
 void p600_keyEvent(uint8_t key, int pressed)
