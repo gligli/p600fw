@@ -31,18 +31,21 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 	BLOCK_INT
 	{
 		dac_write(cvv);
+		
+		// for DAC rise time
+		CYCLE_WAIT(4);
 
 		// select current CV
 		io_write(0x0d,dmux);
 
-		// 2.5 us to let S&H get very precise voltage, some P600s need it apparently
-		CYCLE_WAIT(10);
+		// 2 us to let S&H get very precise voltage, some P600s need it apparently
+		CYCLE_WAIT(8);
 
 		// deselect it
 		io_write(0x0d,0xff);
 
-		// 2.5 more us to let analog hardware stabilize
-		CYCLE_WAIT(10);
+		// 2 more us to let analog hardware stabilize
+		CYCLE_WAIT(8);
 	}
 }
 
@@ -76,9 +79,15 @@ inline void synth_setCV_FastPath(p600CV_t cv,uint16_t value)
 
 	dac_write(value);
 
+	// for DAC rise time (cf tohk issue)
+	CYCLE_WAIT(1)
+			
 	// select current CV
 	io_write(0x0d,dmux);
 
+	// let S&H get very precise voltage (cf tohk issue)
+	CYCLE_WAIT(1)
+	
 	// deselect it
 	io_write(0x0d,0xff);
 }
