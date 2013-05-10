@@ -110,6 +110,31 @@ static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], in
 		return phase>>8; // 20bit -> 16 bit
 }
 
+static NOINLINE void handlePhaseOverflow(struct adsr_s * a)
+{
+	a->phase=0;
+	a->stageIncrement=0;
+
+	++a->stage;
+
+	switch(a->stage)
+	{
+	case sDecay:
+		a->output=a->levelCV;
+		updateStageVars(a,sDecay);
+		return;
+	case sSustain:
+		updateStageVars(a,sSustain);
+		return;			
+	case sDone:
+		a->stage=sWait;
+		a->output=0;
+		return;
+	default:
+		;
+	}
+}
+
 NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl, uint8_t mask)
 {
 	if(mask&0x01)
@@ -178,41 +203,11 @@ void adsr_init(struct adsr_s * adsr)
 
 inline void adsr_update(struct adsr_s * a)
 {
-	// shortcut for inactive envelopes
-
-	if (a->stage==sWait)
-	{
-		a->output=0;
-		return;
-	}
-
-	// handle phase overflow
+	// if bit 24 or higher is set, it's an overflow -> a timed stage is done!
 	
-	if(a->phase>>24) // if bit 24 or higher is set, it's an overflow -> a timed stage is done!
-	{
-		a->phase=0;
-		a->stageIncrement=0;
-
-		++a->stage;
-
-		switch(a->stage)
-		{
-		case sDecay:
-			a->output=a->levelCV;
-			updateStageVars(a,sDecay);
-			return;
-		case sSustain:
-			updateStageVars(a,sSustain);
-			return;			
-		case sDone:
-			a->stage=sWait;
-			a->output=0;
-			return;
-		default:
-			;
-		}
-	}
-
+	if(a->phase>>24)
+		handlePhaseOverflow(a);
+	
 	// compute output level
 	
 	uint16_t o=0;

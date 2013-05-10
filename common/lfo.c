@@ -11,6 +11,26 @@ static void updateIncrement(struct lfo_s * lfo)
 	lfo->increment=((int32_t)lfo->speedCV<<lfo->speedShift)*(1-lfo->halfPeriod*2);
 }
 
+static NOINLINE void handlePhaseOverflow(struct lfo_s * l)
+{
+	l->halfPeriod=1-l->halfPeriod;
+	l->phase=l->halfPeriod?0x00ffffff:0;
+
+	updateIncrement(l);
+
+	switch(l->shape)
+	{
+	case lsPulse:
+		l->rawOutput=l->halfPeriod*UINT16_MAX;
+		break;
+	case lsRand:
+		l->rawOutput=random();
+		break;
+	default:
+		;
+	}
+}
+
 void inline lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 {
 	lfo->levelCV=lvl;
@@ -71,29 +91,12 @@ void lfo_init(struct lfo_s * lfo)
 		sineShape[i]=(cosf((i/255.0f+1.0f)*M_PI)+1.0f)/2.0f*65535.0f;
 }
 
-void lfo_update(struct lfo_s * l)
+inline void lfo_update(struct lfo_s * l)
 {
-	// handle phase overflow
+	// if bit 24 or higher is set, it's an overflow -> a half period is done!
 	
-	if(l->phase>>24) // if bit 24 or higher is set, it's an overflow -> a half period is done!
-	{
-		l->halfPeriod=1-l->halfPeriod;
-		l->phase=l->halfPeriod?0x00ffffff:0;
-		
-		updateIncrement(l);
-
-		switch(l->shape)
-		{
-		case lsPulse:
-			l->rawOutput=l->halfPeriod*UINT16_MAX;
-			break;
-		case lsRand:
-			l->rawOutput=random();
-			break;
-		default:
-			;
-		}
-	}
+	if(l->phase>>24) 
+		handlePhaseOverflow(l);
 	
 	// handle continuous shapes
 
