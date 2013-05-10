@@ -1,0 +1,52 @@
+**********
+* P600FW *
+**********
+
+https://github.com/gligli/p600fw (Project page)
+
+http://forum.anafrog.com/phpBB/viewtopic.php?f=36&t=10535 (French forum)
+
+Description
+===========
+
+This is the P600FW project, a CPU/firmware remake for the SCI Prophet 600.
+It uses a slightly modified Teensy++ board (http://www.pjrc.com/store/teensypp_pins.html) that plugs into the Z80 socket.
+
+Modifying the Teensy++
+======================
+
+See p600fw_install_guide PDFs...
+
+Usage
+=====
+
+Changes from the base Prophet 600 firmware:
+
+	1) Lasting changes
+
+- "Mixer" changes Oscillator A level.
+- "Glide" changes Oscillator B level.
+- "Poly-mod fil env", "Filter envelope amount" and "Oscillator B fine" zero position is now half-course (allows negative envelopes and flat detune).
+
+	2) Alpha version changes
+
+- "Speed" changes glide level.
+- "1" changes LFO shapes (Pulse-Triangle*/Random-Sine).
+- "2" changes LFO speed (Slow*/Medium/Fast).
+- "3" changes ModWheel strength (Full*/Half/Minimum).
+- "4" changes Amplifier envelope shape and speed (Fast linear/Fast exponential*/Slow linear/Slow exponential).
+- "5" changes Filter envelope shape and speed (Fast linear/Fast exponential*/Slow linear/Slow exponential).
+- "6" changes Pitch input mode (Chromatic/Free*).
+- "7" changes Pitch bend range (Third/Fifth*/Octave).
+- "8" changes Pitch bend target (Pitch*/Filter/Volume/Off).
+- "9" sets current Pitch bend position as neutral point (calibration).
+- "0" changes assigner mono mode and note priority (Unison low*/Unison high/Mono low/Mono high).
+
+* means default value.
+
+/!\ Pitch bend must be calibrated using the "9" key in order to get correct oscillator pitch /!\
+
+History
+=======
+
+- alpha 20130226 : First public version.
