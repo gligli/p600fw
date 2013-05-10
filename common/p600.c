@@ -71,7 +71,7 @@ static struct
 	p600Pot_t manualDisplayedPot;
 	uint8_t manualDisplayedValue;
 	
-	enum {pdiNone,pdiLoadDecadeDigit,pdiStoreDecadeDigit,pdiLoadUnitDigit,pdiStoreUnitDigit} presetDigitInput;
+	enum {diSynth,diMisc,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit} digitInput;
 	int8_t presetAwaitingNumber;
 	int8_t presetModified;
 } p600;
@@ -426,7 +426,7 @@ static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 
 static void refreshSevenSeg(void)
 {
-	if(p600.presetDigitInput==pdiNone)
+	if(p600.digitInput<diLoadDecadeDigit)
 	{
 		uint8_t v=p600.manualDisplayedValue;
 		sevenSeg_setNumber(v);
@@ -434,7 +434,7 @@ static void refreshSevenSeg(void)
 	}
 	else
 	{
-		if(p600.presetDigitInput!=pdiLoadDecadeDigit)
+		if(p600.digitInput!=diLoadDecadeDigit)
 		{
 			if(p600.presetAwaitingNumber>=0)
 				sevenSeg_setAscii('0'+p600.presetAwaitingNumber,' ');
@@ -449,6 +449,8 @@ static void refreshSevenSeg(void)
 	}
 
 	led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
+	led_set(plToTape,p600.digitInput==diSynth,0);
+	led_set(plFromTape,p600.digitInput==diMisc,0);
 	
 	if(arp_getMode()!=amOff)
 	{
@@ -458,7 +460,7 @@ static void refreshSevenSeg(void)
 	}
 	else
 	{
-		led_set(plRecord,p600.presetDigitInput==pdiStoreDecadeDigit,p600.presetDigitInput==pdiStoreDecadeDigit);
+		led_set(plRecord,p600.digitInput==diStoreDecadeDigit,p600.digitInput==diStoreDecadeDigit);
 		led_set(plArpUD,0,0);
 		led_set(plArpAssign,0,0);
 	}
@@ -565,7 +567,7 @@ static void refreshPresetMode(void)
 		refreshFullState();
 	}
 
-	p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
+	p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
 }
 
 static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal,int8_t monoGlidingMask,int8_t polyMask)
@@ -618,6 +620,162 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		}
 	}
 }
+
+static void handleSynthPage(p600Button_t button, int pressed)
+{
+	// assigner
+
+	if((pressed && button==pb0))
+	{
+		currentPreset.steppedParameters[spAssignerMonoMode]=(currentPreset.steppedParameters[spAssignerMonoMode]+1)%(mMonoHigh+1);
+
+		refreshAssignerSettings();
+		sevenSeg_scrollText(assigner_modeName(currentPreset.steppedParameters[spAssignerMonoMode]),1);
+	}
+
+	if(button==pbUnison)
+	{
+		sevenSeg_scrollText(assigner_modeName(assigner_getMode()),1);
+	}
+
+	// lfo
+
+	if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
+	{
+		uint8_t shpA,shp,spd,vA,v;
+
+		shp=button==pbLFOShape;
+		shpA=button==pb1;
+		spd=button==pb2;
+
+		if(shpA)
+		{
+			v=currentPreset.steppedParameters[spLFOShape];
+
+			vA=v>>1;
+			v&=1;
+			vA=(vA+1)%3;
+
+			currentPreset.steppedParameters[spLFOShape]=(vA<<1)|v;
+		}
+
+		if(spd)
+			currentPreset.steppedParameters[spLFOShift]=(currentPreset.steppedParameters[spLFOShift]+1)%3;
+
+		refreshLfoSettings(shp||shpA,spd);
+	}
+
+	// modwheel
+
+	if((pressed && button==pb3))
+	{
+		const char * s[6]={"Full","","Half","","Min",""};
+		currentPreset.steppedParameters[spModwheelShift]=(currentPreset.steppedParameters[spModwheelShift]+2)%6;
+		sevenSeg_scrollText(s[currentPreset.steppedParameters[spModwheelShift]],1);
+	}
+
+	// envs
+
+	if(pressed && (button>=pb4 && button<=pb5))
+	{
+		steppedParameter_t param;
+		uint8_t merged;
+
+		param=(button==pb5)?spFilEnvExpo:spAmpEnvExpo;
+
+		merged=currentPreset.steppedParameters[param]+currentPreset.steppedParameters[param+1]*2;
+
+		merged=(merged+1)%4;
+
+		currentPreset.steppedParameters[param]=merged&1;
+		currentPreset.steppedParameters[param+1]=(merged>>1)&1;
+
+		refreshEnvSettings(param==spFilEnvExpo,1);
+	}
+
+	// pitch mode
+
+	if(pressed && button==pb6)
+	{
+		const char * s[2]={"Free","Chromatic"};
+		currentPreset.steppedParameters[spChromaticPitch]^=1;
+		sevenSeg_scrollText(s[currentPreset.steppedParameters[spChromaticPitch]],1);
+	}
+
+	// bender
+
+	if(pressed && (button==pb7 || button==pb8))
+	{
+		const char * s=NULL;
+
+		if(button==pb7)
+		{
+			switch(currentPreset.steppedParameters[spBenderSemitones])
+			{
+			case 3:
+				currentPreset.steppedParameters[spBenderSemitones]=5;
+				s="5th";
+				break;
+			case 5:
+				currentPreset.steppedParameters[spBenderSemitones]=12;
+				s="Oct";
+				break;
+			case 12:
+				currentPreset.steppedParameters[spBenderSemitones]=3;
+				s="3rd";
+				break;
+			}
+		}
+
+		if(button==pb8)
+		{
+			currentPreset.steppedParameters[spBenderTarget]=(currentPreset.steppedParameters[spBenderTarget]+1)%(modVolume+1);
+			s=modulationName(currentPreset.steppedParameters[spBenderTarget]);
+		}
+
+		// clear bender CVs, force recompute
+		memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
+		computeBenderCVs();
+
+		sevenSeg_scrollText(s,1);
+	}
+}
+
+static void handleMiscPage(p600Button_t button, int pressed)
+{
+	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
+	
+	// midi receive channel
+
+	if(pressed && button==pb1)
+	{
+		char s[20];
+		
+		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
+		settings_save();
+		
+		strcpy(s,chs[settings.midiReceiveChannel+1]);
+		strcat(s," midi recv");
+		
+		sevenSeg_scrollText(s,1);
+	}
+	
+	if(pressed && button==pb2)
+	{
+		settings.benderMiddle=potmux_getValue(ppPitchWheel);
+		settings_save();
+
+		// clear bender CVs, force recompute
+		memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
+		computeBenderCVs();
+
+		sevenSeg_scrollText("bender calibrated",1);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// MIDI
+////////////////////////////////////////////////////////////////////////////////
 
 static int8_t midiFilterChannel(uint8_t channel)
 {
@@ -733,6 +891,10 @@ void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
 	}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// P600 main code
+////////////////////////////////////////////////////////////////////////////////
+
 void p600_init(void)
 {
 	memset(&p600,0,sizeof(p600));
@@ -741,7 +903,7 @@ void p600_init(void)
 	
 	// defaults
 	
-	p600.presetDigitInput=pdiNone;
+	p600.digitInput=diSynth;
 	p600.presetAwaitingNumber=-1;
 	p600.manualDisplayedPot=ppNone;
 	settings.benderMiddle=UINT16_MAX/2;
@@ -795,7 +957,7 @@ void p600_init(void)
 
 	if(settingsOk && settings.presetBank!=pbkManual)
 	{
-		p600.presetDigitInput=pdiLoadDecadeDigit;
+		p600.digitInput=diLoadDecadeDigit;
 		p600.presetModified=0;
 		preset_loadCurrent(settings.presetNumber);
 	}
@@ -940,6 +1102,10 @@ void p600_update(void)
 	computeTunedCVs(wheelUpdate);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// P600 interrupts
+////////////////////////////////////////////////////////////////////////////////
+
 void p600_uartInterrupt(void)
 {
 	uart_update();
@@ -1043,6 +1209,10 @@ void p600_timerInterrupt(void)
 	++frc;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// P600 internal events
+////////////////////////////////////////////////////////////////////////////////
+
 void p600_buttonEvent(p600Button_t button, int pressed)
 {
 	// button press might change current preset
@@ -1085,6 +1255,33 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 		return; // override normal record action
 	}
 	
+	// digit buttons use
+	
+	if(pressed && button==pbToTape && settings.presetBank!=pbkManual)
+	{
+		if(p600.digitInput!=diSynth)
+		{
+			p600.digitInput=diSynth;
+			sevenSeg_scrollText("sound settings",1);
+		}
+		else
+		{
+			p600.digitInput=diLoadDecadeDigit;
+		}
+	}
+	else if(pressed && button==pbFromTape)
+	{
+		if(p600.digitInput!=diMisc)
+		{
+			p600.digitInput=diMisc;
+			sevenSeg_scrollText("misc settings",1);
+		}
+		else
+		{
+			p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
+		}
+	}
+
 	// preset mode
 	
 	if(pressed && button==pbPreset)
@@ -1096,40 +1293,40 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	
 	if(pressed && button==pbRecord)
 	{
-		if(p600.presetDigitInput==pdiStoreDecadeDigit)
+		if(p600.digitInput==diStoreDecadeDigit)
 		{
 			// cancel record
-			p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
+			p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
 		}
 		else
 		{
 			// ask for digit
-			p600.presetDigitInput=pdiStoreDecadeDigit;
+			p600.digitInput=diStoreDecadeDigit;
 		}
 	}
 	
-	if(p600.presetDigitInput!=pdiNone)
+	if(p600.digitInput>=diLoadDecadeDigit)
 	{
 		// preset number input 
 		
 		if(pressed && button>=pb0 && button<=pb9)
 		{
-			switch(p600.presetDigitInput)
+			switch(p600.digitInput)
 			{
-			case pdiLoadDecadeDigit:
+			case diLoadDecadeDigit:
 				p600.presetAwaitingNumber=button-pb0;
-				p600.presetDigitInput=pdiLoadUnitDigit;
+				p600.digitInput=diLoadUnitDigit;
 				break;
-			case pdiStoreDecadeDigit:
+			case diStoreDecadeDigit:
 				p600.presetAwaitingNumber=button-pb0;
-				p600.presetDigitInput=pdiStoreUnitDigit;
+				p600.digitInput=diStoreUnitDigit;
 				break;
-			case pdiLoadUnitDigit:
-			case pdiStoreUnitDigit:
+			case diLoadUnitDigit:
+			case diStoreUnitDigit:
 				p600.presetAwaitingNumber=p600.presetAwaitingNumber*10+(button-pb0);
 
 				// store?
-				if(p600.presetDigitInput==pdiStoreUnitDigit)
+				if(p600.digitInput==diStoreUnitDigit)
 				{
 					preset_saveCurrent(p600.presetAwaitingNumber);
 				}
@@ -1143,7 +1340,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 				}
 
 				p600.presetAwaitingNumber=-1;
-				p600.presetDigitInput=(settings.presetBank==pbkManual)?pdiNone:pdiLoadDecadeDigit;
+				p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
 				break;
 			default:
 				;
@@ -1152,129 +1349,10 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	}
 	else
 	{
-		// assigner
-
-		if((pressed && button==pb0))
-		{
-			currentPreset.steppedParameters[spAssignerMonoMode]=(currentPreset.steppedParameters[spAssignerMonoMode]+1)%(mMonoHigh+1);
-
-			refreshAssignerSettings();
-			sevenSeg_scrollText(assigner_modeName(currentPreset.steppedParameters[spAssignerMonoMode]),1);
-		}
-
-		if(button==pbUnison)
-		{
-			sevenSeg_scrollText(assigner_modeName(assigner_getMode()),1);
-		}
-
-		// lfo
-
-		if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
-		{
-			uint8_t shpA,shp,spd,vA,v;
-			
-			shp=button==pbLFOShape;
-			shpA=button==pb1;
-			spd=button==pb2;
-
-			if(shpA)
-			{
-				v=currentPreset.steppedParameters[spLFOShape];
-
-				vA=v>>1;
-				v&=1;
-				vA=(vA+1)%3;
-				
-				currentPreset.steppedParameters[spLFOShape]=(vA<<1)|v;
-			}
-			
-			if(spd)
-				currentPreset.steppedParameters[spLFOShift]=(currentPreset.steppedParameters[spLFOShift]+1)%3;
-
-			refreshLfoSettings(shp||shpA,spd);
-		}
-
-		// modwheel
-
-		if((pressed && button==pb3))
-		{
-			const char * s[6]={"Full","","Half","","Min",""};
-			currentPreset.steppedParameters[spModwheelShift]=(currentPreset.steppedParameters[spModwheelShift]+2)%6;
-			sevenSeg_scrollText(s[currentPreset.steppedParameters[spModwheelShift]],1);
-		}
-
-		// envs
-
-		if(pressed && (button>=pb4 && button<=pb5))
-		{
-			steppedParameter_t param;
-			uint8_t merged;
-
-			param=(button==pb5)?spFilEnvExpo:spAmpEnvExpo;
-			
-			merged=currentPreset.steppedParameters[param]+currentPreset.steppedParameters[param+1]*2;
-			
-			merged=(merged+1)%4;
-			
-			currentPreset.steppedParameters[param]=merged&1;
-			currentPreset.steppedParameters[param+1]=(merged>>1)&1;
-
-			refreshEnvSettings(param==spFilEnvExpo,1);
-		}
-
-		// pitch mode
-
-		if(pressed && button==pb6)
-		{
-			const char * s[2]={"Free","Chromatic"};
-			currentPreset.steppedParameters[spChromaticPitch]^=1;
-			sevenSeg_scrollText(s[currentPreset.steppedParameters[spChromaticPitch]],1);
-		}
-
-
-		// bender
-
-		if(pressed && (button>=pb7 && button<=pb9))
-		{
-			const char * s=NULL;
-
-			if(button==pb7)
-			{
-				switch(currentPreset.steppedParameters[spBenderSemitones])
-				{
-				case 3:
-					currentPreset.steppedParameters[spBenderSemitones]=5;
-					s="5th";
-					break;
-				case 5:
-					currentPreset.steppedParameters[spBenderSemitones]=12;
-					s="Oct";
-					break;
-				case 12:
-					currentPreset.steppedParameters[spBenderSemitones]=3;
-					s="3rd";
-					break;
-				}
-			}
-
-			if(button==pb8)
-			{
-				currentPreset.steppedParameters[spBenderTarget]=(currentPreset.steppedParameters[spBenderTarget]+1)%(modVolume+1);
-				s=modulationName(currentPreset.steppedParameters[spBenderTarget]);
-			}
-
-			if(button==pb9)
-			{
-				settings.benderMiddle=potmux_getValue(ppPitchWheel);
-				s="Calibrated";
-			}
-
-			// clear bender CVs, force recompute
-			memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
-			computeBenderCVs();
-
-			sevenSeg_scrollText(s,1);
-		}
+		if(p600.digitInput==diSynth)
+			handleSynthPage(button,pressed);
+		else
+			handleMiscPage(button,pressed);
 	}
 	
 	// we might have changed state
