@@ -9,7 +9,7 @@
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
-	#define VERSION "alpha "__DATE__
+	#define VERSION "beta "__DATE__
 #else
 	#define VERSION "debug "__DATE__ " " __TIME__
 #endif
