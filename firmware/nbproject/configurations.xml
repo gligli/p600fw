@@ -12,6 +12,7 @@
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/hardware.h</itemPath>
       <itemPath>hardware_impl.h</itemPath>
+      <itemPath>../common/import.h</itemPath>
       <itemPath>../common/lfo.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
       <itemPath>mult16x16.h</itemPath>
@@ -40,6 +41,7 @@
       <itemPath>../common/assigner.c</itemPath>
       <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
+      <itemPath>../common/import.c</itemPath>
       <itemPath>../common/lfo.c</itemPath>
       <itemPath>../common/p600.c</itemPath>
       <itemPath>p600firmware.c</itemPath>
@@ -108,6 +110,10 @@
       <item path="../common/display.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/hardware.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/import.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/import.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/lfo.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -210,6 +216,10 @@
       <item path="../common/display.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/hardware.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/import.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/import.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/lfo.c" ex="false" tool="0" flavor2="0">
       </item>

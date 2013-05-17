@@ -20,6 +20,7 @@
 #include "arp.h"
 #include "storage.h"
 #include "uart_6850.h"
+#include "import.h"
 
 #define P600_MONO_ENV 0 // informative constant, don't change it!
 
@@ -29,6 +30,8 @@
 #define MIDI_BASE_NOTE 12
 
 #define TICKER_1S 500
+
+#define MAX_SYSEX_SIZE 512
 
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
@@ -74,6 +77,9 @@ static struct
 	enum {diSynth,diMisc,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit} digitInput;
 	int8_t presetAwaitingNumber;
 	int8_t presetModified;
+	
+	uint8_t sysexBuffer[MAX_SYSEX_SIZE];
+	int16_t sysexSize;
 } p600;
 
 static const char * modulationName(modulation_t m)
@@ -891,6 +897,50 @@ void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
 	}
 }
 
+void sysexDoByte(uint8_t b)
+{
+	switch(b)
+	{
+	case 0xF0:
+		p600.sysexSize=0;
+		memset(p600.sysexBuffer,0,MAX_SYSEX_SIZE);
+		break;
+	case 0xF7:
+		if(p600.sysexBuffer[0]==0x01 && p600.sysexBuffer[1]==0x02) // SCI P600 program dump
+		{
+			import_sysex(p600.sysexBuffer,p600.sysexSize);
+			refreshFullState();
+		}
+		p600.sysexSize=0;
+		break;
+	default:
+		if(p600.sysexSize>=MAX_SYSEX_SIZE)
+		{
+#ifdef DEBUG
+			print("Warning: sysex buffer overflow\n");
+#endif
+			p600.sysexSize=0;
+		}
+		
+		p600.sysexBuffer[p600.sysexSize++]=b;
+	}
+}
+
+void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
+{
+	if(p600.sysexSize)
+		count=count-p600.sysexSize-1;
+	
+	if(count>0)
+		sysexDoByte(b0);
+	
+	if(count>1)
+		sysexDoByte(b1);
+
+	if(count>2)
+		sysexDoByte(b2);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // P600 main code
 ////////////////////////////////////////////////////////////////////////////////
@@ -933,6 +983,7 @@ void p600_init(void)
 	midi_register_noteoff_callback(&p600.midi,midi_noteOffEvent);
 	midi_register_cc_callback(&p600.midi,midi_ccEvent);
 	midi_register_progchange_callback(&p600.midi,midi_progChangeEvent);
+	midi_register_sysex_callback(&p600.midi,midi_sysexEvent);
 	
 	int8_t i;
 	for(i=0;i<P600_VOICE_COUNT;++i)
@@ -964,8 +1015,10 @@ void p600_init(void)
 		
 		// tune when settings are bad
 	
+#ifndef DEBUG_
 	if(!settingsOk)
 		tuner_tuneSynth();
+#endif	
 
 		// yep
 	

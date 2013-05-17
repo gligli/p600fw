@@ -40,6 +40,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/assigner.o \
 	${OBJECTDIR}/_ext/1270477542/dac.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
+	${OBJECTDIR}/_ext/1270477542/import.o \
 	${OBJECTDIR}/_ext/1270477542/lfo.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
@@ -102,6 +103,11 @@ ${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
+
+${OBJECTDIR}/_ext/1270477542/import.o: ../common/import.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/import.o ../common/import.c
 
 ${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
