@@ -71,8 +71,8 @@ static struct
 	int16_t glideAmount;
 	int8_t gliding;
 	
-	p600Pot_t manualDisplayedPot;
-	uint8_t manualDisplayedValue;
+	p600Pot_t lastActivePot;
+	uint8_t manualActivePotValue;
 	
 	enum {diSynth,diMisc,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit} digitInput;
 	int8_t presetAwaitingNumber;
@@ -434,7 +434,7 @@ static void refreshSevenSeg(void)
 {
 	if(p600.digitInput<diLoadDecadeDigit)
 	{
-		uint8_t v=p600.manualDisplayedValue;
+		uint8_t v=p600.manualActivePotValue;
 		sevenSeg_setNumber(v);
 		led_set(plDot,v>99,v>199);
 	}
@@ -489,7 +489,7 @@ static void refreshPresetPots(int8_t force)
 	continuousParameter_t cp;
 	
 	for(cp=0;cp<cpCount;++cp)
-		if(force || potmux_hasChanged(continuousParameterToPot[cp]))
+		if(force || continuousParameterToPot[cp]==p600.lastActivePot || potmux_hasChanged(continuousParameterToPot[cp]))
 		{
 			currentPreset.continuousParameters[cp]=potmux_getValue(continuousParameterToPot[cp]);
 			p600.presetModified=1;
@@ -569,6 +569,7 @@ static void refreshPresetMode(void)
 	if(settings.presetBank!=pbkManual)
 	{
 		preset_loadCurrent(settings.presetNumber);
+		p600.lastActivePot=ppNone;
 		p600.presetModified=0;
 		refreshFullState();
 	}
@@ -890,6 +891,7 @@ void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
 		if(preset_loadCurrent(program))
 		{
 			settings.presetNumber=program;
+			p600.lastActivePot=ppNone;
 			p600.presetModified=0;
 			settings_save();		
 			refreshFullState();
@@ -955,7 +957,7 @@ void p600_init(void)
 	
 	p600.digitInput=diSynth;
 	p600.presetAwaitingNumber=-1;
-	p600.manualDisplayedPot=ppNone;
+	p600.lastActivePot=ppNone;
 	settings.benderMiddle=UINT16_MAX/2;
 	settings.presetBank=pbkManual;
 	settings.midiReceiveChannel=-1;
@@ -1009,6 +1011,7 @@ void p600_init(void)
 	if(settingsOk && settings.presetBank!=pbkManual)
 	{
 		p600.digitInput=diLoadDecadeDigit;
+		p600.lastActivePot=ppNone;
 		p600.presetModified=0;
 		preset_loadCurrent(settings.presetNumber);
 	}
@@ -1051,20 +1054,20 @@ void p600_update(void)
 	
 	// act on pot change
 	
-	refreshPresetPots(settings.presetBank==pbkManual);
-
 	if(potmux_lastChanged()!=ppNone)
 	{
 		// display last changed pot value
-		p600.manualDisplayedPot=potmux_lastChanged();
+		p600.lastActivePot=potmux_lastChanged();
 	}
+
+	refreshPresetPots(settings.presetBank==pbkManual);
 
 	// has to stay outside of previous if, so that finer pot values changes can also be displayed
 	
-	potVal=potmux_getValue(p600.manualDisplayedPot)>>8;
-	if(potVal!=p600.manualDisplayedValue)
+	potVal=potmux_getValue(p600.lastActivePot)>>8;
+	if(potVal!=p600.manualActivePotValue)
 	{
-		p600.manualDisplayedValue=potVal;
+		p600.manualActivePotValue=potVal;
 		refreshSevenSeg();
 	}
 
@@ -1388,6 +1391,7 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 				if(preset_loadCurrent(p600.presetAwaitingNumber))
 				{
 					settings.presetNumber=p600.presetAwaitingNumber;
+					p600.lastActivePot=ppNone;
 					p600.presetModified=0;
 					settings_save();		
 				}
