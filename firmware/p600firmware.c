@@ -363,9 +363,15 @@ void NRWW_SECTION(".updater") updater_main(void)
 	CYCLE_WAIT(8);
 	
 	// show 'U'
+	
 	hardware_write(1,0x09,0x3e);
 	CYCLE_WAIT(8);
 	
+	// unclear NMI (UART IRQ)
+	
+	hardware_write(1,0x0e,0b00110001);
+	CYCLE_WAIT(8);
+
 	// init 6850
 	
 	hardware_write(0,0x6000,0b00000011); // master reset
@@ -378,7 +384,7 @@ void NRWW_SECTION(".updater") updater_main(void)
 	CYCLE_WAIT(4);
 	hardware_read(0,0xe001);
 	CYCLE_WAIT(4);
-	
+
 	// main loop
 	
 	for(;;)
