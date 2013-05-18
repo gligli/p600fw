@@ -54,6 +54,8 @@ static struct
 
 	struct lfo_s lfo;
 	
+	struct preset_s manualPreset;
+	
 	uint16_t oscANoteCV[P600_VOICE_COUNT];
 	uint16_t oscBNoteCV[P600_VOICE_COUNT];
 	uint16_t filterNoteCV[P600_VOICE_COUNT]; 
@@ -569,11 +571,16 @@ static void refreshPresetMode(void)
 	if(settings.presetBank!=pbkManual)
 	{
 		preset_loadCurrent(settings.presetNumber);
-		p600.lastActivePot=ppNone;
-		p600.presetModified=0;
-		refreshFullState();
+	}
+	else
+	{
+		currentPreset=p600.manualPreset;
 	}
 
+	refreshFullState();
+
+	p600.lastActivePot=ppNone;
+	p600.presetModified=0;
 	p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
 }
 
@@ -844,6 +851,10 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 
 	if(control==0 && value<=pbkA && settings.presetBank!=value) // coarse bank #
 	{
+		// save manual preset
+		if (settings.presetBank==pbkManual)
+			p600.manualPreset=currentPreset;
+		
 		settings.presetBank=value;
 		settings_save();
 		refreshPresetMode();
@@ -951,23 +962,24 @@ void p600_init(void)
 {
 	memset(&p600,0,sizeof(p600));
 	memset(&settings,0,sizeof(settings));
-	memset(&currentPreset,0,sizeof(currentPreset));
 	
 	// defaults
 	
-	p600.digitInput=diSynth;
-	p600.presetAwaitingNumber=-1;
-	p600.lastActivePot=ppNone;
 	settings.benderMiddle=UINT16_MAX/2;
 	settings.presetBank=pbkManual;
 	settings.midiReceiveChannel=-1;
-	currentPreset.steppedParameters[spAssignerMonoMode]=mUnisonLow;
-	currentPreset.steppedParameters[spBenderSemitones]=5;
-	currentPreset.steppedParameters[spBenderTarget]=modPitch;
-	currentPreset.steppedParameters[spFilEnvExpo]=1;
-	currentPreset.steppedParameters[spAmpEnvExpo]=1;
-	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-	currentPreset.continuousParameters[cpFilVelocity]=0;
+	p600.digitInput=diSynth;
+	p600.presetAwaitingNumber=-1;
+	p600.lastActivePot=ppNone;
+	p600.manualPreset.steppedParameters[spAssignerMonoMode]=mUnisonLow;
+	p600.manualPreset.steppedParameters[spBenderSemitones]=5;
+	p600.manualPreset.steppedParameters[spBenderTarget]=modPitch;
+	p600.manualPreset.steppedParameters[spFilEnvExpo]=1;
+	p600.manualPreset.steppedParameters[spAmpEnvExpo]=1;
+	p600.manualPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
+	p600.manualPreset.continuousParameters[cpFilVelocity]=0;
+
+	currentPreset=p600.manualPreset;
 	
 	// init
 	
@@ -1342,6 +1354,10 @@ void p600_buttonEvent(p600Button_t button, int pressed)
 	
 	if(pressed && button==pbPreset)
 	{
+		// save manual preset
+		if (settings.presetBank==pbkManual)
+			p600.manualPreset=currentPreset;
+		
 		settings.presetBank=(settings.presetBank+1)%2; //TODO: second preset bank, how to store?
 		settings_save();
 		refreshPresetMode();

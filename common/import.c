@@ -60,6 +60,7 @@ void import_sysex(uint8_t * buf, int16_t size)
 	int8_t presetNumber,i;
 	uint8_t patchData[16];
 	struct z80Patch_t * zp = (struct z80Patch_t *)patchData;
+	struct preset_s p,savedP;
 	uint16_t tmp;
 	
 	// basic checks
@@ -84,66 +85,67 @@ void import_sysex(uint8_t * buf, int16_t size)
 
 	// import patch
 
+	tmp=zp->mixer<<10;
+	p.continuousParameters[cpVolA]=UINT16_MAX-tmp;
+	p.continuousParameters[cpVolB]=tmp;
+	p.continuousParameters[cpFreqA]=zp->freqA<<10;
+	p.continuousParameters[cpFreqB]=zp->freqB<<10;
+	p.continuousParameters[cpFreqBFine]=(UINT16_MAX/2)+(zp->fineB<<8);
+	p.continuousParameters[cpAPW]=zp->pwA<<9;
+	p.continuousParameters[cpBPW]=zp->pwB<<9;
+	p.continuousParameters[cpCutoff]=((uint32_t)zp->cutoff<<11)/7;
+	p.continuousParameters[cpResonance]=zp->reso<<10;
+	p.continuousParameters[cpFilEnvAmt]=0x8000+(zp->filEnvAmt<<11);
+	p.continuousParameters[cpFilRel]=z80EnvCV[zp->filRel]<<8;
+	p.continuousParameters[cpFilSus]=zp->filSus<<12;
+	p.continuousParameters[cpFilDec]=z80EnvCV[zp->filDec]<<8;
+	p.continuousParameters[cpFilAtt]=z80EnvCV[zp->filAtk]<<8;
+	p.continuousParameters[cpAmpRel]=z80EnvCV[zp->ampRel]<<8;
+	p.continuousParameters[cpAmpSus]=zp->ampSus<<12;
+	p.continuousParameters[cpAmpDec]=z80EnvCV[zp->ampDec]<<8;
+	p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
+	p.continuousParameters[cpPModFilEnv]=0x8000+(zp->pmodFilEnv<<10);
+	p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
+	p.continuousParameters[cpLFOFreq]=zp->lfoFreq<<10;
+	p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;
+	p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0;
+	p.continuousParameters[cpAmpVelocity]=0;
+	p.continuousParameters[cpFilVelocity]=0;
+
+	p.steppedParameters[spASaw]=zp->sawA;
+	p.steppedParameters[spATri]=zp->triA;
+	p.steppedParameters[spASqr]=zp->pulseA;
+	p.steppedParameters[spBSaw]=zp->sawB;
+	p.steppedParameters[spBTri]=zp->triB;
+	p.steppedParameters[spBSqr]=zp->pulseB;
+	p.steppedParameters[spSync]=zp->syncA;
+	p.steppedParameters[spPModFA]=zp->pmodFreqA;
+	p.steppedParameters[spPModFil]=zp->pmodFil;
+	p.steppedParameters[spLFOShape]=zp->lfoShape;
+	p.steppedParameters[spLFOShift]=1;
+	p.steppedParameters[spLFOTargets]=zp->lfoPitch | (zp->lfoPW<<1) | (zp->lfoFil<<2);
+	p.steppedParameters[spTrackingShift]=(zp->trackHalf?1:0) + (zp->trackFull?2:0);
+	p.steppedParameters[spFilEnvExpo]=0;
+	p.steppedParameters[spFilEnvSlow]=1;
+	p.steppedParameters[spAmpEnvExpo]=0;
+	p.steppedParameters[spAmpEnvSlow]=1;
+	p.steppedParameters[spUnison]=zp->unison;
+	p.steppedParameters[spAssignerMonoMode]=mUnisonLow;
+	p.steppedParameters[spBenderSemitones]=3;
+	p.steppedParameters[spBenderTarget]=modPitch;
+	p.steppedParameters[spModwheelShift]=1;
+	p.steppedParameters[spChromaticPitch]=1;
+
+	// save it
+	
 	BLOCK_INT
 	{
-#define p currentPreset		
-		
-		tmp=zp->mixer<<10;
-		p.continuousParameters[cpVolA]=UINT16_MAX-tmp;
-		p.continuousParameters[cpVolB]=tmp;
-		p.continuousParameters[cpFreqA]=zp->freqA<<10;
-		p.continuousParameters[cpFreqB]=zp->freqB<<10;
-		p.continuousParameters[cpFreqBFine]=(UINT16_MAX/2)+(zp->fineB<<8);
-		p.continuousParameters[cpAPW]=zp->pwA<<9;
-		p.continuousParameters[cpBPW]=zp->pwB<<9;
-		p.continuousParameters[cpCutoff]=((uint32_t)zp->cutoff<<11)/7;
-		p.continuousParameters[cpResonance]=zp->reso<<10;
-		p.continuousParameters[cpFilEnvAmt]=0x8000+(zp->filEnvAmt<<11);
-		p.continuousParameters[cpFilRel]=z80EnvCV[zp->filRel]<<8;
-		p.continuousParameters[cpFilSus]=zp->filSus<<12;
-		p.continuousParameters[cpFilDec]=z80EnvCV[zp->filDec]<<8;
-		p.continuousParameters[cpFilAtt]=z80EnvCV[zp->filAtk]<<8;
-		p.continuousParameters[cpAmpRel]=z80EnvCV[zp->ampRel]<<8;
-		p.continuousParameters[cpAmpSus]=zp->ampSus<<12;
-		p.continuousParameters[cpAmpDec]=z80EnvCV[zp->ampDec]<<8;
-		p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
-		p.continuousParameters[cpPModFilEnv]=0x8000+(zp->pmodFilEnv<<10);
-		p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
-		p.continuousParameters[cpLFOFreq]=zp->lfoFreq<<10;
-		p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;
-		p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0;
-		p.continuousParameters[cpAmpVelocity]=0;
-		p.continuousParameters[cpFilVelocity]=0;
-
-		p.steppedParameters[spASaw]=zp->sawA;
-		p.steppedParameters[spATri]=zp->triA;
-		p.steppedParameters[spASqr]=zp->pulseA;
-		p.steppedParameters[spBSaw]=zp->sawB;
-		p.steppedParameters[spBTri]=zp->triB;
-		p.steppedParameters[spBSqr]=zp->pulseB;
-		p.steppedParameters[spSync]=zp->syncA;
-		p.steppedParameters[spPModFA]=zp->pmodFreqA;
-		p.steppedParameters[spPModFil]=zp->pmodFil;
-		p.steppedParameters[spLFOShape]=zp->lfoShape;
-		p.steppedParameters[spLFOShift]=1;
-		p.steppedParameters[spLFOTargets]=zp->lfoPitch | (zp->lfoPW<<1) | (zp->lfoFil<<2);
-		p.steppedParameters[spTrackingShift]=(zp->trackHalf?1:0) + (zp->trackFull?2:0);
-		p.steppedParameters[spFilEnvExpo]=0;
-		p.steppedParameters[spFilEnvSlow]=1;
-		p.steppedParameters[spAmpEnvExpo]=0;
-		p.steppedParameters[spAmpEnvSlow]=1;
-		p.steppedParameters[spUnison]=zp->unison;
-		p.steppedParameters[spAssignerMonoMode]=mUnisonLow;
-		p.steppedParameters[spBenderSemitones]=3;
-		p.steppedParameters[spBenderTarget]=modPitch;
-		p.steppedParameters[spModwheelShift]=1;
-		p.steppedParameters[spChromaticPitch]=1;
+		savedP=currentPreset;
+		currentPreset=p;		
 		
 		preset_saveCurrent(presetNumber);
-#undef p
-
-		if(settings.presetBank==pbkA)
-			preset_loadCurrent(settings.presetNumber);
+		
+		currentPreset=savedP;
 	}
 }
 
