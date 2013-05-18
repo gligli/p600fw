@@ -457,7 +457,7 @@ static void refreshSevenSeg(void)
 	}
 
 	led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
-	led_set(plToTape,p600.digitInput==diSynth,0);
+	led_set(plToTape,p600.digitInput==diSynth && settings.presetBank!=pbkManual,0);
 	led_set(plFromTape,p600.digitInput==diMisc,0);
 	
 	if(arp_getMode()!=amOff)
