@@ -121,7 +121,7 @@ static void storageWriteS8(int8_t v)
 	tempPtr+=sizeof(v);
 }
 
-static void storageLoad(uint16_t pageIdx, uint8_t pageCount)
+static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 {
 	uint16_t i;
 	
@@ -143,7 +143,7 @@ static void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 	tempVersion=storageRead8();
 }
 
-static void storagePrepareStore(void)
+static LOWERCODESIZE void storagePrepareStore(void)
 {
 	memset(temp,0,sizeof(temp));
 	tempPtr=temp;
@@ -153,7 +153,7 @@ static void storagePrepareStore(void)
 	storageWrite8(tempVersion);
 }
 
-static void storageFinishStore(uint16_t pageIdx, uint8_t pageCount)
+static LOWERCODESIZE void storageFinishStore(uint16_t pageIdx, uint8_t pageCount)
 {
 	if((tempPtr-temp)>sizeof(temp))
 	{
@@ -169,7 +169,7 @@ static void storageFinishStore(uint16_t pageIdx, uint8_t pageCount)
 		storage_write(pageIdx+i,&temp[STORAGE_PAGE_SIZE*i]);
 }
 
-int8_t settings_load(void)
+LOWERCODESIZE int8_t settings_load(void)
 {
 	int8_t i,j;
 	
@@ -204,7 +204,7 @@ int8_t settings_load(void)
 	return 1;
 }
 
-void settings_save(void)
+LOWERCODESIZE void settings_save(void)
 {
 	int8_t i,j;
 	
@@ -232,7 +232,7 @@ void settings_save(void)
 	}
 }
 
-int8_t preset_loadCurrent(uint16_t number)
+LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 {
 	BLOCK_INT
 	{
@@ -255,7 +255,7 @@ int8_t preset_loadCurrent(uint16_t number)
 	return 1;
 }
 
-void preset_saveCurrent(uint16_t number)
+LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 {
 	BLOCK_INT
 	{

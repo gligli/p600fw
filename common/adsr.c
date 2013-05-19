@@ -90,7 +90,7 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 	}
 }
 
-static NOINLINE void updateIncrements(struct adsr_s * adsr)
+static LOWERCODESIZE void updateIncrements(struct adsr_s * adsr)
 {
 	adsr->attackIncrement=(getPhaseInc(adsr->attackCV>>8)>>adsr->speedShift)<<4; // phase is 20 bits, from bit 4 to bit 23
 	adsr->decayIncrement=(getPhaseInc(adsr->decayCV>>8)>>adsr->speedShift)<<4;
@@ -135,7 +135,7 @@ static NOINLINE void handlePhaseOverflow(struct adsr_s * a)
 	}
 }
 
-NOINLINE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl, uint8_t mask)
+LOWERCODESIZE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl, uint8_t mask)
 {
 	if(mask&0x01)
 		adsr->attackCV=atk;
@@ -179,7 +179,7 @@ inline void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
 	adsr->expOutput=isExp;
 }
 
-void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift)
+LOWERCODESIZE void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift)
 {
 	adsr->speedShift=shift;
 	

@@ -635,7 +635,7 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 	}
 }
 
-static void handleSynthPage(p600Button_t button, int pressed)
+static LOWERCODESIZE void handleSynthPage(p600Button_t button, int pressed)
 {
 	// assigner
 
@@ -755,7 +755,7 @@ static void handleSynthPage(p600Button_t button, int pressed)
 	}
 }
 
-static void handleMiscPage(p600Button_t button, int pressed)
+static LOWERCODESIZE void handleMiscPage(p600Button_t button, int pressed)
 {
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
 	
@@ -1283,7 +1283,7 @@ void p600_timerInterrupt(void)
 // P600 internal events
 ////////////////////////////////////////////////////////////////////////////////
 
-void p600_buttonEvent(p600Button_t button, int pressed)
+void LOWERCODESIZE p600_buttonEvent(p600Button_t button, int pressed)
 {
 	// button press might change current preset
 

@@ -6,7 +6,7 @@
 
 static uint16_t sineShape[256];
 
-static void updateIncrement(struct lfo_s * lfo)
+static LOWERCODESIZE void updateIncrement(struct lfo_s * lfo)
 {
 	lfo->increment=((int32_t)lfo->speedCV<<lfo->speedShift)*(1-lfo->halfPeriod*2);
 }
@@ -31,7 +31,7 @@ static NOINLINE void handlePhaseOverflow(struct lfo_s * l)
 	}
 }
 
-void inline lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
+void LOWERCODESIZE lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 {
 	lfo->levelCV=lvl;
 
@@ -42,13 +42,13 @@ void inline lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 	}
 }
 
-void inline lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
+void LOWERCODESIZE lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
 {
 	lfo->shape=shape;
 	lfo->noise=random();
 }
 
-void lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift)
+void LOWERCODESIZE lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift)
 {
 	lfo->speedShift=shift;
 

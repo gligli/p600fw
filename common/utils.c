@@ -5,18 +5,6 @@
 #include "utils.h"
 #include "print.h"
 
-#define INVLOG2 3.321928095f
-
-inline float log2f( float n )  
-{  
-    return logf( n ) * INVLOG2;  
-}
-
-inline double log2( double n )  
-{  
-    return log( n ) * INVLOG2;  
-}
-
 inline uint16_t satAddU16U16(uint16_t a, uint16_t b)
 {
 	uint16_t r;

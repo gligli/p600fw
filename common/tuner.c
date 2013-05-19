@@ -40,7 +40,7 @@ static struct
 	p600CV_t currentCV;
 } tuner;
 
-static NOINLINE void whileTuning(void)
+static LOWERCODESIZE void whileTuning(void)
 {
 	static uint8_t frc=0;
 	
@@ -64,13 +64,13 @@ static NOINLINE void whileTuning(void)
 	++frc;
 }
 
-static NOINLINE void i8253Write(uint8_t a,uint8_t v)
+static void i8253Write(uint8_t a,uint8_t v)
 {
 	io_write(a,v);
 	CYCLE_WAIT(4);
 }	
 
-static NOINLINE uint8_t i8253Read(uint8_t a)
+static uint8_t i8253Read(uint8_t a)
 {
 	CYCLE_WAIT(4);
 	return io_read(a);
@@ -200,7 +200,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	return res;
 }
 
-static NOINLINE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, int8_t precision)
+static LOWERCODESIZE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, int8_t precision)
 {
 	int8_t i,relPrec;
 	uint16_t estimate,bit;
@@ -259,7 +259,7 @@ static NOINLINE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, 
 	return 0;
 }
 
-static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
+static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 {
 #ifdef DEBUG		
 	print("\ntuning ");phex(oscCV);print("\n");
@@ -315,7 +315,7 @@ static NOINLINE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	synth_update();
 }
 
-static uint16_t NOINLINE extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
+static uint16_t extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
 {
 	uint32_t v;
 	
@@ -353,7 +353,7 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 	return value;
 }
 
-void tuner_init(void)
+LOWERCODESIZE void tuner_init(void)
 {
 	int8_t i,j;
 	
@@ -368,7 +368,7 @@ void tuner_init(void)
 		}
 }
 
-void tuner_tuneSynth(void)
+LOWERCODESIZE void tuner_tuneSynth(void)
 {
 	int8_t i;
 	
