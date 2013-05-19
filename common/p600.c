@@ -971,15 +971,13 @@ void p600_init(void)
 	p600.digitInput=diSynth;
 	p600.presetAwaitingNumber=-1;
 	p600.lastActivePot=ppNone;
-	p600.manualPreset.steppedParameters[spAssignerMonoMode]=mUnisonLow;
-	p600.manualPreset.steppedParameters[spBenderSemitones]=5;
-	p600.manualPreset.steppedParameters[spBenderTarget]=modPitch;
-	p600.manualPreset.steppedParameters[spFilEnvExpo]=1;
-	p600.manualPreset.steppedParameters[spAmpEnvExpo]=1;
-	p600.manualPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-	p600.manualPreset.continuousParameters[cpFilVelocity]=0;
-
-	currentPreset=p600.manualPreset;
+	currentPreset.steppedParameters[spAssignerMonoMode]=mUnisonLow;
+	currentPreset.steppedParameters[spBenderSemitones]=5;
+	currentPreset.steppedParameters[spBenderTarget]=modPitch;
+	currentPreset.steppedParameters[spFilEnvExpo]=1;
+	currentPreset.steppedParameters[spAmpEnvExpo]=1;
+	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
+	currentPreset.continuousParameters[cpFilVelocity]=0;
 	
 	// init
 	
@@ -1015,6 +1013,10 @@ void p600_init(void)
 	scanner_update(1);
 	potmux_update(POTMUX_POT_COUNT);
 
+		// save manual, in case we load a patch
+	
+	p600.manualPreset=currentPreset;
+	
 		// load stuff from storage
 	
 	int8_t settingsOk;
