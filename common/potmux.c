@@ -6,7 +6,7 @@
 #include "dac.h"
 
 #define PRIORITY_POT_COUNT 4
-#define CHANGE_DETECT_MASK 0xfc00
+#define CHANGE_DETECT_THRESHOLD 4
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 {
@@ -25,6 +25,8 @@ static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
 static struct
 {
 	uint32_t potChanged;
+	uint8_t changeDetect[POTMUX_POT_COUNT];
+
 	uint16_t pots[POTMUX_POT_COUNT];
 	int8_t currentRegularPot;
 	p600Pot_t lastChanged;
@@ -33,14 +35,12 @@ static struct
 static void updatePot(p600Pot_t pot)
 {
 	int8_t i,lower;
-	uint8_t mux,bitDepth;
-	uint16_t estimate,badMask,old;
+	uint8_t mux,bitDepth,cdv;
+	uint16_t estimate,badMask;
 	uint16_t bit;
 	
 	BLOCK_INT
 	{
-		old=potmux.pots[pot];		
-
 		// successive approximations using DAC and comparator
 
 			// select pot
@@ -88,8 +88,13 @@ static void updatePot(p600Pot_t pot)
 		estimate&=badMask;
 		potmux.pots[pot]=estimate;
 		
-		if((old&CHANGE_DETECT_MASK)!=(estimate&CHANGE_DETECT_MASK))
+		// change detector
+		
+		cdv=estimate>>8;
+		
+		if(abs(potmux.changeDetect[pot]-cdv)>CHANGE_DETECT_THRESHOLD)
 		{
+			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
 			potmux.lastChanged=pot;
 		}
