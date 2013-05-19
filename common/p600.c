@@ -1462,9 +1462,9 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 	if(assigner_getMode()!=mPoly)
 		env=P600_MONO_ENV;
 
-		// don't retrigger gate, unless we're arpeggiating
+		// don't retrigger gate, unless we're arpeggiating or in poly mode
 	
-	if(p600.ampEnvs[env].gate!=gate || arp_getMode()!=amOff)
+	if(assigner_getMode()==mPoly || p600.ampEnvs[env].gate!=gate || arp_getMode()!=amOff)
 	{
 		adsr_setGate(&p600.filEnvs[env],gate);
 		adsr_setGate(&p600.ampEnvs[env],gate);
