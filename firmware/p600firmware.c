@@ -581,6 +581,7 @@ ISR(TIMER0_COMPA_vect)
 	// we need to ensure we won't try to recursively handle another p600_timerInterrupt!
 	
 	TIMSK0&=~(1<<OCIE0A); //Disable overflow interrupt for Timer0
+	TIFR0|=7; // Clear any pending interrupt
 	sei();
 
 	p600_timerInterrupt();
