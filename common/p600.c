@@ -1450,7 +1450,7 @@ void p600_keyEvent(uint8_t key, int pressed)
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity)
 {
 	int8_t env;
-	uint16_t velAmt;
+	uint16_t velAmt,v;
 	
 	// prepare CVs
 	
@@ -1489,7 +1489,17 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 
 		synth_setCV(pcOsc1A+voice,p600.oscANoteCV[voice],SYNTH_FLAG_IMMEDIATE);
 		synth_setCV(pcOsc1B+voice,p600.oscBNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcFil1+voice,p600.filterNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
+		
+		// preset & maybe kick-start the VCF, in case we need a sharp attack
+		
+		v=p600.filterNoteCV[voice];
+		if(p600.filEnvs[env].attackCV<512)
+		{
+			v+=currentPreset.continuousParameters[cpFilEnvAmt];
+			v+=INT16_MIN;
+		}
+		
+		synth_setCV(pcFil1+voice,v,SYNTH_FLAG_IMMEDIATE);
 		
 		// kick-start the VCA, in case we need a sharp attack
 		
