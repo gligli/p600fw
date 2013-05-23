@@ -1450,7 +1450,8 @@ void p600_keyEvent(uint8_t key, int pressed)
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity)
 {
 	int8_t env;
-	uint16_t velAmt,v;
+	uint16_t velAmt;
+	int32_t v;
 	
 	// prepare CVs
 	
@@ -1499,7 +1500,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 			v+=INT16_MIN;
 		}
 		
-		synth_setCV(pcFil1+voice,v,SYNTH_FLAG_IMMEDIATE);
+		synth_setCV32Sat(pcFil1+voice,v,SYNTH_FLAG_IMMEDIATE);
 		
 		// kick-start the VCA, in case we need a sharp attack
 		
