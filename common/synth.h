@@ -13,7 +13,7 @@ void synth_setCV_FastPath(p600CV_t cv,uint16_t value);
 void synth_setCV32Sat_FastPath(p600CV_t cv,int32_t value);
 
 void synth_setGate(p600Gate_t gate,int8_t on);
-void synth_updateCV(p600CV_t cv);
+void synth_maintainCV(p600CV_t cv, int8_t finish);
 
 void synth_init(void);
 void synth_update(void);
