@@ -22,7 +22,7 @@ static inline void updateGates(void)
 	}
 }
 
-static inline void updateCV(p600CV_t cv, uint16_t cvv)
+static inline void updateCV(p600CV_t cv, uint16_t cvv, int8_t deselect)
 {
 	uint8_t dmux;
 	
@@ -40,12 +40,15 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 
 		// 2 us to let S&H get very precise voltage, some P600s need it apparently
 		CYCLE_WAIT(8);
+		
+		if(deselect)
+		{
+			// deselect it
+			io_write(0x0d,0xff);
 
-		// deselect it
-		io_write(0x0d,0xff);
-
-		// 2 more us to let analog hardware stabilize
-		CYCLE_WAIT(8);
+			// 2 more us to let analog hardware stabilize
+			CYCLE_WAIT(8);
+		}
 	}
 }
 
@@ -53,7 +56,7 @@ inline void synth_setCV(p600CV_t cv,uint16_t value, uint8_t flags)
 {
 	if(flags&SYNTH_FLAG_IMMEDIATE)
 	{
-		updateCV(cv,value);
+		updateCV(cv,value,1);
 	}
 	else
 	{
@@ -110,9 +113,9 @@ inline void synth_setGate(p600Gate_t gate,int8_t on)
 	updateGates();
 }
 
-void synth_updateCV(p600CV_t cv)
+void synth_maintainCV(p600CV_t cv, int8_t finish)
 {
-	updateCV(cv,synth.cvs[cv]);
+	updateCV(cv,synth.cvs[cv],finish);
 }
 
 void synth_init()
@@ -125,7 +128,7 @@ void synth_update()
 	uint8_t i;
 
 	for(i=0;i<SYNTH_CV_COUNT;++i)
-		updateCV(i,synth.cvs[i]);
+		updateCV(i,synth.cvs[i],1);
 
 	updateGates();
 }
