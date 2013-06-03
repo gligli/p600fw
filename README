@@ -12,13 +12,8 @@ Description
 This is the P600FW project, a CPU/firmware remake for the SCI Prophet 600.
 It uses a slightly modified Teensy++ board (http://www.pjrc.com/store/teensypp_pins.html) that plugs into the Z80 socket.
 
-Modifying the Teensy++
+Installation and usage
 ======================
-
-See documentation PDFs...
-
-Usage
-=====
 
 See documentation PDFs...
 
@@ -26,4 +21,12 @@ History
 =======
 
 - alpha 20130226 : First public version.
-- beta 1.0: First proper release.
+- beta 1.0 : First proper release.
+
+Downloads
+=========
+
+- Beta 1.0 :
+    - Full archive : http://sfx.gligli.free.fr/zik/p600/p600fw_beta_1_0.zip
+    - English manual : http://sfx.gligli.free.fr/zik/p600/Prophet600FirmwareUpgrade_en_beta_1_0.pdf
+    - French manual : http://sfx.gligli.free.fr/zik/p600/Prophet600FirmwareUpgrade_fr_beta_1_0.pdf
