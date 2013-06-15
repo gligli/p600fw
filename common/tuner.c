@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Tunes a CV using the 8253 timer, by counting audio cycles
+// Tunes CVs using the 8253 timer, by measuring audio period
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tuner.h"
@@ -21,8 +21,6 @@
 #define TUNER_MIDDLE_C_HERTZ 261.63
 #define TUNER_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/16)
 
-#define TUNER_VCA_LEVEL UINT16_MAX
-
 #define TUNER_OSC_INIT_OFFSET 5000.0
 #define TUNER_OSC_INIT_SCALE (65536.0/11.0)
 #define TUNER_OSC_PRECISION -3 // higher is preciser but slower
@@ -31,7 +29,7 @@
 
 #define TUNER_FIL_INIT_OFFSET 10000.0
 #define TUNER_FIL_INIT_SCALE (65536.0/22.0)
-#define TUNER_FIL_PRECISION -2 // higher is preciser but slower
+#define TUNER_FIL_PRECISION -3 // higher is preciser but slower
 #define TUNER_FIL_NTH_C_LO 4
 #define TUNER_FIL_NTH_C_HI 7
 
@@ -42,6 +40,8 @@ static struct
 
 static LOWERCODESIZE void whileTuning(void)
 {
+	synth_maintainCV(tuner.currentCV,1);
+
 	// display current osc
 	if(tuner.currentCV<pcOsc1B)
 		sevenSeg_setAscii('a','1'+tuner.currentCV-pcOsc1A);
@@ -52,7 +52,22 @@ static LOWERCODESIZE void whileTuning(void)
 
 	display_update(1);
 
+	// full update once in a while
 	synth_update();
+
+	synth_maintainCV(tuner.currentCV,0);
+}
+
+static void i8253Write(uint8_t a,uint8_t v)
+{
+	io_write(a,v);
+	CYCLE_WAIT(4);
+}	
+
+static uint8_t i8253Read(uint8_t a)
+{
+	CYCLE_WAIT(4);
+	return io_read(a);
 }
 
 static uint8_t ff_state=0;
@@ -70,37 +85,16 @@ static NOINLINE void ffMask(uint8_t set,uint8_t clear)
 	++ff_step;
 }
 
-static FORCEINLINE void counter_reset(void)
-{
-	TCNT1=0;
-}
-
-static FORCEINLINE void counter_start(void)
-{
-	TCCR1B=1<<CS11;
-}
-
-static FORCEINLINE void counter_stop(void)
-{
-	TCCR1B=0;
-}
-
-static FORCEINLINE uint16_t counter_getValue(void)
-{
-	return TCNT1;
-}
-
-static void ffWaitStatus(void)
+static NOINLINE void ffWaitStatus(uint8_t status)
 {
 	uint8_t s;
 	uint16_t timeout=STATUS_TIMEOUT;
-	
-	do
-	{
+
+	do{
 		s=io_read(0x9);
 		--timeout;
-	}
-	while((s&2)==0 && timeout);
+	}while(((s>>1)&0x01)!=status && timeout);
+
 
 	if (!timeout)
 	{
@@ -116,75 +110,110 @@ static void ffWaitStatus(void)
 	}
 }
 
-static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in ticks
+static NOINLINE uint16_t getPeriod(void)
+{
+	uint16_t c;
+	
+	// read counter, add to result
+	c=i8253Read(0x1);
+	c|=i8253Read(0x1)<<8;
+
+	// ch1 reload 0
+	i8253Write(0x1,0x00);
+	i8253Write(0x1,0x00);
+
+	return UINT16_MAX-c;
+}
+
+static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 {
 	uint32_t res=0;
 	
+	//
+	
+	synth_update();
+	synth_maintainCV(tuner.currentCV,0);
+			
 	// prepare flip flop
-
+	
 	ff_state=0;
 	ff_step=0;
 	ffMask(FF_P|FF_CL,FF_D|CNTR_EN);
-
-	// prepare timer
-
-	counter_stop();
-
-	while(periods--)
+	
+	// prepare 8253
+	
+		// ch1 load 0
+	i8253Write(0x1,0x00);
+	i8253Write(0x1,0x00);
+	
+		// ch2 load 1
+	i8253Write(0x2,0x01);
+	i8253Write(0x2,0x00);
+	
+	// flip flop stuff //TODO: EXPLAIN
+		
+	ffMask(CNTR_EN,0);
+	
+	while(periods)
 	{
-		// prepare
+		ffMask(0,FF_P);
+		ffWaitStatus(0); // check
 
-		counter_reset();
+		ffMask(FF_P,0);
+		ffWaitStatus(1); // wait 
+
+		ffMask(FF_D,0);
+		ffWaitStatus(0); // wait
+
+		ffMask(0,FF_CL);
+		ffWaitStatus(1); // check
+
+		ffMask(FF_CL,0);
+		ffWaitStatus(0); // wait
+
+		ffMask(0,FF_D);
+		ffWaitStatus(1); // wait
+		
+		// detect untunable osc		
+
+		if (ff_timeoutCount>=STATUS_TIMEOUT_MAX_FAILURES)
+			return UINT32_MAX;
+
+		// reload fake clock
+		
+		ffMask(0,CNTR_EN);
+		ffMask(CNTR_EN,0);
+		
+		--periods;
+
+		res+=getPeriod();
 
 		whileTuning();
-		synth_maintainCV(tuner.currentCV,0);
 	
-		// wait for peak
-
-		ffMask(0,FF_P);
-		ffMask(FF_P,0);
-		ffWaitStatus();
-
-		// wait for peak
-
-		ffMask(0,FF_P);
-		ffMask(FF_P,0);
-		ffWaitStatus();
-		counter_start();
-
-		// wait for peak
-
-		ffMask(0,FF_P);
-		ffMask(FF_P,0);
-		ffWaitStatus();
-		counter_stop();
-		
-		res+=(uint32_t)counter_getValue();
-
-		synth_maintainCV(tuner.currentCV,1);
 	}
 	
-	return res;	
+	synth_maintainCV(tuner.currentCV,1);
+	
+	return res;
 }
-
 
 static LOWERCODESIZE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestNote, int8_t precision)
 {
 	int8_t i,relPrec;
 	uint16_t estimate,bit;
-	float p,tgtp;
+	double p,tgtp;
 	uint32_t ip;
 
 	ff_timeoutCount=0;
 
-	tgtp=TUNER_TICK/(TUNER_LOWEST_HERTZ*powf(2.0f,nthC));
+	tgtp=TUNER_TICK/(TUNER_LOWEST_HERTZ*pow(2.0,nthC));
 	
 	estimate=UINT16_MAX;
 	bit=0x8000;
 	
 	relPrec=precision+nthC;
 	
-	for(i=0;i<=14;++i) // 14bit dac
+	for(i=0;i<14;++i) // 14bit dac
 	{
 		if(estimate>tuner_computeCVFromNote(lowestNote,0,cv))
 		{
@@ -192,13 +221,13 @@ static LOWERCODESIZE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestN
 			
 			ip=measureAudioPeriod(1<<relPrec);
 			if(ip==UINT32_MAX)
-				return -1; // failure (untunable osc)
+				return -1; // filure (untunable osc)
 			
-			p=(double)ip*powf(2.0f,-relPrec);
+			p=(double)ip*pow(2.0,-relPrec);
 		}
 		else
 		{
-			p=FLT_MAX;
+			p=DBL_MAX;
 		}
 		
 		// adjust estimate
@@ -241,11 +270,12 @@ static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// open VCA
 
-	synth_setCV(ampCV,TUNER_VCA_LEVEL,0);
+	synth_setCV(ampCV,UINT16_MAX,0);
 	
-	// update all params
+	// done many times, to ensure all CVs are at correct voltage
 	
-	synth_update();
+	for(i=0;i<25;++i)
+		synth_update();
 
 	// tune
 
@@ -349,7 +379,7 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 #ifdef DEBUG
 		synth_setCV(pcMVol,20000,0);
 #else
-		synth_setCV(pcMVol,20000,0);
+		synth_setCV(pcMVol,0,0);
 #endif
 
 		synth_setGate(pgASaw,1);
@@ -361,11 +391,19 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		synth_setGate(pgSync,0);
 
 		synth_setCV(pcResonance,0,0);
-		synth_setCV(pcAPW,UINT16_MAX,0);
-		synth_setCV(pcBPW,UINT16_MAX,0);
+		synth_setCV(pcAPW,0,0);
+		synth_setCV(pcBPW,0,0);
 		synth_setCV(pcPModOscB,0,0);
 		synth_setCV(pcExtFil,0,0);
 		
+		// init 8253
+			// ch 0, mode 0, access 2 bytes, binary count
+		i8253Write(0x3,0b00110000); 
+			// ch 1, mode 0, access 2 bytes, binary count
+		i8253Write(0x3,0b01110000); 
+			// ch 2, mode 1, access 2 bytes, binary count
+		i8253Write(0x3,0b10110010); 
+
 		// tune oscs
 			
 			// init
@@ -394,8 +432,6 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setGate(pgASaw,0);
-		synth_setGate(pgBSaw,0);
 		synth_setCV(pcVolA,0,0);
 		synth_setCV(pcVolB,0,0);
 		synth_setCV(pcResonance,UINT16_MAX,0);
