@@ -14,11 +14,11 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=avr-gcc.exe
-CCC=avr-g++.exe
-CXX=avr-g++.exe
+CC=avr-gcc
+CCC=avr-g++
+CXX=avr-g++
 FC=gfortran
-AS=avr-as.exe
+AS=avr-as
 
 # Macros
 CND_PLATFORM=MHV_AVR-Windows

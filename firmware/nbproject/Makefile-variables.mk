@@ -15,13 +15,13 @@ CND_PACKAGE_DIR_Debug=dist/Debug/MHV_AVR-Windows/package
 CND_PACKAGE_NAME_Debug=firmware.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/MHV_AVR-Windows/package/firmware.tar
 # Release configuration
-CND_PLATFORM_Release=WinAVR-Windows
-CND_ARTIFACT_DIR_Release=dist/Release/WinAVR-Windows
+CND_PLATFORM_Release=MHV_AVR-Windows
+CND_ARTIFACT_DIR_Release=dist/Release/MHV_AVR-Windows
 CND_ARTIFACT_NAME_Release=firmware
-CND_ARTIFACT_PATH_Release=dist/Release/WinAVR-Windows/firmware
-CND_PACKAGE_DIR_Release=dist/Release/WinAVR-Windows/package
+CND_ARTIFACT_PATH_Release=dist/Release/MHV_AVR-Windows/firmware
+CND_PACKAGE_DIR_Release=dist/Release/MHV_AVR-Windows/package
 CND_PACKAGE_NAME_Release=firmware.tar
-CND_PACKAGE_PATH_Release=dist/Release/WinAVR-Windows/package/firmware.tar
+CND_PACKAGE_PATH_Release=dist/Release/MHV_AVR-Windows/package/firmware.tar
 #
 # include compiler specific variables
 #

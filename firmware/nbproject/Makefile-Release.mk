@@ -14,14 +14,14 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=avr-gcc.exe
-CCC=avr-g++.exe
-CXX=avr-g++.exe
+CC=avr-gcc
+CCC=avr-g++
+CXX=avr-g++
 FC=gfortran
-AS=avr-as.exe
+AS=avr-as
 
 # Macros
-CND_PLATFORM=WinAVR-Windows
+CND_PLATFORM=MHV_AVR-Windows
 CND_DLIB_EXT=dll
 CND_CONF=Release
 CND_DISTDIR=dist
@@ -35,16 +35,24 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/p600firmware.o \
-	${OBJECTDIR}/usb_debug_only.o \
 	${OBJECTDIR}/_ext/1270477542/adsr.o \
-	${OBJECTDIR}/print.o \
-	${OBJECTDIR}/_ext/1270477542/potmux.o \
-	${OBJECTDIR}/_ext/1270477542/synth.o \
-	${OBJECTDIR}/_ext/1270477542/scanner.o \
+	${OBJECTDIR}/_ext/1270477542/arp.o \
+	${OBJECTDIR}/_ext/1270477542/assigner.o \
+	${OBJECTDIR}/_ext/1270477542/dac.o \
 	${OBJECTDIR}/_ext/1270477542/display.o \
+	${OBJECTDIR}/_ext/1270477542/import.o \
+	${OBJECTDIR}/_ext/1270477542/lfo.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o \
-	${OBJECTDIR}/_ext/1270477542/dac.o
+	${OBJECTDIR}/_ext/1270477542/potmux.o \
+	${OBJECTDIR}/_ext/1270477542/scanner.o \
+	${OBJECTDIR}/_ext/1270477542/storage.o \
+	${OBJECTDIR}/_ext/1270477542/synth.o \
+	${OBJECTDIR}/_ext/1270477542/tuner.o \
+	${OBJECTDIR}/_ext/1270477542/uart_6850.o \
+	${OBJECTDIR}/_ext/1270477542/utils.o \
+	${OBJECTDIR}/p600firmware.o \
+	${OBJECTDIR}/print.o \
+	${OBJECTDIR}/usb_debug_only.o
 
 
 # C Compiler Flags
@@ -69,57 +77,97 @@ LDLIBSOPTIONS=
 
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware ${OBJECTFILES} ${LDLIBSOPTIONS} 
-
-${OBJECTDIR}/p600firmware.o: p600firmware.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600firmware.o p600firmware.c
-
-${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/usb_debug_only.o usb_debug_only.c
+	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
 
-${OBJECTDIR}/print.o: print.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/print.o print.c
-
-${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
+${OBJECTDIR}/_ext/1270477542/arp.o: ../common/arp.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/arp.o ../common/arp.c
 
-${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
+${OBJECTDIR}/_ext/1270477542/assigner.o: ../common/assigner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/assigner.o ../common/assigner.c
 
-${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
+${OBJECTDIR}/_ext/1270477542/dac.o: ../common/dac.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/dac.o ../common/dac.c
 
 ${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
 
+${OBJECTDIR}/_ext/1270477542/import.o: ../common/import.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/import.o ../common/import.c
+
+${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/lfo.o ../common/lfo.c
+
 ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
 
-${OBJECTDIR}/_ext/1270477542/dac.o: ../common/dac.c 
+${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/dac.o ../common/dac.c
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
+
+${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
+
+${OBJECTDIR}/_ext/1270477542/storage.o: ../common/storage.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/storage.o ../common/storage.c
+
+${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
+
+${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/tuner.o ../common/tuner.c
+
+${OBJECTDIR}/_ext/1270477542/uart_6850.o: ../common/uart_6850.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/uart_6850.o ../common/uart_6850.c
+
+${OBJECTDIR}/_ext/1270477542/utils.o: ../common/utils.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/utils.o ../common/utils.c
+
+${OBJECTDIR}/p600firmware.o: p600firmware.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/p600firmware.o p600firmware.c
+
+${OBJECTDIR}/print.o: print.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/print.o print.c
+
+${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/usb_debug_only.o usb_debug_only.c
 
 # Subprojects
 .build-subprojects:
