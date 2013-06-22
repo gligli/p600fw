@@ -2,9 +2,7 @@
 * P600FW *
 **********
 
-https://github.com/gligli/p600fw (Project page)
-
-http://forum.anafrog.com/phpBB/viewtopic.php?f=36&t=10535 (French forum)
+Project web page now located here --> http://gligli.github.io/p600fw/ <-- (donwloads, demos, etc. are there)
 
 Description
 ===========
@@ -15,57 +13,10 @@ It uses a slightly modified Teensy++ board (http://www.pjrc.com/store/teensypp_p
 Installation and usage
 ======================
 
-See documentation PDFs...
+See documentation...
 
 History
 =======
 
 - Alpha 20130226 : First public version.
 - Beta 1.0 : First proper release.
-
-Downloads
-=========
-
-- Beta 1.0 :
-	- Full archive :
-		http://sfx.gligli.free.fr/zik/p600/p600fw_beta_1_0.zip
-	- English documentation (main version, by Bulghur) :
-		http://sfx.gligli.free.fr/zik/p600/Prophet600FirmwareUpgrade_en_beta_1_0.pdf
-	- French documentation (WIP translation by GliGli) :
-		http://sfx.gligli.free.fr/zik/p600/Prophet600FirmwareUpgrade_fr_beta_1_0.pdf
-	- Japanese documentation (translated by Tohk) :
-		http://www.d1.dion.ne.jp/~ohk/p600/Prophet600FirmwareUpgrade_ja_beta_1_0.pdf
-
-Demos
-=====
-
-- Filter overdrive:
-	http://sfx.gligli.free.fr/zik/p600/p600fw_overdrive_2squares.flac	
-- Envelopes (attack time has improved since):
-	http://sfx.gligli.free.fr/zik/p600/p600fw_envelopes_reso_zaps.flac	
-- Polyphonic resonance / unison:
-	http://sfx.gligli.free.fr/zik/p600/p600fw_poly_pads_unison.flac
-- Polyphonic percussive sounds with release:
-	http://sfx.gligli.free.fr/zik/p600/p600fw_poly_percussive.flac
-- LFO:
-	http://sfx.gligli.free.fr/zik/p600/p600fw_hell_fo.flac
-- Polymod (formants):
-	http://sfx.gligli.free.fr/zik/p600/p600fw_pmod_voices.flac
-- Polymod (percussive sounds):
-	http://sfx.gligli.free.fr/zik/p600/p600fw_pmod_indus.flac
-- MIDI (velocity sensitivity):
-	http://sfx.gligli.free.fr/zik/p600/p600fw_midi_velocity.flac
-- Arpeggiator:
-	http://sfx.gligli.free.fr/zik/p600/p600fw_arpeggiator.flac
-	
-Future improvements/fixes (aka. TODO list)
-==========================================
-
-- Assigner rework (better priority system; unison track latch; disabling voices).
-- Midi out / sysex patch dumps.
-- User interface (probably moving all the membrane keypad options to something like: hit a button / turn the "Speed" data pot).
-- Unison detune.
-- Second LFO (probably just a simple vibrato).
-- Sequencer (probably inspired by the Six-trak one, without being multitimbral, of course).
-- Synchronizing LFO/Arpeggiator/Sequencer to MIDI clock.
-- Various bugfixes and tweaks.
