@@ -397,13 +397,13 @@ void NRWW_SECTION(".updater") updater_main(void)
 		if(b!=0xf0)
 			continue;
 		
-		// check for my ID (0x006116)
-		UPDATER_WAIT_BYTE(0x00)
-		UPDATER_WAIT_BYTE(0x61) 
-		UPDATER_WAIT_BYTE(0x16) 
+		// check for my ID
+		UPDATER_WAIT_BYTE(SYSEX_ID_0)
+		UPDATER_WAIT_BYTE(SYSEX_ID_1) 
+		UPDATER_WAIT_BYTE(SYSEX_ID_2) 
 		
 		// check for update command
-		UPDATER_WAIT_BYTE(0x6b) 
+		UPDATER_WAIT_BYTE(SYSEX_COMMAND_UPDATE_FW) 
 		
 		// get page size, 0 indicates end of transmission
 		UPDATER_CRC_BYTE

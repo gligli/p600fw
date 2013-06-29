@@ -55,7 +55,7 @@ __attribute__((packed)) struct z80Patch_t
 	uint16_t unison : 1;
 };
 
-void LOWERCODESIZE import_sysex(uint8_t * buf, int16_t size)
+LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 {
 	int8_t presetNumber,i;
 	uint8_t patchData[16];

@@ -5,7 +5,7 @@
 #include "print.h"
 #include "hardware.h"
 
-//#define DEBUG
+#define DEBUG
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
@@ -15,6 +15,14 @@
 #endif
 
 #define P600_VOICE_COUNT 6
+
+#define SYSEX_ID_0 0x00
+#define SYSEX_ID_1 0x61
+#define SYSEX_ID_2 0x16
+
+#define SYSEX_COMMAND_BANK_A 1
+#define SYSEX_COMMAND_BANK_B 2
+#define SYSEX_COMMAND_UPDATE_FW 0x6b
 
 ////////////////////////////////////////////////////////////////////////////////
 // Prophet 600 definitions

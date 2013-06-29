@@ -3,6 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "storage.h"
+#include "uart_6850.h"
 
 // increment this each time the binary format is changed
 #define STORAGE_VERSION 1
@@ -276,3 +277,33 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 	}
 }
 
+LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * size)
+{
+	int16_t actualSize;
+
+	BLOCK_INT
+	{
+		storageLoad(number,1);
+
+		// don't export trailing zeroes		
+		
+		actualSize=STORAGE_PAGE_SIZE;
+		while(temp[actualSize-1]==0)
+			--actualSize;
+		
+		buf[0]=number;		
+		memcpy(&buf[1],temp,actualSize);
+		*size=actualSize+1;
+	}
+}
+
+LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
+{
+	BLOCK_INT
+	{
+		memset(temp,0,sizeof(temp));
+		memcpy(temp,buf,size);
+		tempPtr=temp+size;
+		storageFinishStore(number,1);
+	}
+}

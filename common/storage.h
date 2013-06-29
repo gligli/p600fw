@@ -74,5 +74,8 @@ void settings_save(void);
 int8_t preset_loadCurrent(uint16_t number);
 void preset_saveCurrent(uint16_t number);
 
+void storage_export(uint16_t number, uint8_t * buf, int16_t * size);
+void storage_import(uint16_t number, uint8_t * buf, int16_t size);
+
 #endif	/* STORAGE_H */
 

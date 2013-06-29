@@ -33,6 +33,8 @@
 
 #define MAX_SYSEX_SIZE 512
 
+static void sysexSend(uint8_t command, int16_t size);
+
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
 	ppFreqA,ppMixer,ppAPW,
@@ -785,6 +787,26 @@ static LOWERCODESIZE void handleMiscPage(p600Button_t button, int pressed)
 
 		sevenSeg_scrollText("bender calibrated",1);
 	}
+	
+	if(pressed && button==pb3)
+	{
+		int8_t i;
+		int16_t size=0;
+		
+		for(i=0;i<100;++i)
+		{
+			if(preset_loadCurrent(i))
+			{
+				storage_export(i,p600.sysexBuffer,&size);
+				sysexSend(SYSEX_COMMAND_BANK_A,size);
+			}
+			
+			sevenSeg_scrollText("done",1);
+		}
+		
+		refreshPresetMode();
+	}
+	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -910,8 +932,62 @@ void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
 	}
 }
 
-void sysexDoByte(uint8_t b)
+static void sysexSend(uint8_t command, int16_t size)
 {
+	int16_t chunkCount,i;
+	uint8_t chunk[4];
+	
+	chunkCount=((size-1)>>2)+1;
+	
+	uart_send(0xf0);
+	uart_send(SYSEX_ID_0);
+	uart_send(SYSEX_ID_1);
+	uart_send(SYSEX_ID_2);
+	uart_send(command);
+	
+	for(i=0;i<chunkCount;++i)
+	{
+		memcpy(chunk,&p600.sysexBuffer[i<<2],4);
+		
+		uart_send(chunk[0]&0x7f);
+		uart_send(chunk[1]&0x7f);
+		uart_send(chunk[2]&0x7f);
+		uart_send(chunk[3]&0x7f);
+		uart_send(((chunk[0]>>7)&1) | ((chunk[1]>>6)&2) | ((chunk[2]>>5)&4) | ((chunk[3]>>4)&8));
+	}
+
+	uart_send(0xf7);
+}
+
+int16_t sysexDescrambleBuffer(int16_t start)
+{
+	int16_t chunkCount,i,out;
+	uint8_t b;
+	
+	chunkCount=((p600.sysexSize-start)/5)+1;
+	out=start;
+
+	for(i=0;i<chunkCount;++i)
+	{
+		memmove(&p600.sysexBuffer[out],&p600.sysexBuffer[i*5+start],4);
+		
+		b=p600.sysexBuffer[i*5+start+4];
+		
+		p600.sysexBuffer[out+0]|=(b&1)<<7;
+		p600.sysexBuffer[out+1]|=(b&2)<<6;
+		p600.sysexBuffer[out+2]|=(b&4)<<5;
+		p600.sysexBuffer[out+3]|=(b&8)<<4;
+		
+		out+=4;
+	}
+	
+	return out-start;
+}
+
+void sysexReceiveByte(uint8_t b)
+{
+	int16_t size;
+
 	switch(b)
 	{
 	case 0xF0:
@@ -922,9 +998,22 @@ void sysexDoByte(uint8_t b)
 		if(p600.sysexBuffer[0]==0x01 && p600.sysexBuffer[1]==0x02) // SCI P600 program dump
 		{
 			import_sysex(p600.sysexBuffer,p600.sysexSize);
-			refreshFullState();
 		}
+		else if(p600.sysexBuffer[0]==SYSEX_ID_0 && p600.sysexBuffer[1]==SYSEX_ID_1 && p600.sysexBuffer[2]==SYSEX_ID_2) // my sysex ID
+		{
+			// handle my sysex commands
+			
+			switch(p600.sysexBuffer[3])
+			{
+			case SYSEX_COMMAND_BANK_A:
+				size=sysexDescrambleBuffer(4);
+				storage_import(p600.sysexBuffer[4],&p600.sysexBuffer[5],size-1);
+				break;
+			}
+		}
+
 		p600.sysexSize=0;
+		refreshFullState();
 		break;
 	default:
 		if(p600.sysexSize>=MAX_SYSEX_SIZE)
@@ -945,13 +1034,13 @@ void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1
 		count=count-p600.sysexSize-1;
 	
 	if(count>0)
-		sysexDoByte(b0);
+		sysexReceiveByte(b0);
 	
 	if(count>1)
-		sysexDoByte(b1);
+		sysexReceiveByte(b1);
 
 	if(count>2)
-		sysexDoByte(b2);
+		sysexReceiveByte(b2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1032,7 +1121,7 @@ void p600_init(void)
 		
 		// tune when settings are bad
 	
-#ifndef DEBUG_
+#ifndef DEBUG
 	if(!settingsOk)
 		tuner_tuneSynth();
 #endif	
