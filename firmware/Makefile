@@ -56,7 +56,6 @@ SRC = \
 	$(TARGET).c \
 	usb_debug_only.c \
 	print.c \
-	../common/p600.c \
 	../common/display.c \
 	../common/scanner.c \
 	../common/dac.c \
@@ -70,7 +69,8 @@ SRC = \
 	../common/storage.c \
 	../common/uart_6850.c \
 	../common/import.c \
-	../common/utils.c
+	../common/utils.c \
+	../common/p600.c
 
 # MCU name, you MUST set this to match the board you are using
 # type "make clean" after changing this, so all files will be rebuilt

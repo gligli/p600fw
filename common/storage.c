@@ -6,7 +6,7 @@
 #include "uart_6850.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 1
+#define STORAGE_VERSION 2
 
 #define STORAGE_MAGIC 0x006116a5
 #define STORAGE_MAX_SIZE 1024
@@ -34,7 +34,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*AmpEnvExpo*/1,
 	/*AmpEnvSlow*/1,
 	/*Unison*/1,
-	/*AssignerMonoMode*/2,
+	/*AssignerPriority*/2,
 	/*BenderSemitones*/4,
 	/*BenderTarget*/2,
 	/*ModwheelShift*/3,
@@ -197,6 +197,13 @@ LOWERCODESIZE int8_t settings_load(void)
 
 		// v2
 
+		settings.voiceMask=storageRead8();
+		
+		if (tempVersion<3)
+			return 1;
+
+		// v3
+		
 		// ...
 	
 	
@@ -224,8 +231,12 @@ LOWERCODESIZE void settings_save(void)
 		storageWrite8(settings.presetBank);
 		storageWriteS8(settings.midiReceiveChannel);
 		
-		// v2 
+		// v2
+		
+		storageWrite8(settings.voiceMask);
 
+		// v3
+		
 		// ...
 
 		// this must stay last
@@ -235,10 +246,18 @@ LOWERCODESIZE void settings_save(void)
 
 LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 {
+	int8_t i;
+	
 	BLOCK_INT
 	{
 		storageLoad(number,1);
 
+		// defaults
+		
+		currentPreset.steppedParameters[spAssignerPriority]=apLast;
+		for(i=0;i<P600_VOICE_COUNT;++i)
+			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
+				
 		if (tempVersion<1)
 			return 0;
 
@@ -251,6 +270,14 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		steppedParameter_t sp;
 		for(sp=spASaw;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
+
+		if (tempVersion<2)
+			return 1;
+
+		// v2
+
+		for(i=0;i<P600_VOICE_COUNT;++i)
+			currentPreset.voicePattern[i]=storageRead8();
 	}
 	
 	return 1;
@@ -258,6 +285,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 {
+	int8_t i;
+	
 	BLOCK_INT
 	{
 		storagePrepareStore();
@@ -271,6 +300,11 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		steppedParameter_t sp;
 		for(sp=spASaw;sp<=spChromaticPitch;++sp)
 			storageWrite8(currentPreset.steppedParameters[sp]);
+		
+		// v2
+		
+		for(i=0;i<P600_VOICE_COUNT;++i)
+			storageWrite8(currentPreset.voicePattern[i]);
 		
 		// this must stay last
 		storageFinishStore(number,1);

@@ -35,7 +35,7 @@ typedef enum
 	spAmpEnvExpo=15,spAmpEnvSlow=16,
 			
 	spUnison=17,
-	spAssignerMonoMode=18,
+	spAssignerPriority=18,
 			
 	spBenderSemitones=19,spBenderTarget=20,
 	spModwheelShift=21,
@@ -56,12 +56,15 @@ struct settings_s
 	enum {pbkManual=0,pbkA=1,pbkB=2} presetBank;
 	
 	int8_t midiReceiveChannel; // -1: omni / 0-15: channel 1-16
+	uint8_t voiceMask;
 };
 
 struct preset_s
 {
 	uint8_t steppedParameters[spCount];
 	uint16_t continuousParameters[cpCount];
+	
+	uint8_t voicePattern[P600_VOICE_COUNT];
 };
 
 extern struct settings_s settings;

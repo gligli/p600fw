@@ -7,18 +7,22 @@
 
 typedef enum
 {
-	mUnisonLow=0,mUnisonHigh=1,mMonoLow=2,mMonoHigh=3,mPoly=15,
-} assignerMode_t;
+	apLast=0,apLow=1,apHigh=2
+} assignerPriority_t;
 
+extern const char * assigner_priorityName[3];
+
+void assigner_setPriority(assignerPriority_t prio);
+void assigner_setVoiceMask(uint8_t mask);
 
 int8_t assigner_getAssignment(int8_t voice, uint8_t * note);
-
-void assigner_setMode(assignerMode_t mode);
-assignerMode_t assigner_getMode(void);
-const char * assigner_modeName(assignerMode_t mode);
-
-void assigner_assignNote(uint8_t note, int8_t on, uint16_t velocity, int8_t fromArp);
+void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato);
 void assigner_voiceDone(int8_t voice); // -1 -> all voices finished
+
+void assigner_setPattern(uint8_t * pattern);
+void assigner_getPattern(uint8_t * pattern);
+void assigner_setPolyPattern(void);
+void assigner_latchPattern(void);
 
 void assigner_init(void);
 

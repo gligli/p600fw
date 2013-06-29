@@ -41,7 +41,7 @@ static void killAllNotes(void)
 
 	arp.noteIndex=-1;
 	
-	assigner_assignNote(ASSIGNER_NO_NOTE,0,0,1);
+	assigner_voiceDone(-1);
 }
 
 inline void arp_setMode(arpMode_t mode, int8_t hold)
@@ -117,7 +117,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 			arp.notes[ARP_LAST_NOTE-note]=ASSIGNER_NO_NOTE;
 		}
 		
-		//
+		// gate off for last note
 		
 		if(isEmpty())
 			killAllNotes();
@@ -185,6 +185,6 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(note,1,UINT16_MAX,1);
+	assigner_assignNote(note,1,UINT16_MAX,0);
 }
 

@@ -5,7 +5,7 @@
 #include "print.h"
 #include "hardware.h"
 
-#define DEBUG
+//#define DEBUG
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
@@ -77,13 +77,16 @@ typedef enum
 
 void p600_buttonEvent(p600Button_t button, int pressed);
 void p600_keyEvent(uint8_t key, int pressed);
-void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity); // voice -1 is unison
+void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
 void p600_uartEvent(uint8_t data);
 
 void p600_init(void);
 void p600_update(void);
 void p600_timerInterrupt(void);
 void p600_uartInterrupt(void);
+
+extern volatile uint32_t currentTick; // 500hz
+
 
 #endif	/* P600_H */
 

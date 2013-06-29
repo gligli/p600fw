@@ -130,7 +130,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spAmpEnvExpo]=0;
 	p.steppedParameters[spAmpEnvSlow]=1;
 	p.steppedParameters[spUnison]=zp->unison;
-	p.steppedParameters[spAssignerMonoMode]=mUnisonLow;
+	p.steppedParameters[spAssignerPriority]=apLast;
 	p.steppedParameters[spBenderSemitones]=3;
 	p.steppedParameters[spBenderTarget]=modPitch;
 	p.steppedParameters[spModwheelShift]=2;
