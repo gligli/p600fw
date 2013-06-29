@@ -2,31 +2,24 @@
 * P600FW *
 **********
 
-https://github.com/gligli/p600fw (Project page)
+Project web page now located there: (downloads, demos, etc.)
 
-http://forum.anafrog.com/phpBB/viewtopic.php?f=36&t=10535 (French forum)
+--> http://gligli.github.io/p600fw/ <--
+
 
 Description
 ===========
 
-This is the P600FW project, a CPU/firmware remake for the SCI Prophet 600.
+This is the P600FW project, a CPU/firmware remake for the SCI Prophet 600 (http://www.vintagesynth.com/sci/p600.php).
 It uses a slightly modified Teensy++ board (http://www.pjrc.com/store/teensypp_pins.html) that plugs into the Z80 socket.
 
 Installation and usage
 ======================
 
-See documentation PDFs...
+See documentation...
 
 History
 =======
 
-- alpha 20130226 : First public version.
-- beta 1.0 : First proper release.
-
-Downloads
-=========
-
-- Beta 1.0 :
-    - Full archive : http://sfx.gligli.free.fr/zik/p600/p600fw_beta_1_0.zip
-    - English manual : http://sfx.gligli.free.fr/zik/p600/Prophet600FirmwareUpgrade_en_beta_1_0.pdf
-    - French manual : http://sfx.gligli.free.fr/zik/p600/Prophet600FirmwareUpgrade_fr_beta_1_0.pdf
+- Alpha 20130226 : First public version.
+- Beta 1.0 : First proper release.
