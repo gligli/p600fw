@@ -16,6 +16,28 @@ void uart_init(void)
 	CYCLE_WAIT(8);
 }
 
+void NOINLINE uart_send(uint8_t data)
+{
+	BLOCK_INT
+	{
+		uint8_t status;
+
+		// wait until previous byte is transmitted
+		
+		do
+		{
+			status=mem_read(0xe000);
+			CYCLE_WAIT(4);
+		}
+		while(!(status&0x02));
+		
+		// send the new one
+		
+		mem_write(0x6001,data);
+		CYCLE_WAIT(4);
+	}
+}
+
 void uart_update(void)
 {
 	if(!hardware_getNMIState())
