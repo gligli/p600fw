@@ -70,6 +70,7 @@ SRC = \
 	../common/uart_6850.c \
 	../common/import.c \
 	../common/utils.c \
+	../common/ui.c \
 	../common/p600.c
 
 # MCU name, you MUST set this to match the board you are using

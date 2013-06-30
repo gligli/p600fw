@@ -67,12 +67,12 @@ typedef enum
 
 typedef enum
 {
-	modOff=0,modPitch=1,modFilter=2,modVolume=3,modPW=4,modResonance=5,modMixer=6
+	modOff=0,modVCO=1,modVCF=2,modVCA=3,modPW=4
 } modulation_t;
 
 typedef enum
 {
-	mtNone=0,mtPitch=1,mtPW=2,mtFilter=4
+	mtNone=0,mtVCO=1,mtVCF=2,mtVCA=4,mtPW=8,mtOnlyA=16,mtOnlyB=32
 } modulationTarget_t;
 
 void p600_buttonEvent(p600Button_t button, int pressed);

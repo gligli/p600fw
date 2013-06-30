@@ -26,6 +26,7 @@
       <itemPath>teensy_bootloader_hack.h</itemPath>
       <itemPath>../common/tuner.h</itemPath>
       <itemPath>../common/uart_6850.h</itemPath>
+      <itemPath>../common/ui.h</itemPath>
       <itemPath>usb_debug_only.h</itemPath>
       <itemPath>../common/utils.h</itemPath>
     </logicalFolder>
@@ -52,6 +53,7 @@
       <itemPath>../common/synth.c</itemPath>
       <itemPath>../common/tuner.c</itemPath>
       <itemPath>../common/uart_6850.c</itemPath>
+      <itemPath>../common/ui.c</itemPath>
       <itemPath>usb_debug_only.c</itemPath>
       <itemPath>../common/utils.c</itemPath>
     </logicalFolder>
@@ -148,6 +150,10 @@
       <item path="../common/uart_6850.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/uart_6850.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/ui.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/ui.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/utils.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -254,6 +260,10 @@
       <item path="../common/uart_6850.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/uart_6850.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/ui.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/ui.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/utils.c" ex="false" tool="0" flavor2="0">
       </item>

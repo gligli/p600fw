@@ -16,6 +16,11 @@ typedef enum
 	cpLFOFreq=20,cpLFOAmt=21,
 	cpGlide=22,
 	cpAmpVelocity=23,cpFilVelocity=24,
+			
+	cpModDelay=25,
+	cpVibfreq=26,cpVibAmt=27,
+	cpUnisonDetune=28,
+	cpSeqArpClock=29,
 
 	// /!\ this must stay last
 	cpCount
@@ -41,7 +46,10 @@ typedef enum
 	spModwheelShift=21,
 
 	spChromaticPitch=22,
-
+			
+	spModwheelTarget=23,
+	spVibTarget=24,
+			
 	// /!\ this must stay last
 	spCount
 } steppedParameter_t;
@@ -69,6 +77,7 @@ struct preset_s
 
 extern struct settings_s settings;
 extern struct preset_s currentPreset;
+extern struct preset_s manualPreset;
 extern const uint8_t steppedParametersBits[spCount];
 
 int8_t settings_load(void);

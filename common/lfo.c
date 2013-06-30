@@ -45,6 +45,10 @@ void LOWERCODESIZE lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 void LOWERCODESIZE lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
 {
 	lfo->shape=shape;
+	
+	if(lfo->noise==0)
+		srandom(currentTick);
+	
 	lfo->noise=random();
 }
 

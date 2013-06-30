@@ -21,6 +21,7 @@
 #include "storage.h"
 #include "uart_6850.h"
 #include "import.h"
+#include "ui.h"
 
 #define MIDI_BASE_STEPPED_CC 48
 #define MIDI_BASE_COARSE_CC 16
@@ -31,8 +32,6 @@
 
 #define MAX_SYSEX_SIZE 512
 
-static void sysexSend(uint8_t command, int16_t size);
-
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
 	ppFreqA,ppMixer,ppAPW,
@@ -42,12 +41,13 @@ const p600Pot_t continuousParameterToPot[cpCount]=
 	ppAmpRel,ppAmpSus,ppAmpDec,ppAmpAtt,
 	ppPModFilEnv,ppPModOscB,
 	ppLFOFreq,ppLFOAmt,
-	ppSpeed,
+	ppNone,ppNone,ppNone,ppNone,
+	ppNone,ppNone,ppNone,ppNone,
 };
 
 volatile uint32_t currentTick=0; // 500hz
 	
-static struct
+struct p600_s
 {
 	struct adsr_s filEnvs[P600_VOICE_COUNT];
 	struct adsr_s ampEnvs[P600_VOICE_COUNT];
@@ -73,37 +73,9 @@ static struct
 	int16_t glideAmount;
 	int8_t gliding;
 	
-	p600Pot_t lastActivePot;
-	uint8_t manualActivePotValue;
-	
-	enum {diSynth,diMisc,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit} digitInput;
-	int8_t presetAwaitingNumber;
-	int8_t presetModified;
-	
 	uint8_t sysexBuffer[MAX_SYSEX_SIZE];
 	int16_t sysexSize;
 } p600;
-
-static const char * modulationName(modulation_t m)
-{
-	switch(m)
-	{
-	case modPitch:
-		return "Pitch";
-	case modFilter:
-		return "Filter";
-	case modVolume:
-		return "Volume";
-	case modPW:
-		return "PWM";
-	case modResonance:
-		return "Resonance";
-	case modMixer:
-		return "Mixer";
-	default:
-		return "Off";
-	}
-}
 
 static void computeTunedCVs(int8_t force)
 {
@@ -116,7 +88,7 @@ static void computeTunedCVs(int8_t force)
 
 	static uint16_t baseAPitchRaw,baseBPitchRaw,baseCutoffRaw,mTuneRaw,fineBFreqRaw;
 	static uint8_t track,chrom;
-	
+
 	// detect change & quit if none
 	
 	uVal=potmux_getValue(ppMTune);
@@ -233,7 +205,7 @@ static void computeTunedCVs(int8_t force)
 	}
 }
 
-static void computeBenderCVs(void)
+void computeBenderCVs(void)
 {
 	int32_t bend,amt;
 	uint16_t pos;
@@ -263,7 +235,7 @@ static void computeBenderCVs(void)
 	
 	switch(currentPreset.steppedParameters[spBenderTarget])
 	{
-	case modPitch:
+	case modVCO:
 		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 		{
 			bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
@@ -272,14 +244,14 @@ static void computeBenderCVs(void)
 			p600.benderCVs[cv]=bend;
 		}
 		break;
-	case modFilter:
+	case modVCF:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=p600.benderAmount;
 		bend/=12;
 		for(cv=pcFil1;cv<=pcFil6;++cv)
 			p600.benderCVs[cv]=bend;
 		break;
-	case modVolume:
+	case modVCA:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=p600.benderAmount;
 		bend/=12;
@@ -413,10 +385,6 @@ static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 	shape=currentPreset.steppedParameters[spLFOShape];
 	shift=currentPreset.steppedParameters[spLFOShift];
 
-	// set random seed for random-based shapes
-	if(shape==lsRand || shape==lsNoise)
-		srandom(currentTick);
-	
 	lfo_setShape(&p600.lfo,shape);
 	lfo_setSpeedShift(&p600.lfo,shift*2);
 
@@ -432,31 +400,31 @@ static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
 
 static void refreshSevenSeg(void)
 {
-	if(p600.digitInput<diLoadDecadeDigit)
+	if(ui.digitInput<diLoadDecadeDigit)
 	{
-		uint8_t v=p600.manualActivePotValue;
+		uint8_t v=ui.manualActivePotValue;
 		sevenSeg_setNumber(v);
 		led_set(plDot,v>99,v>199);
 	}
 	else
 	{
-		if(p600.digitInput!=diLoadDecadeDigit)
+		if(ui.digitInput!=diLoadDecadeDigit)
 		{
-			if(p600.presetAwaitingNumber>=0)
-				sevenSeg_setAscii('0'+p600.presetAwaitingNumber,' ');
+			if(ui.presetAwaitingNumber>=0)
+				sevenSeg_setAscii('0'+ui.presetAwaitingNumber,' ');
 			else
 				sevenSeg_setAscii(' ',' ');
 		}
 		else
 		{
 			sevenSeg_setNumber(settings.presetNumber);
-			led_set(plDot,p600.presetModified,0);
+			led_set(plDot,ui.presetModified,0);
 		}
 	}
 
 	led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
-	led_set(plToTape,p600.digitInput==diSynth && settings.presetBank!=pbkManual,0);
-	led_set(plFromTape,p600.digitInput==diMisc,0);
+	led_set(plToTape,ui.digitInput==diSynth && settings.presetBank!=pbkManual,0);
+	led_set(plFromTape,scanner_buttonState(pbFromTape),0);
 	
 	if(arp_getMode()!=amOff)
 	{
@@ -466,21 +434,22 @@ static void refreshSevenSeg(void)
 	}
 	else
 	{
-		led_set(plRecord,p600.digitInput==diStoreDecadeDigit,p600.digitInput==diStoreDecadeDigit);
+		led_set(plRecord,ui.digitInput==diStoreDecadeDigit,ui.digitInput==diStoreDecadeDigit);
 		led_set(plArpUD,0,0);
 		led_set(plArpAssign,0,0);
 	}
 	
 }
 
-static void refreshFullState(void)
+void refreshFullState(void)
 {
 	refreshGates();
 	refreshAssignerSettings();
 	refreshLfoSettings(0,0);
 	refreshEnvSettings(0,0);
 	refreshEnvSettings(1,0);
-
+	computeBenderCVs();
+	
 	refreshSevenSeg();
 }
 
@@ -489,82 +458,14 @@ static void refreshPresetPots(int8_t force)
 	continuousParameter_t cp;
 	
 	for(cp=0;cp<cpCount;++cp)
-		if(force || continuousParameterToPot[cp]==p600.lastActivePot || potmux_hasChanged(continuousParameterToPot[cp]))
+		if((continuousParameterToPot[cp]!=ppNone) && (force || continuousParameterToPot[cp]==ui.lastActivePot || potmux_hasChanged(continuousParameterToPot[cp])))
 		{
 			currentPreset.continuousParameters[cp]=potmux_getValue(continuousParameterToPot[cp]);
-			p600.presetModified=1;
+			ui.presetModified=1;
 		}
 }
 
-static void refreshPresetButton(p600Button_t button)
-{
-	uint8_t bitState;
-	int8_t change=1;
-	
-	bitState=scanner_buttonState(button)?1:0;
-	
-	switch(button)
-	{
-	case pbASaw:
-		currentPreset.steppedParameters[spASaw]=bitState;
-		break;
-	case pbATri:
-		currentPreset.steppedParameters[spATri]=bitState;
-		break;
-	case pbASqr:
-		currentPreset.steppedParameters[spASqr]=bitState;
-		break;
-	case pbBSaw:
-		currentPreset.steppedParameters[spBSaw]=bitState;
-		break;
-	case pbBTri:
-		currentPreset.steppedParameters[spBTri]=bitState;
-		break;
-	case pbBSqr:
-		currentPreset.steppedParameters[spBSqr]=bitState;
-		break;
-	case pbSync:
-		currentPreset.steppedParameters[spSync]=bitState;
-		break;
-	case pbPModFA:
-		currentPreset.steppedParameters[spPModFA]=bitState;
-		break;
-	case pbPModFil:
-		currentPreset.steppedParameters[spPModFil]=bitState;
-		break;
-	case pbUnison:
-		currentPreset.steppedParameters[spUnison]=bitState;
-		break;
-	case pbLFOShape:
-		currentPreset.steppedParameters[spLFOShape]&=~1;
-		currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
-		break;
-	case pbLFOFreq:
-	case pbLFOPW:
-	case pbLFOFil:
-		currentPreset.steppedParameters[spLFOTargets]=
-			(scanner_buttonState(pbLFOFreq)?mtPitch:0) +
-			(scanner_buttonState(pbLFOPW)?mtPW:0) +
-			(scanner_buttonState(pbLFOFil)?mtFilter:0);
-		break;
-	case pbFilFull:
-	case pbFilHalf:
-		currentPreset.steppedParameters[spTrackingShift]=
-			(scanner_buttonState(pbFilHalf)?1:0) +
-			(scanner_buttonState(pbFilFull)?2:0);
-		break;
-	default:
-		change=0;
-	}
-	
-	if(change)
-	{
-		p600.presetModified=1;
-		refreshFullState();
-	}
-}
-
-static void refreshPresetMode(void)
+void refreshPresetMode(void)
 {
 	if(settings.presetBank!=pbkManual)
 	{
@@ -572,14 +473,14 @@ static void refreshPresetMode(void)
 	}
 	else
 	{
-		currentPreset=p600.manualPreset;
+		currentPreset=manualPreset;
 	}
 
 	refreshFullState();
 
-	p600.lastActivePot=ppNone;
-	p600.presetModified=0;
-	p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
+	ui.lastActivePot=ppNone;
+	ui.presetModified=0;
+	ui.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
 }
 
 static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal)
@@ -625,173 +526,6 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 			synth_setCV_FastPath(pcAmp1+v,0);
 		}
 	}
-}
-
-static LOWERCODESIZE void handleSynthPage(p600Button_t button, int pressed)
-{
-	// assigner
-
-	if((pressed && button==pb0))
-	{
-		currentPreset.steppedParameters[spAssignerPriority]=(currentPreset.steppedParameters[spAssignerPriority]+1)%(apHigh+1);
-
-		refreshAssignerSettings();
-		sevenSeg_scrollText(assigner_priorityName[currentPreset.steppedParameters[spAssignerPriority]],1);
-	}
-
-	// lfo
-
-	if((pressed && (button>=pb1 && button<=pb2)) || button==pbLFOShape)
-	{
-		uint8_t shpA,shp,spd,vA,v;
-
-		shp=button==pbLFOShape;
-		shpA=button==pb1;
-		spd=button==pb2;
-
-		if(shpA)
-		{
-			v=currentPreset.steppedParameters[spLFOShape];
-
-			vA=v>>1;
-			v&=1;
-			vA=(vA+1)%3;
-
-			currentPreset.steppedParameters[spLFOShape]=(vA<<1)|v;
-		}
-
-		if(spd)
-			currentPreset.steppedParameters[spLFOShift]=(currentPreset.steppedParameters[spLFOShift]+1)%3;
-
-		refreshLfoSettings(shp||shpA,spd);
-	}
-
-	// modwheel
-
-	if((pressed && button==pb3))
-	{
-		const char * s[6]={"Full","","Half","","Min",""};
-		currentPreset.steppedParameters[spModwheelShift]=(currentPreset.steppedParameters[spModwheelShift]+2)%6;
-		sevenSeg_scrollText(s[currentPreset.steppedParameters[spModwheelShift]],1);
-	}
-
-	// envs
-
-	if(pressed && (button>=pb4 && button<=pb5))
-	{
-		steppedParameter_t param;
-		uint8_t merged;
-
-		param=(button==pb5)?spFilEnvExpo:spAmpEnvExpo;
-
-		merged=currentPreset.steppedParameters[param]+currentPreset.steppedParameters[param+1]*2;
-
-		merged=(merged+1)%4;
-
-		currentPreset.steppedParameters[param]=merged&1;
-		currentPreset.steppedParameters[param+1]=(merged>>1)&1;
-
-		refreshEnvSettings(param==spFilEnvExpo,1);
-	}
-
-	// pitch mode
-
-	if(pressed && button==pb6)
-	{
-		const char * s[2]={"Free","Chromatic"};
-		currentPreset.steppedParameters[spChromaticPitch]^=1;
-		sevenSeg_scrollText(s[currentPreset.steppedParameters[spChromaticPitch]],1);
-	}
-
-	// bender
-
-	if(pressed && (button==pb7 || button==pb8))
-	{
-		const char * s=NULL;
-
-		if(button==pb7)
-		{
-			switch(currentPreset.steppedParameters[spBenderSemitones])
-			{
-			case 3:
-				currentPreset.steppedParameters[spBenderSemitones]=5;
-				s="5th";
-				break;
-			case 5:
-				currentPreset.steppedParameters[spBenderSemitones]=12;
-				s="Oct";
-				break;
-			case 12:
-				currentPreset.steppedParameters[spBenderSemitones]=3;
-				s="3rd";
-				break;
-			}
-		}
-
-		if(button==pb8)
-		{
-			currentPreset.steppedParameters[spBenderTarget]=(currentPreset.steppedParameters[spBenderTarget]+1)%(modVolume+1);
-			s=modulationName(currentPreset.steppedParameters[spBenderTarget]);
-		}
-
-		// clear bender CVs, force recompute
-		memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
-		computeBenderCVs();
-
-		sevenSeg_scrollText(s,1);
-	}
-}
-
-static LOWERCODESIZE void handleMiscPage(p600Button_t button, int pressed)
-{
-	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
-	
-	// midi receive channel
-
-	if(pressed && button==pb1)
-	{
-		char s[20];
-		
-		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
-		settings_save();
-		
-		strcpy(s,chs[settings.midiReceiveChannel+1]);
-		strcat(s," midi recv");
-		
-		sevenSeg_scrollText(s,1);
-	}
-	
-	if(pressed && button==pb2)
-	{
-		settings.benderMiddle=potmux_getValue(ppPitchWheel);
-		settings_save();
-
-		// clear bender CVs, force recompute
-		memset(&p600.benderCVs,0,sizeof(p600.benderCVs));
-		computeBenderCVs();
-
-		sevenSeg_scrollText("bender calibrated",1);
-	}
-	
-	if(pressed && button==pb3)
-	{
-		int8_t i;
-		int16_t size=0;
-		
-		for(i=0;i<100;++i)
-		{
-			if(preset_loadCurrent(i))
-			{
-				storage_export(i,p600.sysexBuffer,&size);
-				sysexSend(SYSEX_COMMAND_BANK_A,size);
-			}
-			
-			sevenSeg_scrollText("done",1);
-		}
-		
-		refreshPresetMode();
-	}
-	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -877,7 +611,7 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 
 		currentPreset.continuousParameters[param]&=0x01fc;
 		currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-		p600.presetModified=1;	
+		ui.presetModified=1;	
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
 	{
@@ -885,17 +619,17 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 
 		currentPreset.continuousParameters[param]&=0xfe00;
 		currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-		p600.presetModified=1;	
+		ui.presetModified=1;	
 	}
 	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
 	{
 		param=control-MIDI_BASE_STEPPED_CC;
 		
 		currentPreset.steppedParameters[param]=value>>(7-steppedParametersBits[param]);
-		p600.presetModified=1;	
+		ui.presetModified=1;	
 	}
 
-	if(p600.presetModified)
+	if(ui.presetModified)
 		refreshFullState();
 }
 
@@ -909,8 +643,8 @@ void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
 		if(preset_loadCurrent(program))
 		{
 			settings.presetNumber=program;
-			p600.lastActivePot=ppNone;
-			p600.presetModified=0;
+			ui.lastActivePot=ppNone;
+			ui.presetModified=0;
 			settings_save();		
 			refreshFullState();
 		}
@@ -922,26 +656,29 @@ static void sysexSend(uint8_t command, int16_t size)
 	int16_t chunkCount,i;
 	uint8_t chunk[4];
 	
-	chunkCount=((size-1)>>2)+1;
-	
-	uart_send(0xf0);
-	uart_send(SYSEX_ID_0);
-	uart_send(SYSEX_ID_1);
-	uart_send(SYSEX_ID_2);
-	uart_send(command);
-	
-	for(i=0;i<chunkCount;++i)
+	BLOCK_INT
 	{
-		memcpy(chunk,&p600.sysexBuffer[i<<2],4);
-		
-		uart_send(chunk[0]&0x7f);
-		uart_send(chunk[1]&0x7f);
-		uart_send(chunk[2]&0x7f);
-		uart_send(chunk[3]&0x7f);
-		uart_send(((chunk[0]>>7)&1) | ((chunk[1]>>6)&2) | ((chunk[2]>>5)&4) | ((chunk[3]>>4)&8));
-	}
+		chunkCount=((size-1)>>2)+1;
 
-	uart_send(0xf7);
+		uart_send(0xf0);
+		uart_send(SYSEX_ID_0);
+		uart_send(SYSEX_ID_1);
+		uart_send(SYSEX_ID_2);
+		uart_send(command);
+
+		for(i=0;i<chunkCount;++i)
+		{
+			memcpy(chunk,&p600.sysexBuffer[i<<2],4);
+
+			uart_send(chunk[0]&0x7f);
+			uart_send(chunk[1]&0x7f);
+			uart_send(chunk[2]&0x7f);
+			uart_send(chunk[3]&0x7f);
+			uart_send(((chunk[0]>>7)&1) | ((chunk[1]>>6)&2) | ((chunk[2]>>5)&4) | ((chunk[3]>>4)&8));
+		}
+
+		uart_send(0xf7);
+	}
 }
 
 int16_t sysexDescrambleBuffer(int16_t start)
@@ -1028,6 +765,21 @@ void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1
 		sysexReceiveByte(b2);
 }
 
+void dumpPresets(void)
+{
+	int8_t i;
+	int16_t size=0;
+
+	for(i=0;i<100;++i)
+	{
+		if(preset_loadCurrent(i))
+		{
+			storage_export(i,p600.sysexBuffer,&size);
+			sysexSend(SYSEX_COMMAND_BANK_A,size);
+		}
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // P600 main code
 ////////////////////////////////////////////////////////////////////////////////
@@ -1045,11 +797,8 @@ void p600_init(void)
 	settings.presetBank=pbkManual;
 	settings.midiReceiveChannel=-1;
 	settings.voiceMask=0x3f;
-	p600.digitInput=diSynth;
-	p600.presetAwaitingNumber=-1;
-	p600.lastActivePot=ppNone;
 	currentPreset.steppedParameters[spBenderSemitones]=5;
-	currentPreset.steppedParameters[spBenderTarget]=modPitch;
+	currentPreset.steppedParameters[spBenderTarget]=modVCO;
 	currentPreset.steppedParameters[spFilEnvExpo]=1;
 	currentPreset.steppedParameters[spAmpEnvExpo]=1;
 	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
@@ -1067,6 +816,7 @@ void p600_init(void)
 	assigner_init();
 	uart_init();
 	arp_init();
+	ui_init();
 	
 	midi_device_init(&p600.midi);
 	midi_register_noteon_callback(&p600.midi,midi_noteOnEvent);
@@ -1101,9 +851,9 @@ void p600_init(void)
 
 	if(settingsOk && settings.presetBank!=pbkManual)
 	{
-		p600.digitInput=diLoadDecadeDigit;
-		p600.lastActivePot=ppNone;
-		p600.presetModified=0;
+		ui.digitInput=diLoadDecadeDigit;
+		ui.lastActivePot=ppNone;
+		ui.presetModified=0;
 		preset_loadCurrent(settings.presetNumber);
 	}
 		
@@ -1146,19 +896,16 @@ void p600_update(void)
 	// act on pot change
 	
 	if(potmux_lastChanged()!=ppNone)
-	{
-		// display last changed pot value
-		p600.lastActivePot=potmux_lastChanged();
-	}
+		ui_dataPotChanged();
 
 	refreshPresetPots(settings.presetBank==pbkManual);
 
 	// has to stay outside of previous if, so that finer pot values changes can also be displayed
 	
-	potVal=potmux_getValue(p600.lastActivePot)>>8;
-	if(potVal!=p600.manualActivePotValue)
+	potVal=potmux_getValue(ui.lastActivePot)>>8;
+	if(potVal!=ui.manualActivePotValue)
 	{
-		p600.manualActivePotValue=potVal;
+		ui.manualActivePotValue=potVal;
 		refreshSevenSeg();
 	}
 
@@ -1219,9 +966,7 @@ void p600_update(void)
 		
 		// arp
 		
-		arp_setSpeed(potmux_getValue(ppSpeed));
-		if (arp_getMode()!=amOff)
-			p600.gliding=0;
+		arp_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
 		
 		break;
 	}
@@ -1273,10 +1018,10 @@ void p600_timerInterrupt(void)
 	
 	pitchLfoVal=filterLfoVal=0;
 	
-	if(currentPreset.steppedParameters[spLFOTargets]&mtPitch)
+	if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
 		pitchLfoVal=p600.lfo.output;
 
-	if(currentPreset.steppedParameters[spLFOTargets]&mtFilter)
+	if(currentPreset.steppedParameters[spLFOTargets]&mtVCF)
 		filterLfoVal=p600.lfo.output;
 	
 	// global env computations
@@ -1290,6 +1035,7 @@ void p600_timerInterrupt(void)
 	{
 		va=currentPreset.continuousParameters[cpPModFilEnv];
 		va+=INT16_MIN;
+		va/=2; // half strength
 		oscEnvAmt=va;		
 	}
 	
@@ -1352,169 +1098,7 @@ void p600_timerInterrupt(void)
 
 void LOWERCODESIZE p600_buttonEvent(p600Button_t button, int pressed)
 {
-	// button press might change current preset
-
-	refreshPresetButton(button);		
-
-	// tuning
-
-	if(!pressed && button==pbTune)
-	{
-		tuner_tuneSynth();
-	}
-	
-	// arp
-	
-	if(pressed && button==pbArpUD)
-	{
-		arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
-	}
-	else if(pressed && button==pbArpAssign)
-	{
-		switch(arp_getMode())
-		{
-		case amOff:
-		case amUpDown:
-			arp_setMode(amAssign,arp_getHold());
-			break;
-		case amAssign:
-			arp_setMode(amRandom,arp_getHold());
-			break;
-		case amRandom:
-			arp_setMode(amOff,arp_getHold());
-			break;
-		}
-	}
-	
-	if(arp_getMode()!=amOff && pressed && button==pbRecord)
-	{
-		arp_setMode(arp_getMode(),!arp_getHold());
-		return; // override normal record action
-	}
-
-	// assigner
-	
-	if(button==pbUnison)
-	{
-		if(pressed)
-		{
-			assigner_latchPattern();
-			assigner_getPattern(currentPreset.voicePattern);
-		}
-		else
-		{
-			assigner_setPolyPattern();
-		}
-	}
-
-	// digit buttons use
-	
-	if(pressed && button==pbToTape && settings.presetBank!=pbkManual)
-	{
-		if(p600.digitInput!=diSynth)
-		{
-			p600.digitInput=diSynth;
-			sevenSeg_scrollText("sound settings",1);
-		}
-		else
-		{
-			p600.digitInput=diLoadDecadeDigit;
-		}
-	}
-	else if(pressed && button==pbFromTape)
-	{
-		if(p600.digitInput!=diMisc)
-		{
-			p600.digitInput=diMisc;
-			sevenSeg_scrollText("misc settings",1);
-		}
-		else
-		{
-			p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
-		}
-	}
-
-	// preset mode
-	
-	if(pressed && button==pbPreset)
-	{
-		// save manual preset
-		if (settings.presetBank==pbkManual)
-			p600.manualPreset=currentPreset;
-		
-		settings.presetBank=(settings.presetBank+1)%2; //TODO: second preset bank, how to store?
-		settings_save();
-		refreshPresetMode();
-	}
-	
-	if(pressed && button==pbRecord)
-	{
-		if(p600.digitInput==diStoreDecadeDigit)
-		{
-			// cancel record
-			p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
-		}
-		else
-		{
-			// ask for digit
-			p600.digitInput=diStoreDecadeDigit;
-		}
-	}
-	
-	if(p600.digitInput>=diLoadDecadeDigit)
-	{
-		// preset number input 
-		
-		if(pressed && button>=pb0 && button<=pb9)
-		{
-			switch(p600.digitInput)
-			{
-			case diLoadDecadeDigit:
-				p600.presetAwaitingNumber=button-pb0;
-				p600.digitInput=diLoadUnitDigit;
-				break;
-			case diStoreDecadeDigit:
-				p600.presetAwaitingNumber=button-pb0;
-				p600.digitInput=diStoreUnitDigit;
-				break;
-			case diLoadUnitDigit:
-			case diStoreUnitDigit:
-				p600.presetAwaitingNumber=p600.presetAwaitingNumber*10+(button-pb0);
-
-				// store?
-				if(p600.digitInput==diStoreUnitDigit)
-				{
-					preset_saveCurrent(p600.presetAwaitingNumber);
-				}
-
-				// always try to load/reload preset
-				if(preset_loadCurrent(p600.presetAwaitingNumber))
-				{
-					settings.presetNumber=p600.presetAwaitingNumber;
-					p600.lastActivePot=ppNone;
-					p600.presetModified=0;
-					settings_save();		
-				}
-
-				p600.presetAwaitingNumber=-1;
-				p600.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
-				break;
-			default:
-				;
-			}
-		}
-	}
-	else
-	{
-		if(p600.digitInput==diSynth)
-			handleSynthPage(button,pressed);
-		else
-			handleMiscPage(button,pressed);
-	}
-	
-	// we might have changed state
-	
-	refreshFullState();
+	ui_handleButton(button,pressed);
 }
 
 void p600_keyEvent(uint8_t key, int pressed)
@@ -1540,7 +1124,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 	
 	// set gates (don't retrigger gate, unless we're arpeggiating)
 	
-	if(!legato || (arp_getMode()!=amOff))
+	if(!legato || arp_getMode()!=amOff)
 	{
 		adsr_setGate(&p600.filEnvs[voice],gate);
 		adsr_setGate(&p600.ampEnvs[voice],gate);

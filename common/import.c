@@ -104,7 +104,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpAmpSus]=zp->ampSus<<12;
 	p.continuousParameters[cpAmpDec]=z80EnvCV[zp->ampDec]<<8;
 	p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
-	p.continuousParameters[cpPModFilEnv]=0x8000+(zp->pmodFilEnv<<10);
+	p.continuousParameters[cpPModFilEnv]=0x8000+(zp->pmodFilEnv<<11);
 	p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
 	p.continuousParameters[cpLFOFreq]=zp->lfoFreq<<10;
 	p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;
@@ -132,7 +132,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spUnison]=zp->unison;
 	p.steppedParameters[spAssignerPriority]=apLast;
 	p.steppedParameters[spBenderSemitones]=3;
-	p.steppedParameters[spBenderTarget]=modPitch;
+	p.steppedParameters[spBenderTarget]=modVCO;
 	p.steppedParameters[spModwheelShift]=2;
 	p.steppedParameters[spChromaticPitch]=1;
 

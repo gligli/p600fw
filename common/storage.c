@@ -27,7 +27,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*PModFil*/1,
 	/*LFOShape*/3,
 	/*LFOShift*/2,
-	/*LFOTargets*/3,
+	/*LFOTargets*/6,
 	/*TrackingShift*/2,
 	/*FilEnvExpo*/1,
 	/*FilEnvSlow*/1,
@@ -43,6 +43,7 @@ const uint8_t steppedParametersBits[spCount] =
 
 struct settings_s settings;
 struct preset_s currentPreset;
+struct preset_s manualPreset;
 
 static uint8_t temp[STORAGE_MAX_SIZE];
 static uint8_t * tempPtr;

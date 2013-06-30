@@ -131,6 +131,9 @@ LOWERCODESIZE static int8_t getDispensableVoice(uint8_t note, uint32_t timestamp
 	
 void assigner_setPriority(assignerPriority_t prio)
 {
+	if(prio==assigner.priority)
+		return;
+	
 	assigner_voiceDone(-1);
 	
 	if(prio>2)
@@ -141,6 +144,9 @@ void assigner_setPriority(assignerPriority_t prio)
 
 void assigner_setVoiceMask(uint8_t mask)
 {
+	if(mask==assigner.voiceMask)
+		return;
+	
 	assigner_voiceDone(-1);
 	assigner.voiceMask=mask;
 }
