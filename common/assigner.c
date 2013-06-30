@@ -230,8 +230,8 @@ LOWERCODESIZE void assigner_assignNote(uint8_t note, int8_t gate, uint16_t veloc
 			{
 				if(restoredNote!=ASSIGNER_NO_NOTE)
 				{
-					assigner_voiceDone(v);
 					oldVel=assigner.voiceAllocation[v].velocity;
+					assigner_voiceDone(v);
 				}
 				else
 				{
@@ -250,9 +250,6 @@ LOWERCODESIZE void assigner_voiceDone(int8_t voice)
 {
 	if(voice<0)
 	{
-		// safer to also do this
-		memset(assigner.noteStates,0,sizeof(assigner.noteStates));
-
 		for(voice=0;voice<P600_VOICE_COUNT;++voice)
 			assigner_voiceDone(voice);
 	}
@@ -273,7 +270,7 @@ LOWERCODESIZE void assigner_setPattern(uint8_t * pattern)
 
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
-		if(pattern[count]==ASSIGNER_NO_NOTE)
+		if(pattern[i]==ASSIGNER_NO_NOTE)
 			break;
 		
 		assigner.patternOffsets[i]=pattern[i];

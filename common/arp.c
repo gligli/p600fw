@@ -14,7 +14,7 @@ static struct
 {
 	uint8_t notes[ARP_NOTE_MEMORY];
 	int16_t noteIndex;
-	int8_t isDown;
+	uint8_t previousNote;
 
 	uint16_t counter,speed;
 	int8_t hold;
@@ -32,15 +32,20 @@ static int8_t isEmpty(void)
 	return 1;
 }
 
+static void finishPreviousNote(void)
+{
+	if(arp.previousNote!=ASSIGNER_NO_NOTE)
+		assigner_assignNote(arp.previousNote,0,0,0);
+}
+
 static void killAllNotes(void)
 {
-	int16_t i;
-
-	for(i=0;i<ARP_NOTE_MEMORY;++i)
-		arp.notes[i]=ASSIGNER_NO_NOTE;
+	finishPreviousNote();
 
 	arp.noteIndex=-1;
-	
+	arp.previousNote=ASSIGNER_NO_NOTE;
+
+	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
 	assigner_voiceDone(-1);
 }
 
@@ -120,20 +125,8 @@ void arp_assignNote(uint8_t note, int8_t on)
 		// gate off for last note
 		
 		if(isEmpty())
-			killAllNotes();
+			finishPreviousNote();
 	}
-}
-
-void arp_init(void)
-{
-	int16_t i;
-	
-	memset(&arp,0,sizeof(arp));
-
-	for(i=0;i<ARP_NOTE_MEMORY;++i)
-		arp.notes[i]=ASSIGNER_NO_NOTE;
-	
-	arp.noteIndex=-1;
 }
 
 void arp_update(void)
@@ -157,9 +150,11 @@ void arp_update(void)
 	if(isEmpty())
 		return;
 	
-	// act depending on mode
+	// yep
 	
-	uint8_t note;
+	finishPreviousNote();
+			
+	// act depending on mode
 	
 	switch(arp.mode)
 	{
@@ -168,16 +163,12 @@ void arp_update(void)
 		do
 			arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY;
 		while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
-		
-		note=arp.notes[arp.noteIndex];
 		break;
 		
 	case amRandom:
 		do
 			arp.noteIndex=random()%ARP_NOTE_MEMORY;
 		while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
-
-		note=arp.notes[arp.noteIndex];
 		break;
 	default:
 		return;
@@ -185,6 +176,20 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(note,1,UINT16_MAX,0);
+	assigner_assignNote(arp.notes[arp.noteIndex],1,UINT16_MAX,0);
+	
+	arp.previousNote=arp.notes[arp.noteIndex];
 }
 
+void arp_init(void)
+{
+	int16_t i;
+	
+	memset(&arp,0,sizeof(arp));
+
+	for(i=0;i<ARP_NOTE_MEMORY;++i)
+		arp.notes[i]=ASSIGNER_NO_NOTE;
+	
+	arp.noteIndex=-1;
+	arp.previousNote=ASSIGNER_NO_NOTE;
+}
