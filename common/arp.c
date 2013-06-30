@@ -62,7 +62,7 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 
 inline void arp_setSpeed(uint16_t speed)
 {
-	arp.speed=16+((UINT16_MAX-speed)>>7);
+	arp.speed=exponentialCourse(speed,22000.0f,500.0f);
 }
 
 inline arpMode_t arp_getMode(void)

@@ -1214,7 +1214,7 @@ void p600_update(void)
 
 		// glide
 		
-		p600.glideAmount=(UINT16_MAX-currentPreset.continuousParameters[cpGlide])>>5; // 11bit glide
+		p600.glideAmount=exponentialCourse(currentPreset.continuousParameters[cpGlide],11000.0f,2100.0f);
 		p600.gliding=p600.glideAmount<2000;
 		
 		// arp

@@ -26,5 +26,7 @@ uint16_t computeShape(uint32_t phase, const uint16_t lookup[]);
 
 uint32_t lfsr(uint32_t v, uint8_t taps);
 
+uint16_t exponentialCourse(uint16_t v, float ratio, float range);
+		
 #endif	/* UTILS_H */
 

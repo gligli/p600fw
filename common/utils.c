@@ -120,3 +120,8 @@ inline uint32_t lfsr(uint32_t v, uint8_t taps)
 	
 	return v;
 }
+
+uint16_t exponentialCourse(uint16_t v, float ratio, float range)
+{
+	return expf(-(float)v/ratio)*range;
+}
