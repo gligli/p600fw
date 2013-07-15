@@ -19,9 +19,9 @@ int8_t assigner_getAssignment(int8_t voice, uint8_t * note);
 void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato);
 void assigner_voiceDone(int8_t voice); // -1 -> all voices finished
 
-void assigner_setPattern(uint8_t * pattern);
-void assigner_getPattern(uint8_t * pattern);
-void assigner_setPolyPattern(void);
+void assigner_setPattern(uint8_t * pattern, int8_t mono);
+void assigner_getPattern(uint8_t * pattern, int8_t * mono);
+void assigner_setPoly(void);
 void assigner_latchPattern(void);
 
 void assigner_init(void);
