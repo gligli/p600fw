@@ -93,7 +93,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpFreqBFine]=(UINT16_MAX/2)+(zp->fineB<<8);
 	p.continuousParameters[cpAPW]=zp->pwA<<9;
 	p.continuousParameters[cpBPW]=zp->pwB<<9;
-	p.continuousParameters[cpCutoff]=((uint32_t)zp->cutoff<<11)/7;
+	p.continuousParameters[cpCutoff]=zp->cutoff<<8;
 	p.continuousParameters[cpResonance]=zp->reso<<10;
 	p.continuousParameters[cpFilEnvAmt]=0x8000+(zp->filEnvAmt<<11);
 	p.continuousParameters[cpFilRel]=z80EnvCV[zp->filRel]<<8;
