@@ -23,8 +23,8 @@ struct ui_s
 	p600Pot_t lastActivePot;
 	uint8_t manualActivePotValue;
 	
-	const struct uiParam_s * activeParam;
 	int32_t previousData;
+	int8_t activeParamIdx;
 };
 
 extern struct ui_s ui;

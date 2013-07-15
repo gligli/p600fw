@@ -11,25 +11,28 @@
 
 const struct uiParam_s uiParameters[] =
 {
-	/*shortcuts*/
+	/*first press*/
+	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
 	/*1*/ {.type=ptCust,.number=0,.name="lfo shape",.values={"pulse-tri","rand-sin","noise-saw"}},
-	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo range",.values={"low","high"}},
-	/*3*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"Vco","Vcf","Vca","off"}},
-	/*4*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
-	/*5*/ {.type=ptCont,.number=cpVibfreq,.name="Vib spd"},
-	/*6*/ {.type=ptCont,.number=cpModDelay,.name="mod delay"},
+	/*2*/ {.type=ptCont,.number=cpVibfreq,.name="Vib spd"},
+	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
+	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod delay"},
+	/*5*/ {.type=ptCust,.number=2,.name="amp shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"Vco","Vcf","Vca","off"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
-	/*8*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
-	/*9*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
-	/*misc*/
-	{.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b"}},
-	{.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},
-	{.type=ptCust,.number=2,.name="amp shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	{.type=ptCust,.number=3,.name="fil shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	{.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semitone"}},
-	{.type=ptCust,.number=4,.name="bend range",.values={"3rd","5th","Oct"}},
-	{.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
-	{.type=ptStep,.number=spModwheelShift,.name="mod range",.values={"min","low","high","max"}},
+	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
+	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Velo"},
+	/*second press*/
+	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
+	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b"}},
+	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo range",.values={"low","high"}},
+	/*3*/ {.type=ptStep,.number=spModwheelShift,.name="mod range",.values={"min","low","high","max"}},
+	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
+	/*5*/ {.type=ptCust,.number=3,.name="fil shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*6*/ {.type=ptCust,.number=4,.name="bend range",.values={"3rd","5th","Oct"}},
+	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
+	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semitone"}},
+	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Velo"},
 };
 
 struct ui_s ui;
@@ -147,24 +150,26 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 {
-	const struct uiParam_s * prev;
+	int8_t prev,new;
 	
-	prev=ui.activeParam;
+	prev=ui.activeParamIdx;
 	
-	if(button>=pb1 && button<=pb9)
+	if(button>=pb0 && button<=pb9)
 	{
-		ui.activeParam=&uiParameters[button-pb1];
+		new=button-pb0;
+		
+		if (prev==new)
+			ui.activeParamIdx+=10;
+		else if (prev==new+10)
+			ui.activeParamIdx-=10;
+		else
+			ui.activeParamIdx=new;
 		ui.previousData=-1;
 	}
-	else if(button==pb0)
-	{
-		ui.activeParam=&uiParameters[(potmux_getValue(ppSpeed)>>13)+9];
-		ui.previousData=-1;
-	}
 	
-	if(ui.activeParam!=prev)
+	if(ui.activeParamIdx!=prev)
 	{
-		sevenSeg_scrollText(ui.activeParam->name,1);
+		sevenSeg_scrollText(uiParameters[ui.activeParamIdx].name,1);
 	}
 }
 
@@ -177,45 +182,41 @@ void ui_dataPotChanged(void)
 	
 	// handle our "data" pot
 	
-	if(scanner_buttonState(pb0))
-	{
-		ui.lastActivePot=ppNone;
-			
-		handleSynthPage(pb0);
-	}
-	else if(ui.activeParam!=NULL)
+	if(ui.activeParamIdx>=0)
 	{
 		int32_t data,valCount;
+		struct uiParam_s prm;
 		
 		data=potmux_getValue(ppSpeed);
+		prm=uiParameters[ui.activeParamIdx];
 		
-		switch(ui.activeParam->type)
+		switch(prm.type)
 		{
 		case ptCont:
-			currentPreset.continuousParameters[ui.activeParam->number]=data;
+			currentPreset.continuousParameters[prm.number]=data;
 			break;
 		case ptStep:
 		case ptCust:
 			ui.lastActivePot=ppNone;
 			
 			valCount=0;
-			while(valCount<4 && ui.activeParam->values[valCount]!=NULL)
+			while(valCount<4 && prm.values[valCount]!=NULL)
 				++valCount;
 			
 			data=(data*valCount)>>16;
 
 			if(data!=ui.previousData)
-				sevenSeg_scrollText(ui.activeParam->values[data],1);
+				sevenSeg_scrollText(prm.values[data],1);
 
-			if(ui.activeParam->type==ptStep)
+			if(prm.type==ptStep)
 			{
-				currentPreset.steppedParameters[ui.activeParam->number]=data;
+				currentPreset.steppedParameters[prm.number]=data;
 			}
 			else
 			{
 				int8_t br[]={3,5,12};
 	
-				switch(ui.activeParam->number)
+				switch(prm.number)
 				{
 				case 0: // lfo shape 
 					currentPreset.steppedParameters[spLFOShape]=(currentPreset.steppedParameters[spLFOShape]&1) | (data<<1);
@@ -301,11 +302,11 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		if(pressed)
 		{
 			assigner_latchPattern();
-			assigner_getPattern(currentPreset.voicePattern);
+			assigner_getPattern(currentPreset.voicePattern,NULL);
 		}
 		else
 		{
-			assigner_setPolyPattern();
+			assigner_setPoly();
 		}
 	}
 
@@ -393,7 +394,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			}
 		}
 	}
-	else
+	else if(pressed)
 	{
 		if(scanner_buttonState(pbFromTape))
 			handleMiscAction(button);
@@ -414,4 +415,5 @@ void ui_init(void)
 	ui.presetAwaitingNumber=-1;
 	ui.lastActivePot=ppNone;
 	ui.presetModified=1;
+	ui.activeParamIdx=-1;
 }
