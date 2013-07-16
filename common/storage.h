@@ -18,7 +18,7 @@ typedef enum
 	cpAmpVelocity=23,cpFilVelocity=24,
 			
 	cpModDelay=25,
-	cpVibfreq=26,cpVibAmt=27,
+	cpVibFreq=26,cpVibAmt=27,
 	cpUnisonDetune=28,
 	cpSeqArpClock=29,
 
@@ -64,6 +64,7 @@ struct settings_s
 	enum {pbkManual=0,pbkA=1,pbkB=2} presetBank;
 	
 	int8_t midiReceiveChannel; // -1: omni / 0-15: channel 1-16
+	int8_t midiSendChannel; // 0-15: channel 1-16
 	uint8_t voiceMask;
 };
 

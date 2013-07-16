@@ -9,10 +9,10 @@
 #define STORAGE_VERSION 2
 
 #define STORAGE_MAGIC 0x006116a5
-#define STORAGE_MAX_SIZE 1024
+#define STORAGE_MAX_SIZE 512
 
-#define SETTINGS_PAGE_COUNT 4
-#define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-SETTINGS_PAGE_COUNT)
+#define SETTINGS_PAGE_COUNT 2
+#define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-4)
 
 const uint8_t steppedParametersBits[spCount] = 
 {
@@ -45,23 +45,26 @@ struct settings_s settings;
 struct preset_s currentPreset;
 struct preset_s manualPreset;
 
-static uint8_t temp[STORAGE_MAX_SIZE];
-static uint8_t * tempPtr;
-static uint8_t tempVersion;
+static struct
+{
+	uint8_t buffer[STORAGE_MAX_SIZE];
+	uint8_t * bufPtr;
+	uint8_t version;
+} storage;
 
 static uint32_t storageRead32(void)
 {
 	uint32_t v;
-	v=*(uint32_t*)tempPtr;
-	tempPtr+=sizeof(v);
+	v=*(uint32_t*)storage.bufPtr;
+	storage.bufPtr+=sizeof(v);
 	return v;
 }
 
 static uint16_t storageRead16(void)
 {
 	uint16_t v;
-	v=*(uint16_t*)tempPtr;
-	tempPtr+=sizeof(v);
+	v=*(uint16_t*)storage.bufPtr;
+	storage.bufPtr+=sizeof(v);
 	return v;
 }
 
@@ -69,8 +72,8 @@ static uint16_t storageRead16(void)
 static int16_t storageReadS16(void)
 {
 	int16_t v;
-	v=*(int16_t*)tempPtr;
-	tempPtr+=sizeof(v);
+	v=*(int16_t*)storage.bufPtr;
+	storage.bufPtr+=sizeof(v);
 	return v;
 }
 */
@@ -78,49 +81,49 @@ static int16_t storageReadS16(void)
 static uint8_t storageRead8(void)
 {
 	uint8_t v;
-	v=*(uint8_t*)tempPtr;
-	tempPtr+=sizeof(v);
+	v=*(uint8_t*)storage.bufPtr;
+	storage.bufPtr+=sizeof(v);
 	return v;
 }
 
 static int8_t storageReadS8(void)
 {
 	int8_t v;
-	v=*(int8_t*)tempPtr;
-	tempPtr+=sizeof(v);
+	v=*(int8_t*)storage.bufPtr;
+	storage.bufPtr+=sizeof(v);
 	return v;
 }
 
 static void storageWrite32(uint32_t v)
 {
-	*(uint32_t*)tempPtr=v;
-	tempPtr+=sizeof(v);
+	*(uint32_t*)storage.bufPtr=v;
+	storage.bufPtr+=sizeof(v);
 }
 
 static void storageWrite16(uint16_t v)
 {
-	*(uint16_t*)tempPtr=v;
-	tempPtr+=sizeof(v);
+	*(uint16_t*)storage.bufPtr=v;
+	storage.bufPtr+=sizeof(v);
 }
 
 /*
 static void storageWriteS16(int16_t v)
 {
-	*(int16_t*)tempPtr=v;
-	tempPtr+=sizeof(v);
+	*(int16_t*)storage.bufPtr=v;
+	storage.bufPtr+=sizeof(v);
 }
 */
 
 static void storageWrite8(uint8_t v)
 {
-	*(uint8_t*)tempPtr=v;
-	tempPtr+=sizeof(v);
+	*(uint8_t*)storage.bufPtr=v;
+	storage.bufPtr+=sizeof(v);
 }
 
 static void storageWriteS8(int8_t v)
 {
-	*(int8_t*)tempPtr=v;
-	tempPtr+=sizeof(v);
+	*(int8_t*)storage.bufPtr=v;
+	storage.bufPtr+=sizeof(v);
 }
 
 static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
@@ -128,36 +131,36 @@ static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 	uint16_t i;
 	
 	for (i=0;i<pageCount;++i)
-		storage_read(pageIdx+i,&temp[STORAGE_PAGE_SIZE*i]);
+		storage_read(pageIdx+i,&storage.buffer[STORAGE_PAGE_SIZE*i]);
 	
-	tempPtr=temp;
-	tempVersion=0;
+	storage.bufPtr=storage.buffer;
+	storage.version=0;
 
 	if(storageRead32()!=STORAGE_MAGIC)
 	{
 #ifdef DEBUG
 		print("Error: bad page !\n"); 
 #endif	
-		memset(temp,0,sizeof(temp));
+		memset(storage.buffer,0,sizeof(storage.buffer));
 		return;
 	}
 
-	tempVersion=storageRead8();
+	storage.version=storageRead8();
 }
 
 static LOWERCODESIZE void storagePrepareStore(void)
 {
-	memset(temp,0,sizeof(temp));
-	tempPtr=temp;
-	tempVersion=STORAGE_VERSION;
+	memset(storage.buffer,0,sizeof(storage.buffer));
+	storage.bufPtr=storage.buffer;
+	storage.version=STORAGE_VERSION;
 	
 	storageWrite32(STORAGE_MAGIC);
-	storageWrite8(tempVersion);
+	storageWrite8(storage.version);
 }
 
 static LOWERCODESIZE void storageFinishStore(uint16_t pageIdx, uint8_t pageCount)
 {
-	if((tempPtr-temp)>sizeof(temp))
+	if((storage.bufPtr-storage.buffer)>sizeof(storage.buffer))
 	{
 #ifdef DEBUG
 		print("Error: writing too much data to storage !\n"); 
@@ -168,7 +171,7 @@ static LOWERCODESIZE void storageFinishStore(uint16_t pageIdx, uint8_t pageCount
 	uint16_t i;
 	
 	for (i=0;i<pageCount;++i)
-		storage_write(pageIdx+i,&temp[STORAGE_PAGE_SIZE*i]);
+		storage_write(pageIdx+i,&storage.buffer[STORAGE_PAGE_SIZE*i]);
 }
 
 LOWERCODESIZE int8_t settings_load(void)
@@ -179,7 +182,7 @@ LOWERCODESIZE int8_t settings_load(void)
 	{
 		storageLoad(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
 
-		if (tempVersion<1)
+		if (storage.version<1)
 			return 0;
 
 		// v1
@@ -193,14 +196,15 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.presetBank=storageRead8();
 		settings.midiReceiveChannel=storageReadS8();
 		
-		if (tempVersion<2)
+		if (storage.version<2)
 			return 1;
 
 		// v2
 
 		settings.voiceMask=storageRead8();
+		settings.midiSendChannel=storageReadS8();
 		
-		if (tempVersion<3)
+		if (storage.version<3)
 			return 1;
 
 		// v3
@@ -235,6 +239,7 @@ LOWERCODESIZE void settings_save(void)
 		// v2
 		
 		storageWrite8(settings.voiceMask);
+		storageWriteS8(settings.midiSendChannel);
 
 		// v3
 		
@@ -256,10 +261,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		// defaults
 		
 		currentPreset.steppedParameters[spAssignerPriority]=apLast;
-		for(i=0;i<P600_VOICE_COUNT;++i)
-			currentPreset.voicePattern[i]=0;
 				
-		if (tempVersion<1)
+		if (storage.version<1)
 			return 0;
 
 		// v1
@@ -272,7 +275,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		for(sp=spASaw;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
-		if (tempVersion<2)
+		if (storage.version<2)
 			return 1;
 
 		// v2
@@ -335,11 +338,11 @@ LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * size
 		// don't export trailing zeroes		
 		
 		actualSize=STORAGE_PAGE_SIZE;
-		while(temp[actualSize-1]==0)
+		while(storage.buffer[actualSize-1]==0)
 			--actualSize;
 		
 		buf[0]=number;		
-		memcpy(&buf[1],temp,actualSize);
+		memcpy(&buf[1],storage.buffer,actualSize);
 		*size=actualSize+1;
 	}
 }
@@ -348,9 +351,9 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 {
 	BLOCK_INT
 	{
-		memset(temp,0,sizeof(temp));
-		memcpy(temp,buf,size);
-		tempPtr=temp+size;
+		memset(storage.buffer,0,sizeof(storage.buffer));
+		memcpy(storage.buffer,buf,size);
+		storage.bufPtr=storage.buffer+size;
 		storageFinishStore(number,1);
 	}
 }

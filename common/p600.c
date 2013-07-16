@@ -28,9 +28,10 @@
 #define MIDI_BASE_FINE_CC 80
 #define MIDI_BASE_NOTE 12
 
-#define TICKER_1S 500
+#define MAX_SYSEX_SIZE TEMP_BUFFER_SIZE
+#define POT_DEAD_ZONE 512
 
-#define MAX_SYSEX_SIZE 512
+uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
 
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
@@ -46,13 +47,13 @@ const p600Pot_t continuousParameterToPot[cpCount]=
 };
 
 volatile uint32_t currentTick=0; // 500hz
-	
+
 struct p600_s
 {
 	struct adsr_s filEnvs[P600_VOICE_COUNT];
 	struct adsr_s ampEnvs[P600_VOICE_COUNT];
 
-	struct lfo_s lfo;
+	struct lfo_s lfo,vibrato;
 	
 	struct preset_s manualPreset;
 	
@@ -73,8 +74,10 @@ struct p600_s
 	int16_t glideAmount;
 	int8_t gliding;
 	
-	uint8_t sysexBuffer[MAX_SYSEX_SIZE];
 	int16_t sysexSize;
+	
+	uint32_t modulationDelayStart;
+	uint16_t modulationDelayTickCount;
 } p600;
 
 static void computeTunedCVs(int8_t force)
@@ -258,6 +261,29 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 	}
 }
 
+static void refreshModulationDelay(void)
+{
+	int8_t idle=1,v;
+	
+	for(v=0;v<P600_VOICE_COUNT;++v)
+		if(assigner_getAssignment(v,NULL))
+		{
+			idle=0;
+			break;
+		}
+	
+	if(idle)
+	{
+		p600.modulationDelayStart=UINT32_MAX;
+	}
+	else if (p600.modulationDelayStart==UINT32_MAX)
+	{
+		p600.modulationDelayStart=currentTick;
+	}
+	
+	p600.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
+}
+
 static void handleFinishedVoices(void)
 {
 	int8_t v;
@@ -266,7 +292,10 @@ static void handleFinishedVoices(void)
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
 		if(assigner_getAssignment(v,NULL) && adsr_getStage(&p600.ampEnvs[v])==sWait)
+		{
 			assigner_voiceDone(v);
+			refreshModulationDelay();
+		}
 }
 
 static void refreshGates(void)
@@ -298,10 +327,10 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 	if(pwm)
 	{
-		if(sqrA)
+		if(sqrA && !(currentPreset.steppedParameters[spLFOTargets]&mtOnlyB))
 			pa+=p600.lfo.output;
 
-		if(sqrB)
+		if(sqrB && !(currentPreset.steppedParameters[spLFOTargets]&mtOnlyA))
 			pb+=p600.lfo.output;
 	}
 
@@ -319,7 +348,7 @@ static void refreshAssignerSettings(void)
 	assigner_setPriority(currentPreset.steppedParameters[spAssignerPriority]);
 }
 
-static void refreshEnvSettings(int8_t type, int8_t display)
+static void refreshEnvSettings(int8_t type)
 {
 	uint8_t expo,slow;
 	int8_t i;
@@ -338,40 +367,18 @@ static void refreshEnvSettings(int8_t type, int8_t display)
 		adsr_setShape(a,expo);
 		adsr_setSpeedShift(a,(slow)?3:1);
 	}
-	
-	if(display)
-	{
-		char s[20];
-		
-		strcpy(s,(slow)?"slo":"fast");
-		strcat(s,(expo)?" exp":" lin");
-		strcat(s,(type)?" fil":" amp");
-
-		sevenSeg_scrollText(s,1);
-	}
 }
 
-static void refreshLfoSettings(int8_t dispShape,int8_t dispSpd)
+static void refreshLfoSettings(void)
 {
-	const char * s[3]={"Slo","Med","Fast"};
-	
 	lfoShape_t shape;
 	uint8_t shift;
 
 	shape=currentPreset.steppedParameters[spLFOShape];
-	shift=currentPreset.steppedParameters[spLFOShift];
+	shift=1+currentPreset.steppedParameters[spLFOShift]*3;
 
 	lfo_setShape(&p600.lfo,shape);
-	lfo_setSpeedShift(&p600.lfo,shift*2);
-
-	if(dispShape)
-	{
-		sevenSeg_scrollText(lfo_shapeName(shape),1);
-	}
-	else if(dispSpd && shift<=2)
-	{
-		sevenSeg_scrollText(s[shift],1);
-	}
+	lfo_setSpeedShift(&p600.lfo,shift);
 }
 
 static void refreshSevenSeg(void)
@@ -421,9 +428,9 @@ void refreshFullState(void)
 {
 	refreshGates();
 	refreshAssignerSettings();
-	refreshLfoSettings(0,0);
-	refreshEnvSettings(0,0);
-	refreshEnvSettings(1,0);
+	refreshLfoSettings();
+	refreshEnvSettings(0);
+	refreshEnvSettings(1);
 	computeBenderCVs();
 	
 	refreshSevenSeg();
@@ -459,7 +466,7 @@ void refreshPresetMode(void)
 	ui.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
 }
 
-static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchLfoVal,int16_t filterLfoVal)
+static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchALfoVal,int16_t pitchBLfoVal,int16_t filterLfoVal)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
@@ -480,7 +487,8 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 
 			envVal=p600.filEnvs[v].output;
 
-			va=vb=pitchLfoVal;
+			va=pitchALfoVal;
+			vb=pitchBLfoVal;
 
 			va+=scaleU16S16(envVal,oscEnvAmt);	
 			va+=p600.oscANoteCV[v];
@@ -644,7 +652,7 @@ static void sysexSend(uint8_t command, int16_t size)
 
 		for(i=0;i<chunkCount;++i)
 		{
-			memcpy(chunk,&p600.sysexBuffer[i<<2],4);
+			memcpy(chunk,&tempBuffer[i<<2],4);
 
 			uart_send(chunk[0]&0x7f);
 			uart_send(chunk[1]&0x7f);
@@ -667,14 +675,14 @@ int16_t sysexDescrambleBuffer(int16_t start)
 
 	for(i=0;i<chunkCount;++i)
 	{
-		memmove(&p600.sysexBuffer[out],&p600.sysexBuffer[i*5+start],4);
+		memmove(&tempBuffer[out],&tempBuffer[i*5+start],4);
 		
-		b=p600.sysexBuffer[i*5+start+4];
+		b=tempBuffer[i*5+start+4];
 		
-		p600.sysexBuffer[out+0]|=(b&1)<<7;
-		p600.sysexBuffer[out+1]|=(b&2)<<6;
-		p600.sysexBuffer[out+2]|=(b&4)<<5;
-		p600.sysexBuffer[out+3]|=(b&8)<<4;
+		tempBuffer[out+0]|=(b&1)<<7;
+		tempBuffer[out+1]|=(b&2)<<6;
+		tempBuffer[out+2]|=(b&4)<<5;
+		tempBuffer[out+3]|=(b&8)<<4;
 		
 		out+=4;
 	}
@@ -690,22 +698,22 @@ void sysexReceiveByte(uint8_t b)
 	{
 	case 0xF0:
 		p600.sysexSize=0;
-		memset(p600.sysexBuffer,0,MAX_SYSEX_SIZE);
+		memset(tempBuffer,0,MAX_SYSEX_SIZE);
 		break;
 	case 0xF7:
-		if(p600.sysexBuffer[0]==0x01 && p600.sysexBuffer[1]==0x02) // SCI P600 program dump
+		if(tempBuffer[0]==0x01 && tempBuffer[1]==0x02) // SCI P600 program dump
 		{
-			import_sysex(p600.sysexBuffer,p600.sysexSize);
+			import_sysex(tempBuffer,p600.sysexSize);
 		}
-		else if(p600.sysexBuffer[0]==SYSEX_ID_0 && p600.sysexBuffer[1]==SYSEX_ID_1 && p600.sysexBuffer[2]==SYSEX_ID_2) // my sysex ID
+		else if(tempBuffer[0]==SYSEX_ID_0 && tempBuffer[1]==SYSEX_ID_1 && tempBuffer[2]==SYSEX_ID_2) // my sysex ID
 		{
 			// handle my sysex commands
 			
-			switch(p600.sysexBuffer[3])
+			switch(tempBuffer[3])
 			{
 			case SYSEX_COMMAND_BANK_A:
 				size=sysexDescrambleBuffer(4);
-				storage_import(p600.sysexBuffer[4],&p600.sysexBuffer[5],size-1);
+				storage_import(tempBuffer[4],&tempBuffer[5],size-1);
 				break;
 			}
 		}
@@ -722,7 +730,7 @@ void sysexReceiveByte(uint8_t b)
 			p600.sysexSize=0;
 		}
 		
-		p600.sysexBuffer[p600.sysexSize++]=b;
+		tempBuffer[p600.sysexSize++]=b;
 	}
 }
 
@@ -750,7 +758,7 @@ void dumpPresets(void)
 	{
 		if(preset_loadCurrent(i))
 		{
-			storage_export(i,p600.sysexBuffer,&size);
+			storage_export(i,tempBuffer,&size);
 			sysexSend(SYSEX_COMMAND_BANK_A,size);
 		}
 	}
@@ -766,6 +774,7 @@ void p600_init(void)
 	
 	memset(&p600,0,sizeof(p600));
 	memset(&settings,0,sizeof(settings));
+	memset(&currentPreset,0,sizeof(currentPreset));
 	
 	// defaults
 	
@@ -777,10 +786,8 @@ void p600_init(void)
 	currentPreset.steppedParameters[spBenderTarget]=modVCO;
 	currentPreset.steppedParameters[spFilEnvExpo]=1;
 	currentPreset.steppedParameters[spAmpEnvExpo]=1;
+	currentPreset.steppedParameters[spModwheelShift]=1;
 	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-	currentPreset.continuousParameters[cpFilVelocity]=0;
-	for(i=0;i<P600_VOICE_COUNT;++i)
-		currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
 	
 	// init
 	
@@ -808,6 +815,9 @@ void p600_init(void)
 	}
 
 	lfo_init(&p600.lfo);
+	lfo_init(&p600.vibrato);
+	lfo_setShape(&p600.vibrato,lsTri);
+	lfo_setSpeedShift(&p600.vibrato,4);
 
 	// state
 		
@@ -851,8 +861,9 @@ void p600_init(void)
 
 void p600_update(void)
 {
-	int8_t i,wheelChange,wheelUpdate;
+	int8_t i,wheelChange,wheelUpdate,dlyMod;
 	uint8_t potVal;
+	uint16_t mwAmt,lfoAmt,vibAmt;
 	static uint8_t frc=0;
 	static uint32_t bendChangeStart=0;
 	
@@ -910,12 +921,37 @@ void p600_update(void)
 					 currentPreset.continuousParameters[cpFilRel],
 					 0,0x0f);
 
-		// lfo
+		// modulations
 		
-		lfo_setCVs(&p600.lfo,
-				currentPreset.continuousParameters[cpLFOFreq],
-				satAddU16U16(currentPreset.continuousParameters[cpLFOAmt],
-					potmux_getValue(ppModWheel)>>currentPreset.steppedParameters[spModwheelShift]));
+		dlyMod=currentTick-p600.modulationDelayStart>p600.modulationDelayTickCount;
+		mwAmt=potmux_getValue(ppModWheel)>>currentPreset.steppedParameters[spModwheelShift];
+
+		lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
+		lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
+			
+		vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
+		vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
+		
+		if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
+		{
+			lfo_setCVs(&p600.lfo,
+					currentPreset.continuousParameters[cpLFOFreq],
+					satAddU16U16(lfoAmt,mwAmt));
+			lfo_setCVs(&p600.vibrato,
+					 currentPreset.continuousParameters[cpVibFreq],
+					 dlyMod?vibAmt:0);
+		}
+		else
+		{
+			lfo_setCVs(&p600.lfo,
+					currentPreset.continuousParameters[cpLFOFreq],
+					dlyMod?lfoAmt:0);
+			lfo_setCVs(&p600.vibrato,
+					currentPreset.continuousParameters[cpVibFreq],
+					satAddU16U16(vibAmt,mwAmt));
+		}
+		
+		
 		break;
 	case 1:
 		// 'fixed' CVs
@@ -983,7 +1019,7 @@ void p600_uartInterrupt(void)
 void p600_timerInterrupt(void)
 {
 	int32_t va,vf;
-	int16_t pitchLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
+	int16_t pitchALfoVal,pitchBLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
 	int8_t v,hz63;
 
 	static uint8_t frc=0;
@@ -992,10 +1028,16 @@ void p600_timerInterrupt(void)
 	
 	lfo_update(&p600.lfo);
 	
-	pitchLfoVal=filterLfoVal=0;
+	pitchALfoVal=pitchBLfoVal=p600.vibrato.output;
+	filterLfoVal=0;
 	
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
-		pitchLfoVal=p600.lfo.output;
+	{
+		if(!(currentPreset.steppedParameters[spLFOTargets]&mtOnlyB))
+			pitchALfoVal+=p600.lfo.output>>1;
+		if(!(currentPreset.steppedParameters[spLFOTargets]&mtOnlyA))
+			pitchBLfoVal+=p600.lfo.output>>1;
+	}
 
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCF)
 		filterLfoVal=p600.lfo.output;
@@ -1018,12 +1060,12 @@ void p600_timerInterrupt(void)
 	// per voice stuff
 	
 		// P600_VOICE_COUNT calls
-	refreshVoice(0,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal);
-	refreshVoice(1,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal);
-	refreshVoice(2,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal);
-	refreshVoice(3,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal);
-	refreshVoice(4,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal);
-	refreshVoice(5,oscEnvAmt,filEnvAmt,pitchLfoVal,filterLfoVal);
+	refreshVoice(0,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
+	refreshVoice(1,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
+	refreshVoice(2,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
+	refreshVoice(3,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
+	refreshVoice(4,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
+	refreshVoice(5,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
 	
 	// slower updates
 
@@ -1046,8 +1088,7 @@ void p600_timerInterrupt(void)
 		{
 			arp_update();
 		}
-		break;
-	case 2:
+
 		if(p600.gliding)
 		{
 			for(v=0;v<P600_VOICE_COUNT;++v)
@@ -1058,6 +1099,9 @@ void p600_timerInterrupt(void)
 			}
 		}
 
+		break;
+	case 2:
+		lfo_update(&p600.vibrato);
 		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
 	case 3:
@@ -1095,6 +1139,10 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 	uint16_t velAmt;
 	int32_t v;
 	
+	// mod delay
+	
+	refreshModulationDelay();
+			
 	// prepare CVs
 	
 	computeTunedCVs(1);
@@ -1129,7 +1177,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 			// preset & maybe kick-start the VCF, in case we need a sharp attack
 		
 			v=p600.filterNoteCV[voice];
-			if(p600.filEnvs[voice].attackCV<512)
+			if(p600.filEnvs[voice].attackCV<POT_DEAD_ZONE)
 			{
 				v+=currentPreset.continuousParameters[cpFilEnvAmt];
 				v+=INT16_MIN;
@@ -1139,7 +1187,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 		
 			// kick-start the VCA, in case we need a sharp attack
 		
-			if(p600.ampEnvs[voice].attackCV<512)
+			if(p600.ampEnvs[voice].attackCV<POT_DEAD_ZONE)
 				synth_setCV(pcAmp1+voice,UINT16_MAX,SYNTH_FLAG_IMMEDIATE);
 		}
 	}

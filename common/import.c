@@ -122,7 +122,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spPModFA]=zp->pmodFreqA;
 	p.steppedParameters[spPModFil]=zp->pmodFil;
 	p.steppedParameters[spLFOShape]=zp->lfoShape;
-	p.steppedParameters[spLFOShift]=1;
+	p.steppedParameters[spLFOShift]=0;
 	p.steppedParameters[spLFOTargets]=zp->lfoPitch | (zp->lfoPW<<1) | (zp->lfoFil<<2);
 	p.steppedParameters[spTrackingShift]=(zp->trackHalf?1:0) + (zp->trackFull?2:0);
 	p.steppedParameters[spFilEnvExpo]=0;

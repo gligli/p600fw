@@ -14,7 +14,7 @@ const struct uiParam_s uiParameters[] =
 	/*first press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
 	/*1*/ {.type=ptCust,.number=0,.name="lfo shape",.values={"pulse-tri","rand-sin","noise-saw"}},
-	/*2*/ {.type=ptCont,.number=cpVibfreq,.name="Vib spd"},
+	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
 	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod delay"},
 	/*5*/ {.type=ptCust,.number=2,.name="amp shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
@@ -26,7 +26,7 @@ const struct uiParam_s uiParameters[] =
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
 	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b"}},
 	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo range",.values={"low","high"}},
-	/*3*/ {.type=ptStep,.number=spModwheelShift,.name="mod range",.values={"min","low","high","max"}},
+	/*3*/ {.type=ptCust,.number=5,.name="mod range",.values={"min","low","high","full"}},
 	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
 	/*5*/ {.type=ptCust,.number=3,.name="fil shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
 	/*6*/ {.type=ptCust,.number=4,.name="bend range",.values={"3rd","5th","Oct"}},
@@ -113,23 +113,32 @@ static void refreshPresetButton(p600Button_t button)
 static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 {
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
+	static int8_t voice=0;
+	char s[20];
 	
-	// midi receive channel
+	
 
-	if(button==pb1)
+	if(button==pb1) // midi receive channel
 	{
-		char s[20];
-		
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
 		
 		strcpy(s,chs[settings.midiReceiveChannel+1]);
-		strcat(s," midi recv");
+		strcat(s," recv");
 		
 		sevenSeg_scrollText(s,1);
 	}
-	
-	if(button==pb2)
+	else if(button==pb2) // midi send channel
+	{
+		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
+		settings_save();
+		
+		strcpy(s,chs[settings.midiSendChannel+1]);
+		strcat(s," send");
+		
+		sevenSeg_scrollText(s,1);
+	}
+	else if(button==pb3) // pitch wheel calibration
 	{
 		settings.benderMiddle=potmux_getValue(ppPitchWheel);
 		settings_save();
@@ -138,14 +147,39 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 		sevenSeg_scrollText("bender calibrated",1);
 	}
-	
-	if(button==pb3)
+	else if(button==pb4) // voice selection
+	{
+		voice=(voice+1)%P600_VOICE_COUNT;
+
+		strcpy(s,"Vc-");
+		s[2]='1'+voice;
+		sevenSeg_scrollText(s,1);
+	}
+	else if(button==pb5) // selected voice defeat
+	{
+		if(settings.voiceMask&(1<<voice))
+		{
+			strcpy(s,"Vc- off");
+			settings.voiceMask&=~(1<<voice);
+		}
+		else
+		{
+			strcpy(s,"Vc- on");
+			settings.voiceMask|=(1<<voice);
+		}
+
+		settings_save();
+
+		s[2]='1'+voice;
+		sevenSeg_scrollText(s,1);
+		refreshFullState();
+	}
+	else if(button==pb6) // preset dump
 	{
 		dumpPresets();
-		sevenSeg_scrollText("done",1);
+		sevenSeg_scrollText("presets dumped",1);
 		refreshPresetMode();
 	}
-	
 }
 
 static LOWERCODESIZE void handleSynthPage(p600Button_t button)
@@ -215,6 +249,7 @@ void ui_dataPotChanged(void)
 			else
 			{
 				int8_t br[]={3,5,12};
+				int8_t mr[]={5,3,1,0};
 	
 				switch(prm.number)
 				{
@@ -222,12 +257,11 @@ void ui_dataPotChanged(void)
 					currentPreset.steppedParameters[spLFOShape]=(currentPreset.steppedParameters[spLFOShape]&1) | (data<<1);
 					break;
 				case 1: // lfo tgt
+					currentPreset.steppedParameters[spLFOTargets]&=~(mtOnlyA|mtOnlyB);
 					if(data==1)
 						currentPreset.steppedParameters[spLFOTargets]|=mtOnlyA;
 					else if(data==2)
 						currentPreset.steppedParameters[spLFOTargets]|=mtOnlyB;
-					else
-						currentPreset.steppedParameters[spLFOTargets]&=~(mtOnlyA|mtOnlyB);
 					break;					
 				case 2: // amp shape
 					currentPreset.steppedParameters[spAmpEnvExpo]=1-(data&1);
@@ -239,6 +273,9 @@ void ui_dataPotChanged(void)
 					break;
 				case 4: // bend range 
 					currentPreset.steppedParameters[spBenderSemitones]=br[data];
+					break;
+				case 5: // mod range
+					currentPreset.steppedParameters[spModwheelShift]=mr[data];
 					break;
 				}
 			}

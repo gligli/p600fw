@@ -24,6 +24,9 @@
 #define SYSEX_COMMAND_BANK_B 2
 #define SYSEX_COMMAND_UPDATE_FW 0x6b
 
+#define TICKER_1S 500
+#define TEMP_BUFFER_SIZE 512
+
 ////////////////////////////////////////////////////////////////////////////////
 // Prophet 600 definitions
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +89,7 @@ void p600_timerInterrupt(void);
 void p600_uartInterrupt(void);
 
 extern volatile uint32_t currentTick; // 500hz
+extern uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
 
 
 #endif	/* P600_H */
