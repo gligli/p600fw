@@ -257,7 +257,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		
 		currentPreset.steppedParameters[spAssignerPriority]=apLast;
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
+			currentPreset.voicePattern[i]=0;
 				
 		if (tempVersion<1)
 			return 0;
@@ -276,6 +276,12 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 			return 1;
 
 		// v2
+
+		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp)
+			currentPreset.continuousParameters[cp]=storageRead16();
+
+		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
+			currentPreset.steppedParameters[sp]=storageRead8();
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
@@ -304,6 +310,12 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		
 		// v2
 		
+		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp)
+			storageWrite16(currentPreset.continuousParameters[cp]);
+
+		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
+			storageWrite8(currentPreset.steppedParameters[sp]);
+
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			storageWrite8(currentPreset.voicePattern[i]);
 		
