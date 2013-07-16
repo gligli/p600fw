@@ -79,68 +79,40 @@ struct p600_s
 
 static void computeTunedCVs(int8_t force)
 {
-	uint16_t cva,cvb,cvf,uVal;
+	uint16_t cva,cvb,cvf;
 	uint8_t note,baseCutoffNote,baseANote,baseBNote,trackingNote;
 	int8_t v;
 
 	uint16_t baseAPitch,baseBPitch,baseCutoff;
-	int16_t mTune,fineBFreq;
+	int16_t mTune,fineBFreq,detune;
 
-	static uint16_t baseAPitchRaw,baseBPitchRaw,baseCutoffRaw,mTuneRaw,fineBFreqRaw;
+	static uint16_t baseAPitchRaw,baseBPitchRaw,baseCutoffRaw,mTuneRaw,fineBFreqRaw,detuneRaw;
 	static uint8_t track,chrom;
-
+	
 	// detect change & quit if none
 	
-	uVal=potmux_getValue(ppMTune);
-	if(mTuneRaw!=uVal)
+	if(!force && 
+		mTuneRaw==potmux_getValue(ppMTune) &&
+		fineBFreqRaw==currentPreset.continuousParameters[cpFreqBFine] &&
+		baseCutoffRaw==currentPreset.continuousParameters[cpCutoff] &&
+		baseAPitchRaw==currentPreset.continuousParameters[cpFreqA] &&
+		baseBPitchRaw==currentPreset.continuousParameters[cpFreqB] &&
+		detuneRaw==currentPreset.continuousParameters[cpUnisonDetune] &&
+		track==currentPreset.steppedParameters[spTrackingShift] &&
+		chrom==currentPreset.steppedParameters[spChromaticPitch])
 	{
-		mTuneRaw=uVal;
-		force=1;
-	}
-	
-	uVal=currentPreset.continuousParameters[cpFreqBFine];
-	if(fineBFreqRaw!=uVal)
-	{
-		fineBFreqRaw=uVal;
-		force=1;
-	}
-	
-	uVal=currentPreset.continuousParameters[cpCutoff];
-	if(baseCutoffRaw!=uVal)
-	{
-		baseCutoffRaw=uVal;
-		force=1;
-	}
-	
-	uVal=currentPreset.continuousParameters[cpFreqA];
-	if(baseAPitchRaw!=uVal)
-	{
-		baseAPitchRaw=uVal;
-		force=1;
-	}
-
-	uVal=currentPreset.continuousParameters[cpFreqB];
-	if(baseBPitchRaw!=uVal)
-	{
-		baseBPitchRaw=uVal;
-		force=1;
-	}
-	
-	if(track!=currentPreset.steppedParameters[spTrackingShift])
-	{
-		track=currentPreset.steppedParameters[spTrackingShift];
-		force=1;
-	}
-	
-	if(chrom!=currentPreset.steppedParameters[spChromaticPitch])
-	{
-		chrom=currentPreset.steppedParameters[spChromaticPitch];
-		force=1;
-	}
-	
-	if(!force)
 		return;
-
+	}
+	
+	mTuneRaw=potmux_getValue(ppMTune);
+	fineBFreqRaw=currentPreset.continuousParameters[cpFreqBFine];
+	baseCutoffRaw=currentPreset.continuousParameters[cpCutoff];
+	baseAPitchRaw=currentPreset.continuousParameters[cpFreqA];
+	baseBPitchRaw=currentPreset.continuousParameters[cpFreqB];
+	detuneRaw=currentPreset.continuousParameters[cpUnisonDetune];
+	track=currentPreset.steppedParameters[spTrackingShift];
+	chrom=currentPreset.steppedParameters[spChromaticPitch];
+	
 	// compute for oscs & filters
 	
 	mTune=(mTuneRaw>>7)+INT8_MIN*2;
@@ -165,16 +137,24 @@ static void computeTunedCVs(int8_t force)
 		baseAPitch&=0xff;
 		baseBPitch&=0xff;
 	}
-	
+
 	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
 		if (!assigner_getAssignment(v,&note))
 			continue;
-		
+
 		// oscs
 		
 		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)p600.benderCVs[pcOsc1A+v]+mTune);
 		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		
+		if(currentPreset.steppedParameters[spUnison])
+		{
+			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8);
+
+			cva=satAddU16S16(cva,detune);
+			cvb=satAddU16S16(cvb,detune);
+		}
 		
 		// filter
 		
@@ -334,11 +314,7 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 static void refreshAssignerSettings(void)
 {
-	if(currentPreset.steppedParameters[spUnison])
-		assigner_setPattern(currentPreset.voicePattern,currentPreset.steppedParameters[spUnison]);
-	else
-		assigner_setPoly();
-	
+	assigner_setPattern(currentPreset.voicePattern,currentPreset.steppedParameters[spUnison]);
 	assigner_setVoiceMask(settings.voiceMask);
 	assigner_setPriority(currentPreset.steppedParameters[spAssignerPriority]);
 }
@@ -1056,24 +1032,6 @@ void p600_timerInterrupt(void)
 	switch(frc&0x03) // 4 phases, each 500hz
 	{
 	case 0:
-		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
-		break;
-	case 1:
-		if(arp_getMode()!=amOff)
-		{
-			arp_update();
-		}
-		else if(p600.gliding)
-		{
-			for(v=0;v<P600_VOICE_COUNT;++v)
-			{
-				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
-				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
-				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
-			}
-		}
-		break;
-	case 2:
 		if(hz63)
 			handleFinishedVoices();
 		
@@ -1082,6 +1040,25 @@ void p600_timerInterrupt(void)
 
 		// ticker inc
 		++currentTick;
+		break;
+	case 1:
+		if(arp_getMode()!=amOff)
+		{
+			arp_update();
+		}
+		break;
+	case 2:
+		if(p600.gliding)
+		{
+			for(v=0;v<P600_VOICE_COUNT;++v)
+			{
+				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
+				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
+				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
+			}
+		}
+
+		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
 	case 3:
 		scanner_update(hz63);

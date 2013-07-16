@@ -341,7 +341,8 @@ LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)
 {
 	int8_t i,count=0;
 
-	assigner_voiceDone(-1);
+	if(mono!=assigner.mono)
+		assigner_voiceDone(-1);
 	
 	assigner.mono=mono;
 	memset(assigner.patternOffsets,ASSIGNER_NO_NOTE,P600_VOICE_COUNT);
