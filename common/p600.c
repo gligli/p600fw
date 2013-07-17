@@ -788,6 +788,8 @@ void p600_init(void)
 	currentPreset.steppedParameters[spAmpEnvExpo]=1;
 	currentPreset.steppedParameters[spModwheelShift]=1;
 	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
+	for(i=0;i<P600_VOICE_COUNT;++i)
+		currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;	
 	
 	// init
 	

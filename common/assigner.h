@@ -10,8 +10,6 @@ typedef enum
 	apLast=0,apLow=1,apHigh=2
 } assignerPriority_t;
 
-extern const char * assigner_priorityName[3];
-
 void assigner_setPriority(assignerPriority_t prio);
 void assigner_setVoiceMask(uint8_t mask);
 

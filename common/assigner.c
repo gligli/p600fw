@@ -4,8 +4,6 @@
 
 #include "assigner.h"
 
-const char * assigner_priorityName[3]={"last","lo","hi"};
-
 struct allocation_s
 {
 	uint32_t timestamp;
@@ -13,7 +11,7 @@ struct allocation_s
 	uint8_t rootNote;
 	uint8_t note;
 	int8_t assigned;
-	int8_t voice;
+	int8_t disabled;
 };
 
 static struct
@@ -48,34 +46,16 @@ static int8_t getNoteState(uint8_t note)
 	return (assigner.noteStates[note>>3]&mask)!=0;
 }
 
-static int8_t getAllocIdxFromVoice(int8_t voice)
-{
-	int8_t i,ai=-1;
-	
-	// shortcut
-	if(assigner.allocation[voice].voice==voice)
-		return voice;
-	
-	for(i=0;i<P600_VOICE_COUNT;++i)
-		if(assigner.allocation[i].voice==voice)
-		{
-			ai=i;
-			break;
-		}
-
-	return ai;
-}
-
-LOWERCODESIZE static int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
+static int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 {
 	int8_t v,sameNote=-1,firstFree=-1;
 
-	for(v=0;v<(assigner.mono?1:P600_VOICE_COUNT);++v)
+	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
 		// never assign a disabled voice
 		
-		if(assigner.allocation[v].voice==-1)
-			break;
+		if(assigner.allocation[v].disabled)
+			continue;
 		
 		if(assigner.allocation[v].assigned)
 		{
@@ -102,31 +82,48 @@ LOWERCODESIZE static int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		return firstFree;
 }
 
-LOWERCODESIZE static int8_t getDispensableVoice(uint8_t note, uint32_t timestamp)
+static int8_t getDispensableVoice(uint8_t note, int8_t * stolenHeld)
 {
 	int8_t v,res=-1;
+	uint32_t ts;
+
+	// first pass, steal oldest released voice
+	
+	ts=UINT32_MAX;
 		
-	for(v=0;v<(assigner.mono?1:P600_VOICE_COUNT);++v)
+	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
-		// never assign a disabled voice
+		if(assigner.allocation[v].disabled)
+			continue;
 		
-		if(assigner.allocation[v].voice==-1)
-			break;
+		if(!getNoteState(assigner.allocation[v].rootNote) && assigner.allocation[v].timestamp<ts)
+		{
+			ts=assigner.allocation[v].timestamp;
+			res=v;
+		}
+	}
+	
+	*stolenHeld=0;
+	
+	if(res>=0)
+		return res;
+	
+	// second pass, use priority rules to steal the less important held note
+	
+	ts=UINT32_MAX;
 		
-		// steal any released note
-		
-		if(!getNoteState(assigner.allocation[v].rootNote))
-			return v;
-		
-		// else use priority rules to steal the less important one
+	for(v=0;v<P600_VOICE_COUNT;++v)
+	{
+		if(assigner.allocation[v].disabled)
+			continue;
 		
 		switch(assigner.priority)
 		{
 		case apLast:
-			if(assigner.allocation[v].timestamp<timestamp)
+			if(assigner.allocation[v].timestamp<ts)
 			{
 				res=v;
-				timestamp=assigner.allocation[v].timestamp;
+				ts=assigner.allocation[v].timestamp;
 			}
 			break;
 		case apLow:
@@ -146,6 +143,8 @@ LOWERCODESIZE static int8_t getDispensableVoice(uint8_t note, uint32_t timestamp
 		}
 	}
 	
+	*stolenHeld=1;
+	
 	return res;
 }
 	
@@ -164,20 +163,13 @@ void assigner_setPriority(assignerPriority_t prio)
 
 void assigner_setVoiceMask(uint8_t mask)
 {
-	int8_t i,v;
+	int8_t v;
 
 	if(mask==assigner.voiceMask)
 		return;
 	
-	// generate a list of valid voice indices
-	
-	v=0;
-	for(i=0;i<P600_VOICE_COUNT;++i)
-	{
-		assigner.allocation[i].voice=-1;
-		if(mask&(1<<i))
-			assigner.allocation[v++].voice=i;
-	}
+	for(v=0;v<P600_VOICE_COUNT;++v)
+		assigner.allocation[v].disabled=!(mask&(1<<v));
 	
 	assigner_voiceDone(-1);
 	assigner.voiceMask=mask;
@@ -185,137 +177,130 @@ void assigner_setVoiceMask(uint8_t mask)
 
 int8_t assigner_getAssignment(int8_t voice, uint8_t * note)
 {
-	int8_t a,ai;
+	int8_t a;
 	
-	ai=getAllocIdxFromVoice(voice);
-	if(ai<0)
-		return -1;	
-	
-	a=assigner.allocation[ai].assigned;
+	a=assigner.allocation[voice].assigned;
 	
 	if(a && note)
-		*note=assigner.allocation[ai].note;
+		*note=assigner.allocation[voice].note;
 	
 	return a;
 }
 
-LOWERCODESIZE void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato)
+void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato)
 {
-	uint32_t timestamp=currentTick;
-	uint16_t oldVel=UINT16_MAX;
-	uint8_t n,restoredNote=ASSIGNER_NO_NOTE;
-	int8_t v,vc,i,redo,legato=forceLegato;
+	uint32_t timestamp;
+	uint16_t oldVel;
+	uint8_t n,restoredNote;
+	int8_t v,vi,i,legato,stolenHeld;
 	
-	do
+	setNoteState(note,gate);
+
+	if(gate)
 	{
-		redo=0;
 		
-		setNoteState(note,gate);
+reassign:
 
-		if(gate)
+		timestamp=currentTick;
+		legato=forceLegato;
+	
+		// first, try to get a free voice
+
+		v=getAvailableVoice(note,timestamp);
+
+		// no free voice, try to steal one
+
+		if(v<0)
 		{
-			// first, try to get a free voice
+			v=getDispensableVoice(note,&stolenHeld);
+			legato|=stolenHeld && assigner.priority!=apLast;
+		}
 
-			v=getAvailableVoice(note,timestamp);
+		// we might still have no voice
 
-			// no free voice, try to steal one
+		if(v>=0)
+		{
+			if(assigner.mono)
+				v=0;
+			
+			// try to assign the whole pattern of notes
 
-			if(v<0)
+			for(vi=0;vi<P600_VOICE_COUNT;++vi)
 			{
-				v=getDispensableVoice(note,timestamp);
+				if(assigner.patternOffsets[vi]==ASSIGNER_NO_NOTE)
+					break;
+				
+				n=note+assigner.patternOffsets[vi];
 
-				// legato is for lo/hi note priority in case solen note is still held
-				legato|=(assigner.priority!=apLast && getNoteState(assigner.allocation[v].rootNote));
+				assigner.allocation[v].assigned=1;
+				assigner.allocation[v].velocity=velocity;
+				assigner.allocation[v].rootNote=note;
+				assigner.allocation[v].note=n;
+				assigner.allocation[v].timestamp=timestamp;
+
+				p600_assignerEvent(n,1,v,velocity,legato);
+				
+				do
+					v=(v+1)%P600_VOICE_COUNT;
+				while(assigner.allocation[v].disabled);
+			}
+		}
+	}
+	else
+	{
+		oldVel=UINT16_MAX;
+		restoredNote=ASSIGNER_NO_NOTE;
+
+		// some still triggered notes might have been stolen, find them
+
+		for(n=0;n<128;++n)
+			if(getNoteState(n))
+			{
+				i=0;
+				for(v=0;v<P600_VOICE_COUNT;++v)
+					if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==n)
+					{
+						i=1;
+						break;
+					}
+
+				if(i==0)
+				{
+					restoredNote=n;
+					break;
+				}
 			}
 
-			// we might still have no voice
+		// hitting a note spawns a pattern of note, not just one
 
-			if(v>=0)
+		for(v=0;v<P600_VOICE_COUNT;++v)
+			if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
 			{
-				// handle mono/poly
-
-				if(assigner.mono)
+				if(restoredNote!=ASSIGNER_NO_NOTE)
 				{
-					v=0;
-					vc=assigner.patternNoteCount;
+					oldVel=assigner.allocation[v].velocity;
 				}
 				else
 				{
-					vc=v+1;
-				}
-
-				// try to assign the whole pattern of notes
-
-				for(;v<vc;++v)
-				{
-					if(assigner.patternOffsets[v]==ASSIGNER_NO_NOTE)
-						break;
-
-					n=note+assigner.patternOffsets[v];
-
-					assigner.allocation[v].assigned=1;
-					assigner.allocation[v].velocity=velocity;
-					assigner.allocation[v].rootNote=note;
-					assigner.allocation[v].note=n;
-					assigner.allocation[v].timestamp=timestamp;
-
-					p600_assignerEvent(n,1,assigner.allocation[v].voice,velocity,legato);
+					p600_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
 				}
 			}
-		}
-		else
+
+		// restored notes can be assigned again
+
+		if(restoredNote!=ASSIGNER_NO_NOTE)
 		{
-			// some still triggered notes might have been stolen, find them
-
-			for(n=0;n<128;++n)
-				if(getNoteState(n))
-				{
-					i=0;
-					for(v=0;v<P600_VOICE_COUNT;++v)
-						if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==n)
-						{
-							i=1;
-							break;
-						}
-
-					if(i==0)
-					{
-						restoredNote=n;
-						break;
-					}
-				}
-
-			// hitting a note spawns a pattern of note, not just one
-
-			for(v=0;v<P600_VOICE_COUNT;++v)
-				if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
-				{
-					if(restoredNote!=ASSIGNER_NO_NOTE)
-					{
-						oldVel=assigner.allocation[v].velocity;
-						assigner_voiceDone(assigner.allocation[v].voice);
-					}
-					else
-					{
-						p600_assignerEvent(assigner.allocation[v].note,0,assigner.allocation[v].voice,velocity,0);
-					}
-				}
-
-			// restored notes can be assigned again
-
-			if(restoredNote!=ASSIGNER_NO_NOTE)
-			{
-				redo=1;
-				note=restoredNote;
-				gate=1;
-				velocity=oldVel;
-				forceLegato=1;
-			}
+			note=restoredNote;
+			gate=1;
+			velocity=oldVel;
+			forceLegato=1;
+			
+			goto reassign;
 		}
-	} while(redo);
+	}
 }
 
-LOWERCODESIZE void assigner_voiceDone(int8_t voice)
+void assigner_voiceDone(int8_t voice)
 {
 	if(voice<0)
 	{
@@ -324,16 +309,10 @@ LOWERCODESIZE void assigner_voiceDone(int8_t voice)
 	}
 	else
 	{
-		int8_t ai;
-		
-		ai=getAllocIdxFromVoice(voice);
-		if(ai<0)
-			return;
-		
-		assigner.allocation[ai].assigned=0;
-		assigner.allocation[ai].note=ASSIGNER_NO_NOTE;
-		assigner.allocation[ai].rootNote=ASSIGNER_NO_NOTE;
-		assigner.allocation[ai].timestamp=0;
+		assigner.allocation[voice].assigned=0;
+		assigner.allocation[voice].note=ASSIGNER_NO_NOTE;
+		assigner.allocation[voice].rootNote=ASSIGNER_NO_NOTE;
+		assigner.allocation[voice].timestamp=0;
 	}
 }
 
@@ -405,8 +384,9 @@ LOWERCODESIZE void assigner_latchPattern(void)
 
 LOWERCODESIZE void assigner_setPoly(void)
 {
-	uint8_t dummy[P600_VOICE_COUNT]={0,0,0,0,0,0};	
-	assigner_setPattern(dummy,0);
+	print("poly");
+	uint8_t polyPattern[P600_VOICE_COUNT]={0,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE};	
+	assigner_setPattern(polyPattern,0);
 }
 
 void assigner_init(void)

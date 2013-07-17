@@ -261,7 +261,9 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		// defaults
 		
 		currentPreset.steppedParameters[spAssignerPriority]=apLast;
-				
+		for(i=0;i<P600_VOICE_COUNT;++i)
+			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
+		
 		if (storage.version<1)
 			return 0;
 

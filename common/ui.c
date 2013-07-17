@@ -339,12 +339,12 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		if(pressed)
 		{
 			assigner_latchPattern();
-			assigner_getPattern(currentPreset.voicePattern,NULL);
 		}
 		else
 		{
 			assigner_setPoly();
 		}
+		assigner_getPattern(currentPreset.voicePattern,NULL);
 	}
 
 	// digit buttons use
