@@ -4,9 +4,6 @@
 
 #include <string.h>
 
-#include "../xnormidi/midi_device.h"
-#include "../xnormidi/midi.h"
-
 #include "p600.h"
 
 #include "scanner.h"
@@ -22,13 +19,8 @@
 #include "uart_6850.h"
 #include "import.h"
 #include "ui.h"
+#include "midi.h"
 
-#define MIDI_BASE_STEPPED_CC 48
-#define MIDI_BASE_COARSE_CC 16
-#define MIDI_BASE_FINE_CC 80
-#define MIDI_BASE_NOTE 12
-
-#define MAX_SYSEX_SIZE TEMP_BUFFER_SIZE
 #define POT_DEAD_ZONE 512
 
 uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
@@ -55,8 +47,6 @@ struct p600_s
 
 	struct lfo_s lfo,vibrato;
 	
-	struct preset_s manualPreset;
-	
 	uint16_t oscANoteCV[P600_VOICE_COUNT];
 	uint16_t oscBNoteCV[P600_VOICE_COUNT];
 	uint16_t filterNoteCV[P600_VOICE_COUNT]; 
@@ -65,8 +55,6 @@ struct p600_s
 	uint16_t oscBTargetCV[P600_VOICE_COUNT];
 	uint16_t filterTargetCV[P600_VOICE_COUNT];
 
-	MidiDevice midi;
-
 	int16_t benderAmount;
 	int16_t benderCVs[pcFil6-pcOsc1A+1];
 	int16_t benderVolumeCV;
@@ -74,11 +62,12 @@ struct p600_s
 	int16_t glideAmount;
 	int8_t gliding;
 	
-	int16_t sysexSize;
-	
 	uint32_t modulationDelayStart;
 	uint16_t modulationDelayTickCount;
 } p600;
+
+extern void refreshAllPresetButtons(void);
+
 
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
@@ -308,7 +297,6 @@ static void refreshGates(void)
 	synth_setGate(pgPModFil,currentPreset.steppedParameters[spPModFil]);
 }
 
-
 static inline void refreshPulseWidth(int8_t pwm)
 {
 	int32_t pa,pb;
@@ -450,17 +438,12 @@ static void refreshPresetPots(int8_t force)
 
 void refreshPresetMode(void)
 {
-	if(settings.presetMode)
-	{
-		preset_loadCurrent(settings.presetNumber);
-	}
-	else
-	{
-		currentPreset=manualPreset;
-	}
+	if(!preset_loadCurrent(settings.presetMode?settings.presetNumber:MANUAL_PRESET_PAGE))
+		preset_loadDefault(1);
 
-	refreshFullState();
-
+	if(!settings.presetMode)
+		refreshAllPresetButtons();
+	
 	ui.lastActivePot=ppNone;
 	ui.presetModified=0;
 	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
@@ -515,258 +498,6 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// MIDI
-////////////////////////////////////////////////////////////////////////////////
-
-static int8_t midiFilterChannel(uint8_t channel)
-{
-	return settings.midiReceiveChannel<0 || (channel&MIDI_CHANMASK)==settings.midiReceiveChannel;
-}
-
-void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
-{
-	int16_t intNote;
-	
-	if(!midiFilterChannel(channel))
-		return;
-	
-#ifdef DEBUG_
-	print("midi note on  ");
-	phex(note);
-	print("\n");
-#endif
-
-	intNote=note-MIDI_BASE_NOTE;
-	intNote=MAX(0,intNote);
-	
-	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1,0);
-}
-
-void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
-{
-	int16_t intNote;
-	
-	if(!midiFilterChannel(channel))
-		return;
-	
-#ifdef DEBUG_
-	print("midi note off ");
-	phex(note);
-	print("\n");
-#endif
-
-	intNote=note-MIDI_BASE_NOTE;
-	intNote=MAX(0,intNote);
-	
-	assigner_assignNote(intNote,0,0,0);
-}
-
-void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
-{
-	int16_t param;
-	
-	if(!midiFilterChannel(channel))
-		return;
-	
-#ifdef DEBUG_
-	print("midi cc ");
-	phex(control);
-	print(" value ");
-	phex(value);
-	print("\n");
-#endif
-
-	if(control==0 && value<=1 && settings.presetMode!=value) // coarse bank #
-	{
-		// save manual preset
-		if (!settings.presetMode)
-			p600.manualPreset=currentPreset;
-		
-		settings.presetMode=value;
-		settings_save();
-		refreshPresetMode();
-		refreshSevenSeg();
-	}
-	
-	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
-		return;
-	
-	if(control>=MIDI_BASE_COARSE_CC && control<MIDI_BASE_COARSE_CC+cpCount)
-	{
-		param=control-MIDI_BASE_COARSE_CC;
-
-		currentPreset.continuousParameters[param]&=0x01fc;
-		currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-		ui.presetModified=1;	
-	}
-	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
-	{
-		param=control-MIDI_BASE_FINE_CC;
-
-		currentPreset.continuousParameters[param]&=0xfe00;
-		currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-		ui.presetModified=1;	
-	}
-	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
-	{
-		param=control-MIDI_BASE_STEPPED_CC;
-		
-		currentPreset.steppedParameters[param]=value>>(7-steppedParametersBits[param]);
-		ui.presetModified=1;	
-	}
-
-	if(ui.presetModified)
-		refreshFullState();
-}
-
-void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
-{
-	if(!midiFilterChannel(channel))
-		return;
-
-	if(settings.presetMode && program<100  && program!=settings.presetNumber)
-	{
-		if(preset_loadCurrent(program))
-		{
-			settings.presetNumber=program;
-			ui.lastActivePot=ppNone;
-			ui.presetModified=0;
-			settings_save();		
-			refreshFullState();
-		}
-	}
-}
-
-static void sysexSend(uint8_t command, int16_t size)
-{
-	int16_t chunkCount,i;
-	uint8_t chunk[4];
-	
-	BLOCK_INT
-	{
-		chunkCount=((size-1)>>2)+1;
-
-		uart_send(0xf0);
-		uart_send(SYSEX_ID_0);
-		uart_send(SYSEX_ID_1);
-		uart_send(SYSEX_ID_2);
-		uart_send(command);
-
-		for(i=0;i<chunkCount;++i)
-		{
-			memcpy(chunk,&tempBuffer[i<<2],4);
-
-			uart_send(chunk[0]&0x7f);
-			uart_send(chunk[1]&0x7f);
-			uart_send(chunk[2]&0x7f);
-			uart_send(chunk[3]&0x7f);
-			uart_send(((chunk[0]>>7)&1) | ((chunk[1]>>6)&2) | ((chunk[2]>>5)&4) | ((chunk[3]>>4)&8));
-		}
-
-		uart_send(0xf7);
-	}
-}
-
-int16_t sysexDescrambleBuffer(int16_t start)
-{
-	int16_t chunkCount,i,out;
-	uint8_t b;
-	
-	chunkCount=((p600.sysexSize-start)/5)+1;
-	out=start;
-
-	for(i=0;i<chunkCount;++i)
-	{
-		memmove(&tempBuffer[out],&tempBuffer[i*5+start],4);
-		
-		b=tempBuffer[i*5+start+4];
-		
-		tempBuffer[out+0]|=(b&1)<<7;
-		tempBuffer[out+1]|=(b&2)<<6;
-		tempBuffer[out+2]|=(b&4)<<5;
-		tempBuffer[out+3]|=(b&8)<<4;
-		
-		out+=4;
-	}
-	
-	return out-start;
-}
-
-void sysexReceiveByte(uint8_t b)
-{
-	int16_t size;
-
-	switch(b)
-	{
-	case 0xF0:
-		p600.sysexSize=0;
-		memset(tempBuffer,0,MAX_SYSEX_SIZE);
-		break;
-	case 0xF7:
-		if(tempBuffer[0]==0x01 && tempBuffer[1]==0x02) // SCI P600 program dump
-		{
-			import_sysex(tempBuffer,p600.sysexSize);
-		}
-		else if(tempBuffer[0]==SYSEX_ID_0 && tempBuffer[1]==SYSEX_ID_1 && tempBuffer[2]==SYSEX_ID_2) // my sysex ID
-		{
-			// handle my sysex commands
-			
-			switch(tempBuffer[3])
-			{
-			case SYSEX_COMMAND_BANK_A:
-				size=sysexDescrambleBuffer(4);
-				storage_import(tempBuffer[4],&tempBuffer[5],size-1);
-				break;
-			}
-		}
-
-		p600.sysexSize=0;
-		refreshFullState();
-		break;
-	default:
-		if(p600.sysexSize>=MAX_SYSEX_SIZE)
-		{
-#ifdef DEBUG
-			print("Warning: sysex buffer overflow\n");
-#endif
-			p600.sysexSize=0;
-		}
-		
-		tempBuffer[p600.sysexSize++]=b;
-	}
-}
-
-void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
-{
-	if(p600.sysexSize)
-		count=count-p600.sysexSize-1;
-	
-	if(count>0)
-		sysexReceiveByte(b0);
-	
-	if(count>1)
-		sysexReceiveByte(b1);
-
-	if(count>2)
-		sysexReceiveByte(b2);
-}
-
-void dumpPresets(void)
-{
-	int8_t i;
-	int16_t size=0;
-
-	for(i=0;i<100;++i)
-	{
-		if(preset_loadCurrent(i))
-		{
-			storage_export(i,tempBuffer,&size);
-			sysexSend(SYSEX_COMMAND_BANK_A,size);
-		}
-	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // P600 main code
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -774,26 +505,9 @@ void p600_init(void)
 {
 	int8_t i;
 	
-	memset(&p600,0,sizeof(p600));
-	memset(&settings,0,sizeof(settings));
-	memset(&currentPreset,0,sizeof(currentPreset));
-	
-	// defaults
-	
-	settings.benderMiddle=UINT16_MAX/2;
-	settings.midiReceiveChannel=-1;
-	settings.voiceMask=0x3f;
-	currentPreset.steppedParameters[spBenderSemitones]=5;
-	currentPreset.steppedParameters[spBenderTarget]=modVCO;
-	currentPreset.steppedParameters[spFilEnvExpo]=1;
-	currentPreset.steppedParameters[spAmpEnvExpo]=1;
-	currentPreset.steppedParameters[spModwheelShift]=1;
-	currentPreset.steppedParameters[spChromaticPitch]=2; // octave
-	currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-	for(i=0;i<P600_VOICE_COUNT;++i)
-		currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;	
-	
 	// init
+	
+	memset(&p600,0,sizeof(p600));
 	
 	scanner_init();
 	display_init();
@@ -804,13 +518,7 @@ void p600_init(void)
 	uart_init();
 	arp_init();
 	ui_init();
-	
-	midi_device_init(&p600.midi);
-	midi_register_noteon_callback(&p600.midi,midi_noteOnEvent);
-	midi_register_noteoff_callback(&p600.midi,midi_noteOffEvent);
-	midi_register_cc_callback(&p600.midi,midi_ccEvent);
-	midi_register_progchange_callback(&p600.midi,midi_progChangeEvent);
-	midi_register_sysex_callback(&p600.midi,midi_sysexEvent);
+	midi_init();
 	
 	for(i=0;i<P600_VOICE_COUNT;++i)
 	{
@@ -822,40 +530,34 @@ void p600_init(void)
 	lfo_init(&p600.vibrato);
 	lfo_setShape(&p600.vibrato,lsTri);
 	lfo_setSpeedShift(&p600.vibrato,4);
-
-	// state
-		
-		// initial input state
+	
+	// initial input state
 	
 	scanner_update(1);
 	potmux_update(POTMUX_POT_COUNT);
 
-		// save manual, in case we load a patch
+	// manual preset
 	
-	p600.manualPreset=currentPreset;
-	
-		// load stuff from storage
-	
-	int8_t settingsOk;
-	settingsOk=settings_load();
-
-	if(settingsOk && settings.presetMode)
+	if(!preset_loadCurrent(MANUAL_PRESET_PAGE))
 	{
-		ui.digitInput=diLoadDecadeDigit;
-		ui.lastActivePot=ppNone;
-		ui.presetModified=0;
-		preset_loadCurrent(settings.presetNumber);
+		preset_loadDefault(0);
+		preset_saveCurrent(MANUAL_PRESET_PAGE);
 	}
-		
-		// tune when settings are bad
 	
+	// load settings from storage; tune when they are bad
+	
+	if(!settings_load())
+	{
+		settings_loadDefault();
+		
 #ifndef DEBUG
-	if(!settingsOk)
 		tuner_tuneSynth();
 #endif	
+	}
 
-		// yep
+	// load last preset & do a full refresh
 	
+	refreshPresetMode();
 	refreshFullState();
 	
 	// a nice welcome message, and we're ready to go :)
@@ -1084,7 +786,7 @@ void p600_timerInterrupt(void)
 				handleFinishedVoices();
 
 			// MIDI processing
-			midi_device_process(&p600.midi);
+			midi_update();
 
 			// ticker inc
 			++currentTick;
@@ -1186,5 +888,5 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 
 void p600_uartEvent(uint8_t data)
 {
-	midi_device_input(&p600.midi,1,&data);
+	midi_newData(data);
 }

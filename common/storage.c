@@ -43,7 +43,6 @@ const uint8_t steppedParametersBits[spCount] =
 
 struct settings_s settings;
 struct preset_s currentPreset;
-struct preset_s manualPreset;
 
 static struct
 {
@@ -357,5 +356,50 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 		memcpy(storage.buffer,buf,size);
 		storage.bufPtr=storage.buffer+size;
 		storageFinishStore(number,1);
+	}
+}
+
+LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
+{
+	int8_t i;
+
+	BLOCK_INT
+	{
+		memset(&currentPreset,0,sizeof(currentPreset));
+
+		currentPreset.continuousParameters[cpAPW]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpBPW]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpCutoff]=UINT16_MAX;
+		currentPreset.continuousParameters[cpFilEnvAmt]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
+		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
+		currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
+
+		for(i=0;i<P600_VOICE_COUNT;++i)
+			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;	
+
+		currentPreset.steppedParameters[spBenderSemitones]=5;
+		currentPreset.steppedParameters[spBenderTarget]=modVCO;
+		currentPreset.steppedParameters[spFilEnvExpo]=1;
+		currentPreset.steppedParameters[spAmpEnvExpo]=1;
+		currentPreset.steppedParameters[spModwheelShift]=1;
+		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
+		
+		if(makeSound)
+			currentPreset.steppedParameters[spASaw]=1;
+	}
+}
+
+LOWERCODESIZE void settings_loadDefault(void)
+{
+	BLOCK_INT
+	{
+		memset(&settings,0,sizeof(settings));
+		
+		settings.benderMiddle=UINT16_MAX/2;
+		settings.midiReceiveChannel=-1;
+		settings.voiceMask=0x3f;
+		
+		tuner_init(); // use theoretical tuning
 	}
 }

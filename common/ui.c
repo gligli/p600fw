@@ -8,6 +8,7 @@
 #include "scanner.h"
 #include "display.h"
 #include "potmux.h"
+#include "midi.h"
 
 const struct uiParam_s uiParameters[] =
 {
@@ -39,7 +40,6 @@ struct ui_s ui;
 
 extern void refreshFullState(void);
 extern void refreshPresetMode(void);
-extern void dumpPresets(void);
 extern void computeBenderCVs(void);
 
 static void refreshPresetButton(p600Button_t button)
@@ -111,6 +111,13 @@ static void refreshPresetButton(p600Button_t button)
 	}
 }
 
+void refreshAllPresetButtons(void)
+{
+	p600Button_t b;
+	for(b=pbASqr;b<=pbUnison;++b)
+		refreshPresetButton(b);
+}
+
 static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 {
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
@@ -177,9 +184,15 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	}
 	else if(button==pb6) // preset dump
 	{
-		dumpPresets();
+		midi_dumpPresets();
 		sevenSeg_scrollText("presets dumped",1);
 		refreshPresetMode();
+		refreshFullState();
+	}
+	else if(button==pb7) // reset to a basic patch
+	{
+		preset_loadDefault(1);
+		refreshFullState();
 	}
 }
 
@@ -204,7 +217,14 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	
 	if(ui.activeParamIdx!=prev)
 	{
+		// display param name
+		
 		sevenSeg_scrollText(uiParameters[ui.activeParamIdx].name,1);
+		
+		// save manual preset
+		
+		if(!settings.presetMode)
+			preset_saveCurrent(MANUAL_PRESET_PAGE);
 	}
 }
 
@@ -372,13 +392,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbPreset)
 		{
-			// save manual preset
-			if (!settings.presetMode)
-				manualPreset=currentPreset;
-
 			settings.presetMode=settings.presetMode?0:1;
 			settings_save();
 			refreshPresetMode();
+			refreshFullState();
 		}
 		else if(button==pbRecord)
 		{
@@ -424,13 +441,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				if(preset_loadCurrent(ui.presetAwaitingNumber))
 				{
 					settings.presetNumber=ui.presetAwaitingNumber;
-					ui.lastActivePot=ppNone;
-					ui.presetModified=0;
 					settings_save();		
 				}
 
 				ui.presetAwaitingNumber=-1;
-				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
 				
 				refreshPresetMode();
 				break;

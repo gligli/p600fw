@@ -5,6 +5,8 @@
 #include "tuner.h"
 #include "assigner.h"
 
+#define MANUAL_PRESET_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-5)
+
 typedef enum
 {
 	cpFreqA=0,cpVolA=1,cpAPW=2,
@@ -78,7 +80,6 @@ struct preset_s
 
 extern struct settings_s settings;
 extern struct preset_s currentPreset;
-extern struct preset_s manualPreset;
 extern const uint8_t steppedParametersBits[spCount];
 
 int8_t settings_load(void);
@@ -86,6 +87,9 @@ void settings_save(void);
 
 int8_t preset_loadCurrent(uint16_t number);
 void preset_saveCurrent(uint16_t number);
+
+void preset_loadDefault(int8_t makeSound);
+void settings_loadDefault(void);
 
 void storage_export(uint16_t number, uint8_t * buf, int16_t * size);
 void storage_import(uint16_t number, uint8_t * buf, int16_t size);

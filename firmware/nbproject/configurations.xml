@@ -44,6 +44,7 @@
       <itemPath>../common/display.c</itemPath>
       <itemPath>../common/import.c</itemPath>
       <itemPath>../common/lfo.c</itemPath>
+      <itemPath>../common/midi.c</itemPath>
       <itemPath>../common/p600.c</itemPath>
       <itemPath>p600firmware.c</itemPath>
       <itemPath>../common/potmux.c</itemPath>
@@ -122,6 +123,8 @@
       <item path="../common/lfo.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/map_to_7segment.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/midi.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/p600.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -232,6 +235,8 @@
       <item path="../common/lfo.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/map_to_7segment.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/midi.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/p600.c" ex="false" tool="0" flavor2="0">
       </item>

@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/display.o \
 	${OBJECTDIR}/_ext/1270477542/import.o \
 	${OBJECTDIR}/_ext/1270477542/lfo.o \
+	${OBJECTDIR}/_ext/1270477542/midi.o \
 	${OBJECTDIR}/_ext/1270477542/p600.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
@@ -114,6 +115,11 @@ ${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/lfo.o ../common/lfo.c
+
+${OBJECTDIR}/_ext/1270477542/midi.o: ../common/midi.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/midi.o ../common/midi.c
 
 ${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
