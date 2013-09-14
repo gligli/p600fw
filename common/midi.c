@@ -17,7 +17,7 @@
 #define MIDI_BASE_STEPPED_CC 48
 #define MIDI_BASE_COARSE_CC 16
 #define MIDI_BASE_FINE_CC 80
-#define MIDI_BASE_NOTE 12
+#define MIDI_BASE_NOTE 24
 
 static MidiDevice midi;
 static int16_t sysexSize;
