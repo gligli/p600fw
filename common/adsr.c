@@ -1,21 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////
-// ADSR envelope, ported from electricdruid's ENVGEN7_MOOG.ASM
+// ADSR envelope, based on electricdruid's ENVGEN7_MOOG.ASM
 ////////////////////////////////////////////////////////////////////////////////
 
 /*
-;  Programme fait par tom wiltshire http://www.electricdruid.com
-;  Pour module VCADSR, Programme original nommé ENVGEN7.ASM (premiere version).
-;  La 2ieme ver ENVGEN7B.ASM ne marchait pas.
-;  Les lignes 884 à 893 ont été ajoutées pour annuler l'effet
-;  du pot nommé TIME CV (RC2/AN6, PIN8) qui changait toute la durée
-;  de l'envelope ADSR (étirait ou écrasait.. selon voltage 0-5v
-;  présent à la patte PIN8).
-;  Les tables nommées PhaseLookupHi, PhaseLookupMid, PhaseLookupLo (lignes 1002 à 1074 ) 
-;  ont été modifiées pour suivre le graticule Moog des pots Attack, Decay, Release.
-;  de 2msec. à 10sec.
-;  Juin 2008. JPD.
-;  ---------------------------------------------------------------------
-;
 ;  This program provides a versatile envelope generator on a single chip.
 ;  It is designed as a modern version of the CEM3312 or SSM2056 ICs.
 ;  Analogue output is provided as a PWM output, which requires LP
