@@ -13,7 +13,7 @@
 #define FF_D	0x08
 #define FF_CL	0x10 // active low
 
-#define STATUS_TIMEOUT UINT16_MAX
+#define STATUS_TIMEOUT 200000
 #define STATUS_TIMEOUT_MAX_FAILURES 5
 
 #define TUNER_TICK 2000000.0
@@ -88,7 +88,7 @@ static NOINLINE void ffMask(uint8_t set,uint8_t clear)
 static NOINLINE void ffWaitStatus(uint8_t status)
 {
 	uint8_t s;
-	uint16_t timeout=STATUS_TIMEOUT;
+	uint32_t timeout=STATUS_TIMEOUT;
 
 	do{
 		s=io_read(0x9);
@@ -221,7 +221,7 @@ static LOWERCODESIZE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestN
 			
 			ip=measureAudioPeriod(1<<relPrec);
 			if(ip==UINT32_MAX)
-				return -1; // filure (untunable osc)
+				return -1; // failure (untunable osc)
 			
 			p=(double)ip*pow(2.0,-relPrec);
 		}
@@ -274,7 +274,7 @@ static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// done many times, to ensure all CVs are at correct voltage
 	
-	for(i=0;i<25;++i)
+	for(i=0;i<10;++i)
 		synth_update();
 
 	// tune
@@ -356,6 +356,8 @@ LOWERCODESIZE void tuner_init(void)
 	
 	memset(&tuner,0,sizeof(tuner));
 	
+	// theoretical base tuning
+	
 	for(j=0;j<TUNER_OCTAVE_COUNT;++j)
 		for(i=0;i<P600_VOICE_COUNT;++i)
 		{
@@ -371,7 +373,11 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 	
 	BLOCK_INT
 	{
-		// init synth
+		// reinit tuner
+		
+		tuner_init();
+		
+		// prepare synth for tuning
 		
 		display_clear();
 		led_set(plTune,1,0);
