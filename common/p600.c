@@ -130,10 +130,16 @@ static void computeTunedCVs(int8_t force)
 	
 	baseCutoff&=0xff;
 	
-	if(chrom)
+	if(chrom>0)
 	{
 		baseAPitch=0;
 		baseBPitch=0;
+		
+		if(chrom>1)
+		{
+			baseANote-=baseANote%12;
+			baseBNote-=baseBNote%12;
+		}
 	}
 	else
 	{
@@ -405,8 +411,8 @@ static void refreshSevenSeg(void)
 		}
 	}
 
-	led_set(plPreset,settings.presetBank!=pbkManual,settings.presetBank==pbkB);
-	led_set(plToTape,ui.digitInput==diSynth && settings.presetBank!=pbkManual,0);
+	led_set(plPreset,settings.presetMode,0);
+	led_set(plToTape,ui.digitInput==diSynth && settings.presetMode,0);
 	led_set(plFromTape,scanner_buttonState(pbFromTape),0);
 	
 	if(arp_getMode()!=amOff)
@@ -450,7 +456,7 @@ static void refreshPresetPots(int8_t force)
 
 void refreshPresetMode(void)
 {
-	if(settings.presetBank!=pbkManual)
+	if(settings.presetMode)
 	{
 		preset_loadCurrent(settings.presetNumber);
 	}
@@ -463,7 +469,7 @@ void refreshPresetMode(void)
 
 	ui.lastActivePot=ppNone;
 	ui.presetModified=0;
-	ui.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
+	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
 }
 
 static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchALfoVal,int16_t pitchBLfoVal,int16_t filterLfoVal)
@@ -574,19 +580,19 @@ void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t
 	print("\n");
 #endif
 
-	if(control==0 && value<=pbkA && settings.presetBank!=value) // coarse bank #
+	if(control==0 && value<=1 && settings.presetMode!=value) // coarse bank #
 	{
 		// save manual preset
-		if (settings.presetBank==pbkManual)
+		if (!settings.presetMode)
 			p600.manualPreset=currentPreset;
 		
-		settings.presetBank=value;
+		settings.presetMode=value;
 		settings_save();
 		refreshPresetMode();
 		refreshSevenSeg();
 	}
 	
-	if(settings.presetBank==pbkManual) // in manual mode CC changes would only conflict with pot scans...
+	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
 		return;
 	
 	if(control>=MIDI_BASE_COARSE_CC && control<MIDI_BASE_COARSE_CC+cpCount)
@@ -622,7 +628,7 @@ void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)
 	if(!midiFilterChannel(channel))
 		return;
 
-	if(settings.presetBank!=pbkManual && program<100  && program!=settings.presetNumber)
+	if(settings.presetMode && program<100  && program!=settings.presetNumber)
 	{
 		if(preset_loadCurrent(program))
 		{
@@ -779,7 +785,6 @@ void p600_init(void)
 	// defaults
 	
 	settings.benderMiddle=UINT16_MAX/2;
-	settings.presetBank=pbkManual;
 	settings.midiReceiveChannel=-1;
 	settings.voiceMask=0x3f;
 	currentPreset.steppedParameters[spBenderSemitones]=5;
@@ -837,7 +842,7 @@ void p600_init(void)
 	int8_t settingsOk;
 	settingsOk=settings_load();
 
-	if(settingsOk && settings.presetBank!=pbkManual)
+	if(settingsOk && settings.presetMode)
 	{
 		ui.digitInput=diLoadDecadeDigit;
 		ui.lastActivePot=ppNone;
@@ -887,7 +892,7 @@ void p600_update(void)
 	if(potmux_lastChanged()!=ppNone)
 		ui_dataPotChanged();
 
-	refreshPresetPots(settings.presetBank==pbkManual);
+	refreshPresetPots(!settings.presetMode);
 
 	// has to stay outside of previous if, so that finer pot values changes can also be displayed
 	

@@ -18,7 +18,7 @@ const struct uiParam_s uiParameters[] =
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
 	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod delay"},
 	/*5*/ {.type=ptCust,.number=2,.name="amp shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"Vco","Vcf","Vca","off"}},
+	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vca"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Velo"},
@@ -31,7 +31,7 @@ const struct uiParam_s uiParameters[] =
 	/*5*/ {.type=ptCust,.number=3,.name="fil shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
 	/*6*/ {.type=ptCust,.number=4,.name="bend range",.values={"3rd","5th","Oct"}},
 	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
-	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semitone"}},
+	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semitone","octaVe"}},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Velo"},
 };
 
@@ -89,14 +89,15 @@ static void refreshPresetButton(p600Button_t button)
 	case pbLFOPW:
 	case pbLFOFil:
 		currentPreset.steppedParameters[spLFOTargets]=
-			(scanner_buttonState(pbLFOFreq)?mtVCO:0) +
-			(scanner_buttonState(pbLFOPW)?mtPW:0) +
+			(currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB)) | // keep those as-is
+			(scanner_buttonState(pbLFOFreq)?mtVCO:0) |
+			(scanner_buttonState(pbLFOPW)?mtPW:0) |
 			(scanner_buttonState(pbLFOFil)?mtVCF:0);
 		break;
 	case pbFilFull:
 	case pbFilHalf:
 		currentPreset.steppedParameters[spTrackingShift]=
-			(scanner_buttonState(pbFilHalf)?1:0) +
+			(scanner_buttonState(pbFilHalf)?1:0) |
 			(scanner_buttonState(pbFilFull)?2:0);
 		break;
 	default:
@@ -349,7 +350,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 
 	// digit buttons use
 	
-	if(pressed && button==pbToTape && settings.presetBank!=pbkManual)
+	if(pressed && button==pbToTape && settings.presetMode)
 	{
 		if(ui.digitInput!=diSynth)
 		{
@@ -361,39 +362,44 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 	}
 
-	// preset mode
+	// modes 
 	
-	if(pressed && button==pbPreset)
+	if(pressed)
 	{
-		// save manual preset
-		if (settings.presetBank==pbkManual)
-			manualPreset=currentPreset;
-		
-		settings.presetBank=(settings.presetBank+1)%2; //TODO: second preset bank, how to store?
-		settings_save();
-		refreshPresetMode();
-	}
-	
-	if(pressed && button==pbRecord)
-	{
-		if(ui.digitInput==diStoreDecadeDigit)
+		if(scanner_buttonState(pbFromTape))
 		{
-			// cancel record
-			ui.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
+			handleMiscAction(button);
 		}
-		else
+		else if(button==pbPreset)
 		{
-			// ask for digit
-			ui.digitInput=diStoreDecadeDigit;
+			// save manual preset
+			if (!settings.presetMode)
+				manualPreset=currentPreset;
+
+			settings.presetMode=settings.presetMode?0:1;
+			settings_save();
+			refreshPresetMode();
 		}
-	}
-	
-	if(ui.digitInput>=diLoadDecadeDigit)
-	{
-		// preset number input 
-		
-		if(pressed && button>=pb0 && button<=pb9)
+		else if(button==pbRecord)
 		{
+			if(ui.digitInput==diStoreDecadeDigit)
+			{
+				// cancel record
+				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+			}
+			else
+			{
+				// ask for digit
+				ui.digitInput=diStoreDecadeDigit;
+			}
+		}
+		else if(ui.digitInput==diSynth)
+		{
+			handleSynthPage(button);
+		}
+		else if(ui.digitInput>=diLoadDecadeDigit && button>=pb0 && button<=pb9)
+		{
+			// preset number input 
 			switch(ui.digitInput)
 			{
 			case diLoadDecadeDigit:
@@ -424,19 +430,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				}
 
 				ui.presetAwaitingNumber=-1;
-				ui.digitInput=(settings.presetBank==pbkManual)?diSynth:diLoadDecadeDigit;
+				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+				
+				refreshPresetMode();
 				break;
 			default:
 				;
 			}
 		}
-	}
-	else if(pressed)
-	{
-		if(scanner_buttonState(pbFromTape))
-			handleMiscAction(button);
-		else if(ui.digitInput==diSynth)
-			handleSynthPage(button);
 	}
 	
 	// we might have changed state

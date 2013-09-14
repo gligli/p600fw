@@ -61,7 +61,7 @@ struct settings_s
 	uint16_t benderMiddle;
 
 	uint16_t presetNumber;
-	enum {pbkManual=0,pbkA=1,pbkB=2} presetBank;
+	int8_t presetMode;
 	
 	int8_t midiReceiveChannel; // -1: omni / 0-15: channel 1-16
 	int8_t midiSendChannel; // 0-15: channel 1-16

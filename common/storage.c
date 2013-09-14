@@ -38,7 +38,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*BenderSemitones*/4,
 	/*BenderTarget*/2,
 	/*ModwheelShift*/3,
-	/*ChromaticPitch*/1,
+	/*ChromaticPitch*/2,
 };
 
 struct settings_s settings;
@@ -193,7 +193,7 @@ LOWERCODESIZE int8_t settings_load(void)
 
 		settings.presetNumber=storageRead16();
 		settings.benderMiddle=storageRead16();
-		settings.presetBank=storageRead8();
+		settings.presetMode=storageRead8();
 		settings.midiReceiveChannel=storageReadS8();
 		
 		if (storage.version<2)
@@ -233,7 +233,7 @@ LOWERCODESIZE void settings_save(void)
 
 		storageWrite16(settings.presetNumber);
 		storageWrite16(settings.benderMiddle);
-		storageWrite8(settings.presetBank);
+		storageWrite8(settings.presetMode);
 		storageWriteS8(settings.midiReceiveChannel);
 		
 		// v2
