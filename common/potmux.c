@@ -13,7 +13,7 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Mixer*/8,/*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/8,
 	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/8,/*AmpDec*/8,/*AmpAtt*/8,
 	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
-	/*Speed*/10,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
+	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
 };
 
 static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=

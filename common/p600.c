@@ -80,7 +80,7 @@ struct p600_s
 	uint16_t modulationDelayTickCount;
 } p600;
 
-static void computeTunedCVs(int8_t force)
+static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
 	uint16_t cva,cvb,cvf;
 	uint8_t note,baseCutoffNote,baseANote,baseBNote,trackingNote;
@@ -149,7 +149,7 @@ static void computeTunedCVs(int8_t force)
 
 	for(v=0;v<P600_VOICE_COUNT;++v)
 	{
-		if (!assigner_getAssignment(v,&note))
+		if ((forceVoice>=0 && v!=forceVoice) || !assigner_getAssignment(v,&note))
 			continue;
 
 		// oscs
@@ -267,18 +267,13 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 	}
 }
 
-static void refreshModulationDelay(void)
+static void refreshModulationDelay(int8_t refreshTickCount)
 {
-	int8_t idle=1,v;
+	int8_t anyPressed;
 	
-	for(v=0;v<P600_VOICE_COUNT;++v)
-		if(assigner_getAssignment(v,NULL))
-		{
-			idle=0;
-			break;
-		}
+	anyPressed=assigner_getAnyPressed();	
 	
-	if(idle)
+	if(!anyPressed)
 	{
 		p600.modulationDelayStart=UINT32_MAX;
 	}
@@ -287,7 +282,8 @@ static void refreshModulationDelay(void)
 		p600.modulationDelayStart=currentTick;
 	}
 	
-	p600.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
+	if(refreshTickCount)
+		p600.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
 }
 
 static void handleFinishedVoices(void)
@@ -298,10 +294,7 @@ static void handleFinishedVoices(void)
 	
 	for(v=0;v<P600_VOICE_COUNT;++v)
 		if(assigner_getAssignment(v,NULL) && adsr_getStage(&p600.ampEnvs[v])==sWait)
-		{
 			assigner_voiceDone(v);
-			refreshModulationDelay();
-		}
 }
 
 static void refreshGates(void)
@@ -432,6 +425,7 @@ static void refreshSevenSeg(void)
 
 void refreshFullState(void)
 {
+	refreshModulationDelay(1);
 	refreshGates();
 	refreshAssignerSettings();
 	refreshLfoSettings();
@@ -480,41 +474,43 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 	
 	assigned=assigner_getAssignment(v,NULL);
 	
-	BLOCK_INT
+	if(assigned)
 	{
-		if(assigned)
-		{
-			// handle envs update
+		// update envs, compute CVs & apply them
 
-			adsr_update(&p600.filEnvs[v]);
-			adsr_update(&p600.ampEnvs[v]);
+		adsr_update(&p600.filEnvs[v]);
+		envVal=p600.filEnvs[v].output;
 
-			// compute CVs & apply them
+		va=pitchALfoVal;
+		vb=pitchBLfoVal;
 
-			envVal=p600.filEnvs[v].output;
+		// osc B
 
-			va=pitchALfoVal;
-			vb=pitchBLfoVal;
+		vb+=p600.oscBNoteCV[v];
+		synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
-			va+=scaleU16S16(envVal,oscEnvAmt);	
-			va+=p600.oscANoteCV[v];
+		// osc A
 
-			synth_setCV32Sat_FastPath(pcOsc1A+v,va);
+		va+=scaleU16S16(envVal,oscEnvAmt);	
+		va+=p600.oscANoteCV[v];
+		synth_setCV32Sat_FastPath(pcOsc1A+v,va);
 
-			vb+=p600.oscBNoteCV[v];
-			synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
+		// filter
 
-			vf=filterLfoVal;
-			vf+=scaleU16S16(envVal,filEnvAmt);
-			vf+=p600.filterNoteCV[v];
-			synth_setCV32Sat_FastPath(pcFil1+v,vf);
+		vf=filterLfoVal;
+		vf+=scaleU16S16(envVal,filEnvAmt);
+		vf+=p600.filterNoteCV[v];
+		synth_setCV32Sat_FastPath(pcFil1+v,vf);
 
-			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
-		}
-		else
-		{
-			synth_setCV_FastPath(pcAmp1+v,0);
-		}
+		// amplifier
+
+		adsr_update(&p600.ampEnvs[v]);
+		synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
+	}
+	else
+	{
+		CYCLE_WAIT(40); // 10us (helps for snappiness, because it lets some time for previous voice CVs to stabilize)
+		synth_setCV_FastPath(pcAmp1+v,0);
 	}
 }
 
@@ -1011,7 +1007,7 @@ void p600_update(void)
 
 		// tuned CVs
 
-	computeTunedCVs(wheelUpdate);
+	computeTunedCVs(wheelUpdate,-1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1076,49 +1072,52 @@ void p600_timerInterrupt(void)
 	refreshVoice(5,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
 	
 	// slower updates
-
-	hz63=(frc&0x1c)==0;	
-
-	switch(frc&0x03) // 4 phases, each 500hz
-	{
-	case 0:
-		if(hz63)
-			handleFinishedVoices();
-		
-		// MIDI processing
-		midi_device_process(&p600.midi);
-
-		// ticker inc
-		++currentTick;
-		break;
-	case 1:
-		if(arp_getMode()!=amOff)
-		{
-			arp_update();
-		}
-
-		if(p600.gliding)
-		{
-			for(v=0;v<P600_VOICE_COUNT;++v)
-			{
-				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
-				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
-				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
-			}
-		}
-
-		break;
-	case 2:
-		lfo_update(&p600.vibrato);
-		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
-		break;
-	case 3:
-		scanner_update(hz63);
-		display_update(hz63);
-		break;
-	}
 	
-	++frc;
+	BLOCK_INT
+	{
+		hz63=(frc&0x1c)==0;	
+
+		switch(frc&0x03) // 4 phases, each 500hz
+		{
+		case 0:
+			if(hz63)
+				handleFinishedVoices();
+
+			// MIDI processing
+			midi_device_process(&p600.midi);
+
+			// ticker inc
+			++currentTick;
+			break;
+		case 1:
+			if(arp_getMode()!=amOff)
+			{
+				arp_update();
+			}
+
+			if(p600.gliding)
+			{
+				for(v=0;v<P600_VOICE_COUNT;++v)
+				{
+					computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
+					computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
+					computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
+				}
+			}
+
+			break;
+		case 2:
+			lfo_update(&p600.vibrato);
+			refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
+			break;
+		case 3:
+			scanner_update(hz63);
+			display_update(hz63);
+			break;
+		}
+
+		++frc;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1145,18 +1144,17 @@ void p600_keyEvent(uint8_t key, int pressed)
 void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato)
 {
 	uint16_t velAmt;
-	int32_t v;
 	
 	// mod delay
-	
-	refreshModulationDelay();
-			
+
+	refreshModulationDelay(0);
+
 	// prepare CVs
-	
-	computeTunedCVs(1);
-	
+
+	computeTunedCVs(1,voice);
+
 	// set gates (don't retrigger gate, unless we're arpeggiating)
-	
+
 	if(!legato || arp_getMode()!=amOff)
 	{
 		adsr_setGate(&p600.filEnvs[voice],gate);
@@ -1171,35 +1169,8 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 		adsr_setCVs(&p600.filEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 		velAmt=currentPreset.continuousParameters[cpAmpVelocity];
 		adsr_setCVs(&p600.ampEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
-	
-		// prepare voices on gate on (don't do it in legato mode, it would glitch)
-		
-		if(!legato)
-		{
-			// pre-set rough pitches, to avoid tiny portamento-like glitches
-			// when the voice actually starts
-
-			synth_setCV(pcOsc1A+voice,p600.oscANoteCV[voice],SYNTH_FLAG_IMMEDIATE);
-			synth_setCV(pcOsc1B+voice,p600.oscBNoteCV[voice],SYNTH_FLAG_IMMEDIATE);
-		
-			// preset & maybe kick-start the VCF, in case we need a sharp attack
-		
-			v=p600.filterNoteCV[voice];
-			if(p600.filEnvs[voice].attackCV<POT_DEAD_ZONE)
-			{
-				v+=currentPreset.continuousParameters[cpFilEnvAmt];
-				v+=INT16_MIN;
-			}
-
-			synth_setCV32Sat(pcFil1+voice,v,SYNTH_FLAG_IMMEDIATE);
-		
-			// kick-start the VCA, in case we need a sharp attack
-		
-			if(p600.ampEnvs[voice].attackCV<POT_DEAD_ZONE)
-				synth_setCV(pcAmp1+voice,UINT16_MAX,SYNTH_FLAG_IMMEDIATE);
-		}
 	}
-	
+
 #ifdef DEBUG
 	print("assign note ");
 	phex(note);

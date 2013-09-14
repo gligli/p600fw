@@ -25,28 +25,36 @@ static struct
 	int8_t mono;
 } assigner;
 
-static void setNoteState(uint8_t note, int8_t gate)
+static const uint8_t bit2mask[8] = {1,2,4,8,16,32,64,128};
+
+static inline void setNoteState(uint8_t note, int8_t gate)
 {
-	uint8_t mask;
+	uint8_t *bf,mask;
 	
-	mask=1<<(note&7);
+	bf=&assigner.noteStates[note>>3];
+	mask=bit2mask[note&7];
 	
 	if(gate)	
-		assigner.noteStates[note>>3]|=mask;
+		*bf|=mask;
 	else
-		assigner.noteStates[note>>3]&=~mask;
+		*bf&=~mask;
 }
 
-static int8_t getNoteState(uint8_t note)
+static inline int8_t getNoteState(uint8_t note)
 {
-	uint8_t mask;
+	uint8_t bf,mask;
 	
-	mask=1<<(note&7);
-
-	return (assigner.noteStates[note>>3]&mask)!=0;
+	bf=assigner.noteStates[note>>3];
+	
+	if(!bf)
+		return 0;
+	
+	mask=bit2mask[note&7];
+	
+	return (bf&mask)!=0;
 }
 
-static int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
+static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 {
 	int8_t v,sameNote=-1,firstFree=-1;
 
@@ -82,7 +90,7 @@ static int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		return firstFree;
 }
 
-static int8_t getDispensableVoice(uint8_t note, int8_t * stolenHeld)
+static inline int8_t getDispensableVoice(uint8_t note, int8_t * stolenHeld)
 {
 	int8_t v,res=-1;
 	uint32_t ts;
@@ -175,7 +183,7 @@ void assigner_setVoiceMask(uint8_t mask)
 	assigner.voiceMask=mask;
 }
 
-int8_t assigner_getAssignment(int8_t voice, uint8_t * note)
+FORCEINLINE int8_t assigner_getAssignment(int8_t voice, uint8_t * note)
 {
 	int8_t a;
 	
@@ -185,6 +193,17 @@ int8_t assigner_getAssignment(int8_t voice, uint8_t * note)
 		*note=assigner.allocation[voice].note;
 	
 	return a;
+}
+
+int8_t assigner_getAnyPressed(void)
+{
+	int8_t i;
+	uint8_t v=0;
+	
+	for(i=0;i<sizeof(assigner.noteStates);++i)
+		v|=assigner.noteStates[i];
+	
+	return v!=0;
 }
 
 void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato)
