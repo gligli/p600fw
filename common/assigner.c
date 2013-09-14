@@ -338,6 +338,9 @@ void assigner_voiceDone(int8_t voice)
 LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)
 {
 	int8_t i,count=0;
+	
+	if(mono==assigner.mono && !memcmp(pattern,assigner.patternOffsets,P600_VOICE_COUNT))
+		return;
 
 	if(mono!=assigner.mono)
 		assigner_voiceDone(-1);

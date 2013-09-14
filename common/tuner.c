@@ -274,7 +274,7 @@ static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// done many times, to ensure all CVs are at correct voltage
 	
-	for(i=0;i<10;++i)
+	for(i=0;i<20;++i)
 		synth_update();
 
 	// tune

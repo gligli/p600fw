@@ -455,45 +455,48 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 	uint16_t envVal;
 	int8_t assigned;
 	
-	assigned=assigner_getAssignment(v,NULL);
-	
-	if(assigned)
+	BLOCK_INT
 	{
-		// update envs, compute CVs & apply them
+		assigned=assigner_getAssignment(v,NULL);
 
-		adsr_update(&p600.filEnvs[v]);
-		envVal=p600.filEnvs[v].output;
+		if(assigned)
+		{
+			// update envs, compute CVs & apply them
 
-		va=pitchALfoVal;
-		vb=pitchBLfoVal;
+			adsr_update(&p600.filEnvs[v]);
+			envVal=p600.filEnvs[v].output;
 
-		// osc B
+			va=pitchALfoVal;
+			vb=pitchBLfoVal;
 
-		vb+=p600.oscBNoteCV[v];
-		synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
+			// osc B
 
-		// osc A
+			vb+=p600.oscBNoteCV[v];
+			synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
-		va+=scaleU16S16(envVal,oscEnvAmt);	
-		va+=p600.oscANoteCV[v];
-		synth_setCV32Sat_FastPath(pcOsc1A+v,va);
+			// osc A
 
-		// filter
+			va+=scaleU16S16(envVal,oscEnvAmt);	
+			va+=p600.oscANoteCV[v];
+			synth_setCV32Sat_FastPath(pcOsc1A+v,va);
 
-		vf=filterLfoVal;
-		vf+=scaleU16S16(envVal,filEnvAmt);
-		vf+=p600.filterNoteCV[v];
-		synth_setCV32Sat_FastPath(pcFil1+v,vf);
+			// filter
 
-		// amplifier
+			vf=filterLfoVal;
+			vf+=scaleU16S16(envVal,filEnvAmt);
+			vf+=p600.filterNoteCV[v];
+			synth_setCV32Sat_FastPath(pcFil1+v,vf);
 
-		adsr_update(&p600.ampEnvs[v]);
-		synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
-	}
-	else
-	{
-		CYCLE_WAIT(40); // 10us (helps for snappiness, because it lets some time for previous voice CVs to stabilize)
-		synth_setCV_FastPath(pcAmp1+v,0);
+			// amplifier
+
+			adsr_update(&p600.ampEnvs[v]);
+			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
+		}
+		else
+		{
+			CYCLE_WAIT(40); // 10us (helps for snappiness, because it lets some time for previous voice CVs to stabilize)
+			synth_setCV_FastPath(pcAmp1+v,0);
+		}
 	}
 }
 
@@ -775,51 +778,48 @@ void p600_timerInterrupt(void)
 	
 	// slower updates
 	
-	BLOCK_INT
+	hz63=(frc&0x1c)==0;	
+
+	switch(frc&0x03) // 4 phases, each 500hz
 	{
-		hz63=(frc&0x1c)==0;	
+	case 0:
+		if(hz63)
+			handleFinishedVoices();
 
-		switch(frc&0x03) // 4 phases, each 500hz
+		// MIDI processing
+		midi_update();
+
+		// ticker inc
+		++currentTick;
+		break;
+	case 1:
+		if(arp_getMode()!=amOff)
 		{
-		case 0:
-			if(hz63)
-				handleFinishedVoices();
-
-			// MIDI processing
-			midi_update();
-
-			// ticker inc
-			++currentTick;
-			break;
-		case 1:
-			if(arp_getMode()!=amOff)
-			{
-				arp_update();
-			}
-
-			if(p600.gliding)
-			{
-				for(v=0;v<P600_VOICE_COUNT;++v)
-				{
-					computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
-					computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
-					computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
-				}
-			}
-
-			break;
-		case 2:
-			lfo_update(&p600.vibrato);
-			refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
-			break;
-		case 3:
-			scanner_update(hz63);
-			display_update(hz63);
-			break;
+			arp_update();
 		}
 
-		++frc;
+		if(p600.gliding)
+		{
+			for(v=0;v<P600_VOICE_COUNT;++v)
+			{
+				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
+				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
+				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
+			}
+		}
+
+		break;
+	case 2:
+		lfo_update(&p600.vibrato);
+		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
+		break;
+	case 3:
+		scanner_update(hz63);
+		display_update(hz63);
+		break;
 	}
+
+	++frc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
