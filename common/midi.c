@@ -295,9 +295,23 @@ static void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uin
 		sysexReceiveByte(b2);
 }
 
+static void midi_sendFunc(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
+{
+	if(count>0)
+		uart_send(b0);
+	
+	if(count>1)
+		uart_send(b1);
+
+	if(count>2)
+		uart_send(b2);
+}
+
+
 void midi_init(void)
 {
 	midi_device_init(&midi);
+	midi_device_set_send_func(&midi,midi_sendFunc);
 	midi_register_noteon_callback(&midi,midi_noteOnEvent);
 	midi_register_noteoff_callback(&midi,midi_noteOffEvent);
 	midi_register_cc_callback(&midi,midi_ccEvent);
@@ -333,3 +347,28 @@ void midi_dumpPresets(void)
 	}
 }
 
+void midi_sendNoteEvent(uint8_t note, int8_t gate, uint16_t velocity)
+{
+	if(gate)
+		midi_send_noteon(&midi,settings.midiSendChannel,note+MIDI_BASE_NOTE,velocity>>9);
+	else
+		midi_send_noteoff(&midi,settings.midiSendChannel,note+MIDI_BASE_NOTE,velocity>>9);
+}
+
+void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
+{
+	static int16_t lastBend=0;
+	static uint16_t lastMod=0;
+	
+	if(mask&1 && (bend&0xfffc)!=(lastBend&0xfffc))
+	{
+		midi_send_pitchbend(&midi,settings.midiSendChannel,bend);
+		lastBend=bend;
+	}
+
+	if(mask&2 && (modulation&0xfe00)!=(lastMod&0xfe00))
+	{
+		midi_send_cc(&midi,settings.midiSendChannel,1,modulation>>9);
+		lastMod=modulation;
+	}
+}

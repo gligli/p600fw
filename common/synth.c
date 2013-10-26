@@ -649,13 +649,15 @@ void synth_update(void)
 
 	// update CVs
 
-	if(potmux_lastChanged()!=ppNone)
+	if(ui.lastActivePot!=ppNone)
 	{
-		if(potmux_lastChanged()==ppModWheel)
-			synth.modwheelAmount=potmux_getValue(ppModWheel);
-				
-		refreshLfoSettings();
-		refreshEnvSettings();
+		if(ui.lastActivePot==ppModWheel)
+			synth_wheelEvent(0,potmux_getValue(ppModWheel),2);
+		else if(ui.lastActivePot==ppPitchWheel)
+			synth_wheelEvent((int32_t)potmux_getValue(ppPitchWheel)+INT16_MIN,0,1);
+
+		if(potmux_hasChanged(ui.lastActivePot))
+			refreshEnvSettings();
 	}
 	
 	switch(frc&0x03) // 4 phases
@@ -875,7 +877,11 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 		velAmt=currentPreset.continuousParameters[cpAmpVelocity];
 		adsr_setCVs(&synth.ampEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 	}
-
+	
+	// pass to MIDI out
+	
+	midi_sendNoteEvent(note,gate,velocity);
+	
 #ifdef DEBUG
 	print("assign note ");
 	phex(note);
@@ -908,4 +914,8 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 		synth.modwheelAmount=modulation;
 		refreshLfoSettings();
 	}
+	
+	// pass to MIDI out
+	
+	midi_sendWheelEvent(bend,modulation,mask);
 }

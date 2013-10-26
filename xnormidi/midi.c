@@ -107,16 +107,14 @@ void midi_send_aftertouch(MidiDevice * device, uint8_t chan, uint8_t note_num, u
 //amt in range -0x2000, 0x1fff
 //uAmt should be in range..
 //0x0000 to 0x3FFF
+
+//gli: fixed
+
 void midi_send_pitchbend(MidiDevice * device, uint8_t chan, int16_t amt){
    uint16_t uAmt;
-   //check range
-   if(amt > 0x1fff){
-      uAmt = 0x3FFF;
-   } else if(amt < -0x2000){
-      uAmt = 0;
-   } else {
-      uAmt = amt + 0x2000;
-   }
+
+   uAmt=(amt-INT16_MIN)>>2;
+
    device->send_func(device, 3,
          MIDI_PITCHBEND | (chan & MIDI_CHANMASK),
          uAmt & 0x7F,
