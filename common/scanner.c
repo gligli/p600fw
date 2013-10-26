@@ -35,9 +35,9 @@ inline int8_t scanner_buttonState(p600Button_t button)
 static inline void scanner_event(uint8_t key, int8_t pressed)
 {
 	if (key<SCANNER_KEYS_START)
-		p600_buttonEvent(key,pressed);
+		synth_buttonEvent(key,pressed);
 	else
-		p600_keyEvent(key-SCANNER_KEYS_START,pressed);
+		synth_keyEvent(key-SCANNER_KEYS_START,pressed);
 }
 
 void scanner_update(int8_t fullScan)

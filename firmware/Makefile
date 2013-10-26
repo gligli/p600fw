@@ -72,7 +72,7 @@ SRC = \
 	../common/utils.c \
 	../common/ui.c \
 	../common/midi.c \
-	../common/p600.c
+	../common/synth.c
 
 # MCU name, you MUST set this to match the board you are using
 # type "make clean" after changing this, so all files will be rebuilt

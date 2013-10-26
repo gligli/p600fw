@@ -1,7 +1,7 @@
 #ifndef ASSIGNER_H
 #define	ASSIGNER_H
 
-#include "p600.h"
+#include "synth.h"
 
 #define ASSIGNER_NO_NOTE UINT8_MAX
 

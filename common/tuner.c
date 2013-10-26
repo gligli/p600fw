@@ -359,7 +359,7 @@ LOWERCODESIZE void tuner_init(void)
 	// theoretical base tuning
 	
 	for(j=0;j<TUNER_OCTAVE_COUNT;++j)
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 		{
 			settings.tunes[j][i+pcOsc1A]=TUNER_OSC_INIT_OFFSET+j*TUNER_OSC_INIT_SCALE;
 			settings.tunes[j][i+pcOsc1B]=TUNER_OSC_INIT_OFFSET+j*TUNER_OSC_INIT_SCALE;
@@ -415,7 +415,7 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 			// init
 		
 		sh_setCV(pcResonance,0,0);
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			sh_setCV(pcFil1+i,UINT16_MAX,0);
 	
 			// A oscs
@@ -423,7 +423,7 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		sh_setCV(pcVolA,UINT16_MAX,0);
 		sh_setCV(pcVolB,0,0);
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
 			// B oscs
@@ -431,7 +431,7 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		sh_setCV(pcVolA,0,0);
 		sh_setCV(pcVolB,UINT16_MAX,0);
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
 
 		// tune filters
@@ -442,18 +442,18 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		sh_setCV(pcVolB,0,0);
 		sh_setCV(pcResonance,UINT16_MAX,0);
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			sh_setCV(pcFil1+i,0,0);
 	
 			// filters
 		
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			tuneCV(pcFil1+i,pcAmp1+i);
 
 		// finish
 		
 		sh_setCV(pcResonance,0,0);
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			sh_setCV(pcAmp1+i,0,0);
 		
 		sh_update();

@@ -4,7 +4,7 @@
 
 #include <string.h>
 
-#include "p600.h"
+#include "synth.h"
 
 #include "scanner.h"
 #include "display.h"
@@ -40,20 +40,20 @@ const p600Pot_t continuousParameterToPot[cpCount]=
 
 volatile uint32_t currentTick=0; // 500hz
 
-struct p600_s
+struct synth_s
 {
-	struct adsr_s filEnvs[P600_VOICE_COUNT];
-	struct adsr_s ampEnvs[P600_VOICE_COUNT];
+	struct adsr_s filEnvs[SYNTH_VOICE_COUNT];
+	struct adsr_s ampEnvs[SYNTH_VOICE_COUNT];
 
 	struct lfo_s lfo,vibrato;
 	
-	uint16_t oscANoteCV[P600_VOICE_COUNT];
-	uint16_t oscBNoteCV[P600_VOICE_COUNT];
-	uint16_t filterNoteCV[P600_VOICE_COUNT]; 
+	uint16_t oscANoteCV[SYNTH_VOICE_COUNT];
+	uint16_t oscBNoteCV[SYNTH_VOICE_COUNT];
+	uint16_t filterNoteCV[SYNTH_VOICE_COUNT]; 
 	
-	uint16_t oscATargetCV[P600_VOICE_COUNT];
-	uint16_t oscBTargetCV[P600_VOICE_COUNT];
-	uint16_t filterTargetCV[P600_VOICE_COUNT];
+	uint16_t oscATargetCV[SYNTH_VOICE_COUNT];
+	uint16_t oscBTargetCV[SYNTH_VOICE_COUNT];
+	uint16_t filterTargetCV[SYNTH_VOICE_COUNT];
 
 	int16_t benderAmount;
 	int16_t benderCVs[pcFil6-pcOsc1A+1];
@@ -136,7 +136,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		baseBPitch&=0xff;
 	}
 
-	for(v=0;v<P600_VOICE_COUNT;++v)
+	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
 		if ((forceVoice>=0 && v!=forceVoice) || !assigner_getAssignment(v,&note))
 			continue;
@@ -281,7 +281,7 @@ static void handleFinishedVoices(void)
 	
 	// when amp env finishes, voice is done
 	
-	for(v=0;v<P600_VOICE_COUNT;++v)
+	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 		if(assigner_getAssignment(v,NULL) && adsr_getStage(&p600.ampEnvs[v])==sWait)
 			assigner_voiceDone(v);
 }
@@ -344,7 +344,7 @@ static void refreshEnvSettings(int8_t type)
 	expo=currentPreset.steppedParameters[(type)?spFilEnvExpo:spAmpEnvExpo];
 	slow=currentPreset.steppedParameters[(type)?spFilEnvSlow:spAmpEnvSlow];
 
-	for(i=0;i<P600_VOICE_COUNT;++i)
+	for(i=0;i<SYNTH_VOICE_COUNT;++i)
 	{
 		if(type)
 			a=&p600.filEnvs[i];
@@ -504,7 +504,7 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 // P600 main code
 ////////////////////////////////////////////////////////////////////////////////
 
-void p600_init(void)
+void synth_init(void)
 {
 	int8_t i;
 	
@@ -523,7 +523,7 @@ void p600_init(void)
 	ui_init();
 	midi_init();
 	
-	for(i=0;i<P600_VOICE_COUNT;++i)
+	for(i=0;i<SYNTH_VOICE_COUNT;++i)
 	{
 		adsr_init(&p600.ampEnvs[i]);
 		adsr_init(&p600.filEnvs[i]);
@@ -568,7 +568,7 @@ void p600_init(void)
 	sevenSeg_scrollText("GliGli's P600 upgrade "VERSION,1);
 }
 
-void p600_update(void)
+void synth_update(void)
 {
 	int8_t i,wheelChange,wheelUpdate,dlyMod;
 	uint8_t potVal;
@@ -612,7 +612,7 @@ void p600_update(void)
 	case 0:
 		// amplifier envs
 		
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			adsr_setCVs(&p600.ampEnvs[i],
 					 currentPreset.continuousParameters[cpAmpAtt],
 					 currentPreset.continuousParameters[cpAmpDec],
@@ -622,7 +622,7 @@ void p600_update(void)
 
 		// filter envs
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			adsr_setCVs(&p600.filEnvs[i],
 					 currentPreset.continuousParameters[cpFilAtt],
 					 currentPreset.continuousParameters[cpFilDec],
@@ -719,13 +719,13 @@ void p600_update(void)
 // P600 interrupts
 ////////////////////////////////////////////////////////////////////////////////
 
-void p600_uartInterrupt(void)
+void synth_uartInterrupt(void)
 {
 	uart_update();
 }
 
 // 2Khz
-void p600_timerInterrupt(void)
+void synth_timerInterrupt(void)
 {
 	int32_t va,vf;
 	int16_t pitchALfoVal,pitchBLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
@@ -768,7 +768,7 @@ void p600_timerInterrupt(void)
 	
 	// per voice stuff
 	
-		// P600_VOICE_COUNT calls
+		// SYNTH_VOICE_COUNT calls
 	refreshVoice(0,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
 	refreshVoice(1,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
 	refreshVoice(2,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
@@ -800,7 +800,7 @@ void p600_timerInterrupt(void)
 
 		if(p600.gliding)
 		{
-			for(v=0;v<P600_VOICE_COUNT;++v)
+			for(v=0;v<SYNTH_VOICE_COUNT;++v)
 			{
 				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
 				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
@@ -826,12 +826,12 @@ void p600_timerInterrupt(void)
 // P600 internal events
 ////////////////////////////////////////////////////////////////////////////////
 
-void LOWERCODESIZE p600_buttonEvent(p600Button_t button, int pressed)
+void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 {
 	ui_handleButton(button,pressed);
 }
 
-void p600_keyEvent(uint8_t key, int pressed)
+void synth_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
@@ -843,7 +843,7 @@ void p600_keyEvent(uint8_t key, int pressed)
 	}
 }
 
-void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato)
+void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato)
 {
 	uint16_t velAmt;
 	
@@ -886,7 +886,7 @@ void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloci
 #endif
 }
 
-void p600_uartEvent(uint8_t data)
+void synth_uartEvent(uint8_t data)
 {
 	midi_newData(data);
 }

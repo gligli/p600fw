@@ -1,7 +1,7 @@
 #ifndef UI_H
 #define	UI_H
 
-#include "p600.h"
+#include "synth.h"
 
 enum uiDigitInput_e {diSynth,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit};
 enum uiParamType_e {ptCont,ptStep,ptCust};

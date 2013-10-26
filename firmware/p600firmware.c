@@ -8,7 +8,7 @@
 #include "print.h"
 #include "teensy_bootloader_hack.h"
 
-#include "p600.h"
+#include "synth.h"
 
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 #define CPU_16MHz       0x00
@@ -563,7 +563,7 @@ int main(void)
 
 	// initialize synth code
 
-	p600_init();
+	synth_init();
 	
 	// all inited, enable ints and do periodical updates
 	
@@ -571,20 +571,20 @@ int main(void)
 	
 	for(;;)
 	{
-		p600_update();
+		synth_update();
 	}
 }
 
 ISR(TIMER0_COMPA_vect) 
 { 
-	// use nested interrupts, because we must still handle p600_uartInterrupt
-	// we need to ensure we won't try to recursively handle another p600_timerInterrupt!
+	// use nested interrupts, because we must still handle synth_uartInterrupt
+	// we need to ensure we won't try to recursively handle another synth_timerInterrupt!
 	
 	TIMSK0&=~(1<<OCIE0A); //Disable overflow interrupt for Timer0
 	TIFR0|=7; // Clear any pending interrupt
 	sei();
 
-	p600_timerInterrupt();
+	synth_timerInterrupt();
 
 	cli();
 	TIMSK0|=(1<<OCIE0A); //Re-enable overflow interrupt for Timer0
@@ -596,7 +596,7 @@ ISR(INT4_vect)
 ISR(TIMER2_COMPA_vect) 
 #endif
 { 
-	p600_uartInterrupt();
+	synth_uartInterrupt();
 }
 
 

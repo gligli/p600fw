@@ -157,7 +157,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	}
 	else if(button==pb4) // voice selection
 	{
-		voice=(voice+1)%P600_VOICE_COUNT;
+		voice=(voice+1)%SYNTH_VOICE_COUNT;
 
 		strcpy(s,"Vc-");
 		s[2]='1'+voice;

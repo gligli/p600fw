@@ -1,7 +1,7 @@
 #ifndef ARP_H
 #define	ARP_H
 
-#include "p600.h"
+#include "synth.h"
 
 typedef enum
 {

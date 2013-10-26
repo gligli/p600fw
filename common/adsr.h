@@ -1,7 +1,7 @@
 #ifndef ADSR_H
 #define	ADSR_H
 
-#include "p600.h"
+#include "synth.h"
 
 typedef enum
 {

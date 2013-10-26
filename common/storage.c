@@ -262,7 +262,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		// defaults
 		
 		currentPreset.steppedParameters[spAssignerPriority]=apLast;
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
 		
 		if (storage.version<1)
@@ -289,7 +289,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
 	}
 	
@@ -322,7 +322,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
 			storageWrite8(currentPreset.steppedParameters[sp]);
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			storageWrite8(currentPreset.voicePattern[i]);
 		
 		// this must stay last
@@ -377,7 +377,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
 
-		for(i=0;i<P600_VOICE_COUNT;++i)
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;	
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;

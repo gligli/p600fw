@@ -1,7 +1,7 @@
 #ifndef MIDI_H
 #define	MIDI_H
 
-#include "p600.h"
+#include "synth.h"
 
 void midi_init(void);
 void midi_update(void);

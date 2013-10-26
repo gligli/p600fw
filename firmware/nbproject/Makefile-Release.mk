@@ -43,11 +43,11 @@ OBJECTFILES= \
 	${OBJECTDIR}/_ext/1270477542/import.o \
 	${OBJECTDIR}/_ext/1270477542/lfo.o \
 	${OBJECTDIR}/_ext/1270477542/midi.o \
-	${OBJECTDIR}/_ext/1270477542/p600.o \
 	${OBJECTDIR}/_ext/1270477542/potmux.o \
 	${OBJECTDIR}/_ext/1270477542/scanner.o \
 	${OBJECTDIR}/_ext/1270477542/sh.o \
 	${OBJECTDIR}/_ext/1270477542/storage.o \
+	${OBJECTDIR}/_ext/1270477542/synth.o \
 	${OBJECTDIR}/_ext/1270477542/tuner.o \
 	${OBJECTDIR}/_ext/1270477542/uart_6850.o \
 	${OBJECTDIR}/_ext/1270477542/ui.o \
@@ -121,11 +121,6 @@ ${OBJECTDIR}/_ext/1270477542/midi.o: ../common/midi.c
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/midi.o ../common/midi.c
 
-${OBJECTDIR}/_ext/1270477542/p600.o: ../common/p600.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/p600.o ../common/p600.c
-
 ${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
@@ -145,6 +140,11 @@ ${OBJECTDIR}/_ext/1270477542/storage.o: ../common/storage.c
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
 	${RM} $@.d
 	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/storage.o ../common/storage.c
+
+${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
 
 ${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c 
 	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542

@@ -1,7 +1,7 @@
 #ifndef LFO_H
 #define	LFO_H
 
-#include "p600.h"
+#include "synth.h"
 
 typedef enum
 {

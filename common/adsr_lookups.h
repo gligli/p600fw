@@ -1,7 +1,7 @@
 #ifndef ADSR_TABLES_H
 #define	ADSR_TABLES_H
 
-#include "p600.h"
+#include "synth.h"
 
 const uint16_t attackCurveLookup[]=
 {

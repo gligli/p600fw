@@ -1,7 +1,7 @@
 #ifndef STORAGE_H
 #define	STORAGE_H
 
-#include "p600.h"
+#include "synth.h"
 #include "tuner.h"
 #include "assigner.h"
 
@@ -75,7 +75,7 @@ struct preset_s
 	uint8_t steppedParameters[spCount];
 	uint16_t continuousParameters[cpCount];
 	
-	uint8_t voicePattern[P600_VOICE_COUNT];
+	uint8_t voicePattern[SYNTH_VOICE_COUNT];
 };
 
 extern struct settings_s settings;

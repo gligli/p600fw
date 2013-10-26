@@ -1,5 +1,5 @@
-#ifndef P600_H
-#define	P600_H
+#ifndef SYNTH_H
+#define	SYNTH_H
 
 #include "utils.h"
 #include "print.h"
@@ -14,7 +14,7 @@
 	#define VERSION "debug "__DATE__ " " __TIME__
 #endif
 
-#define P600_VOICE_COUNT 6
+#define SYNTH_VOICE_COUNT 6
 
 #define SYSEX_ID_0 0x00
 #define SYSEX_ID_1 0x61
@@ -78,19 +78,19 @@ typedef enum
 	mtNone=0,mtVCO=1,mtVCF=2,mtVCA=4,mtPW=8,mtOnlyA=16,mtOnlyB=32
 } modulationTarget_t;
 
-void p600_buttonEvent(p600Button_t button, int pressed);
-void p600_keyEvent(uint8_t key, int pressed);
-void p600_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
-void p600_uartEvent(uint8_t data);
+void synth_buttonEvent(p600Button_t button, int pressed);
+void synth_keyEvent(uint8_t key, int pressed);
+void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
+void synth_uartEvent(uint8_t data);
 
-void p600_init(void);
-void p600_update(void);
-void p600_timerInterrupt(void);
-void p600_uartInterrupt(void);
+void synth_init(void);
+void synth_update(void);
+void synth_timerInterrupt(void);
+void synth_uartInterrupt(void);
 
 extern volatile uint32_t currentTick; // 500hz
 extern uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
 
 
-#endif	/* P600_H */
+#endif	/* SYNTH_H */
 

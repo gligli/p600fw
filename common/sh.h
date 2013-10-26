@@ -1,7 +1,7 @@
 #ifndef SH_H
 #define	SH_H
 
-#include "p600.h"
+#include "synth.h"
 
 #define SH_FLAG_IMMEDIATE 1
 

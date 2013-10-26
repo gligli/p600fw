@@ -85,7 +85,7 @@ void uart_update(void)
 #endif	
 		}
 
-		p600_uartEvent(data);
+		synth_uartEvent(data);
 	}
 }
 

@@ -1,7 +1,7 @@
 #ifndef POTMUX_H
 #define	POTMUX_H
 
-#include "p600.h"
+#include "synth.h"
 
 #define POTMUX_POT_COUNT 32
 

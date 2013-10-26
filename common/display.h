@@ -1,7 +1,7 @@
 #ifndef DISPLAY_H
 #define	DISPLAY_H
 
-#include "p600.h"
+#include "synth.h"
 
 void sevenSeg_scrollText(const char * text, int8_t times); // -1 -> infinite / 0 -> off
 void sevenSeg_setAscii(char left, char right);
