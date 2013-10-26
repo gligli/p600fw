@@ -194,6 +194,26 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		preset_loadDefault(1);
 		refreshFullState();
 	}
+	else if(button==pb8) // sync mode
+	{
+		settings.syncMode=(settings.syncMode+1)%3;
+		settings_save();
+		
+		switch(settings.syncMode)
+		{
+			case smInternal:
+				sevenSeg_scrollText("Int sync",1);
+				break;
+			case smMIDI:
+				sevenSeg_scrollText("Midi sync",1);
+				break;
+			case smTape:
+				sevenSeg_scrollText("tape sync",1);
+				break;
+		}
+
+		refreshFullState();
+	}
 }
 
 static LOWERCODESIZE void handleSynthPage(p600Button_t button)
@@ -359,7 +379,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(arp_getMode()!=amOff && pressed && button==pbRecord)
 	{
-		arp_setMode(arp_getMode(),!arp_getHold());
+		arp_setMode(arp_getMode(),arp_getHold()?0:1);
 		return; // override normal record action
 	}
 

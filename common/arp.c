@@ -8,6 +8,8 @@
 
 #define ARP_NOTE_MEMORY 128 // must stay>=128 for up/down mode
 
+#define ARP_NOTE_HELD_FLAG 0x80
+
 #define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
 
 static struct
@@ -35,7 +37,7 @@ static int8_t isEmpty(void)
 static void finishPreviousNote(void)
 {
 	if(arp.previousNote!=ASSIGNER_NO_NOTE)
-		assigner_assignNote(arp.previousNote,0,0,0);
+		assigner_assignNote(arp.previousNote&~ARP_NOTE_HELD_FLAG,0,0,0);
 }
 
 static void killAllNotes(void)
@@ -49,13 +51,36 @@ static void killAllNotes(void)
 	assigner_voiceDone(-1);
 }
 
+static void markNotesAsHeld(void)
+{
+	int16_t i;
+	for(i=0;i<ARP_NOTE_MEMORY;++i)
+		arp.notes[i]|=ARP_NOTE_HELD_FLAG;
+}
+
+static void killHeldNotes(void)
+{
+	int16_t i;
+	for(i=0;i<ARP_NOTE_MEMORY;++i)
+		if(arp.notes[i]&ARP_NOTE_HELD_FLAG)
+			arp.notes[i]=ASSIGNER_NO_NOTE;
+}
+
 inline void arp_setMode(arpMode_t mode, int8_t hold)
 {
 	// stop previous assigned notes
 	
-	if(arp.mode!=mode || !hold)
+	if(mode!=arp.mode)
 		killAllNotes();
 	
+	if(hold!=arp.hold)
+	{
+		if(hold)
+			markNotesAsHeld();
+		else
+			killHeldNotes();
+	}
+
 	arp.mode=mode;
 	arp.hold=hold;
 }
@@ -102,6 +127,9 @@ void arp_assignNote(uint8_t note, int8_t on)
 			arp.notes[note]=note;
 			arp.notes[ARP_LAST_NOTE-note]=note;
 		}
+		
+		if(arp.hold==1)
+			markNotesAsHeld();
 	}
 	else if(!arp.hold)
 	{
@@ -176,7 +204,7 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(arp.notes[arp.noteIndex],1,UINT16_MAX,0);
+	assigner_assignNote(arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG,1,UINT16_MAX,0);
 	
 	arp.previousNote=arp.notes[arp.noteIndex];
 }

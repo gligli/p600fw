@@ -210,6 +210,13 @@ LOWERCODESIZE int8_t settings_load(void)
 
 		// v3
 		
+		settings.syncMode=storageRead8();
+	
+		if (storage.version<4)
+			return 1;
+
+		// v4
+		
 		// ...
 	
 	
@@ -243,6 +250,10 @@ LOWERCODESIZE void settings_save(void)
 		storageWriteS8(settings.midiSendChannel);
 
 		// v3
+		
+		storageWrite8(settings.syncMode);
+		
+		// v4
 		
 		// ...
 

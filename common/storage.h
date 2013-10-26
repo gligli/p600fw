@@ -68,6 +68,8 @@ struct settings_s
 	int8_t midiReceiveChannel; // -1: omni / 0-15: channel 1-16
 	int8_t midiSendChannel; // 0-15: channel 1-16
 	uint8_t voiceMask;
+	
+	int8_t syncMode;
 };
 
 struct preset_s

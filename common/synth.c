@@ -23,6 +23,9 @@
 
 #define POT_DEAD_ZONE 512
 
+#define BIT_INTPUT_FOOTSWITCH 0x20
+#define BIT_INTPUT_TAPE_IN 0x01
+
 uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
 
 const p600Pot_t continuousParameterToPot[cpCount]=
@@ -65,6 +68,8 @@ struct synth_s
 	
 	uint32_t modulationDelayStart;
 	uint16_t modulationDelayTickCount;
+	
+	int8_t pendingSyncTick;
 } synth;
 
 extern void refreshAllPresetButtons(void);
@@ -543,6 +548,33 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 	}
 }
 
+static void handleBitInputs(void)
+{
+	uint8_t cur;
+	static uint8_t last=0;
+	
+	BLOCK_INT
+	{
+		cur=io_read(0x9);
+	}
+	
+	// control footswitch 
+	 
+	if(currentPreset.steppedParameters[spUnison] && !(cur&BIT_INTPUT_FOOTSWITCH) && last&BIT_INTPUT_FOOTSWITCH)
+	{
+		assigner_latchPattern();
+		assigner_getPattern(currentPreset.voicePattern,NULL);
+	}
+	else if(arp_getMode()!=amOff && (cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
+	{
+		arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:2);
+	}
+
+	// this must stay last
+	
+	last=cur;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // P600 main code
 ////////////////////////////////////////////////////////////////////////////////
@@ -718,6 +750,10 @@ void synth_update(void)
 		// tuned CVs
 
 	computeTunedCVs(wheelUpdate,-1);
+	
+	// bit inputs (footswitch / tape in)
+	
+	handleBitInputs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -798,8 +834,9 @@ void synth_timerInterrupt(void)
 		++currentTick;
 		break;
 	case 1:
-		if(arp_getMode()!=amOff)
+		if(arp_getMode()!=amOff && (settings.syncMode==smInternal || synth.pendingSyncTick))
 		{
+			synth.pendingSyncTick=0;
 			arp_update();
 		}
 

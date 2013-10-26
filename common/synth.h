@@ -78,6 +78,11 @@ typedef enum
 	mtNone=0,mtVCO=1,mtVCF=2,mtVCA=4,mtPW=8,mtOnlyA=16,mtOnlyB=32
 } modulationTarget_t;
 
+typedef enum
+{
+	smInternal=0,smMIDI=1,smTape=2
+} syncMode_t;
+
 void synth_buttonEvent(p600Button_t button, int pressed);
 void synth_keyEvent(uint8_t key, int pressed);
 void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
