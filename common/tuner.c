@@ -4,7 +4,7 @@
 
 #include "tuner.h"
 #include "storage.h"
-#include "synth.h"
+#include "sh.h"
 #include "display.h"
 #include "storage.h"
 
@@ -40,7 +40,7 @@ static struct
 
 static LOWERCODESIZE void whileTuning(void)
 {
-	synth_maintainCV(tuner.currentCV,1);
+	sh_maintainCV(tuner.currentCV,1);
 
 	// display current osc
 	if(tuner.currentCV<pcOsc1B)
@@ -53,9 +53,9 @@ static LOWERCODESIZE void whileTuning(void)
 	display_update(1);
 
 	// full update once in a while
-	synth_update();
+	sh_update();
 
-	synth_maintainCV(tuner.currentCV,0);
+	sh_maintainCV(tuner.currentCV,0);
 }
 
 static void i8253Write(uint8_t a,uint8_t v)
@@ -131,8 +131,8 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	//
 	
-	synth_update();
-	synth_maintainCV(tuner.currentCV,0);
+	sh_update();
+	sh_maintainCV(tuner.currentCV,0);
 			
 	// prepare flip flop
 	
@@ -192,7 +192,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	}
 	
-	synth_maintainCV(tuner.currentCV,1);
+	sh_maintainCV(tuner.currentCV,1);
 	
 	return res;
 }
@@ -217,7 +217,7 @@ static LOWERCODESIZE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestN
 	{
 		if(estimate>tuner_computeCVFromNote(lowestNote,0,cv))
 		{
-			synth_setCV(cv,estimate,0);
+			sh_setCV(cv,estimate,0);
 			
 			ip=measureAudioPeriod(1<<relPrec);
 			if(ip==UINT32_MAX)
@@ -270,12 +270,12 @@ static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	// open VCA
 
-	synth_setCV(ampCV,UINT16_MAX,0);
+	sh_setCV(ampCV,UINT16_MAX,0);
 	
 	// done many times, to ensure all CVs are at correct voltage
 	
 	for(i=0;i<20;++i)
-		synth_update();
+		sh_update();
 
 	// tune
 
@@ -308,8 +308,8 @@ static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 	
 	// close VCA
 
-	synth_setCV(ampCV,0,0);
-	synth_update();
+	sh_setCV(ampCV,0,0);
+	sh_update();
 }
 
 static uint16_t extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
@@ -383,24 +383,24 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		led_set(plTune,1,0);
 		
 #ifdef DEBUG
-		synth_setCV(pcMVol,20000,0);
+		sh_setCV(pcMVol,20000,0);
 #else
-		synth_setCV(pcMVol,0,0);
+		sh_setCV(pcMVol,0,0);
 #endif
 
-		synth_setGate(pgASaw,1);
-		synth_setGate(pgATri,0);
-		synth_setGate(pgBSaw,1);
-		synth_setGate(pgBTri,0);
-		synth_setGate(pgPModFA,0);
-		synth_setGate(pgPModFil,0);
-		synth_setGate(pgSync,0);
+		sh_setGate(pgASaw,1);
+		sh_setGate(pgATri,0);
+		sh_setGate(pgBSaw,1);
+		sh_setGate(pgBTri,0);
+		sh_setGate(pgPModFA,0);
+		sh_setGate(pgPModFil,0);
+		sh_setGate(pgSync,0);
 
-		synth_setCV(pcResonance,0,0);
-		synth_setCV(pcAPW,0,0);
-		synth_setCV(pcBPW,0,0);
-		synth_setCV(pcPModOscB,0,0);
-		synth_setCV(pcExtFil,0,0);
+		sh_setCV(pcResonance,0,0);
+		sh_setCV(pcAPW,0,0);
+		sh_setCV(pcBPW,0,0);
+		sh_setCV(pcPModOscB,0,0);
+		sh_setCV(pcExtFil,0,0);
 		
 		// init 8253
 			// ch 0, mode 0, access 2 bytes, binary count
@@ -414,22 +414,22 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcResonance,0,0);
+		sh_setCV(pcResonance,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,UINT16_MAX,0);
+			sh_setCV(pcFil1+i,UINT16_MAX,0);
 	
 			// A oscs
 
-		synth_setCV(pcVolA,UINT16_MAX,0);
-		synth_setCV(pcVolB,0,0);
+		sh_setCV(pcVolA,UINT16_MAX,0);
+		sh_setCV(pcVolB,0,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
 			// B oscs
 
-		synth_setCV(pcVolA,0,0);
-		synth_setCV(pcVolB,UINT16_MAX,0);
+		sh_setCV(pcVolA,0,0);
+		sh_setCV(pcVolB,UINT16_MAX,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
@@ -438,12 +438,12 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 			
 			// init
 		
-		synth_setCV(pcVolA,0,0);
-		synth_setCV(pcVolB,0,0);
-		synth_setCV(pcResonance,UINT16_MAX,0);
+		sh_setCV(pcVolA,0,0);
+		sh_setCV(pcVolB,0,0);
+		sh_setCV(pcResonance,UINT16_MAX,0);
 
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcFil1+i,0,0);
+			sh_setCV(pcFil1+i,0,0);
 	
 			// filters
 		
@@ -452,11 +452,11 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 
 		// finish
 		
-		synth_setCV(pcResonance,0,0);
+		sh_setCV(pcResonance,0,0);
 		for(i=0;i<P600_VOICE_COUNT;++i)
-			synth_setCV(pcAmp1+i,0,0);
+			sh_setCV(pcAmp1+i,0,0);
 		
-		synth_update();
+		sh_update();
 
 		display_clear();
 		

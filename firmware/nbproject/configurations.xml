@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="89">
+<configurationDescriptor version="90">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -21,8 +21,8 @@
       <itemPath>../common/potmux.h</itemPath>
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
+      <itemPath>../common/sh.h</itemPath>
       <itemPath>../common/storage.h</itemPath>
-      <itemPath>../common/synth.h</itemPath>
       <itemPath>teensy_bootloader_hack.h</itemPath>
       <itemPath>../common/tuner.h</itemPath>
       <itemPath>../common/uart_6850.h</itemPath>
@@ -50,8 +50,8 @@
       <itemPath>../common/potmux.c</itemPath>
       <itemPath>print.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
+      <itemPath>../common/sh.c</itemPath>
       <itemPath>../common/storage.c</itemPath>
-      <itemPath>../common/synth.c</itemPath>
       <itemPath>../common/tuner.c</itemPath>
       <itemPath>../common/uart_6850.c</itemPath>
       <itemPath>../common/ui.c</itemPath>
@@ -74,7 +74,6 @@
   <confs>
     <conf name="Debug" type="1">
       <toolsSet>
-        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>MHV_AVR|WinAVR</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -138,13 +137,13 @@
       </item>
       <item path="../common/scanner.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/sh.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/sh.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/storage.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/storage.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../common/synth.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="../common/synth.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/tuner.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -183,7 +182,6 @@
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
-        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>MHV_AVR|WinAVR</compilerSet>
         <dependencyChecking>true</dependencyChecking>
         <rebuildPropChanged>false</rebuildPropChanged>
@@ -250,13 +248,13 @@
       </item>
       <item path="../common/scanner.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/sh.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/sh.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/storage.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/storage.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../common/synth.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="../common/synth.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/tuner.c" ex="false" tool="0" flavor2="0">
       </item>

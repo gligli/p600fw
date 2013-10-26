@@ -8,7 +8,7 @@
 
 #include "scanner.h"
 #include "display.h"
-#include "synth.h"
+#include "sh.h"
 #include "potmux.h"
 #include "adsr.h"
 #include "lfo.h"
@@ -288,13 +288,13 @@ static void handleFinishedVoices(void)
 
 static void refreshGates(void)
 {
-	synth_setGate(pgASaw,currentPreset.steppedParameters[spASaw]);
-	synth_setGate(pgBSaw,currentPreset.steppedParameters[spBSaw]);
-	synth_setGate(pgATri,currentPreset.steppedParameters[spATri]);
-	synth_setGate(pgBTri,currentPreset.steppedParameters[spBTri]);
-	synth_setGate(pgSync,currentPreset.steppedParameters[spSync]);
-	synth_setGate(pgPModFA,currentPreset.steppedParameters[spPModFA]);
-	synth_setGate(pgPModFil,currentPreset.steppedParameters[spPModFil]);
+	sh_setGate(pgASaw,currentPreset.steppedParameters[spASaw]);
+	sh_setGate(pgBSaw,currentPreset.steppedParameters[spBSaw]);
+	sh_setGate(pgATri,currentPreset.steppedParameters[spATri]);
+	sh_setGate(pgBTri,currentPreset.steppedParameters[spBTri]);
+	sh_setGate(pgSync,currentPreset.steppedParameters[spSync]);
+	sh_setGate(pgPModFA,currentPreset.steppedParameters[spPModFA]);
+	sh_setGate(pgPModFil,currentPreset.steppedParameters[spPModFil]);
 }
 
 static inline void refreshPulseWidth(int8_t pwm)
@@ -323,8 +323,8 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 	BLOCK_INT
 	{
-		synth_setCV32Sat_FastPath(pcAPW,pa);
-		synth_setCV32Sat_FastPath(pcBPW,pb);
+		sh_setCV32Sat_FastPath(pcAPW,pa);
+		sh_setCV32Sat_FastPath(pcBPW,pb);
 	}
 }
 
@@ -472,30 +472,30 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 			// osc B
 
 			vb+=p600.oscBNoteCV[v];
-			synth_setCV32Sat_FastPath(pcOsc1B+v,vb);
+			sh_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
 			// osc A
 
 			va+=scaleU16S16(envVal,oscEnvAmt);	
 			va+=p600.oscANoteCV[v];
-			synth_setCV32Sat_FastPath(pcOsc1A+v,va);
+			sh_setCV32Sat_FastPath(pcOsc1A+v,va);
 
 			// filter
 
 			vf=filterLfoVal;
 			vf+=scaleU16S16(envVal,filEnvAmt);
 			vf+=p600.filterNoteCV[v];
-			synth_setCV32Sat_FastPath(pcFil1+v,vf);
+			sh_setCV32Sat_FastPath(pcFil1+v,vf);
 
 			// amplifier
 
 			adsr_update(&p600.ampEnvs[v]);
-			synth_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
+			sh_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
 		}
 		else
 		{
 			CYCLE_WAIT(40); // 10us (helps for snappiness, because it lets some time for previous voice CVs to stabilize)
-			synth_setCV_FastPath(pcAmp1+v,0);
+			sh_setCV_FastPath(pcAmp1+v,0);
 		}
 	}
 }
@@ -514,7 +514,7 @@ void p600_init(void)
 	
 	scanner_init();
 	display_init();
-	synth_init();
+	sh_init();
 	potmux_init();
 	tuner_init();
 	assigner_init();
@@ -665,15 +665,15 @@ void p600_update(void)
 	case 1:
 		// 'fixed' CVs
 		
-		synth_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SYNTH_FLAG_IMMEDIATE);
+		sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
+		sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
 		break;
 	case 2:
 		// 'fixed' CVs
 		
-		synth_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SYNTH_FLAG_IMMEDIATE);
-		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
+		sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
+		sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
+		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SH_FLAG_IMMEDIATE);
 		break;
 	case 3:
 		// gates
@@ -704,7 +704,7 @@ void p600_update(void)
 		computeBenderCVs();
 
 		// volume bending
-		synth_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SYNTH_FLAG_IMMEDIATE);
+		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SH_FLAG_IMMEDIATE);
 		
 		if(wheelChange)
 			bendChangeStart=currentTick;

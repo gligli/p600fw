@@ -59,7 +59,7 @@ SRC = \
 	../common/display.c \
 	../common/scanner.c \
 	../common/dac.c \
-	../common/synth.c \
+	../common/sh.c \
 	../common/adsr.c \
 	../common/lfo.c \
 	../common/arp.c \

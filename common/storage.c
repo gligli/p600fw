@@ -39,6 +39,8 @@ const uint8_t steppedParametersBits[spCount] =
 	/*BenderTarget*/2,
 	/*ModwheelShift*/3,
 	/*ChromaticPitch*/2,
+	/*ModwheelTarget*/1,
+	/*VibTarget*/2,
 };
 
 struct settings_s settings;
