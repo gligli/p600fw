@@ -55,6 +55,7 @@ struct synth_s
 	uint16_t oscBTargetCV[SYNTH_VOICE_COUNT];
 	uint16_t filterTargetCV[SYNTH_VOICE_COUNT];
 
+	uint16_t modwheelAmount;
 	int16_t benderAmount;
 	int16_t benderCVs[pcFil6-pcOsc1A+1];
 	int16_t benderVolumeCV;
@@ -64,7 +65,7 @@ struct synth_s
 	
 	uint32_t modulationDelayStart;
 	uint16_t modulationDelayTickCount;
-} p600;
+} synth;
 
 extern void refreshAllPresetButtons(void);
 
@@ -143,8 +144,8 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 
 		// oscs
 		
-		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)p600.benderCVs[pcOsc1A+v]+mTune);
-		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)p600.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
+		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
 		
 		if(currentPreset.steppedParameters[spUnison])
 		{
@@ -160,54 +161,57 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		if(track)
 			trackingNote+=note>>(2-track);
 			
-		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),p600.benderCVs[pcFil1+v]);
+		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),synth.benderCVs[pcFil1+v]);
 		
 		// glide
 		
-		if(p600.gliding)
+		if(synth.gliding)
 		{
-			p600.oscATargetCV[v]=cva;
-			p600.oscBTargetCV[v]=cvb;
-			p600.filterTargetCV[v]=cvf;
+			synth.oscATargetCV[v]=cva;
+			synth.oscBTargetCV[v]=cvb;
+			synth.filterTargetCV[v]=cvf;
 
 			if(!track)
-				p600.filterNoteCV[v]=cvf; // no glide if no tracking for filter
+				synth.filterNoteCV[v]=cvf; // no glide if no tracking for filter
 		}
 		else			
 		{
-			p600.oscANoteCV[v]=cva;
-			p600.oscBNoteCV[v]=cvb;
-			p600.filterNoteCV[v]=cvf;
+			synth.oscANoteCV[v]=cva;
+			synth.oscBNoteCV[v]=cvb;
+			synth.filterNoteCV[v]=cvf;
 		}
 				
 	}
 }
 
-void computeBenderCVs(void)
+void computeBenderCVs(int8_t computeAmount)
 {
 	int32_t bend,amt;
 	uint16_t pos;
 	p600CV_t cv;
 
-	pos=potmux_getValue(ppPitchWheel);
-	
-	// compute adjusted bender amount
-	
-	amt=pos;
-	
-	if(amt<settings.benderMiddle)
+	if(computeAmount)
 	{
-		amt=settings.benderMiddle-amt;
-		amt*=INT16_MIN;
-		amt/=settings.benderMiddle;
+		pos=potmux_getValue(ppPitchWheel);
+
+		// compute adjusted bender amount
+
+		amt=pos;
+
+		if(amt<settings.benderMiddle)
+		{
+			amt=settings.benderMiddle-amt;
+			amt*=INT16_MIN;
+			amt/=settings.benderMiddle;
+		}
+		else
+		{
+			amt-=settings.benderMiddle;
+			amt*=INT16_MAX;
+			amt/=UINT16_MAX-settings.benderMiddle;
+		}
+		synth.benderAmount=MIN(MAX(amt,INT16_MIN),INT16_MAX);
 	}
-	else
-	{
-		amt-=settings.benderMiddle;
-		amt*=INT16_MAX;
-		amt/=UINT16_MAX-settings.benderMiddle;
-	}
-	p600.benderAmount=MIN(MAX(amt,INT16_MIN),INT16_MAX);
 	
 	// compute bends
 	
@@ -217,23 +221,23 @@ void computeBenderCVs(void)
 		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 		{
 			bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
-			bend*=p600.benderAmount;
+			bend*=synth.benderAmount;
 			bend/=UINT16_MAX;
-			p600.benderCVs[cv]=bend;
+			synth.benderCVs[cv]=bend;
 		}
 		break;
 	case modVCF:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
-		bend*=p600.benderAmount;
+		bend*=synth.benderAmount;
 		bend/=12;
 		for(cv=pcFil1;cv<=pcFil6;++cv)
-			p600.benderCVs[cv]=bend;
+			synth.benderCVs[cv]=bend;
 		break;
 	case modVCA:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
-		bend*=p600.benderAmount;
+		bend*=synth.benderAmount;
 		bend/=12;
-		p600.benderVolumeCV=bend;
+		synth.benderVolumeCV=bend;
 		break;
 	default:
 		;
@@ -264,15 +268,15 @@ static void refreshModulationDelay(int8_t refreshTickCount)
 	
 	if(!anyPressed)
 	{
-		p600.modulationDelayStart=UINT32_MAX;
+		synth.modulationDelayStart=UINT32_MAX;
 	}
-	else if (p600.modulationDelayStart==UINT32_MAX)
+	else if (synth.modulationDelayStart==UINT32_MAX)
 	{
-		p600.modulationDelayStart=currentTick;
+		synth.modulationDelayStart=currentTick;
 	}
 	
 	if(refreshTickCount)
-		p600.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
+		synth.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
 }
 
 static void handleFinishedVoices(void)
@@ -282,7 +286,7 @@ static void handleFinishedVoices(void)
 	// when amp env finishes, voice is done
 	
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
-		if(assigner_getAssignment(v,NULL) && adsr_getStage(&p600.ampEnvs[v])==sWait)
+		if(assigner_getAssignment(v,NULL) && adsr_getStage(&synth.ampEnvs[v])==sWait)
 			assigner_voiceDone(v);
 }
 
@@ -315,10 +319,10 @@ static inline void refreshPulseWidth(int8_t pwm)
 	if(pwm)
 	{
 		if(sqrA && !(currentPreset.steppedParameters[spLFOTargets]&mtOnlyB))
-			pa+=p600.lfo.output;
+			pa+=synth.lfo.output;
 
 		if(sqrB && !(currentPreset.steppedParameters[spLFOTargets]&mtOnlyA))
-			pb+=p600.lfo.output;
+			pb+=synth.lfo.output;
 	}
 
 	BLOCK_INT
@@ -335,24 +339,31 @@ static void refreshAssignerSettings(void)
 	assigner_setPriority(currentPreset.steppedParameters[spAssignerPriority]);
 }
 
-static void refreshEnvSettings(int8_t type)
+static void refreshEnvSettings(void)
 {
-	uint8_t expo,slow;
 	int8_t i;
-	struct adsr_s * a;
-		
-	expo=currentPreset.steppedParameters[(type)?spFilEnvExpo:spAmpEnvExpo];
-	slow=currentPreset.steppedParameters[(type)?spFilEnvSlow:spAmpEnvSlow];
 
 	for(i=0;i<SYNTH_VOICE_COUNT;++i)
 	{
-		if(type)
-			a=&p600.filEnvs[i];
-		else
-			a=&p600.ampEnvs[i];
+		adsr_setShape(&synth.ampEnvs[i],currentPreset.steppedParameters[spAmpEnvExpo]);
+		adsr_setShape(&synth.filEnvs[i],currentPreset.steppedParameters[spFilEnvExpo]);
+		
+		adsr_setSpeedShift(&synth.ampEnvs[i],(currentPreset.steppedParameters[spAmpEnvSlow])?3:1);
+		adsr_setSpeedShift(&synth.filEnvs[i],(currentPreset.steppedParameters[spFilEnvSlow])?3:1);
 
-		adsr_setShape(a,expo);
-		adsr_setSpeedShift(a,(slow)?3:1);
+		adsr_setCVs(&synth.ampEnvs[i],
+				 currentPreset.continuousParameters[cpAmpAtt],
+				 currentPreset.continuousParameters[cpAmpDec],
+				 currentPreset.continuousParameters[cpAmpSus],
+				 currentPreset.continuousParameters[cpAmpRel],
+				 0,0x0f);
+
+		adsr_setCVs(&synth.filEnvs[i],
+				 currentPreset.continuousParameters[cpFilAtt],
+				 currentPreset.continuousParameters[cpFilDec],
+				 currentPreset.continuousParameters[cpFilSus],
+				 currentPreset.continuousParameters[cpFilRel],
+				 0,0x0f);
 	}
 }
 
@@ -360,12 +371,42 @@ static void refreshLfoSettings(void)
 {
 	lfoShape_t shape;
 	uint8_t shift;
+	int8_t dlyMod;
+	uint16_t mwAmt,lfoAmt,vibAmt;
 
 	shape=currentPreset.steppedParameters[spLFOShape];
 	shift=1+currentPreset.steppedParameters[spLFOShift]*3;
 
-	lfo_setShape(&p600.lfo,shape);
-	lfo_setSpeedShift(&p600.lfo,shift);
+	lfo_setShape(&synth.lfo,shape);
+	lfo_setSpeedShift(&synth.lfo,shift);
+	
+	dlyMod=currentTick-synth.modulationDelayStart>synth.modulationDelayTickCount;
+	mwAmt=synth.modwheelAmount>>currentPreset.steppedParameters[spModwheelShift];
+
+	lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
+	lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
+
+	vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
+	vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
+
+	if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
+	{
+		lfo_setCVs(&synth.lfo,
+				currentPreset.continuousParameters[cpLFOFreq],
+				satAddU16U16(lfoAmt,mwAmt));
+		lfo_setCVs(&synth.vibrato,
+				 currentPreset.continuousParameters[cpVibFreq],
+				 dlyMod?vibAmt:0);
+	}
+	else
+	{
+		lfo_setCVs(&synth.lfo,
+				currentPreset.continuousParameters[cpLFOFreq],
+				dlyMod?lfoAmt:0);
+		lfo_setCVs(&synth.vibrato,
+				currentPreset.continuousParameters[cpVibFreq],
+				satAddU16U16(vibAmt,mwAmt));
+	}
 }
 
 static void refreshSevenSeg(void)
@@ -417,9 +458,8 @@ void refreshFullState(void)
 	refreshGates();
 	refreshAssignerSettings();
 	refreshLfoSettings();
-	refreshEnvSettings(0);
-	refreshEnvSettings(1);
-	computeBenderCVs();
+	refreshEnvSettings();
+	computeBenderCVs(0);
 	
 	refreshSevenSeg();
 }
@@ -442,7 +482,10 @@ void refreshPresetMode(void)
 		preset_loadDefault(1);
 
 	if(!settings.presetMode)
+	{
 		refreshAllPresetButtons();
+		refreshPresetPots(1);
+	}
 	
 	ui.lastActivePot=ppNone;
 	ui.presetModified=0;
@@ -463,34 +506,34 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		{
 			// update envs, compute CVs & apply them
 
-			adsr_update(&p600.filEnvs[v]);
-			envVal=p600.filEnvs[v].output;
+			adsr_update(&synth.filEnvs[v]);
+			envVal=synth.filEnvs[v].output;
 
 			va=pitchALfoVal;
 			vb=pitchBLfoVal;
 
 			// osc B
 
-			vb+=p600.oscBNoteCV[v];
+			vb+=synth.oscBNoteCV[v];
 			sh_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
 			// osc A
 
 			va+=scaleU16S16(envVal,oscEnvAmt);	
-			va+=p600.oscANoteCV[v];
+			va+=synth.oscANoteCV[v];
 			sh_setCV32Sat_FastPath(pcOsc1A+v,va);
 
 			// filter
 
 			vf=filterLfoVal;
 			vf+=scaleU16S16(envVal,filEnvAmt);
-			vf+=p600.filterNoteCV[v];
+			vf+=synth.filterNoteCV[v];
 			sh_setCV32Sat_FastPath(pcFil1+v,vf);
 
 			// amplifier
 
-			adsr_update(&p600.ampEnvs[v]);
-			sh_setCV_FastPath(pcAmp1+v,p600.ampEnvs[v].output);
+			adsr_update(&synth.ampEnvs[v]);
+			sh_setCV_FastPath(pcAmp1+v,synth.ampEnvs[v].output);
 		}
 		else
 		{
@@ -510,7 +553,7 @@ void synth_init(void)
 	
 	// init
 	
-	memset(&p600,0,sizeof(p600));
+	memset(&synth,0,sizeof(synth));
 	
 	scanner_init();
 	display_init();
@@ -525,14 +568,14 @@ void synth_init(void)
 	
 	for(i=0;i<SYNTH_VOICE_COUNT;++i)
 	{
-		adsr_init(&p600.ampEnvs[i]);
-		adsr_init(&p600.filEnvs[i]);
+		adsr_init(&synth.ampEnvs[i]);
+		adsr_init(&synth.filEnvs[i]);
 	}
 
-	lfo_init(&p600.lfo);
-	lfo_init(&p600.vibrato);
-	lfo_setShape(&p600.vibrato,lsTri);
-	lfo_setSpeedShift(&p600.vibrato,4);
+	lfo_init(&synth.lfo);
+	lfo_init(&synth.vibrato);
+	lfo_setShape(&synth.vibrato,lsTri);
+	lfo_setSpeedShift(&synth.vibrato,4);
 	
 	// initial input state
 	
@@ -570,9 +613,8 @@ void synth_init(void)
 
 void synth_update(void)
 {
-	int8_t i,wheelChange,wheelUpdate,dlyMod;
+	int8_t wheelChange,wheelUpdate;
 	uint8_t potVal;
-	uint16_t mwAmt,lfoAmt,vibAmt;
 	static uint8_t frc=0;
 	static uint32_t bendChangeStart=0;
 	
@@ -607,60 +649,21 @@ void synth_update(void)
 
 	// update CVs
 
+	if(potmux_lastChanged()!=ppNone)
+	{
+		if(potmux_lastChanged()==ppModWheel)
+			synth.modwheelAmount=potmux_getValue(ppModWheel);
+				
+		refreshLfoSettings();
+		refreshEnvSettings();
+	}
+	
 	switch(frc&0x03) // 4 phases
 	{
 	case 0:
-		// amplifier envs
-		
-		for(i=0;i<SYNTH_VOICE_COUNT;++i)
-			adsr_setCVs(&p600.ampEnvs[i],
-					 currentPreset.continuousParameters[cpAmpAtt],
-					 currentPreset.continuousParameters[cpAmpDec],
-					 currentPreset.continuousParameters[cpAmpSus],
-					 currentPreset.continuousParameters[cpAmpRel],
-					 0,0x0f);
+		// lfo (for mod delay)
 
-		// filter envs
-
-		for(i=0;i<SYNTH_VOICE_COUNT;++i)
-			adsr_setCVs(&p600.filEnvs[i],
-					 currentPreset.continuousParameters[cpFilAtt],
-					 currentPreset.continuousParameters[cpFilDec],
-					 currentPreset.continuousParameters[cpFilSus],
-					 currentPreset.continuousParameters[cpFilRel],
-					 0,0x0f);
-
-		// modulations
-		
-		dlyMod=currentTick-p600.modulationDelayStart>p600.modulationDelayTickCount;
-		mwAmt=potmux_getValue(ppModWheel)>>currentPreset.steppedParameters[spModwheelShift];
-
-		lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
-		lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
-			
-		vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
-		vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
-		
-		if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
-		{
-			lfo_setCVs(&p600.lfo,
-					currentPreset.continuousParameters[cpLFOFreq],
-					satAddU16U16(lfoAmt,mwAmt));
-			lfo_setCVs(&p600.vibrato,
-					 currentPreset.continuousParameters[cpVibFreq],
-					 dlyMod?vibAmt:0);
-		}
-		else
-		{
-			lfo_setCVs(&p600.lfo,
-					currentPreset.continuousParameters[cpLFOFreq],
-					dlyMod?lfoAmt:0);
-			lfo_setCVs(&p600.vibrato,
-					currentPreset.continuousParameters[cpVibFreq],
-					satAddU16U16(vibAmt,mwAmt));
-		}
-		
-		
+		refreshLfoSettings();
 		break;
 	case 1:
 		// 'fixed' CVs
@@ -673,7 +676,7 @@ void synth_update(void)
 		
 		sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
 		sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
-		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SH_FLAG_IMMEDIATE);
+		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
 		break;
 	case 3:
 		// gates
@@ -682,8 +685,8 @@ void synth_update(void)
 
 		// glide
 		
-		p600.glideAmount=exponentialCourse(currentPreset.continuousParameters[cpGlide],11000.0f,2100.0f);
-		p600.gliding=p600.glideAmount<2000;
+		synth.glideAmount=exponentialCourse(currentPreset.continuousParameters[cpGlide],11000.0f,2100.0f);
+		synth.gliding=synth.glideAmount<2000;
 		
 		// arp
 		
@@ -701,10 +704,10 @@ void synth_update(void)
 	
 	if(wheelUpdate)
 	{
-		computeBenderCVs();
+		computeBenderCVs(1);
 
 		// volume bending
-		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),p600.benderVolumeCV),SH_FLAG_IMMEDIATE);
+		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
 		
 		if(wheelChange)
 			bendChangeStart=currentTick;
@@ -735,21 +738,21 @@ void synth_timerInterrupt(void)
 
 	// lfo
 	
-	lfo_update(&p600.lfo);
+	lfo_update(&synth.lfo);
 	
-	pitchALfoVal=pitchBLfoVal=p600.vibrato.output;
+	pitchALfoVal=pitchBLfoVal=synth.vibrato.output;
 	filterLfoVal=0;
 	
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
 	{
 		if(!(currentPreset.steppedParameters[spLFOTargets]&mtOnlyB))
-			pitchALfoVal+=p600.lfo.output>>1;
+			pitchALfoVal+=synth.lfo.output>>1;
 		if(!(currentPreset.steppedParameters[spLFOTargets]&mtOnlyA))
-			pitchBLfoVal+=p600.lfo.output>>1;
+			pitchBLfoVal+=synth.lfo.output>>1;
 	}
 
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCF)
-		filterLfoVal=p600.lfo.output;
+		filterLfoVal=synth.lfo.output;
 	
 	// global env computations
 	
@@ -798,19 +801,19 @@ void synth_timerInterrupt(void)
 			arp_update();
 		}
 
-		if(p600.gliding)
+		if(synth.gliding)
 		{
 			for(v=0;v<SYNTH_VOICE_COUNT;++v)
 			{
-				computeGlide(&p600.oscANoteCV[v],p600.oscATargetCV[v],p600.glideAmount);
-				computeGlide(&p600.oscBNoteCV[v],p600.oscBTargetCV[v],p600.glideAmount);
-				computeGlide(&p600.filterNoteCV[v],p600.filterTargetCV[v],p600.glideAmount);
+				computeGlide(&synth.oscANoteCV[v],synth.oscATargetCV[v],synth.glideAmount);
+				computeGlide(&synth.oscBNoteCV[v],synth.oscBTargetCV[v],synth.glideAmount);
+				computeGlide(&synth.filterNoteCV[v],synth.filterTargetCV[v],synth.glideAmount);
 			}
 		}
 
 		break;
 	case 2:
-		lfo_update(&p600.vibrato);
+		lfo_update(&synth.vibrato);
 		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
 	case 3:
@@ -859,8 +862,8 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 
 	if(!legato || arp_getMode()!=amOff)
 	{
-		adsr_setGate(&p600.filEnvs[voice],gate);
-		adsr_setGate(&p600.ampEnvs[voice],gate);
+		adsr_setGate(&synth.filEnvs[voice],gate);
+		adsr_setGate(&synth.ampEnvs[voice],gate);
 	}
 
 	if(gate)
@@ -868,9 +871,9 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 		// handle velocity
 
 		velAmt=currentPreset.continuousParameters[cpFilVelocity];
-		adsr_setCVs(&p600.filEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
+		adsr_setCVs(&synth.filEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 		velAmt=currentPreset.continuousParameters[cpAmpVelocity];
-		adsr_setCVs(&p600.ampEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
+		adsr_setCVs(&synth.ampEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 	}
 
 #ifdef DEBUG
@@ -889,4 +892,20 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 void synth_uartEvent(uint8_t data)
 {
 	midi_newData(data);
+}
+
+void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
+{
+	if(mask&1)
+	{
+		synth.benderAmount=bend;
+		computeBenderCVs(0);
+		computeTunedCVs(1,-1);
+	}
+	
+	if(mask&2)
+	{
+		synth.modwheelAmount=modulation;
+		refreshLfoSettings();
+	}
 }

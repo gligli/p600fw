@@ -101,22 +101,22 @@ static void updatePot(p600Pot_t pot)
 	}
 }
 
-inline uint16_t potmux_getValue(p600Pot_t pot)
+FORCEINLINE uint16_t potmux_getValue(p600Pot_t pot)
 {
 	return potmux.pots[pot];
 }
 
-inline int8_t potmux_hasChanged(p600Pot_t pot)
+FORCEINLINE int8_t potmux_hasChanged(p600Pot_t pot)
 {
 	return (potmux.potChanged&((uint32_t)1<<pot))!=0;
 }
 
-inline p600Pot_t potmux_lastChanged(void)
+FORCEINLINE p600Pot_t potmux_lastChanged(void)
 {
 	return potmux.lastChanged;
 }
 
-inline void potmux_resetChanged(void)
+FORCEINLINE void potmux_resetChanged(void)
 {
 	potmux.potChanged=0;
 	potmux.lastChanged=ppNone;

@@ -228,6 +228,16 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	}
 }
 
+FORCEINLINE void ui_setPresetModified(int8_t modified)
+{
+	ui.presetModified=modified;
+}
+
+FORCEINLINE int8_t ui_isPresetModified(void)
+{
+	return ui.presetModified;
+}
+
 void ui_dataPotChanged(void)
 {
 	ui.lastActivePot=potmux_lastChanged();

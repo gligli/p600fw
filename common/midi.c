@@ -8,6 +8,7 @@
 #include "ui.h"
 #include "uart_6850.h"
 #include "import.h"
+#include "arp.h"
 
 #include "../xnormidi/midi_device.h"
 #include "../xnormidi/midi.h"
@@ -24,6 +25,15 @@ static int16_t sysexSize;
 
 extern void refreshFullState(void);
 extern void refreshPresetMode(void);
+
+uint16_t midiCombineBytes(uint8_t first, uint8_t second)
+{
+   uint16_t _14bit;
+   _14bit = (uint16_t)second;
+   _14bit <<= 7;
+   _14bit |= (uint16_t)first;
+   return _14bit;
+}
 
 static void sysexSend(uint8_t command, int16_t size)
 {
@@ -145,7 +155,14 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,velocity!=0,((velocity+1)<<9)-1,0);
+	if(arp_getMode()==amOff)
+	{
+		assigner_assignNote(intNote,velocity!=0,(((uint32_t)velocity+1)<<9)-1,0);
+	}
+	else
+	{
+		arp_assignNote(intNote,velocity!=0);
+	}
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -164,7 +181,14 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,0,0,0);
+	if(arp_getMode()==amOff)
+	{
+		assigner_assignNote(intNote,0,0,0);
+	}
+	else
+	{
+		arp_assignNote(intNote,0);
+	}
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -189,6 +213,10 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		refreshPresetMode();
 		refreshFullState();
 	}
+	else if (control==1) // modwheel
+	{
+		synth_wheelEvent(0,value<<9,2);
+	}
 	
 	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
 		return;
@@ -199,7 +227,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 
 		currentPreset.continuousParameters[param]&=0x01fc;
 		currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-		ui.presetModified=1;	
+		ui_setPresetModified(1);	
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
 	{
@@ -207,17 +235,17 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 
 		currentPreset.continuousParameters[param]&=0xfe00;
 		currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-		ui.presetModified=1;	
+		ui_setPresetModified(1);	
 	}
 	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
 	{
 		param=control-MIDI_BASE_STEPPED_CC;
 		
 		currentPreset.steppedParameters[param]=value>>(7-steppedParametersBits[param]);
-		ui.presetModified=1;	
+		ui_setPresetModified(1);	
 	}
 
-	if(ui.presetModified)
+	if(ui_isPresetModified())
 		refreshFullState();
 }
 
@@ -231,12 +259,25 @@ static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t p
 		if(preset_loadCurrent(program))
 		{
 			settings.presetNumber=program;
-			ui.lastActivePot=ppNone;
-			ui.presetModified=0;
+			ui_setPresetModified(0);	
 			settings_save();		
 			refreshFullState();
 		}
 	}
+}
+
+static void midi_pitchBendEvent(MidiDevice * device, uint8_t channel, uint8_t v1, uint8_t v2)
+{
+	if(!midiFilterChannel(channel))
+		return;
+
+	int16_t value;
+	
+	value=midiCombineBytes(v1,v2);
+	value-=0x2000;
+	value<<=2;
+	
+	synth_wheelEvent(value,0,1);
 }
 
 static void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
@@ -261,6 +302,7 @@ void midi_init(void)
 	midi_register_noteoff_callback(&midi,midi_noteOffEvent);
 	midi_register_cc_callback(&midi,midi_ccEvent);
 	midi_register_progchange_callback(&midi,midi_progChangeEvent);
+	midi_register_pitchbend_callback(&midi,midi_pitchBendEvent);
 	midi_register_sysex_callback(&midi,midi_sysexEvent);
 	
 	sysexSize=0;
