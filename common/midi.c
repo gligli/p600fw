@@ -295,6 +295,11 @@ static void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uin
 		sysexReceiveByte(b2);
 }
 
+static void midi_realtimeEvent(MidiDevice * device, uint8_t event)
+{
+	synth_realtimeEvent(event);
+}
+
 static void midi_sendFunc(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
 {
 	if(count>0)
@@ -318,6 +323,7 @@ void midi_init(void)
 	midi_register_progchange_callback(&midi,midi_progChangeEvent);
 	midi_register_pitchbend_callback(&midi,midi_pitchBendEvent);
 	midi_register_sysex_callback(&midi,midi_sysexEvent);
+	midi_register_realtime_callback(&midi,midi_realtimeEvent);
 	
 	sysexSize=0;
 }

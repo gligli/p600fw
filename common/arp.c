@@ -5,12 +5,15 @@
 #include "arp.h"
 
 #include "assigner.h"
+#include "storage.h"
 
 #define ARP_NOTE_MEMORY 128 // must stay>=128 for up/down mode
 
 #define ARP_NOTE_HELD_FLAG 0x80
 
 #define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
+
+const uint16_t extClockDividers[16] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3};
 
 static struct
 {
@@ -71,7 +74,12 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 	// stop previous assigned notes
 	
 	if(mode!=arp.mode)
+	{
 		killAllNotes();
+		
+		if(settings.syncMode!=smInternal)
+			arp_resetCounter();
+	}
 	
 	if(hold!=arp.hold)
 	{
@@ -87,7 +95,15 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 
 inline void arp_setSpeed(uint16_t speed)
 {
-	arp.speed=exponentialCourse(speed,22000.0f,500.0f);
+	if(settings.syncMode==smInternal)
+		arp.speed=exponentialCourse(speed,22000.0f,500.0f);
+	else
+		arp.speed=extClockDividers[speed>>12];
+}
+
+void arp_resetCounter(void)
+{
+	arp.counter=INT16_MAX; // start on a note
 }
 
 inline arpMode_t arp_getMode(void)
@@ -108,7 +124,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 	{
 		// if this is the first note, make sure the arp will start on it as as soon as we update
 		
-		if(isEmpty())
+		if(isEmpty() && settings.syncMode==smInternal)
 			arp.counter=INT16_MAX; // not UINT16_MAX, to avoid overflow
 
 		// assign note			

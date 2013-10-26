@@ -20,6 +20,7 @@
 #include "import.h"
 #include "ui.h"
 #include "midi.h"
+#include "../xnormidi/midi.h"
 
 #define POT_DEAD_ZONE 512
 
@@ -69,7 +70,7 @@ struct synth_s
 	uint32_t modulationDelayStart;
 	uint16_t modulationDelayTickCount;
 	
-	int8_t pendingSyncTick;
+	uint8_t pendingExtClock;
 } synth;
 
 extern void refreshAllPresetButtons(void);
@@ -570,6 +571,13 @@ static void handleBitInputs(void)
 		arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:2);
 	}
 
+	// tape in
+	
+	if(settings.syncMode==smTape && cur&BIT_INTPUT_TAPE_IN && !(last&BIT_INTPUT_TAPE_IN))
+	{
+		++synth.pendingExtClock;
+	}
+	
 	// this must stay last
 	
 	last=cur;
@@ -750,10 +758,6 @@ void synth_update(void)
 		// tuned CVs
 
 	computeTunedCVs(wheelUpdate,-1);
-	
-	// bit inputs (footswitch / tape in)
-	
-	handleBitInputs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -834,12 +838,22 @@ void synth_timerInterrupt(void)
 		++currentTick;
 		break;
 	case 1:
-		if(arp_getMode()!=amOff && (settings.syncMode==smInternal || synth.pendingSyncTick))
+		// bit inputs (footswitch / tape in)
+	
+		handleBitInputs();
+		
+		// arpeggiator
+
+		if(arp_getMode()!=amOff && (settings.syncMode==smInternal || synth.pendingExtClock))
 		{
-			synth.pendingSyncTick=0;
+			if(synth.pendingExtClock)
+				--synth.pendingExtClock;
+			
 			arp_update();
 		}
 
+		// glide
+		
 		if(synth.gliding)
 		{
 			for(v=0;v<SYNTH_VOICE_COUNT;++v)
@@ -955,4 +969,21 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 	// pass to MIDI out
 	
 	midi_sendWheelEvent(bend,modulation,mask);
+}
+
+void synth_realtimeEvent(uint8_t midiEvent)
+{
+	if(settings.syncMode!=smMIDI)
+		return;
+	
+	switch(midiEvent)
+	{
+		case MIDI_CLOCK:
+			++synth.pendingExtClock;
+			break;
+		case MIDI_START:
+			arp_resetCounter();
+			synth.pendingExtClock=0;
+			break;
+	}
 }
