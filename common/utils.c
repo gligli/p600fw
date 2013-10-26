@@ -3,7 +3,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "utils.h"
-#include "print.h"
 
 inline uint16_t satAddU16U16(uint16_t a, uint16_t b)
 {
@@ -41,24 +40,31 @@ inline uint16_t satAddU16S16(uint16_t a, int16_t b)
 
 inline uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
 {
-	return a+(x*((b-a)>>8));
+	return a+((x*(b-a))>>8);
 }
 
-inline uint16_t computeShape(uint32_t phase, const uint16_t lookup[])
+inline uint16_t computeShape(uint32_t phase, const uint16_t lookup[], int8_t interpolate)
 {
 	uint8_t ai,bi,x;
 	uint16_t a,b;
+	
+	if(interpolate)
+	{
+		x=phase>>8;
+		bi=ai=phase>>16;
 
-	x=phase>>8;
-	bi=ai=phase>>16;
+		if(ai<UINT8_MAX)
+			bi=ai+1;
 
-	if(ai<UINT8_MAX)
-		bi=ai+1;
+		a=lookup[ai];
+		b=lookup[bi];
 
-	a=lookup[ai];
-	b=lookup[bi];
-
-	return lerp(a,b,x);
+		return lerp(a,b,x);
+	}
+	else
+	{
+		return lookup[phase>>16];
+	}
 }
 
 #ifdef AVR
@@ -124,4 +130,14 @@ inline uint32_t lfsr(uint32_t v, uint8_t taps)
 uint16_t exponentialCourse(uint16_t v, float ratio, float range)
 {
 	return expf(-(float)v/ratio)*range;
+}
+
+int uint16Compare(const void * a,const void * b)
+{
+	if (*(uint16_t*)a==*(uint16_t*)b)
+		return 0;
+	else if (*(uint16_t*)a < *(uint16_t*)b)
+		return -1;
+	else
+		return 1;
 }

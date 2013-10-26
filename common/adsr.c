@@ -92,7 +92,7 @@ static LOWERCODESIZE void updateIncrements(struct adsr_s * adsr)
 static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], int8_t isExp)
 {
 	if(isExp)
-		return computeShape(phase,lookup);
+		return computeShape(phase,lookup,0);
 	else
 		return phase>>8; // 20bit -> 16 bit
 }
@@ -124,22 +124,40 @@ static NOINLINE void handlePhaseOverflow(struct adsr_s * a)
 
 LOWERCODESIZE void adsr_setCVs(struct adsr_s * adsr, uint16_t atk, uint16_t dec, uint16_t sus, uint16_t rls, uint16_t lvl, uint8_t mask)
 {
-	if(mask&0x01)
+	int8_t m=mask&0x80;
+	
+	if(mask&0x01 && adsr->attackCV!=atk)
+	{
+		m=1;
 		adsr->attackCV=atk;
+	}
 	
-	if(mask&0x02)
+	if(mask&0x02 && adsr->decayCV!=dec)
+	{
+		m=1;
 		adsr->decayCV=dec;
+	}
 	
-	if(mask&0x04)
+	if(mask&0x04 && adsr->sustainCV!=sus)
+	{
+		m=1;
 		adsr->sustainCV=sus;
+	}
 	
-	if(mask&0x08)
+	if(mask&0x08 && adsr->releaseCV!=rls)
+	{
+		m=1;
 		adsr->releaseCV=rls;
+	}
 	
-	if(mask&0x10)
+	if(mask&0x10 && adsr->levelCV!=lvl)
+	{
+		m=1;
 		adsr->levelCV=lvl;
+	}
 
-	updateIncrements(adsr);
+	if(m)
+		updateIncrements(adsr);
 }
 
 void adsr_setGate(struct adsr_s * a, int8_t gate)
