@@ -19,7 +19,7 @@ const struct uiParam_s uiParameters[] =
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
 	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod delay"},
 	/*5*/ {.type=ptCust,.number=2,.name="amp shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vca"}},
+	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Velo"},

@@ -215,6 +215,10 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	}
 	else if(control==1) // modwheel
 	{
+		// make sure the synth pot won't conflict
+		if(ui.lastActivePot==ppModWheel)
+			ui.lastActivePot=ppNone;
+
 		synth_wheelEvent(0,value<<9,2);
 	}
 	
@@ -276,6 +280,10 @@ static void midi_pitchBendEvent(MidiDevice * device, uint8_t channel, uint8_t v1
 	value=midiCombineBytes(v1,v2);
 	value-=0x2000;
 	value<<=2;
+	
+	// make sure the synth pot won't conflict
+	if(ui.lastActivePot==ppPitchWheel)
+		ui.lastActivePot=ppNone;
 	
 	synth_wheelEvent(value,0,1);
 }

@@ -190,37 +190,48 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	}
 }
 
-void computeBenderCVs(int8_t computeAmount)
+int16_t getAdjustedBenderAmount(void)
 {
-	int32_t bend,amt;
+	int32_t amt;
 	uint16_t pos;
+
+	pos=potmux_getValue(ppPitchWheel);
+
+	// compute adjusted bender amount
+
+	amt=pos;
+
+	if(amt<settings.benderMiddle)
+	{
+		amt=settings.benderMiddle-amt;
+		amt*=INT16_MIN;
+		amt/=settings.benderMiddle;
+	}
+	else
+	{
+		amt-=settings.benderMiddle;
+		amt*=INT16_MAX;
+		amt/=UINT16_MAX-settings.benderMiddle;
+	}
+
+	return MIN(MAX(amt,INT16_MIN),INT16_MAX);
+}
+
+void computeBenderCVs(void)
+{
+	int32_t bend;
 	p600CV_t cv;
 
-	if(computeAmount)
-	{
-		pos=potmux_getValue(ppPitchWheel);
-
-		// compute adjusted bender amount
-
-		amt=pos;
-
-		if(amt<settings.benderMiddle)
-		{
-			amt=settings.benderMiddle-amt;
-			amt*=INT16_MIN;
-			amt/=settings.benderMiddle;
-		}
-		else
-		{
-			amt-=settings.benderMiddle;
-			amt*=INT16_MAX;
-			amt/=UINT16_MAX-settings.benderMiddle;
-		}
-		synth.benderAmount=MIN(MAX(amt,INT16_MIN),INT16_MAX);
-	}
-	
 	// compute bends
 	
+		// reset old bends
+		
+	for(cv=pcOsc1A;cv<=pcFil6;++cv)
+		synth.benderCVs[cv]=0;
+	synth.benderVolumeCV=0;
+	
+		// compute new
+
 	switch(currentPreset.steppedParameters[spBenderTarget])
 	{
 	case modVCO:
@@ -465,7 +476,7 @@ void refreshFullState(void)
 	refreshAssignerSettings();
 	refreshLfoSettings();
 	refreshEnvSettings();
-	computeBenderCVs(0);
+	computeBenderCVs();
 	
 	refreshSevenSeg();
 }
@@ -653,10 +664,8 @@ void synth_init(void)
 
 void synth_update(void)
 {
-	int8_t wheelChange,wheelUpdate;
 	uint8_t potVal;
 	static uint8_t frc=0;
-	static uint32_t bendChangeStart=0;
 	
 	// toggle tape out (debug)
 
@@ -694,7 +703,7 @@ void synth_update(void)
 		if(ui.lastActivePot==ppModWheel)
 			synth_wheelEvent(0,potmux_getValue(ppModWheel),2);
 		else if(ui.lastActivePot==ppPitchWheel)
-			synth_wheelEvent((int32_t)potmux_getValue(ppPitchWheel)+INT16_MIN,0,1);
+			synth_wheelEvent(getAdjustedBenderAmount(),0,1);
 
 		if(potmux_hasChanged(ui.lastActivePot))
 			refreshEnvSettings();
@@ -737,27 +746,9 @@ void synth_update(void)
 		break;
 	}
 
-	// CV computations
+	// tuned CVs
 
-		// bender
-	
-	wheelChange=potmux_hasChanged(ppPitchWheel);
-	wheelUpdate=wheelChange || bendChangeStart+TICKER_1S>currentTick;
-	
-	if(wheelUpdate)
-	{
-		computeBenderCVs(1);
-
-		// volume bending
-		sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
-		
-		if(wheelChange)
-			bendChangeStart=currentTick;
-	}
-
-		// tuned CVs
-
-	computeTunedCVs(wheelUpdate,-1);
+	computeTunedCVs(0,-1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -956,7 +947,7 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 	if(mask&1)
 	{
 		synth.benderAmount=bend;
-		computeBenderCVs(0);
+		computeBenderCVs();
 		computeTunedCVs(1,-1);
 	}
 	
