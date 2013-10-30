@@ -18,21 +18,25 @@ void uart_init(void)
 
 void NOINLINE uart_send(uint8_t data)
 {
-	BLOCK_INT
-	{
 		uint8_t status;
 
-		// wait until previous byte is transmitted
-		
-		do
+	// wait until previous byte is transmitted
+
+	do
+	{
+		BLOCK_INT
 		{
 			status=mem_read(0xe000);
-			CYCLE_WAIT(4);
 		}
-		while(!(status&0x02));
 		
-		// send the new one
-		
+		CYCLE_WAIT(4);
+	}
+	while(!(status&0x02));
+
+	// send the new one
+
+	BLOCK_INT
+	{
 		mem_write(0x6001,data);
 		CYCLE_WAIT(4);
 	}
