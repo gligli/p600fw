@@ -6,7 +6,7 @@
 #include "uart_6850.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 2
+#define STORAGE_VERSION 3
 
 #define STORAGE_MAGIC 0x006116a5
 #define STORAGE_MAX_SIZE 512
@@ -182,6 +182,10 @@ LOWERCODESIZE int8_t settings_load(void)
 	BLOCK_INT
 	{
 		storageLoad(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
+
+		// defaults
+
+		settings.voiceMask=0x3f;
 
 		if (storage.version<1)
 			return 0;
