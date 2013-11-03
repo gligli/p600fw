@@ -1,25 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="88">
+<configurationDescriptor version="90">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <logicalFolder name="f1" displayName="xnormidi" projectFiles="true">
+        <itemPath>../xnormidi/bytequeue/bytequeue.h</itemPath>
+        <itemPath>../xnormidi/bytequeue/interrupt_setting.h</itemPath>
+        <itemPath>../xnormidi/midi.h</itemPath>
+        <itemPath>../xnormidi/midi_device.h</itemPath>
+        <itemPath>../xnormidi/midi_function_types.h</itemPath>
+        <itemPath>../xnormidi/sysex_tools.h</itemPath>
+      </logicalFolder>
       <itemPath>../common/adsr.h</itemPath>
       <itemPath>../common/adsr_lookups.h</itemPath>
+      <itemPath>../common/arp.h</itemPath>
       <itemPath>../common/assigner.h</itemPath>
       <itemPath>../common/dac.h</itemPath>
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/hardware.h</itemPath>
       <itemPath>hardware_impl.h</itemPath>
+      <itemPath>../common/import.h</itemPath>
       <itemPath>../common/lfo.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
-      <itemPath>../common/p600.h</itemPath>
+      <itemPath>../common/midi.h</itemPath>
       <itemPath>../common/potmux.h</itemPath>
       <itemPath>print.h</itemPath>
       <itemPath>../common/scanner.h</itemPath>
+      <itemPath>../common/sh.h</itemPath>
       <itemPath>../common/storage.h</itemPath>
       <itemPath>../common/synth.h</itemPath>
       <itemPath>../common/tuner.h</itemPath>
+      <itemPath>../common/uart_6850.h</itemPath>
+      <itemPath>../common/ui.h</itemPath>
       <itemPath>../common/utils.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -29,18 +42,29 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <logicalFolder name="xnormidi" displayName="xnormidi" projectFiles="true">
+        <itemPath>../xnormidi/bytequeue/bytequeue.c</itemPath>
+        <itemPath>../xnormidi/midi.c</itemPath>
+        <itemPath>../xnormidi/midi_device.c</itemPath>
+        <itemPath>../xnormidi/sysex_tools.c</itemPath>
+      </logicalFolder>
       <itemPath>../common/adsr.c</itemPath>
+      <itemPath>../common/arp.c</itemPath>
       <itemPath>../common/assigner.c</itemPath>
       <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
+      <itemPath>../common/import.c</itemPath>
       <itemPath>../common/lfo.c</itemPath>
-      <itemPath>../common/p600.c</itemPath>
+      <itemPath>../common/midi.c</itemPath>
       <itemPath>p600mockup.c</itemPath>
       <itemPath>../common/potmux.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
+      <itemPath>../common/sh.c</itemPath>
       <itemPath>../common/storage.c</itemPath>
       <itemPath>../common/synth.c</itemPath>
       <itemPath>../common/tuner.c</itemPath>
+      <itemPath>../common/uart_6850.c</itemPath>
+      <itemPath>../common/ui.c</itemPath>
       <itemPath>../common/utils.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -55,15 +79,21 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../common</Elem>
+    <Elem>../xnormidi</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="2">
       <toolsSet>
-        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
+          <standard>3</standard>
           <incDir>
             <pElem>../common</pElem>
             <pElem>.</pElem>
@@ -79,6 +109,10 @@
       </item>
       <item path="../common/adsr_lookups.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/arp.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/arp.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/assigner.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/assigner.h" ex="false" tool="3" flavor2="0">
@@ -93,15 +127,19 @@
       </item>
       <item path="../common/hardware.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/import.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/import.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/lfo.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/lfo.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/map_to_7segment.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../common/p600.c" ex="false" tool="0" flavor2="0">
+      <item path="../common/midi.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="../common/p600.h" ex="false" tool="3" flavor2="0">
+      <item path="../common/midi.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/potmux.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -110,6 +148,10 @@
       <item path="../common/scanner.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/scanner.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/sh.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/sh.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/storage.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -123,9 +165,40 @@
       </item>
       <item path="../common/tuner.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/uart_6850.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/uart_6850.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/ui.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/ui.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/utils.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/utils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/bytequeue/bytequeue.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/bytequeue/bytequeue.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/bytequeue/interrupt_setting.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../xnormidi/midi.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi_device.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi_device.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi_function_types.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/sysex_tools.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/sysex_tools.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="hardware_impl.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -136,8 +209,9 @@
     </conf>
     <conf name="Release" type="2">
       <toolsSet>
-        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
         <compilerSet>default</compilerSet>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -159,6 +233,10 @@
       </item>
       <item path="../common/adsr_lookups.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/arp.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/arp.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/assigner.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/assigner.h" ex="false" tool="3" flavor2="0">
@@ -173,15 +251,19 @@
       </item>
       <item path="../common/hardware.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/import.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/import.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/lfo.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/lfo.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/map_to_7segment.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../common/p600.c" ex="false" tool="0" flavor2="0">
+      <item path="../common/midi.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="../common/p600.h" ex="false" tool="3" flavor2="0">
+      <item path="../common/midi.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/potmux.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -190,6 +272,10 @@
       <item path="../common/scanner.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/scanner.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/sh.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/sh.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../common/storage.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -203,9 +289,40 @@
       </item>
       <item path="../common/tuner.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../common/uart_6850.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/uart_6850.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/ui.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../common/ui.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../common/utils.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/utils.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/bytequeue/bytequeue.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/bytequeue/bytequeue.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/bytequeue/interrupt_setting.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../xnormidi/midi.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi_device.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi_device.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/midi_function_types.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../xnormidi/sysex_tools.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="../xnormidi/sysex_tools.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="hardware_impl.h" ex="false" tool="3" flavor2="0">
       </item>

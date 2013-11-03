@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include "p600.h"
+#include "synth.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Mockup implementation of low level interface that can be loaded in the emulator
@@ -38,6 +38,12 @@ uint8_t io_read(uint8_t address)
 	return emu_read(1,address);
 }
 
+int8_t hardware_getNMIState(void)
+{
+	return 0;
+}
+
+
 void print(const char *s)
 {
 	char c;
@@ -67,20 +73,42 @@ void phex16(unsigned int i)
 	phex(i);
 }
 
+int random(void)
+{
+	return rand();
+}
+
+void srandom(unsigned int s)
+{
+	srand(s);
+}
+
+
+#include "../xnormidi/bytequeue/interrupt_setting.h"
+
+interrupt_setting_t store_and_clear_interrupt(void) {
+   return 0;
+}
+
+void restore_interrupt_setting(interrupt_setting_t setting) {
+}
+
+
 __declspec(dllexport) __stdcall void emu_init(emu_write_t write,emu_read_t read, emu_debug_t debug)
 {
 	emu_write=write;
 	emu_read=read;
 	emu_debug=debug;
 
-	p600_init();
+	synth_init();
 }
 
 __declspec(dllexport) __stdcall void emu_start(void)
 {
-	p600_update();
-	p600_fastInterrupt();
-	p600_slowInterrupt();
+	synth_update();
+	
+	for(int i=0;i<10;++i)
+		synth_timerInterrupt();
 }
 
 
@@ -95,19 +123,3 @@ void storage_read(uint32_t pageIdx, uint8_t *buf)
 {
 	memcpy(buf,&storage[pageIdx*STORAGE_PAGE_SIZE],STORAGE_PAGE_SIZE);
 }
-
-
-void wait(uint8_t cycles)
-{
-	// emu doesn't care about timing
-}
-
-void int_clear(void)
-{
-	// no ints, done in tick
-}
-
-void int_set(void)
-{
-	// no ints, done in tick
-}	

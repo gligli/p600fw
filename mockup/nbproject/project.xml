@@ -9,7 +9,10 @@
             <header-extensions>h</header-extensions>
             <sourceEncoding>ISO-8859-15</sourceEncoding>
             <make-dep-projects/>
-            <sourceRootList/>
+            <sourceRootList>
+                <sourceRootElem>../common</sourceRootElem>
+                <sourceRootElem>../xnormidi</sourceRootElem>
+            </sourceRootList>
             <confList>
                 <confElem>
                     <name>Debug</name>
@@ -20,6 +23,9 @@
                     <type>2</type>
                 </confElem>
             </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
         </data>
     </configuration>
 </project>
