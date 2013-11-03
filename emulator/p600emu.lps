@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="19">
+    <Units Count="20">
       <Unit0>
         <Filename Value="p600emu.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -22,7 +22,6 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FMain"/>
-        <EditorIndex Value="1"/>
         <WindowIndex Value="0"/>
         <TopLine Value="104"/>
         <CursorPos X="54" Y="120"/>
@@ -48,7 +47,7 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="112"/>
+        <TopLine Value="135"/>
         <CursorPos X="7" Y="157"/>
         <UsageCount Value="84"/>
         <Bookmarks Count="1">
@@ -182,6 +181,14 @@
         <CursorPos X="46" Y="2730"/>
         <UsageCount Value="10"/>
       </Unit18>
+      <Unit19>
+        <Filename Value="..\common\adsr.c"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="61"/>
+        <CursorPos X="66" Y="155"/>
+        <UsageCount Value="10"/>
+        <DefaultSyntaxHighlighter Value="C++"/>
+      </Unit19>
     </Units>
     <General>
       <ActiveWindowIndexAtStart Value="0"/>
@@ -189,123 +196,123 @@
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="675" Column="82" TopLine="547"/>
+        <Caret Line="685" Column="44" TopLine="643"/>
       </Position1>
       <Position2>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="422" Column="23" TopLine="370"/>
+        <Caret Line="284" Column="35" TopLine="259"/>
       </Position2>
       <Position3>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="149" Column="22" TopLine="134"/>
+        <Caret Line="44" Column="15" TopLine="14"/>
       </Position3>
       <Position4>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="351" Column="19" TopLine="321"/>
+        <Caret Line="146" Column="20" TopLine="108"/>
       </Position4>
       <Position5>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="685" Column="44" TopLine="643"/>
+        <Caret Line="152" Column="11" TopLine="138"/>
       </Position5>
       <Position6>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="284" Column="35" TopLine="259"/>
+        <Caret Line="200" Column="10" TopLine="194"/>
       </Position6>
       <Position7>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="44" Column="15" TopLine="14"/>
+        <Caret Line="8" Column="52" TopLine="1"/>
       </Position7>
       <Position8>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="146" Column="20" TopLine="108"/>
+        <Caret Line="194" Column="15" TopLine="153"/>
       </Position8>
       <Position9>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="152" Column="11" TopLine="138"/>
+        <Caret Line="192" Column="10" TopLine="162"/>
       </Position9>
       <Position10>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="200" Column="10" TopLine="194"/>
+        <Caret Line="194" Column="5" TopLine="164"/>
       </Position10>
       <Position11>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="8" Column="52" TopLine="1"/>
+        <Caret Line="216" Column="2" TopLine="185"/>
       </Position11>
       <Position12>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="194" Column="15" TopLine="153"/>
+        <Caret Line="203" Column="1" TopLine="185"/>
       </Position12>
       <Position13>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="192" Column="10" TopLine="162"/>
+        <Caret Line="204" Column="1" TopLine="185"/>
       </Position13>
       <Position14>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="194" Column="5" TopLine="164"/>
+        <Caret Line="206" Column="1" TopLine="185"/>
       </Position14>
       <Position15>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="216" Column="2" TopLine="185"/>
+        <Caret Line="207" Column="1" TopLine="185"/>
       </Position15>
       <Position16>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="203" Column="1" TopLine="185"/>
+        <Caret Line="208" Column="1" TopLine="185"/>
       </Position16>
       <Position17>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="204" Column="1" TopLine="185"/>
+        <Caret Line="210" Column="1" TopLine="185"/>
       </Position17>
       <Position18>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="206" Column="1" TopLine="185"/>
+        <Caret Line="211" Column="1" TopLine="185"/>
       </Position18>
       <Position19>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="207" Column="1" TopLine="185"/>
+        <Caret Line="197" Column="49" TopLine="167"/>
       </Position19>
       <Position20>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="208" Column="1" TopLine="185"/>
+        <Caret Line="202" Column="65" TopLine="167"/>
       </Position20>
       <Position21>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="210" Column="1" TopLine="185"/>
+        <Caret Line="225" Column="43" TopLine="187"/>
       </Position21>
       <Position22>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="211" Column="1" TopLine="185"/>
+        <Caret Line="203" Column="9" TopLine="177"/>
       </Position22>
       <Position23>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="197" Column="49" TopLine="167"/>
+        <Caret Line="414" Column="5" TopLine="393"/>
       </Position23>
       <Position24>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="202" Column="65" TopLine="167"/>
+        <Caret Line="670" Column="68" TopLine="590"/>
       </Position24>
       <Position25>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="225" Column="43" TopLine="187"/>
+        <Caret Line="75" Column="15" TopLine="44"/>
       </Position25>
       <Position26>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="203" Column="9" TopLine="177"/>
+        <Caret Line="88" Column="14" TopLine="61"/>
       </Position26>
       <Position27>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="414" Column="5" TopLine="393"/>
+        <Caret Line="432" Column="18" TopLine="398"/>
       </Position27>
       <Position28>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="670" Column="68" TopLine="590"/>
+        <Caret Line="133" Column="20" TopLine="83"/>
       </Position28>
       <Position29>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="75" Column="15" TopLine="44"/>
+        <Caret Line="607" Column="35" TopLine="573"/>
       </Position29>
       <Position30>
         <Filename Value="p600emuclasses.pas"/>
-        <Caret Line="88" Column="14" TopLine="61"/>
+        <Caret Line="525" Column="56" TopLine="495"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

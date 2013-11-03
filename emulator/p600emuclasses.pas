@@ -242,7 +242,7 @@ end;
 procedure T8253Timer.WriteReg(AReg, AValue: Byte);
 var cmd:Byte;
 begin
-  DebugLn(['W ',Areg,' ',AValue,' ',binStr(AValue,8)]);
+//  DebugLn(['W ',Areg,' ',AValue,' ',binStr(AValue,8)]);
   if AReg = $03 then
   begin
     // control word
@@ -324,7 +324,7 @@ begin
     end;
   end;
 
-  DebugLn(['R ',Areg,' ',Result,' ',binStr(Result,8)]);
+//  DebugLn(['R ',Areg,' ',Result,' ',binStr(Result,8)]);
 end;
 
 procedure T8253Timer.RunCycles(AChannel: Byte; ACount: Integer);
@@ -629,7 +629,7 @@ begin
         end;
         $06:
         begin
-          debugln(['W ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(AValue,2),' (',AValue,')']);
+//          debugln(['W ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(AValue,2),' (',AValue,')']);
 
           // tune
           F8253.SetGate(2,AValue and $02 <> 0); // Cntr En
@@ -680,7 +680,7 @@ begin
           Result:=Result or $04;
         if ADCCompare then
           Result:=Result or $08;
-        debugln(['R ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(Result,2),' (',Result,')']);
+//        debugln(['R ',Ord(AIsIO),' ',hexStr(AAddress,4),' ',hexStr(Result,2),' (',Result,')']);
       end
       else if AAddress and $03 = $02 then // CSI1 (switch matrix)
       begin
