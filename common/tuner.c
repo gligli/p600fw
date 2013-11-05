@@ -129,10 +129,10 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 {
 	uint32_t res=0;
 	
-	//
+	// display / start maintainting CV
 	
-	sh_update();
-	sh_maintainCV(tuner.currentCV,0);
+	for(int8_t i=0;i<5;++i)
+		whileTuning();
 			
 	// prepare flip flop
 	
@@ -157,7 +157,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	while(periods)
 	{
 		ffMask(0,FF_P);
-		ffWaitStatus(0); // check
+//		ffWaitStatus(0); // check
 
 		ffMask(FF_P,0);
 		ffWaitStatus(1); // wait 
@@ -166,7 +166,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 		ffWaitStatus(0); // wait
 
 		ffMask(0,FF_CL);
-		ffWaitStatus(1); // check
+//		ffWaitStatus(1); // check
 
 		ffMask(FF_CL,0);
 		ffWaitStatus(0); // wait
@@ -177,7 +177,10 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 		// detect untunable osc		
 
 		if (ff_timeoutCount>=STATUS_TIMEOUT_MAX_FAILURES)
-			return UINT32_MAX;
+		{
+			res=UINT32_MAX;
+			break;
+		}
 
 		// reload fake clock
 		
@@ -189,8 +192,9 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 		res+=getPeriod();
 
 		whileTuning();
-	
 	}
+	
+	// stop maintainting CV
 	
 	sh_maintainCV(tuner.currentCV,1);
 	
@@ -272,11 +276,6 @@ static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 
 	sh_setCV(ampCV,UINT16_MAX,0);
 	
-	// done many times, to ensure all CVs are at correct voltage
-	
-	for(i=0;i<20;++i)
-		sh_update();
-
 	// tune
 
 	if (isOsc)
