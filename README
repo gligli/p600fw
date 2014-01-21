@@ -18,6 +18,18 @@ Installation and usage
 
 See documentation...
 
+Compiling the Firmware
+======================
+
+Requirements:
+- AVR-GCC cross-compiler (e.g. on Windows: "WinAVR", on Mac: "CrossPack for AVR")
+- "Teensy Loader" for flashing the compiled firmware to the physical device (http://www.pjrc.com/teensy/loader.html)
+
+> cd firmware
+> make
+
+This will produce p600firmware.hex, which you can flash onto your Teensy++ using the Teensy Loader.
+
 History
 =======
 
