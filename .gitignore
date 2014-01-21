@@ -3,3 +3,15 @@
 *.d
 *.bak
 *.ppu
+
+firmware/p600firmware.bin
+
+firmware/p600firmware.elf
+
+firmware/p600firmware.hex
+
+firmware/p600firmware.lss
+
+firmware/p600firmware.map
+
+firmware/p600firmware.syx
