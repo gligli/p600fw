@@ -40,7 +40,7 @@ inline uint16_t satAddU16S16(uint16_t a, int16_t b)
 
 inline uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
 {
-	return a+((x*(b-a))>>8);
+	return a+(x*((b-a)>>8));
 }
 
 inline uint16_t computeShape(uint32_t phase, const uint16_t lookup[], int8_t interpolate)
