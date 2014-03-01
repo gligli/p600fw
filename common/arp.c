@@ -40,7 +40,7 @@ static int8_t isEmpty(void)
 static void finishPreviousNote(void)
 {
 	if(arp.previousNote!=ASSIGNER_NO_NOTE)
-		assigner_assignNote(arp.previousNote&~ARP_NOTE_HELD_FLAG,0,0,0);
+		assigner_assignNote(arp.previousNote&~ARP_NOTE_HELD_FLAG,0,0,0,1);
 }
 
 static void killAllNotes(void)
@@ -220,7 +220,7 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG,1,UINT16_MAX,0);
+	assigner_assignNote(arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG,1,UINT16_MAX,0,1);
 	
 	arp.previousNote=arp.notes[arp.noteIndex];
 }

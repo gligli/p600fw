@@ -204,7 +204,7 @@ int8_t assigner_getAnyPressed(void)
 	return v!=0;
 }
 
-void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato)
+void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato, int8_t outputToMidi)
 {
 	uint32_t timestamp;
 	uint16_t oldVel;
@@ -256,7 +256,7 @@ reassign:
 				assigner.allocation[v].note=n;
 				assigner.allocation[v].timestamp=timestamp;
 
-				synth_assignerEvent(n,1,v,velocity,legato);
+				synth_assignerEvent(n,1,v,velocity,legato,outputToMidi);
 				
 				do
 					v=(v+1)%SYNTH_VOICE_COUNT;
@@ -300,7 +300,7 @@ reassign:
 				}
 				else
 				{
-					synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
+					synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0,outputToMidi);
 				}
 			}
 

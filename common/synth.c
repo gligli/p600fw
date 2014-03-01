@@ -698,15 +698,14 @@ void synth_update(void)
 
 	// update CVs
 
-	if(ui.lastActivePot!=ppNone)
+	if(ui.lastActivePot!=ppNone && potmux_hasChanged(ui.lastActivePot))
 	{
 		if(ui.lastActivePot==ppModWheel)
-			synth_wheelEvent(0,potmux_getValue(ppModWheel),2);
+			synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1);
 		else if(ui.lastActivePot==ppPitchWheel)
-			synth_wheelEvent(getAdjustedBenderAmount(),0,1);
+			synth_wheelEvent(getAdjustedBenderAmount(),0,1,1);
 
-		if(potmux_hasChanged(ui.lastActivePot))
-			refreshEnvSettings();
+		refreshEnvSettings();
 	}
 	
 	switch(frc&0x03) // 4 phases
@@ -882,7 +881,7 @@ void synth_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
-		assigner_assignNote(key,pressed,UINT16_MAX,0);
+		assigner_assignNote(key,pressed,UINT16_MAX,0,1);
 	}
 	else
 	{
@@ -890,7 +889,7 @@ void synth_keyEvent(uint8_t key, int pressed)
 	}
 }
 
-void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato)
+void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato, int8_t outputToMidi)
 {
 	uint16_t velAmt;
 	
@@ -922,7 +921,8 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 	
 	// pass to MIDI out
 	
-	midi_sendNoteEvent(note,gate,velocity);
+	if(outputToMidi)
+		midi_sendNoteEvent(note,gate,velocity);
 	
 #ifdef DEBUG
 	print("assign note ");
@@ -942,7 +942,7 @@ void synth_uartEvent(uint8_t data)
 	midi_newData(data);
 }
 
-void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
+void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi)
 {
 	if(mask&1)
 	{
@@ -959,7 +959,8 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 	
 	// pass to MIDI out
 	
-	midi_sendWheelEvent(bend,modulation,mask);
+	if(outputToMidi)
+		midi_sendWheelEvent(bend,modulation,mask);
 }
 
 void synth_realtimeEvent(uint8_t midiEvent)
