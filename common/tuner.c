@@ -387,9 +387,9 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		sh_setCV(pcMVol,0,0);
 #endif
 
-		sh_setGate(pgASaw,1);
+		sh_setGate(pgASaw,0);
 		sh_setGate(pgATri,0);
-		sh_setGate(pgBSaw,1);
+		sh_setGate(pgBSaw,0);
 		sh_setGate(pgBTri,0);
 		sh_setGate(pgPModFA,0);
 		sh_setGate(pgPModFil,0);
@@ -415,9 +415,14 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		
 		sh_setCV(pcResonance,0,0);
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
+		{
+			sh_setCV(pcAmp1+i,0,0);
 			sh_setCV(pcFil1+i,UINT16_MAX,0);
+		}
 	
 			// A oscs
+
+		sh_setGate(pgASaw,1);
 
 		sh_setCV(pcVolA,UINT16_MAX,0);
 		sh_setCV(pcVolB,0,0);
@@ -425,13 +430,19 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			tuneCV(pcOsc1A+i,pcAmp1+i);
 
-			// B oscs
+		sh_setGate(pgASaw,0);
+		
+		// B oscs
+
+		sh_setGate(pgBSaw,1);
 
 		sh_setCV(pcVolA,0,0);
 		sh_setCV(pcVolB,UINT16_MAX,0);
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			tuneCV(pcOsc1B+i,pcAmp1+i);
+
+		sh_setGate(pgBSaw,0);
 
 		// tune filters
 			
