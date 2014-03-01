@@ -13,7 +13,7 @@
 
 #define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
 
-const uint16_t extClockDividers[16] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3};
+const uint16_t extClockDividers[18] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2,1};
 
 static struct
 {
@@ -98,7 +98,7 @@ inline void arp_setSpeed(uint16_t speed)
 	if(settings.syncMode==smInternal)
 		arp.speed=exponentialCourse(speed,22000.0f,500.0f);
 	else
-		arp.speed=extClockDividers[speed>>12];
+		arp.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
 }
 
 void arp_resetCounter(void)
