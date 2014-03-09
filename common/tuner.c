@@ -85,7 +85,21 @@ static NOINLINE void ffMask(uint8_t set,uint8_t clear)
 	++ff_step;
 }
 
-static NOINLINE void ffWaitStatus(uint8_t status)
+static NOINLINE void ffDoTimeout(void)
+{
+	++ff_timeoutCount;
+#ifdef DEBUG
+	print("bad flip flop status : ");
+	phex(ff_step);
+	phex(s);
+	print(" timeout count : ");
+	phex(ff_timeoutCount);
+	print("\n");
+#endif	
+}
+
+
+static void ffWaitStatus(uint8_t status)
 {
 	uint8_t s;
 	uint32_t timeout=STATUS_TIMEOUT;
@@ -95,19 +109,22 @@ static NOINLINE void ffWaitStatus(uint8_t status)
 		--timeout;
 	}while(((s>>1)&0x01)!=status && timeout);
 
+	if (!timeout)
+		ffDoTimeout();
+}
+
+static void ffWaitCounter(uint8_t status)
+{
+	uint8_t s;
+	uint32_t timeout=STATUS_TIMEOUT;
+
+	do{
+		s=io_read(0x9);
+		--timeout;
+	}while(((s>>2)&0x01)!=status && timeout);
 
 	if (!timeout)
-	{
-		++ff_timeoutCount;
-#ifdef DEBUG
-		print("bad flip flop status : ");
-		phex(ff_step);
-		phex(s);
-		print(" timeout count : ");
-		phex(ff_timeoutCount);
-		print("\n");
-#endif	
-	}
+		ffDoTimeout();
 }
 
 static NOINLINE uint16_t getPeriod(void)
@@ -118,10 +135,14 @@ static NOINLINE uint16_t getPeriod(void)
 	c=i8253Read(0x1);
 	c|=i8253Read(0x1)<<8;
 
-	// ch1 reload 0
+		// ch1 load 0
 	i8253Write(0x1,0x00);
 	i8253Write(0x1,0x00);
-
+	
+		// ch2 load 1
+	i8253Write(0x2,0x01);
+	i8253Write(0x2,0x00);
+	
 	return UINT16_MAX-c;
 }
 
@@ -131,8 +152,11 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	// display / start maintainting CV
 	
-	for(int8_t i=0;i<5;++i)
+	for(int8_t i=0;i<10;++i)
+	{
 		whileTuning();
+		MDELAY(1);
+	}
 			
 	// prepare flip flop
 	
@@ -142,56 +166,50 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	// prepare 8253
 	
-		// ch1 load 0
-	i8253Write(0x1,0x00);
-	i8253Write(0x1,0x00);
+	getPeriod();
 	
-		// ch2 load 1
-	i8253Write(0x2,0x01);
-	i8253Write(0x2,0x00);
-	
-	// flip flop stuff //TODO: EXPLAIN
+	// flip flop stuff (CF sevice manual section 2-16)
 		
-	ffMask(CNTR_EN,0);
-	
 	while(periods)
 	{
-		ffMask(0,FF_P);
-//		ffWaitStatus(0); // check
+		// init
 
-		ffMask(FF_P,0);
-		ffWaitStatus(1); // wait 
+		ffMask(CNTR_EN,0);
 
-		ffMask(FF_D,0);
-		ffWaitStatus(0); // wait
+		ffMask(FF_D,FF_P);
+		ffWaitStatus(0);
+
+		ffMask(FF_P,FF_CL);
+		ffWaitStatus(1);
+
+		// start
+		
+		ffMask(FF_CL,0);
+		ffWaitCounter(0);
 
 		ffMask(0,FF_CL);
-//		ffWaitStatus(1); // check
-
 		ffMask(FF_CL,0);
-		ffWaitStatus(0); // wait
-
-		ffMask(0,FF_D);
-		ffWaitStatus(1); // wait
+		ffWaitCounter(1);
 		
-		// detect untunable osc		
+		// reset
 
-		if (ff_timeoutCount>=STATUS_TIMEOUT_MAX_FAILURES)
-		{
-			res=UINT32_MAX;
-			break;
-		}
-
-		// reload fake clock
+		ffMask(0,CNTR_EN|FF_D);
 		
-		ffMask(0,CNTR_EN);
-		ffMask(CNTR_EN,0);
+		// get result / display / ...
 		
 		--periods;
 
 		res+=getPeriod();
 
 		whileTuning();
+
+		// detect untunable osc		
+		
+		if (ff_timeoutCount>=STATUS_TIMEOUT_MAX_FAILURES)
+		{
+			res=UINT32_MAX;
+			break;
+		}
 	}
 	
 	// stop maintainting CV
