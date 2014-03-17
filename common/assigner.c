@@ -204,7 +204,7 @@ int8_t assigner_getAnyPressed(void)
 	return v!=0;
 }
 
-void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato, int8_t outputToMidi)
+void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato)
 {
 	uint32_t timestamp;
 	uint16_t oldVel;
@@ -256,7 +256,7 @@ reassign:
 				assigner.allocation[v].note=n;
 				assigner.allocation[v].timestamp=timestamp;
 
-				synth_assignerEvent(n,1,v,velocity,legato,outputToMidi);
+				synth_assignerEvent(n,1,v,velocity,legato);
 				
 				do
 					v=(v+1)%SYNTH_VOICE_COUNT;
@@ -300,7 +300,7 @@ reassign:
 				}
 				else
 				{
-					synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0,outputToMidi);
+					synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
 				}
 			}
 
@@ -329,6 +329,12 @@ void assigner_voiceDone(int8_t voice)
 			assigner.allocation[v].rootNote=ASSIGNER_NO_NOTE;
 			assigner.allocation[v].timestamp=0;
 		}
+	
+	if(voice<0)
+	{
+		// also remove any stuck notes
+		memset(assigner.noteStates,0,sizeof(assigner.noteStates));
+	}
 }
 
 LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)

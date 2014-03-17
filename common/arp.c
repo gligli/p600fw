@@ -6,6 +6,7 @@
 
 #include "assigner.h"
 #include "storage.h"
+#include "midi.h"
 
 #define ARP_NOTE_MEMORY 128 // must stay>=128 for up/down mode
 
@@ -40,7 +41,14 @@ static int8_t isEmpty(void)
 static void finishPreviousNote(void)
 {
 	if(arp.previousNote!=ASSIGNER_NO_NOTE)
-		assigner_assignNote(arp.previousNote&~ARP_NOTE_HELD_FLAG,0,0,0,1);
+	{
+		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
+		
+		assigner_assignNote(n,0,0,0);
+		
+		// pass to MIDI out
+		midi_sendNoteEvent(n,0,0);
+	}
 }
 
 static void killAllNotes(void)
@@ -175,6 +183,8 @@ void arp_assignNote(uint8_t note, int8_t on)
 
 void arp_update(void)
 {
+	uint8_t n;
+	
 	// arp off -> nothing to do
 	
 	if(arp.mode==amOff)
@@ -218,10 +228,16 @@ void arp_update(void)
 		return;
 	}
 	
+	n=arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG;
+	
 	// send note to assigner
 	
-	assigner_assignNote(arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG,1,UINT16_MAX,0,1);
+	assigner_assignNote(n,1,UINT16_MAX,0);
 	
+	// pass to MIDI out
+
+	midi_sendNoteEvent(n,1,UINT16_MAX);
+
 	arp.previousNote=arp.notes[arp.noteIndex];
 }
 

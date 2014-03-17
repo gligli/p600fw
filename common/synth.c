@@ -892,7 +892,10 @@ void synth_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
-		assigner_assignNote(key,pressed,UINT16_MAX,0,1);
+		assigner_assignNote(key,pressed,UINT16_MAX,0);
+
+		// pass to MIDI out
+		midi_sendNoteEvent(key,pressed,UINT16_MAX);
 	}
 	else
 	{
@@ -900,7 +903,7 @@ void synth_keyEvent(uint8_t key, int pressed)
 	}
 }
 
-void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato, int8_t outputToMidi)
+void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato)
 {
 	uint16_t velAmt;
 	
@@ -929,11 +932,6 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 		velAmt=currentPreset.continuousParameters[cpAmpVelocity];
 		adsr_setCVs(&synth.ampEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 	}
-	
-	// pass to MIDI out
-	
-	if(outputToMidi)
-		midi_sendNoteEvent(note,gate,velocity);
 	
 #ifdef DEBUG
 	print("assign note ");
