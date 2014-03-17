@@ -430,9 +430,17 @@ static void refreshSevenSeg(void)
 {
 	if(ui.digitInput<diLoadDecadeDigit)
 	{
-		uint8_t v=ui.manualActivePotValue;
-		sevenSeg_setNumber(v);
-		led_set(plDot,v>99,v>199);
+		if(ui.manualActivePotValue>=0)
+		{
+			uint8_t v=ui.manualActivePotValue;
+			sevenSeg_setNumber(v);
+			led_set(plDot,v>99,v>199);
+		}
+		else
+		{
+			sevenSeg_setAscii(' ',' ');
+			led_set(plDot,0,0);
+		}
 	}
 	else
 	{
@@ -504,7 +512,7 @@ void refreshPresetMode(void)
 		refreshPresetPots(1);
 	}
 	
-	ui.lastActivePot=ppNone;
+	ui_setNoActivePot();
 	ui.presetModified=0;
 	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
 }
@@ -687,25 +695,28 @@ void synth_update(void)
 
 	refreshPresetPots(!settings.presetMode);
 
-	// has to stay outside of previous if, so that finer pot values changes can also be displayed
-	
-	potVal=potmux_getValue(ui.lastActivePot)>>8;
-	if(potVal!=ui.manualActivePotValue)
+	if(ui.lastActivePot!=ppNone)
 	{
-		ui.manualActivePotValue=potVal;
-		refreshSevenSeg();
-	}
+		// has to stay outside of previous if, so that finer pot values changes can also be displayed
 
-	// update CVs
+		potVal=potmux_getValue(ui.lastActivePot)>>8;
+		if(potVal!=ui.manualActivePotValue)
+		{
+			ui.manualActivePotValue=potVal;
+			refreshSevenSeg();
+		}
 
-	if(ui.lastActivePot!=ppNone && potmux_hasChanged(ui.lastActivePot))
-	{
-		if(ui.lastActivePot==ppModWheel)
-			synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1);
-		else if(ui.lastActivePot==ppPitchWheel)
-			synth_wheelEvent(getAdjustedBenderAmount(),0,1,1);
+		// update CVs
 
-		refreshEnvSettings();
+		if(potmux_hasChanged(ui.lastActivePot))
+		{
+			if(ui.lastActivePot==ppModWheel)
+				synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1);
+			else if(ui.lastActivePot==ppPitchWheel)
+				synth_wheelEvent(getAdjustedBenderAmount(),0,1,1);
+
+			refreshEnvSettings();
+		}
 	}
 	
 	switch(frc&0x03) // 4 phases

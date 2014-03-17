@@ -111,7 +111,7 @@ static void refreshPresetButton(p600Button_t button)
 	}
 }
 
-void refreshAllPresetButtons(void)
+LOWERCODESIZE void refreshAllPresetButtons(void)
 {
 	p600Button_t b;
 	for(b=pbASqr;b<=pbUnison;++b)
@@ -216,6 +216,77 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	}
 }
 
+static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
+{
+	int8_t br[]={3,5,12};
+	int8_t mr[]={5,3,1,0};
+
+	switch(num)
+	{
+	case 0: // lfo shape 
+		currentPreset.steppedParameters[spLFOShape]=(currentPreset.steppedParameters[spLFOShape]&1) | (data<<1);
+		break;
+	case 1: // lfo tgt
+		currentPreset.steppedParameters[spLFOTargets]&=~(mtOnlyA|mtOnlyB);
+		if(data==1)
+			currentPreset.steppedParameters[spLFOTargets]|=mtOnlyA;
+		else if(data==2)
+			currentPreset.steppedParameters[spLFOTargets]|=mtOnlyB;
+		break;					
+	case 2: // amp shape
+		currentPreset.steppedParameters[spAmpEnvExpo]=1-(data&1);
+		currentPreset.steppedParameters[spAmpEnvSlow]=(data&2)>>1;
+		break;
+	case 3: // fil shape 
+		currentPreset.steppedParameters[spFilEnvExpo]=1-(data&1);
+		currentPreset.steppedParameters[spFilEnvSlow]=(data&2)>>1;
+		break;
+	case 4: // bend range 
+		currentPreset.steppedParameters[spBenderSemitones]=br[data];
+		break;
+	case 5: // mod range
+		currentPreset.steppedParameters[spModwheelShift]=mr[data];
+		break;
+	}
+}
+
+static LOWERCODESIZE void displayUIParameter(int8_t num)
+{
+	int8_t i;
+	char s[20];
+	const struct uiParam_s * prm = &uiParameters[ui.activeParamIdx];
+
+	ui_setNoActivePot();
+	
+	strcpy(s,prm->name);
+	strcat(s," = ");
+	
+	switch(prm->type)
+	{
+	case ptCont:
+		ui.manualActivePotValue=currentPreset.continuousParameters[prm->number]>>8;
+		break;
+	case ptStep:
+		strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
+		break;
+	case ptCust:
+		// reverse lookup for uiParam value (assumes only steppedParameters will be modified)
+		memcpy(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters));
+		for(i=0;i<4;++i)
+		{
+			setCustomParameter(prm->number,i);
+			if(!memcmp(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters)))
+			{
+				strcat(s,prm->values[i]);
+				break;
+			}
+		}
+		break;
+	}
+	
+	sevenSeg_scrollText(s,1);
+}
+
 static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 {
 	int8_t prev,new;
@@ -237,15 +308,22 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	
 	if(ui.activeParamIdx!=prev)
 	{
-		// display param name
+		// display param name + value
 		
-		sevenSeg_scrollText(uiParameters[ui.activeParamIdx].name,1);
+		displayUIParameter(ui.activeParamIdx);
 		
 		// save manual preset
 		
 		if(!settings.presetMode)
 			preset_saveCurrent(MANUAL_PRESET_PAGE);
 	}
+}
+
+void ui_setNoActivePot(void)
+{
+	potmux_resetChanged();
+	ui.lastActivePot=ppNone;
+	ui.manualActivePotValue=-1;
 }
 
 FORCEINLINE void ui_setPresetModified(int8_t modified)
@@ -261,7 +339,7 @@ FORCEINLINE int8_t ui_isPresetModified(void)
 void ui_dataPotChanged(void)
 {
 	ui.lastActivePot=potmux_lastChanged();
-		
+	
 	if(ui.lastActivePot!=ppSpeed)
 		return;
 	
@@ -282,7 +360,7 @@ void ui_dataPotChanged(void)
 			break;
 		case ptStep:
 		case ptCust:
-			ui.lastActivePot=ppNone;
+			ui_setNoActivePot();
 			
 			valCount=0;
 			while(valCount<4 && prm.values[valCount]!=NULL)
@@ -299,36 +377,7 @@ void ui_dataPotChanged(void)
 			}
 			else
 			{
-				int8_t br[]={3,5,12};
-				int8_t mr[]={5,3,1,0};
-	
-				switch(prm.number)
-				{
-				case 0: // lfo shape 
-					currentPreset.steppedParameters[spLFOShape]=(currentPreset.steppedParameters[spLFOShape]&1) | (data<<1);
-					break;
-				case 1: // lfo tgt
-					currentPreset.steppedParameters[spLFOTargets]&=~(mtOnlyA|mtOnlyB);
-					if(data==1)
-						currentPreset.steppedParameters[spLFOTargets]|=mtOnlyA;
-					else if(data==2)
-						currentPreset.steppedParameters[spLFOTargets]|=mtOnlyB;
-					break;					
-				case 2: // amp shape
-					currentPreset.steppedParameters[spAmpEnvExpo]=1-(data&1);
-					currentPreset.steppedParameters[spAmpEnvSlow]=(data&2)>>1;
-					break;
-				case 3: // fil shape 
-					currentPreset.steppedParameters[spFilEnvExpo]=1-(data&1);
-					currentPreset.steppedParameters[spFilEnvSlow]=(data&2)>>1;
-					break;
-				case 4: // bend range 
-					currentPreset.steppedParameters[spBenderSemitones]=br[data];
-					break;
-				case 5: // mod range
-					currentPreset.steppedParameters[spModwheelShift]=mr[data];
-					break;
-				}
+				setCustomParameter(prm.number,data);
 			}
 
 			ui.previousData=data;
@@ -496,6 +545,7 @@ void ui_init(void)
 	ui.digitInput=diSynth;
 	ui.presetAwaitingNumber=-1;
 	ui.lastActivePot=ppNone;
+	ui.manualActivePotValue=-1;
 	ui.presetModified=1;
 	ui.activeParamIdx=-1;
 }
