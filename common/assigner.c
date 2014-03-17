@@ -329,12 +329,6 @@ void assigner_voiceDone(int8_t voice)
 			assigner.allocation[v].rootNote=ASSIGNER_NO_NOTE;
 			assigner.allocation[v].timestamp=0;
 		}
-	
-	if(voice<0)
-	{
-		// also remove any stuck notes
-		memset(assigner.noteStates,0,sizeof(assigner.noteStates));
-	}
 }
 
 LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)
