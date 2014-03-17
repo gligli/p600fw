@@ -91,7 +91,7 @@ static NOINLINE void ffDoTimeout(void)
 #ifdef DEBUG
 	print("bad flip flop status : ");
 	phex(ff_step);
-	phex(s);
+	phex(io_read(0x9));
 	print(" timeout count : ");
 	phex(ff_timeoutCount);
 	print("\n");
