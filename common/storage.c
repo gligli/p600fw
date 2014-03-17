@@ -378,8 +378,6 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 
 LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 {
-	int8_t i;
-
 	BLOCK_INT
 	{
 		memset(&currentPreset,0,sizeof(currentPreset));
@@ -391,9 +389,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-
-		for(i=0;i<SYNTH_VOICE_COUNT;++i)
-			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;	
+		currentPreset.continuousParameters[cpSeqArpClock]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpVibFreq]=UINT16_MAX/2;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modVCO;
