@@ -351,7 +351,11 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 static void refreshAssignerSettings(void)
 {
-	assigner_setPattern(currentPreset.voicePattern,currentPreset.steppedParameters[spUnison]);
+	if(currentPreset.steppedParameters[spUnison])
+		assigner_setPattern(currentPreset.voicePattern,1);
+	else
+		assigner_setPoly();
+		
 	assigner_setVoiceMask(settings.voiceMask);
 	assigner_setPriority(currentPreset.steppedParameters[spAssignerPriority]);
 }

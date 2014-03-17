@@ -399,6 +399,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spModwheelShift]=1;
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		
+		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
+
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
 	}
