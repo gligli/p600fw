@@ -446,6 +446,11 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			assigner_setPoly();
 		}
 		assigner_getPattern(currentPreset.voicePattern,NULL);
+
+		// save manual preset
+		
+		if(!settings.presetMode)
+			preset_saveCurrent(MANUAL_PRESET_PAGE);
 	}
 
 	// digit buttons use
