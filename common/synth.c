@@ -388,8 +388,7 @@ static void refreshLfoSettings(void)
 {
 	lfoShape_t shape;
 	uint8_t shift;
-	int8_t dlyMod;
-	uint16_t mwAmt,lfoAmt,vibAmt;
+	uint16_t mwAmt,lfoAmt,vibAmt,dlyAmt;
 
 	shape=currentPreset.steppedParameters[spLFOShape];
 	shift=1+currentPreset.steppedParameters[spLFOShift]*3;
@@ -397,7 +396,11 @@ static void refreshLfoSettings(void)
 	lfo_setShape(&synth.lfo,shape);
 	lfo_setSpeedShift(&synth.lfo,shift);
 	
-	dlyMod=currentTick-synth.modulationDelayStart>synth.modulationDelayTickCount;
+	// about half a second to reach full modulation strength
+	dlyAmt=0;
+	if(synth.modulationDelayStart!=UINT32_MAX)
+		dlyAmt=MIN(255,MAX(0,(int32_t)(currentTick-synth.modulationDelayStart)-(int32_t)synth.modulationDelayTickCount))<<8;
+	
 	mwAmt=synth.modwheelAmount>>currentPreset.steppedParameters[spModwheelShift];
 
 	lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
@@ -413,13 +416,13 @@ static void refreshLfoSettings(void)
 				satAddU16U16(lfoAmt,mwAmt));
 		lfo_setCVs(&synth.vibrato,
 				 currentPreset.continuousParameters[cpVibFreq],
-				 dlyMod?vibAmt:0);
+				 scaleU16U16(vibAmt,dlyAmt));
 	}
 	else
 	{
 		lfo_setCVs(&synth.lfo,
 				currentPreset.continuousParameters[cpLFOFreq],
-				dlyMod?lfoAmt:0);
+				scaleU16U16(lfoAmt,dlyAmt));
 		lfo_setCVs(&synth.vibrato,
 				currentPreset.continuousParameters[cpVibFreq],
 				satAddU16U16(vibAmt,mwAmt));
