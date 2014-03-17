@@ -41,6 +41,7 @@ struct ui_s ui;
 extern void refreshFullState(void);
 extern void refreshPresetMode(void);
 extern void computeBenderCVs(void);
+extern int16_t getAdjustedBenderAmount(void);
 
 static void refreshPresetButton(p600Button_t button)
 {
@@ -151,7 +152,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		settings.benderMiddle=potmux_getValue(ppPitchWheel);
 		settings_save();
 
-		computeBenderCVs();
+		synth_wheelEvent(getAdjustedBenderAmount(),0,1,0); // immediate update
 
 		sevenSeg_scrollText("bender calibrated",1);
 	}
