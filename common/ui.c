@@ -30,7 +30,7 @@ const struct uiParam_s uiParameters[] =
 	/*3*/ {.type=ptCust,.number=5,.name="mod range",.values={"min","low","high","full"}},
 	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
 	/*5*/ {.type=ptCust,.number=3,.name="fil shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptCust,.number=4,.name="bend range",.values={"3rd","5th","Oct"}},
+	/*6*/ {.type=ptCust,.number=4,.name="bend range",.values={"2nd","3rd","5th","Oct"}},
 	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
 	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semitone","octaVe"}},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Velo"},
@@ -219,7 +219,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 {
-	int8_t br[]={3,5,12};
+	int8_t br[]={2,3,5,12};
 	int8_t mr[]={5,3,1,0};
 
 	switch(num)
