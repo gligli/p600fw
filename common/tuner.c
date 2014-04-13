@@ -40,8 +40,6 @@ static struct
 
 static LOWERCODESIZE void whileTuning(void)
 {
-	sh_maintainCV(tuner.currentCV,1);
-
 	// display current osc
 	if(tuner.currentCV<pcOsc1B)
 		sevenSeg_setAscii('a','1'+tuner.currentCV-pcOsc1A);
@@ -54,8 +52,6 @@ static LOWERCODESIZE void whileTuning(void)
 
 	// full update once in a while
 	sh_update();
-
-	sh_maintainCV(tuner.currentCV,0);
 }
 
 static void i8253Write(uint8_t a,uint8_t v)
@@ -150,13 +146,10 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 {
 	uint32_t res=0;
 	
-	// display / start maintainting CV
+	// display / start maintainting CVs
 	
-	for(int8_t i=0;i<10;++i)
-	{
+	for(int8_t i=0;i<30;++i) // lower this and eg. filter tuning starts behaving badly
 		whileTuning();
-		MDELAY(1);
-	}
 			
 	// prepare flip flop
 	
@@ -211,10 +204,6 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 			break;
 		}
 	}
-	
-	// stop maintainting CV
-	
-	sh_maintainCV(tuner.currentCV,1);
 	
 	return res;
 }
@@ -450,7 +439,7 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 
 		sh_setGate(pgASaw,0);
 		
-		// B oscs
+			// B oscs
 
 		sh_setGate(pgBSaw,1);
 
