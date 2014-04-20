@@ -74,7 +74,7 @@ struct synth_s
 } synth;
 
 extern void refreshAllPresetButtons(void);
-
+extern const uint16_t attackCurveLookup[]; // for modulation delay
 
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
@@ -393,6 +393,7 @@ static void refreshLfoSettings(void)
 	lfoShape_t shape;
 	uint8_t shift;
 	uint16_t mwAmt,lfoAmt,vibAmt,dlyAmt;
+	uint32_t elapsed;
 
 	shape=currentPreset.steppedParameters[spLFOShape];
 	shift=1+currentPreset.steppedParameters[spLFOShift]*3;
@@ -400,10 +401,24 @@ static void refreshLfoSettings(void)
 	lfo_setShape(&synth.lfo,shape);
 	lfo_setSpeedShift(&synth.lfo,shift);
 	
-	// about half a second to reach full modulation strength
+	// wait modulationDelayTickCount then progressively increase over
+	// modulationDelayTickCount time, following an exponential curve
 	dlyAmt=0;
 	if(synth.modulationDelayStart!=UINT32_MAX)
-		dlyAmt=MIN(255,MAX(0,(int32_t)(currentTick-synth.modulationDelayStart)-(int32_t)synth.modulationDelayTickCount))<<8;
+	{
+		if(currentPreset.continuousParameters[cpModDelay]==0)
+		{
+			dlyAmt=UINT16_MAX;
+		}
+		else if(currentTick>=synth.modulationDelayStart+synth.modulationDelayTickCount)
+		{
+			elapsed=currentTick-(synth.modulationDelayStart+synth.modulationDelayTickCount);
+			if(elapsed>=synth.modulationDelayTickCount)
+				dlyAmt=UINT16_MAX;
+			else
+				dlyAmt=attackCurveLookup[(elapsed<<8)/synth.modulationDelayTickCount];
+		}
+	}
 	
 	mwAmt=synth.modwheelAmount>>currentPreset.steppedParameters[spModwheelShift];
 
