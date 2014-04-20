@@ -127,7 +127,7 @@ static void storageWriteS8(int8_t v)
 	storage.bufPtr+=sizeof(v);
 }
 
-static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
+static LOWERCODESIZE int8_t storageLoad(uint16_t pageIdx, uint8_t pageCount)
 {
 	uint16_t i;
 	
@@ -140,13 +140,17 @@ static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 	if(storageRead32()!=STORAGE_MAGIC)
 	{
 #ifdef DEBUG
-		print("Error: bad page !\n"); 
+		print("Error: bad page: "); 
+		phex(pageIdx);
+		print("\n");
 #endif	
 		memset(storage.buffer,0,sizeof(storage.buffer));
-		return;
+		return 0;
 	}
 
 	storage.version=storageRead8();
+	
+	return 1;
 }
 
 static LOWERCODESIZE void storagePrepareStore(void)
@@ -181,14 +185,15 @@ LOWERCODESIZE int8_t settings_load(void)
 	
 	BLOCK_INT
 	{
-		storageLoad(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
+		if (!storageLoad(SETTINGS_PAGE,SETTINGS_PAGE_COUNT))
+			return 0;
 
 		// defaults
 
 		settings.voiceMask=0x3f;
 
 		if (storage.version<1)
-			return 0;
+			return 1;
 
 		// v1
 
@@ -272,7 +277,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 	
 	BLOCK_INT
 	{
-		storageLoad(number,1);
+		if(!storageLoad(number,1))
+			return 0;
 
 		// defaults
 		
@@ -281,7 +287,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
 		
 		if (storage.version<1)
-			return 0;
+			return 1;
 
 		// v1
 		

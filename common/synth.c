@@ -643,11 +643,6 @@ void synth_init(void)
 	lfo_setShape(&synth.vibrato,lsTri);
 	lfo_setSpeedShift(&synth.vibrato,4);
 	
-	// initial input state
-	
-	scanner_update(1);
-	potmux_update(POTMUX_POT_COUNT);
-
 	// manual preset
 	
 	if(!preset_loadCurrent(MANUAL_PRESET_PAGE))
@@ -666,6 +661,11 @@ void synth_init(void)
 		tuner_tuneSynth();
 #endif	
 	}
+
+	// initial input state
+	
+	scanner_update(1);
+	potmux_update(POTMUX_POT_COUNT);
 
 	// load last preset & do a full refresh
 	
@@ -899,7 +899,7 @@ void synth_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
-		assigner_assignNote(key,pressed,UINT16_MAX,0);
+		assigner_assignNote(key,pressed,UINT16_MAX);
 
 		// pass to MIDI out
 		midi_sendNoteEvent(key,pressed,UINT16_MAX);

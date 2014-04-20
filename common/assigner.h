@@ -16,7 +16,7 @@ void assigner_setVoiceMask(uint8_t mask);
 int8_t assigner_getAssignment(int8_t voice, uint8_t * note);
 int8_t assigner_getAnyPressed(void);
 
-void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato);
+void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity);
 void assigner_voiceDone(int8_t voice); // -1 -> all voices finished
 
 void assigner_setPattern(uint8_t * pattern, int8_t mono);

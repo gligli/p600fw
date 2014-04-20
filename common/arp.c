@@ -44,7 +44,7 @@ static void finishPreviousNote(void)
 	{
 		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
 		
-		assigner_assignNote(n,0,0,0);
+		assigner_assignNote(n,0,0);
 		
 		// pass to MIDI out
 		midi_sendNoteEvent(n,0,0);
@@ -232,7 +232,7 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(n,1,UINT16_MAX,0);
+	assigner_assignNote(n,1,UINT16_MAX);
 	
 	// pass to MIDI out
 

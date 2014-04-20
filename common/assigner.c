@@ -93,7 +93,7 @@ static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		return firstFree;
 }
 
-static inline int8_t getDispensableVoice(uint8_t note, int8_t * stolenHeld)
+static inline int8_t getDispensableVoice(uint8_t note)
 {
 	int8_t v,res=-1;
 	uint32_t ts;
@@ -113,8 +113,6 @@ static inline int8_t getDispensableVoice(uint8_t note, int8_t * stolenHeld)
 			res=v;
 		}
 	}
-	
-	*stolenHeld=0;
 	
 	if(res>=0)
 		return res;
@@ -153,8 +151,6 @@ static inline int8_t getDispensableVoice(uint8_t note, int8_t * stolenHeld)
 			break;
 		}
 	}
-	
-	*stolenHeld=1;
 	
 	return res;
 }
@@ -204,13 +200,13 @@ int8_t assigner_getAnyPressed(void)
 	return v!=0;
 }
 
-void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t forceLegato)
+void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity)
 {
 	uint32_t timestamp;
 	uint16_t oldVel;
 	uint8_t restoredNote;
-	int8_t v,vi,i,legato,stolenHeld;
-	int16_t n;
+	int8_t v,vi,i,legato=0,forceLegato=0;
+	int16_t ni,n;
 	
 	setNoteState(note,gate);
 
@@ -220,48 +216,63 @@ void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity, int8_t fo
 reassign:
 
 		timestamp=currentTick;
-		legato=forceLegato;
-	
-		// first, try to get a free voice
 
-		v=getAvailableVoice(note,timestamp);
-
-		// no free voice, try to steal one
-
-		if(v<0)
+		if(assigner.mono)
 		{
-			v=getDispensableVoice(note,&stolenHeld);
-			legato|=stolenHeld && assigner.priority!=apLast;
+			// just handle legato & priority
+			
+			v=0;
+			legato=forceLegato;
+
+			if(assigner.priority!=apLast)
+				for(n=0;n<128;++n)
+					if(n!=note && getNoteState(n))
+					{
+						if (note>n && assigner.priority==apLow)
+							return;
+						if (note<n && assigner.priority==apHigh)
+							return;
+						
+						legato=1;
+					}
+		}
+		else
+		{
+			// first, try to get a free voice
+
+			v=getAvailableVoice(note,timestamp);
+
+			// no free voice, try to steal one
+
+			if(v<0)
+				v=getDispensableVoice(note);
+
+			// we might still have no voice
+
+			if(v<0)
+				return;
 		}
 
-		// we might still have no voice
+		// try to assign the whole pattern of notes
 
-		if(v>=0)
+		for(vi=0;vi<SYNTH_VOICE_COUNT;++vi)
 		{
-			if(assigner.mono)
-				v=0;
-			
-			// try to assign the whole pattern of notes
+			if(assigner.patternOffsets[vi]==ASSIGNER_NO_NOTE)
+				break;
 
-			for(vi=0;vi<SYNTH_VOICE_COUNT;++vi)
-			{
-				if(assigner.patternOffsets[vi]==ASSIGNER_NO_NOTE)
-					break;
-				
-				n=note+assigner.patternOffsets[vi];
+			n=note+assigner.patternOffsets[vi];
 
-				assigner.allocation[v].assigned=1;
-				assigner.allocation[v].velocity=velocity;
-				assigner.allocation[v].rootNote=note;
-				assigner.allocation[v].note=n;
-				assigner.allocation[v].timestamp=timestamp;
+			assigner.allocation[v].assigned=1;
+			assigner.allocation[v].velocity=velocity;
+			assigner.allocation[v].rootNote=note;
+			assigner.allocation[v].note=n;
+			assigner.allocation[v].timestamp=timestamp;
 
-				synth_assignerEvent(n,1,v,velocity,legato);
-				
-				do
-					v=(v+1)%SYNTH_VOICE_COUNT;
-				while(isVoiceDisabled(v));
-			}
+			synth_assignerEvent(n,1,v,velocity,legato);
+
+			do
+				v=(v+1)%SYNTH_VOICE_COUNT;
+			while(isVoiceDisabled(v));
 		}
 	}
 	else
@@ -271,7 +282,13 @@ reassign:
 
 		// some still triggered notes might have been stolen, find them
 
-		for(n=0;n<128;++n)
+		for(ni=0;ni<128;++ni)
+		{
+			if(assigner.priority==apHigh)
+				n=127-ni;
+			else
+				n=ni;
+			
 			if(getNoteState(n))
 			{
 				i=0;
@@ -288,6 +305,7 @@ reassign:
 					break;
 				}
 			}
+		}
 
 		// hitting a note spawns a pattern of note, not just one
 
