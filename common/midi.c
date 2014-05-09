@@ -155,7 +155,7 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,velocity!=0,(((uint32_t)velocity+1)<<9)-1,0);
+	assigner_assignNote(intNote,velocity!=0,(((uint32_t)velocity+1)<<9)-1);
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -174,7 +174,7 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	intNote=note-MIDI_BASE_NOTE;
 	intNote=MAX(0,intNote);
 	
-	assigner_assignNote(intNote,0,0,0);
+	assigner_assignNote(intNote,0,0);
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -201,11 +201,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	}
 	else if(control==1) // modwheel
 	{
-		// make sure the synth pot won't conflict
-		if(ui.lastActivePot==ppModWheel)
-			ui.lastActivePot=ppNone;
-
-		synth_wheelEvent(0,value<<9,2);
+		synth_wheelEvent(0,value<<9,2,0);
 	}
 	
 	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
@@ -267,11 +263,7 @@ static void midi_pitchBendEvent(MidiDevice * device, uint8_t channel, uint8_t v1
 	value-=0x2000;
 	value<<=2;
 	
-	// make sure the synth pot won't conflict
-	if(ui.lastActivePot==ppPitchWheel)
-		ui.lastActivePot=ppNone;
-	
-	synth_wheelEvent(value,0,1);
+	synth_wheelEvent(value,0,1,0);
 }
 
 static void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)

@@ -6,6 +6,7 @@
 
 #include "assigner.h"
 #include "storage.h"
+#include "midi.h"
 
 #define ARP_NOTE_MEMORY 128 // must stay>=128 for up/down mode
 
@@ -13,7 +14,7 @@
 
 #define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
 
-const uint16_t extClockDividers[16] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3};
+const uint16_t extClockDividers[18] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2,1};
 
 static struct
 {
@@ -40,7 +41,14 @@ static int8_t isEmpty(void)
 static void finishPreviousNote(void)
 {
 	if(arp.previousNote!=ASSIGNER_NO_NOTE)
-		assigner_assignNote(arp.previousNote&~ARP_NOTE_HELD_FLAG,0,0,0);
+	{
+		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
+		
+		assigner_assignNote(n,0,0);
+		
+		// pass to MIDI out
+		midi_sendNoteEvent(n,0,0);
+	}
 }
 
 static void killAllNotes(void)
@@ -98,7 +106,7 @@ inline void arp_setSpeed(uint16_t speed)
 	if(settings.syncMode==smInternal)
 		arp.speed=exponentialCourse(speed,22000.0f,500.0f);
 	else
-		arp.speed=extClockDividers[speed>>12];
+		arp.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
 }
 
 void arp_resetCounter(void)
@@ -175,6 +183,8 @@ void arp_assignNote(uint8_t note, int8_t on)
 
 void arp_update(void)
 {
+	uint8_t n;
+	
 	// arp off -> nothing to do
 	
 	if(arp.mode==amOff)
@@ -218,10 +228,16 @@ void arp_update(void)
 		return;
 	}
 	
+	n=arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG;
+	
 	// send note to assigner
 	
-	assigner_assignNote(arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG,1,UINT16_MAX,0);
+	assigner_assignNote(n,1,UINT16_MAX);
 	
+	// pass to MIDI out
+
+	midi_sendNoteEvent(n,1,UINT16_MAX);
+
 	arp.previousNote=arp.notes[arp.noteIndex];
 }
 

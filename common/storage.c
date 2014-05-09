@@ -127,7 +127,7 @@ static void storageWriteS8(int8_t v)
 	storage.bufPtr+=sizeof(v);
 }
 
-static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
+static LOWERCODESIZE int8_t storageLoad(uint16_t pageIdx, uint8_t pageCount)
 {
 	uint16_t i;
 	
@@ -140,13 +140,17 @@ static LOWERCODESIZE void storageLoad(uint16_t pageIdx, uint8_t pageCount)
 	if(storageRead32()!=STORAGE_MAGIC)
 	{
 #ifdef DEBUG
-		print("Error: bad page !\n"); 
+		print("Error: bad page: "); 
+		phex(pageIdx);
+		print("\n");
 #endif	
 		memset(storage.buffer,0,sizeof(storage.buffer));
-		return;
+		return 0;
 	}
 
 	storage.version=storageRead8();
+	
+	return 1;
 }
 
 static LOWERCODESIZE void storagePrepareStore(void)
@@ -181,14 +185,15 @@ LOWERCODESIZE int8_t settings_load(void)
 	
 	BLOCK_INT
 	{
-		storageLoad(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
+		if (!storageLoad(SETTINGS_PAGE,SETTINGS_PAGE_COUNT))
+			return 0;
 
 		// defaults
 
 		settings.voiceMask=0x3f;
 
 		if (storage.version<1)
-			return 0;
+			return 1;
 
 		// v1
 
@@ -272,7 +277,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 	
 	BLOCK_INT
 	{
-		storageLoad(number,1);
+		if(!storageLoad(number,1))
+			return 0;
 
 		// defaults
 		
@@ -281,7 +287,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
 		
 		if (storage.version<1)
-			return 0;
+			return 1;
 
 		// v1
 		
@@ -378,8 +384,6 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 
 LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 {
-	int8_t i;
-
 	BLOCK_INT
 	{
 		memset(&currentPreset,0,sizeof(currentPreset));
@@ -391,9 +395,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-
-		for(i=0;i<SYNTH_VOICE_COUNT;++i)
-			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;	
+		currentPreset.continuousParameters[cpSeqArpClock]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpVibFreq]=UINT16_MAX/2;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modVCO;
@@ -402,6 +405,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spModwheelShift]=1;
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		
+		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
+
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
 	}

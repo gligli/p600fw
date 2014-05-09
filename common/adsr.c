@@ -92,7 +92,7 @@ static LOWERCODESIZE void updateIncrements(struct adsr_s * adsr)
 static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], int8_t isExp)
 {
 	if(isExp)
-		return computeShape(phase,lookup,0);
+		return computeShape(phase,lookup,1);
 	else
 		return phase>>8; // 20bit -> 16 bit
 }

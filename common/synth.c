@@ -74,7 +74,7 @@ struct synth_s
 } synth;
 
 extern void refreshAllPresetButtons(void);
-
+extern const uint16_t attackCurveLookup[]; // for modulation delay
 
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
@@ -351,7 +351,11 @@ static inline void refreshPulseWidth(int8_t pwm)
 
 static void refreshAssignerSettings(void)
 {
-	assigner_setPattern(currentPreset.voicePattern,currentPreset.steppedParameters[spUnison]);
+	if(currentPreset.steppedParameters[spUnison])
+		assigner_setPattern(currentPreset.voicePattern,1);
+	else
+		assigner_setPoly();
+		
 	assigner_setVoiceMask(settings.voiceMask);
 	assigner_setPriority(currentPreset.steppedParameters[spAssignerPriority]);
 }
@@ -388,8 +392,8 @@ static void refreshLfoSettings(void)
 {
 	lfoShape_t shape;
 	uint8_t shift;
-	int8_t dlyMod;
-	uint16_t mwAmt,lfoAmt,vibAmt;
+	uint16_t mwAmt,lfoAmt,vibAmt,dlyAmt;
+	uint32_t elapsed;
 
 	shape=currentPreset.steppedParameters[spLFOShape];
 	shift=1+currentPreset.steppedParameters[spLFOShift]*3;
@@ -397,7 +401,25 @@ static void refreshLfoSettings(void)
 	lfo_setShape(&synth.lfo,shape);
 	lfo_setSpeedShift(&synth.lfo,shift);
 	
-	dlyMod=currentTick-synth.modulationDelayStart>synth.modulationDelayTickCount;
+	// wait modulationDelayTickCount then progressively increase over
+	// modulationDelayTickCount time, following an exponential curve
+	dlyAmt=0;
+	if(synth.modulationDelayStart!=UINT32_MAX)
+	{
+		if(currentPreset.continuousParameters[cpModDelay]==0)
+		{
+			dlyAmt=UINT16_MAX;
+		}
+		else if(currentTick>=synth.modulationDelayStart+synth.modulationDelayTickCount)
+		{
+			elapsed=currentTick-(synth.modulationDelayStart+synth.modulationDelayTickCount);
+			if(elapsed>=synth.modulationDelayTickCount)
+				dlyAmt=UINT16_MAX;
+			else
+				dlyAmt=attackCurveLookup[(elapsed<<8)/synth.modulationDelayTickCount];
+		}
+	}
+	
 	mwAmt=synth.modwheelAmount>>currentPreset.steppedParameters[spModwheelShift];
 
 	lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
@@ -413,13 +435,13 @@ static void refreshLfoSettings(void)
 				satAddU16U16(lfoAmt,mwAmt));
 		lfo_setCVs(&synth.vibrato,
 				 currentPreset.continuousParameters[cpVibFreq],
-				 dlyMod?vibAmt:0);
+				 scaleU16U16(vibAmt,dlyAmt));
 	}
 	else
 	{
 		lfo_setCVs(&synth.lfo,
 				currentPreset.continuousParameters[cpLFOFreq],
-				dlyMod?lfoAmt:0);
+				scaleU16U16(lfoAmt,dlyAmt));
 		lfo_setCVs(&synth.vibrato,
 				currentPreset.continuousParameters[cpVibFreq],
 				satAddU16U16(vibAmt,mwAmt));
@@ -430,9 +452,17 @@ static void refreshSevenSeg(void)
 {
 	if(ui.digitInput<diLoadDecadeDigit)
 	{
-		uint8_t v=ui.manualActivePotValue;
-		sevenSeg_setNumber(v);
-		led_set(plDot,v>99,v>199);
+		if(ui.manualActivePotValue>=0)
+		{
+			uint8_t v=ui.manualActivePotValue;
+			sevenSeg_setNumber(v);
+			led_set(plDot,v>99,v>199);
+		}
+		else
+		{
+			sevenSeg_setAscii(' ',' ');
+			led_set(plDot,0,0);
+		}
 	}
 	else
 	{
@@ -504,7 +534,7 @@ void refreshPresetMode(void)
 		refreshPresetPots(1);
 	}
 	
-	ui.lastActivePot=ppNone;
+	ui_setNoActivePot();
 	ui.presetModified=0;
 	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
 }
@@ -628,11 +658,6 @@ void synth_init(void)
 	lfo_setShape(&synth.vibrato,lsTri);
 	lfo_setSpeedShift(&synth.vibrato,4);
 	
-	// initial input state
-	
-	scanner_update(1);
-	potmux_update(POTMUX_POT_COUNT);
-
 	// manual preset
 	
 	if(!preset_loadCurrent(MANUAL_PRESET_PAGE))
@@ -651,6 +676,11 @@ void synth_init(void)
 		tuner_tuneSynth();
 #endif	
 	}
+
+	// initial input state
+	
+	scanner_update(1);
+	potmux_update(POTMUX_POT_COUNT);
 
 	// load last preset & do a full refresh
 	
@@ -687,26 +717,28 @@ void synth_update(void)
 
 	refreshPresetPots(!settings.presetMode);
 
-	// has to stay outside of previous if, so that finer pot values changes can also be displayed
-	
-	potVal=potmux_getValue(ui.lastActivePot)>>8;
-	if(potVal!=ui.manualActivePotValue)
-	{
-		ui.manualActivePotValue=potVal;
-		refreshSevenSeg();
-	}
-
-	// update CVs
-
 	if(ui.lastActivePot!=ppNone)
 	{
-		if(ui.lastActivePot==ppModWheel)
-			synth_wheelEvent(0,potmux_getValue(ppModWheel),2);
-		else if(ui.lastActivePot==ppPitchWheel)
-			synth_wheelEvent(getAdjustedBenderAmount(),0,1);
+		// has to stay outside of previous if, so that finer pot values changes can also be displayed
+
+		potVal=potmux_getValue(ui.lastActivePot)>>8;
+		if(potVal!=ui.manualActivePotValue)
+		{
+			ui.manualActivePotValue=potVal;
+			refreshSevenSeg();
+		}
+
+		// update CVs
 
 		if(potmux_hasChanged(ui.lastActivePot))
+		{
+			if(ui.lastActivePot==ppModWheel)
+				synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1);
+			else if(ui.lastActivePot==ppPitchWheel)
+				synth_wheelEvent(getAdjustedBenderAmount(),0,1,1);
+
 			refreshEnvSettings();
+		}
 	}
 	
 	switch(frc&0x03) // 4 phases
@@ -882,7 +914,10 @@ void synth_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
-		assigner_assignNote(key,pressed,UINT16_MAX,0);
+		assigner_assignNote(key,pressed,UINT16_MAX);
+
+		// pass to MIDI out
+		midi_sendNoteEvent(key,pressed,UINT16_MAX);
 	}
 	else
 	{
@@ -920,10 +955,6 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 		adsr_setCVs(&synth.ampEnvs[voice],0,0,0,0,(UINT16_MAX-velAmt)+scaleU16U16(velocity,velAmt),0x10);
 	}
 	
-	// pass to MIDI out
-	
-	midi_sendNoteEvent(note,gate,velocity);
-	
 #ifdef DEBUG
 	print("assign note ");
 	phex(note);
@@ -942,7 +973,7 @@ void synth_uartEvent(uint8_t data)
 	midi_newData(data);
 }
 
-void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
+void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi)
 {
 	if(mask&1)
 	{
@@ -959,7 +990,8 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 	
 	// pass to MIDI out
 	
-	midi_sendWheelEvent(bend,modulation,mask);
+	if(outputToMidi)
+		midi_sendWheelEvent(bend,modulation,mask);
 }
 
 void synth_realtimeEvent(uint8_t midiEvent)

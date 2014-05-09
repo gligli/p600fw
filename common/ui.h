@@ -21,7 +21,7 @@ struct ui_s
 	int8_t presetModified;
 
 	p600Pot_t lastActivePot;
-	uint8_t manualActivePotValue;
+	int16_t manualActivePotValue;
 	
 	int32_t previousData;
 	int8_t activeParamIdx;
@@ -34,6 +34,7 @@ void ui_dataPotChanged(void);
 void ui_handleButton(p600Button_t button, int pressed);
 void ui_setPresetModified(int8_t modified);
 int8_t ui_isPresetModified(void);
+void ui_setNoActivePot(void);
 
 #endif	/* UI_H */
 

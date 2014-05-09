@@ -13,7 +13,6 @@ void sh_setCV_FastPath(p600CV_t cv,uint16_t value);
 void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value);
 
 void sh_setGate(p600Gate_t gate,int8_t on);
-void sh_maintainCV(p600CV_t cv, int8_t finish);
 
 void sh_init(void);
 void sh_update(void);
