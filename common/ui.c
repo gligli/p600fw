@@ -477,6 +477,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbPreset)
 		{
+			// save manual preset
+			if(!settings.presetMode)
+				preset_saveCurrent(MANUAL_PRESET_PAGE);
+
 			settings.presetMode=settings.presetMode?0:1;
 			settings_save();
 			refreshPresetMode();
