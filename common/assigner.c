@@ -200,6 +200,17 @@ int8_t assigner_getAnyPressed(void)
 	return v!=0;
 }
 
+int8_t assigner_getAnyAssigned(void)
+{
+	int8_t i;
+	int8_t v=0;
+	
+	for(i=0;i<SYNTH_VOICE_COUNT;++i)
+		v|=assigner.allocation[i].assigned;
+	
+	return v!=0;
+}
+
 void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity)
 {
 	uint32_t timestamp;

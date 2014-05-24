@@ -279,18 +279,23 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
 
 static void refreshModulationDelay(int8_t refreshTickCount)
 {
-	int8_t anyPressed;
+	int8_t anyPressed, anyAssigned;
+	static int8_t prevAnyPressed=0;
 	
 	anyPressed=assigner_getAnyPressed();	
+	anyAssigned=assigner_getAnyAssigned();	
 	
-	if(!anyPressed)
+	if(!anyAssigned)
 	{
 		synth.modulationDelayStart=UINT32_MAX;
 	}
-	else if (synth.modulationDelayStart==UINT32_MAX)
+	
+	if(anyPressed && !prevAnyPressed)
 	{
 		synth.modulationDelayStart=currentTick;
 	}
+	
+	prevAnyPressed=anyPressed;
 	
 	if(refreshTickCount)
 		synth.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
@@ -406,7 +411,7 @@ static void refreshLfoSettings(void)
 	dlyAmt=0;
 	if(synth.modulationDelayStart!=UINT32_MAX)
 	{
-		if(currentPreset.continuousParameters[cpModDelay]==0)
+		if(currentPreset.continuousParameters[cpModDelay]<POT_DEAD_ZONE)
 		{
 			dlyAmt=UINT16_MAX;
 		}
