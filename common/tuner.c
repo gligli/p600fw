@@ -13,7 +13,7 @@
 #define FF_D	0x08
 #define FF_CL	0x10 // active low
 
-#define STATUS_TIMEOUT 200000
+#define STATUS_TIMEOUT 1000000
 #define STATUS_TIMEOUT_MAX_FAILURES 5
 
 #define TUNER_TICK 2000000.0
