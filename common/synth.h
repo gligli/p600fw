@@ -6,10 +6,16 @@
 #include "hardware.h"
 
 //#define DEBUG
+#define RELEASE "1.99"
+
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
-	#define VERSION "alpha "__DATE__
+	#ifdef RELEASE
+		#define VERSION RELEASE
+	#else
+		#define VERSION "alpha "__DATE__
+	#endif
 #else
 	#define VERSION "debug "__DATE__ " " __TIME__
 #endif
