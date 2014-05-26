@@ -71,7 +71,7 @@ inline void sh_setCV32Sat(p600CV_t cv,int32_t value, uint8_t flags)
 	sh_setCV(cv,value,flags);
 }
 
-inline void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
+FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 {
 	uint8_t dmux;
 	
@@ -86,17 +86,22 @@ inline void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 	io_write(0x0d,dmux);
 
 	// let S&H get very precise voltage (cf tohk issue)
-	CYCLE_WAIT(1)
+	CYCLE_WAIT(2)
 	
 	// deselect it
 	io_write(0x0d,0xff);
+
+	// let analog hardware stabilize
+	CYCLE_WAIT(2);
 }
 
-inline void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value)
+FORCEINLINE void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value)
 {
-	value=MAX(value,0);
-	value=MIN(value,UINT16_MAX);
-	
+	if(value<0)
+		value=0;
+	else if (value>UINT16_MAX)
+		value=UINT16_MAX;
+
 	sh_setCV_FastPath(cv,value);
 }
 
