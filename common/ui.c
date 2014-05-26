@@ -337,9 +337,9 @@ FORCEINLINE int8_t ui_isPresetModified(void)
 	return ui.presetModified;
 }
 
-void ui_dataPotChanged(void)
+void ui_checkIfDataPotChanged(void)
 {
-	ui.lastActivePot=potmux_lastChanged();
+	ui.lastActivePot = potmux_lastChanged() != ppNone ? potmux_lastChanged() :  ui.lastActivePot;
 	
 	if(ui.lastActivePot!=ppSpeed)
 		return;

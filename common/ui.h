@@ -30,7 +30,7 @@ struct ui_s
 extern struct ui_s ui;
 
 void ui_init(void);
-void ui_dataPotChanged(void);
+void ui_checkIfDataPotChanged(void);
 void ui_handleButton(p600Button_t button, int pressed);
 void ui_setPresetModified(int8_t modified);
 int8_t ui_isPresetModified(void);
