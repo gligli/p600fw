@@ -21,7 +21,7 @@ struct ui_s
 	int8_t presetModified;
 
 	p600Pot_t lastActivePot;
-	int16_t manualActivePotValue;
+	int32_t lastActivePotValue;
 	
 	int32_t previousData;
 	int8_t activeParamIdx;

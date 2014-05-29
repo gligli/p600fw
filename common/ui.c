@@ -265,7 +265,7 @@ static LOWERCODESIZE void displayUIParameter(int8_t num)
 	switch(prm->type)
 	{
 	case ptCont:
-		ui.manualActivePotValue=currentPreset.continuousParameters[prm->number]>>8;
+		ui.lastActivePotValue=currentPreset.continuousParameters[prm->number];
 		break;
 	case ptStep:
 		strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
@@ -324,7 +324,7 @@ void ui_setNoActivePot(void)
 {
 	potmux_resetChanged();
 	ui.lastActivePot=ppNone;
-	ui.manualActivePotValue=-1;
+	ui.lastActivePotValue=-1;
 }
 
 FORCEINLINE void ui_setPresetModified(int8_t modified)
@@ -339,7 +339,7 @@ FORCEINLINE int8_t ui_isPresetModified(void)
 
 void ui_checkIfDataPotChanged(void)
 {
-	ui.lastActivePot = potmux_lastChanged() != ppNone ? potmux_lastChanged() :  ui.lastActivePot;
+	ui.lastActivePot = potmux_lastChanged() != ppNone ? potmux_lastChanged() : ui.lastActivePot;
 	
 	if(ui.lastActivePot!=ppSpeed)
 		return;
@@ -352,6 +352,10 @@ void ui_checkIfDataPotChanged(void)
 		struct uiParam_s prm;
 		
 		data=potmux_getValue(ppSpeed);
+		
+		if(data==ui.lastActivePotValue) // prevent slowdown caused by unwanted updates
+			return;
+		
 		prm=uiParameters[ui.activeParamIdx];
 		
 		switch(prm.type)
@@ -555,7 +559,7 @@ void ui_init(void)
 	ui.digitInput=diSynth;
 	ui.presetAwaitingNumber=-1;
 	ui.lastActivePot=ppNone;
-	ui.manualActivePotValue=-1;
+	ui.lastActivePotValue=-1;
 	ui.presetModified=1;
 	ui.activeParamIdx=-1;
 }

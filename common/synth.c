@@ -457,9 +457,9 @@ static void refreshSevenSeg(void)
 {
 	if(ui.digitInput<diLoadDecadeDigit)
 	{
-		if(ui.manualActivePotValue>=0)
+		if(ui.lastActivePotValue>=0)
 		{
-			uint8_t v=ui.manualActivePotValue;
+			uint8_t v=ui.lastActivePotValue>>8;
 			sevenSeg_setNumber(v);
 			led_set(plDot,v>99,v>199);
 		}
@@ -699,7 +699,7 @@ void synth_init(void)
 
 void synth_update(void)
 {
-	uint8_t potVal;
+	int32_t potVal;
 	static uint8_t frc=0;
 	
 	// toggle tape out (debug)
@@ -725,10 +725,10 @@ void synth_update(void)
 	{
 		// has to stay outside of previous if, so that finer pot values changes can also be displayed
 
-		potVal=potmux_getValue(ui.lastActivePot)>>8;
-		if(potVal!=ui.manualActivePotValue)
+		potVal=potmux_getValue(ui.lastActivePot);
+		if(potVal!=ui.lastActivePotValue)
 		{
-			ui.manualActivePotValue=potVal;
+			ui.lastActivePotValue=potVal;
 			refreshSevenSeg();
 		}
 
