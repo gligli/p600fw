@@ -22,7 +22,7 @@ Compiling the Firmware
 ======================
 
 Requirements:
-- AVR-GCC cross-compiler (e.g. on Windows: "WinAVR", on Mac: "CrossPack for AVR")
+- AVR-GCC cross-compiler (e.g. on Windows: "MHV_AVR_Tools_20121007", on Mac: "CrossPack for AVR")
 - "Teensy Loader" for flashing the compiled firmware to the physical device (http://www.pjrc.com/teensy/loader.html)
 
 > cd firmware
