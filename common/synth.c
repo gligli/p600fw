@@ -717,8 +717,7 @@ void synth_update(void)
 	
 	// act on pot change
 	
-	if(potmux_lastChanged()!=ppNone)
-		ui_dataPotChanged();
+	ui_checkIfDataPotChanged();
 
 	refreshPresetPots(!settings.presetMode);
 
