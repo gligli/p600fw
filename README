@@ -35,6 +35,15 @@ History
 
 - Alpha 20130226 : First public version.
 - Beta 1.0 : First proper release.
+- Stable 2.0 :
+	- New user interface (moved all the membrane keypad options to: hit a button once or twice / turn the "Speed" data pot).
+	- Assigner rework (better priority system; unison track latch; disabling voices).
+	- MIDI out / SysEx patch dumps.
+	- Synchronizing the Arpeggiator to MIDI clock.
+	- Unison detune.
+	- Dedicated vibrato (independent from the LFO).
+	- Automatic modulation after a delay.
+	- Many bug fixes and tweaks.
 
 License
 =======
