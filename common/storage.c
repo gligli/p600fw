@@ -6,7 +6,7 @@
 #include "uart_6850.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 3
+#define STORAGE_VERSION 4
 
 #define STORAGE_MAGIC 0x006116a5
 #define STORAGE_MAX_SIZE 512
@@ -191,6 +191,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		// defaults
 
 		settings.voiceMask=0x3f;
+		settings.spread=0;
 
 		if (storage.version<1)
 			return 1;
@@ -223,8 +224,15 @@ LOWERCODESIZE int8_t settings_load(void)
 	
 		if (storage.version<4)
 			return 1;
-
+		
 		// v4
+		
+		settings.spread=storageReadS8();
+
+		if (storage.version<5)
+			return 1;
+
+		// v5
 		
 		// ...
 	
@@ -263,6 +271,10 @@ LOWERCODESIZE void settings_save(void)
 		storageWrite8(settings.syncMode);
 		
 		// v4
+		
+		storageWriteS8(settings.spread);
+		
+		// v5
 		
 		// ...
 

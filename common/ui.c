@@ -215,6 +215,22 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 		refreshFullState();
 	}
+	else if(button==pb9) // spread
+	{
+		settings.spread=(settings.spread+1)%2;
+		settings_save();
+		
+		if(settings.spread)
+		{
+			sevenSeg_scrollText("spread on",1);
+		}
+		else
+		{
+			sevenSeg_scrollText("spread off",1);
+		};
+		
+		refreshFullState();
+	}
 }
 
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)

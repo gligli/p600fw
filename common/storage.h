@@ -70,6 +70,8 @@ struct settings_s
 	uint8_t voiceMask;
 	
 	int8_t syncMode;
+	
+	int8_t spread;
 };
 
 struct preset_s

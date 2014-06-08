@@ -153,14 +153,6 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
 		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
 		
-		if(currentPreset.steppedParameters[spUnison])
-		{
-			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8);
-
-			cva=satAddU16S16(cva,detune);
-			cvb=satAddU16S16(cvb,detune);
-		}
-		
 		// filter
 		
 		trackingNote=baseCutoffNote;
@@ -168,6 +160,17 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 			trackingNote+=note>>(2-track);
 			
 		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),synth.benderCVs[pcFil1+v]);
+
+		// detune
+		
+		if(currentPreset.steppedParameters[spUnison] || settings.spread)
+		{
+			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8);
+
+			cva=satAddU16S16(cva,detune);
+			cvb=satAddU16S16(cvb,detune);
+			cvf=satAddU16S16(cvf,detune);
+		}
 		
 		// glide
 		
@@ -368,7 +371,12 @@ static void refreshAssignerSettings(void)
 static void refreshEnvSettings(void)
 {
 	int8_t i;
-
+	uint16_t aa,ad,as,ar,fa,fd,fs,fr;
+	int16_t spread;
+	
+	as=currentPreset.continuousParameters[cpAmpSus];
+	fs=currentPreset.continuousParameters[cpFilSus];
+	
 	for(i=0;i<SYNTH_VOICE_COUNT;++i)
 	{
 		adsr_setShape(&synth.ampEnvs[i],currentPreset.steppedParameters[spAmpEnvExpo]);
@@ -376,20 +384,21 @@ static void refreshEnvSettings(void)
 		
 		adsr_setSpeedShift(&synth.ampEnvs[i],(currentPreset.steppedParameters[spAmpEnvSlow])?3:1);
 		adsr_setSpeedShift(&synth.filEnvs[i],(currentPreset.steppedParameters[spFilEnvSlow])?3:1);
+		
+		spread=0;
+		if(settings.spread)
+			spread=((1+(i>>1))*(i&1?-1:1))<<8;
+		
+		aa=satAddU16S16(currentPreset.continuousParameters[cpAmpAtt],spread);
+		ad=satAddU16S16(currentPreset.continuousParameters[cpAmpDec],spread);
+		ar=satAddU16S16(currentPreset.continuousParameters[cpAmpRel],spread);
 
-		adsr_setCVs(&synth.ampEnvs[i],
-				 currentPreset.continuousParameters[cpAmpAtt],
-				 currentPreset.continuousParameters[cpAmpDec],
-				 currentPreset.continuousParameters[cpAmpSus],
-				 currentPreset.continuousParameters[cpAmpRel],
-				 0,0x0f);
+		fa=satAddU16S16(currentPreset.continuousParameters[cpFilAtt],spread);
+		fd=satAddU16S16(currentPreset.continuousParameters[cpFilDec],spread);
+		fr=satAddU16S16(currentPreset.continuousParameters[cpFilRel],spread);
 
-		adsr_setCVs(&synth.filEnvs[i],
-				 currentPreset.continuousParameters[cpFilAtt],
-				 currentPreset.continuousParameters[cpFilDec],
-				 currentPreset.continuousParameters[cpFilSus],
-				 currentPreset.continuousParameters[cpFilRel],
-				 0,0x0f);
+		adsr_setCVs(&synth.ampEnvs[i],aa,ad,as,ar,0,0x0f);
+		adsr_setCVs(&synth.filEnvs[i],fa,fd,fs,fr,0,0x0f);
 	}
 }
 
