@@ -757,6 +757,7 @@ void synth_update(void)
 		
 		sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
 		sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
+		sh_setCV(pcExtFil,24576,SH_FLAG_IMMEDIATE); // value from the emulator
 		break;
 	case 2:
 		// 'fixed' CVs
