@@ -6,7 +6,7 @@
 #include "hardware.h"
 
 //#define DEBUG
-#define RELEASE "Ver 2.00"
+//#define RELEASE "Ver 2.00"
 
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
