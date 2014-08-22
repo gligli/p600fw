@@ -466,16 +466,24 @@ static void refreshSevenSeg(void)
 {
 	if(ui.digitInput<diLoadDecadeDigit)
 	{
+		led_set(plDot,0,0);
+		
 		if(ui.lastActivePotValue>=0)
 		{
-			uint8_t v=ui.lastActivePotValue/656; // 0..100 range
+			int16_t v=ui.lastActivePotValue/656; // 0..100 range
+		
+			if(potmux_isPotZeroCentered(ui.lastActivePot))
+			{
+				v=abs(v-50);
+				led_set(plDot,ui.lastActivePotValue<=INT16_MAX,0); // dot indicates negative
+			}
+			
 			sevenSeg_setNumber(v);
 		}
 		else
 		{
 			sevenSeg_setAscii(' ',' ');
 		}
-		led_set(plDot,0,0);
 	}
 	else
 	{

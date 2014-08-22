@@ -15,6 +15,7 @@ void potmux_init(void);
 
 void potmux_update(uint8_t regularPotCount);
 
+int8_t potmux_isPotZeroCentered(p600Pot_t pot);
 
 #endif	/* POTMUX_H */
 

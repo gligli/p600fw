@@ -122,6 +122,11 @@ FORCEINLINE void potmux_resetChanged(void)
 	potmux.lastChanged=ppNone;
 }
 
+int8_t potmux_isPotZeroCentered(p600Pot_t pot)
+{
+	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel;
+}
+
 inline void potmux_update(uint8_t regularPotCount)
 {
 	int16_t i;
