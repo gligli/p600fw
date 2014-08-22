@@ -557,50 +557,39 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
-	int8_t assigned;
 	
 	BLOCK_INT
 	{
-		assigned=assigner_getAssignment(v,NULL);
+		// update envs, compute CVs & apply them
 
-		if(assigned)
-		{
-			// update envs, compute CVs & apply them
+		adsr_update(&synth.filEnvs[v]);
+		envVal=synth.filEnvs[v].output;
 
-			adsr_update(&synth.filEnvs[v]);
-			envVal=synth.filEnvs[v].output;
+		va=pitchALfoVal;
+		vb=pitchBLfoVal;
 
-			va=pitchALfoVal;
-			vb=pitchBLfoVal;
+		// osc B
 
-			// osc B
+		vb+=synth.oscBNoteCV[v];
+		sh_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
-			vb+=synth.oscBNoteCV[v];
-			sh_setCV32Sat_FastPath(pcOsc1B+v,vb);
+		// osc A
 
-			// osc A
+		va+=scaleU16S16(envVal,oscEnvAmt);	
+		va+=synth.oscANoteCV[v];
+		sh_setCV32Sat_FastPath(pcOsc1A+v,va);
 
-			va+=scaleU16S16(envVal,oscEnvAmt);	
-			va+=synth.oscANoteCV[v];
-			sh_setCV32Sat_FastPath(pcOsc1A+v,va);
+		// filter
 
-			// filter
+		vf=filterLfoVal;
+		vf+=scaleU16S16(envVal,filEnvAmt);
+		vf+=synth.filterNoteCV[v];
+		sh_setCV32Sat_FastPath(pcFil1+v,vf);
 
-			vf=filterLfoVal;
-			vf+=scaleU16S16(envVal,filEnvAmt);
-			vf+=synth.filterNoteCV[v];
-			sh_setCV32Sat_FastPath(pcFil1+v,vf);
+		// amplifier
 
-			// amplifier
-
-			adsr_update(&synth.ampEnvs[v]);
-			sh_setCV_FastPath(pcAmp1+v,synth.ampEnvs[v].output);
-		}
-		else
-		{
-			CYCLE_WAIT(40); // 10us (helps for snappiness, because it lets some time for previous voice CVs to stabilize)
-			sh_setCV(pcAmp1+v,0,SH_FLAG_IMMEDIATE); // slower update to keep the voice shut (helps for bulghurs's P600)
-		}
+		adsr_update(&synth.ampEnvs[v]);
+		sh_setCV_FastPath(pcAmp1+v,synth.ampEnvs[v].output);
 	}
 }
 
