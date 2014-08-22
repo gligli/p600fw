@@ -86,13 +86,13 @@ FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 	io_write(0x0d,dmux);
 
 	// let S&H get very precise voltage (cf tohk issue)
-	CYCLE_WAIT(2)
+	CYCLE_WAIT(1)
 	
 	// deselect it
 	io_write(0x0d,0xff);
 
 	// let analog hardware stabilize
-	CYCLE_WAIT(2);
+	CYCLE_WAIT(1);
 }
 
 FORCEINLINE void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value)
