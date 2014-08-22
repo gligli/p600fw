@@ -728,25 +728,23 @@ void synth_update(void)
 
 	if(ui.lastActivePot!=ppNone)
 	{
-		// has to stay outside of previous if, so that finer pot values changes can also be displayed
-
 		potVal=potmux_getValue(ui.lastActivePot);
 		if(potVal!=ui.lastActivePotValue)
 		{
 			ui.lastActivePotValue=potVal;
 			refreshSevenSeg();
-		}
 
-		// update CVs
+			// update CVs
 
-		if(potmux_hasChanged(ui.lastActivePot))
-		{
 			if(ui.lastActivePot==ppModWheel)
 				synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1);
 			else if(ui.lastActivePot==ppPitchWheel)
 				synth_wheelEvent(getAdjustedBenderAmount(),0,1,1);
-
-			refreshEnvSettings();
+			else if (ui.lastActivePot==ppAmpAtt || ui.lastActivePot==ppAmpDec ||
+					ui.lastActivePot==ppAmpSus || ui.lastActivePot==ppAmpRel ||
+					ui.lastActivePot==ppFilAtt || ui.lastActivePot==ppFilDec ||
+					ui.lastActivePot==ppFilSus || ui.lastActivePot==ppFilRel)
+				refreshEnvSettings();
 		}
 	}
 	
