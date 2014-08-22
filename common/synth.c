@@ -468,15 +468,14 @@ static void refreshSevenSeg(void)
 	{
 		if(ui.lastActivePotValue>=0)
 		{
-			uint8_t v=ui.lastActivePotValue>>8;
+			uint8_t v=ui.lastActivePotValue/656; // 0..100 range
 			sevenSeg_setNumber(v);
-			led_set(plDot,v>99,v>199);
 		}
 		else
 		{
 			sevenSeg_setAscii(' ',' ');
-			led_set(plDot,0,0);
 		}
+		led_set(plDot,0,0);
 	}
 	else
 	{
