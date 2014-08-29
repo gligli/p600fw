@@ -169,7 +169,7 @@ static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 	v =(c<<7)&0x80;
 	v|=(c>>1)&0x03;
 	
-	v|=(d	 )&0x10;
+	v|=(d   )&0x10;
 	v|=(d>>2)&0x08;
 	v|=(d>>1)&0x60;
 	
@@ -182,27 +182,27 @@ static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 	return v;
 }
 
-inline void mem_write(uint16_t address, uint8_t value)
+FORCEINLINE void mem_write(uint16_t address, uint8_t value)
 {
 	hardware_write(0,address,value);
 }
 
-inline void io_write(uint8_t address, uint8_t value)
+FORCEINLINE void io_write(uint8_t address, uint8_t value)
 {
 	hardware_write(1,address,value);
 }
 
-inline uint8_t mem_read(uint16_t address)
+FORCEINLINE uint8_t mem_read(uint16_t address)
 {
 	return hardware_read(0,address);
 }
 
-inline uint8_t io_read(uint8_t address)
+FORCEINLINE uint8_t io_read(uint8_t address)
 {
 	return hardware_read(1,address);
 }
 
-inline int8_t hardware_getNMIState(void)
+FORCEINLINE int8_t hardware_getNMIState(void)
 {
 	return !(PINC&0x10);
 }

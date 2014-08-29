@@ -12,37 +12,39 @@ static struct
 	uint32_t immediateBits;
 	uint16_t cvs[SH_CV_COUNT];
 	uint8_t gateBits;
-} synth;
+} sh;
 
 static inline void updateGates(void)
 {
 	BLOCK_INT
 	{
-		io_write(0x0b,synth.gateBits);
+		io_write(0x0b,sh.gateBits);
 	}
 }
 
 static inline void updateCV(p600CV_t cv, uint16_t cvv)
 {
-	uint8_t dmux;
+	uint8_t dmux1,dmux2;
 	
-	dmux=(cv&0x07)|(~(0x08<<(cv>>3))&0xf8);
-
+	dmux1=(cv&0x07)|0xf8;
+	dmux2=dmux1&~(0x08<<(cv>>3));
+	
 	BLOCK_INT
 	{
 		dac_write(cvv);
+		io_write(0x0d,dmux1);
 		
 		// for DAC rise time
 		CYCLE_WAIT(4);
 
 		// select current CV
-		io_write(0x0d,dmux);
+		io_write(0x0d,dmux2);
 
 		// 2 us to let S&H get very precise voltage, some P600s need it apparently
 		CYCLE_WAIT(8);
 		
 		// deselect it
-		io_write(0x0d,0xff);
+		io_write(0x0d,dmux1);
 
 		// 2 more us to let analog hardware stabilize
 		CYCLE_WAIT(8);
@@ -57,7 +59,7 @@ inline void sh_setCV(p600CV_t cv,uint16_t value, uint8_t flags)
 	}
 	else
 	{
-		synth.cvs[cv]=value;
+		sh.cvs[cv]=value;
 	}
 }
 
@@ -73,26 +75,24 @@ inline void sh_setCV32Sat(p600CV_t cv,int32_t value, uint8_t flags)
 
 FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 {
-	uint8_t dmux;
+	uint8_t dmux1,dmux2;
 	
-	dmux=(cv&0x07)|(~(0x08<<(cv>>3))&0xf8);
-
+	dmux1=(cv&0x07)|0xf8;
+	dmux2=dmux1&~(0x08<<(cv>>3));
+	
 	dac_write(value);
 
-	// for DAC rise time (cf tohk issue)
-	CYCLE_WAIT(1)
-			
+	// prepare S&H (also serves as a wait for DAC rise time)
+	io_write(0x0d,dmux1);
+
 	// select current CV
-	io_write(0x0d,dmux);
+	io_write(0x0d,dmux2);
 
 	// let S&H get very precise voltage (cf tohk issue)
 	CYCLE_WAIT(1)
 	
 	// deselect it
-	io_write(0x0d,0xff);
-
-	// let analog hardware stabilize
-	CYCLE_WAIT(1);
+	io_write(0x0d,dmux1);
 }
 
 FORCEINLINE void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value)
@@ -109,15 +109,15 @@ inline void sh_setGate(p600Gate_t gate,int8_t on)
 {
 	uint8_t mask=1<<gate;
 	
-	synth.gateBits&=~mask;
-	if (on) synth.gateBits|=mask;
+	sh.gateBits&=~mask;
+	if (on) sh.gateBits|=mask;
 	
 	updateGates();
 }
 
 void sh_init()
 {
-	memset(&synth,0,sizeof(synth));
+	memset(&sh,0,sizeof(sh));
 }
 
 void sh_update()
@@ -125,7 +125,7 @@ void sh_update()
 	uint8_t i;
 
 	for(i=0;i<SH_CV_COUNT;++i)
-		updateCV(i,synth.cvs[i]);
+		updateCV(i,sh.cvs[i]);
 
 	updateGates();
 }
