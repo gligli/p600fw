@@ -66,6 +66,7 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 	case sSustain:
 		a->stageAdd=0;
 		a->stageMul=a->levelCV;
+		a->stageIncrement=0;
 		break;
 	case sRelease:
 		a->stageAdd=0;
@@ -73,7 +74,9 @@ static inline void updateStageVars(struct adsr_s * a, adsrStage_t s)
 		a->stageIncrement=a->releaseIncrement;
 		break;
 	default:
-		;
+		a->stageAdd=0;
+		a->stageMul=0;
+		a->stageIncrement=0;
 	}
 }
 
@@ -177,6 +180,16 @@ void adsr_setGate(struct adsr_s * a, int8_t gate)
 	}
 
 	a->gate=gate;
+}
+
+void adsr_reset(struct adsr_s * adsr)
+{
+	adsr->gate=0;
+	adsr->output=0;
+	adsr->phase=0;
+	adsr->stageLevel=0;
+	adsr->stage=sWait;
+	updateStageVars(adsr,sWait);
 }
 
 inline void adsr_setShape(struct adsr_s * adsr, int8_t isExp)

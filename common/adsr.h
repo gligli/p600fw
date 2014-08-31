@@ -34,6 +34,8 @@ void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift);
 adsrStage_t adsr_getStage(struct adsr_s * adsr);
 uint16_t adsr_getOutput(struct adsr_s * adsr);
 
+void adsr_reset(struct adsr_s * adsr);
+
 void adsr_init(struct adsr_s * adsr);
 void adsr_update(struct adsr_s * adsr);
 

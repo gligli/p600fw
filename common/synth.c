@@ -308,11 +308,19 @@ static void handleFinishedVoices(void)
 {
 	int8_t v;
 	
-	// when amp env finishes, voice is done
-	
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
+	{
+		// when amp env finishes, voice is done
 		if(assigner_getAssignment(v,NULL) && adsr_getStage(&synth.ampEnvs[v])==sWait)
 			assigner_voiceDone(v);
+	
+		// if voice isn't assigned, silence it
+		if(!assigner_getAssignment(v,NULL) && adsr_getStage(&synth.ampEnvs[v])!=sWait)
+		{
+			adsr_reset(&synth.ampEnvs[v]);
+			adsr_reset(&synth.filEnvs[v]);
+		}
+	}
 }
 
 static void refreshGates(void)
