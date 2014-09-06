@@ -360,6 +360,8 @@ void assigner_voiceDone(int8_t voice)
 			assigner.allocation[v].assigned=0;
 			assigner.allocation[v].note=ASSIGNER_NO_NOTE;
 			assigner.allocation[v].rootNote=ASSIGNER_NO_NOTE;
+			if(voice<0)
+				assigner.allocation[v].timestamp=0; // reset to voice 0 in case all voices stopped at once
 		}
 }
 
