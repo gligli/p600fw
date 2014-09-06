@@ -59,7 +59,8 @@ static inline int8_t isVoiceDisabled(int8_t voice)
 
 static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 {
-	int8_t v,sameNote=-1,firstFree=-1;
+	int8_t v,oldestVoice=-1,sameNote=-1;
+	uint32_t oldestTimestamp=UINT32_MAX;
 
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
@@ -80,17 +81,20 @@ static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		}
 		else
 		{
-			// else use first free voice, if there's one
-			
-			if(firstFree<0)
-				firstFree=v;
+			// else use oldest voice, if there is one
+
+			if (assigner.allocation[v].timestamp<oldestTimestamp)
+			{
+				oldestTimestamp=assigner.allocation[v].timestamp;
+				oldestVoice=v;
+			}
 		}
 	}
 	
 	if(sameNote>=0)
 		return sameNote;
 	else
-		return firstFree;
+		return oldestVoice;
 }
 
 static inline int8_t getDispensableVoice(uint8_t note)
@@ -356,7 +360,6 @@ void assigner_voiceDone(int8_t voice)
 			assigner.allocation[v].assigned=0;
 			assigner.allocation[v].note=ASSIGNER_NO_NOTE;
 			assigner.allocation[v].rootNote=ASSIGNER_NO_NOTE;
-			assigner.allocation[v].timestamp=0;
 		}
 }
 
