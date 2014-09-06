@@ -813,7 +813,7 @@ void synth_timerInterrupt(void)
 {
 	int32_t va,vf;
 	int16_t pitchALfoVal,pitchBLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
-	int8_t v,hz63;
+	int8_t v,hz63,hz250;
 
 	static uint8_t frc=0;
 
@@ -863,6 +863,7 @@ void synth_timerInterrupt(void)
 	// slower updates
 	
 	hz63=(frc&0x1c)==0;	
+	hz250=(frc&0x04)==0;	
 
 	switch(frc&0x03) // 4 phases, each 500hz
 	{
@@ -909,8 +910,11 @@ void synth_timerInterrupt(void)
 		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
 	case 3:
-		scanner_update(hz63);
-		display_update(hz63);
+		if(hz250)
+		{
+			scanner_update(hz63);
+			display_update(hz63);
+		}
 		break;
 	}
 
