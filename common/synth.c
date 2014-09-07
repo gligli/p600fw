@@ -79,11 +79,16 @@ extern const uint16_t attackCurveLookup[]; // for modulation delay
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
 	uint16_t cva,cvb,cvf;
-	uint8_t note,baseCutoffNote,baseANote,baseBNote,trackingNote;
+	uint8_t note,baseCutoffNote;
 	int8_t v;
 
 	uint16_t baseAPitch,baseBPitch,baseCutoff;
 	int16_t mTune,fineBFreq,detune;
+
+	// We use int16_t here because we want to be able to use negative
+	// values for intermediate calculations, while still retaining a
+	// maximum value of at least UINT8_T.
+	int16_t sNote,baseANote,ANote,baseBNote,BNote,trackingNote;
 
 	static uint16_t baseAPitchRaw,baseBPitchRaw,baseCutoffRaw,mTuneRaw,fineBFreqRaw,detuneRaw;
 	static uint8_t track,chrom;
@@ -148,16 +153,39 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		if ((forceVoice>=0 && v!=forceVoice) || !assigner_getAssignment(v,&note))
 			continue;
 
+		// Subtract bottom C, signed result. Here a value of 0
+		// is lowest C on kbd, values below that can arrive via MIDI
+		sNote=note-SCANNER_BASE_NOTE;
+
 		// oscs
+
+		ANote=baseANote+sNote;
+		if (ANote<0)
+			ANote=0;
+		// We assume we won't get more than UINT8_MAX here, even
+		// if the incoming MIDI note is high and baseANote is large too.
+		BNote=baseBNote+sNote;
+		if (BNote<0)
+			BNote=0;
 		
-		cva=satAddU16S32(tuner_computeCVFromNote(baseANote+note,baseAPitch,pcOsc1A+v),(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
-		cvb=satAddU16S32(tuner_computeCVFromNote(baseBNote+note,baseBPitch,pcOsc1B+v),(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		cva=satAddU16S32(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
+		cvb=satAddU16S32(tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v),(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
 		
 		// filter
 		
 		trackingNote=baseCutoffNote;
-		if(track)
-			trackingNote+=note>>(2-track);
+		if(track) {
+			// We use / instead of >> because sNote is signed. */
+			// Using a constant instead of calculated value
+			// for the divisor as it gives the compiler a chance to
+			// optimize using shift operations.
+			// >> is not guaranteed in C to work properly for
+			// signed numbers (implementation-specific). */
+			trackingNote+=(track==1?sNote/2:sNote);
+			// can only be negative if tracking is enabled. */
+			if (trackingNote<0)
+				trackingNote=0;
+		}
 			
 		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),synth.benderCVs[pcFil1+v]);
 

@@ -3,6 +3,8 @@
 
 #include "synth.h"
 
+#define SCANNER_BASE_NOTE 24
+
 int8_t scanner_keyState(uint8_t key);
 int8_t scanner_buttonState(p600Button_t button);
 

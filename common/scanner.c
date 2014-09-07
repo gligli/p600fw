@@ -38,7 +38,7 @@ static FORCEINLINE void scanner_event(uint8_t key, int8_t pressed)
 	if (key<SCANNER_KEYS_START)
 		synth_buttonEvent(key,pressed);
 	else
-		synth_keyEvent(key-SCANNER_KEYS_START,pressed);
+		synth_keyEvent(key-SCANNER_KEYS_START+SCANNER_BASE_NOTE,pressed);
 }
 
 void scanner_update(int8_t fullScan)
