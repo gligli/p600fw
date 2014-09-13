@@ -18,7 +18,6 @@
 #define MIDI_BASE_STEPPED_CC 48
 #define MIDI_BASE_COARSE_CC 16
 #define MIDI_BASE_FINE_CC 80
-#define MIDI_BASE_NOTE 24
 
 static MidiDevice midi;
 static int16_t sysexSize;
@@ -141,8 +140,6 @@ static int8_t midiFilterChannel(uint8_t channel)
 
 static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
 {
-	int16_t intNote;
-	
 	if(!midiFilterChannel(channel))
 		return;
 	
@@ -152,16 +149,11 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	print("\n");
 #endif
 
-	intNote=note-MIDI_BASE_NOTE;
-	intNote=MAX(0,intNote);
-	
-	assigner_assignNote(intNote,velocity!=0,(((uint32_t)velocity+1)<<9)-1);
+	assigner_assignNote(note,velocity!=0,(((uint32_t)velocity+1)<<9)-1);
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
 {
-	int16_t intNote;
-	
 	if(!midiFilterChannel(channel))
 		return;
 	
@@ -171,10 +163,7 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	print("\n");
 #endif
 
-	intNote=note-MIDI_BASE_NOTE;
-	intNote=MAX(0,intNote);
-	
-	assigner_assignNote(intNote,0,0);
+	assigner_assignNote(note,0,0);
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -342,9 +331,9 @@ void midi_dumpPresets(void)
 void midi_sendNoteEvent(uint8_t note, int8_t gate, uint16_t velocity)
 {
 	if(gate)
-		midi_send_noteon(&midi,settings.midiSendChannel,note+MIDI_BASE_NOTE,velocity>>9);
+		midi_send_noteon(&midi,settings.midiSendChannel,note,velocity>>9);
 	else
-		midi_send_noteoff(&midi,settings.midiSendChannel,note+MIDI_BASE_NOTE,velocity>>9);
+		midi_send_noteoff(&midi,settings.midiSendChannel,note,velocity>>9);
 }
 
 void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
