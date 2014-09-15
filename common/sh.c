@@ -32,6 +32,8 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 	BLOCK_INT
 	{
 		dac_write(cvv);
+	
+		// prepare S&H
 		io_write(0x0d,dmux1);
 		
 		// for DAC rise time
@@ -82,8 +84,11 @@ FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 	
 	dac_write(value);
 
-	// prepare S&H (also serves as a wait for DAC rise time)
+	// prepare S&H
 	io_write(0x0d,dmux1);
+
+	// for DAC rise time
+	CYCLE_WAIT(1);
 
 	// select current CV
 	io_write(0x0d,dmux2);
