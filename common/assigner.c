@@ -11,6 +11,7 @@ struct allocation_s
 	uint8_t rootNote;
 	uint8_t note;
 	int8_t assigned;
+	int8_t keyPressed;
 };
 
 static struct
@@ -21,6 +22,7 @@ static struct
 	assignerPriority_t priority;
 	uint8_t voiceMask;
 	int8_t mono;
+	int8_t hold;
 } assigner;
 
 static const uint8_t bit2mask[8] = {1,2,4,8,16,32,64,128};
@@ -278,6 +280,7 @@ reassign:
 			n=note+assigner.patternOffsets[vi];
 
 			assigner.allocation[v].assigned=1;
+			assigner.allocation[v].keyPressed=1;
 			assigner.allocation[v].velocity=velocity;
 			assigner.allocation[v].rootNote=note;
 			assigner.allocation[v].note=n;
@@ -333,7 +336,9 @@ reassign:
 				}
 				else
 				{
-					synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
+					assigner.allocation[v].keyPressed=0;
+					if (!assigner.hold)
+						synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
 				}
 			}
 
@@ -358,6 +363,7 @@ void assigner_voiceDone(int8_t voice)
 		if(v==voice || voice<0)
 		{
 			assigner.allocation[v].assigned=0;
+			assigner.allocation[v].keyPressed=0;
 			assigner.allocation[v].note=ASSIGNER_NO_NOTE;
 			assigner.allocation[v].rootNote=ASSIGNER_NO_NOTE;
 			if(voice<0)
@@ -440,7 +446,19 @@ LOWERCODESIZE void assigner_setPoly(void)
 
 void assigner_holdEvent(int8_t hold)
 {
-	// stub for now
+	int8_t v;
+
+	if (hold) {
+		assigner.hold=1;
+		return;
+	}
+
+	assigner.hold=0;
+	// Send gate off to all voices whose corresponding key is up
+	for(v=0;v<SYNTH_VOICE_COUNT;++v) {
+		if (!isVoiceDisabled(v) && !assigner.allocation[v].keyPressed)
+			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
+	}
 }
 
 void assigner_init(void)
