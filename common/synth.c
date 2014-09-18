@@ -962,10 +962,11 @@ void synth_keyEvent(uint8_t key, int pressed)
 {
 	if(arp_getMode()==amOff)
 	{
-		assigner_assignNote(key,pressed,UINT16_MAX);
+		// Set velocity to half (corresponding to MIDI value 64)
+		assigner_assignNote(key,pressed,32768U);
 
 		// pass to MIDI out
-		midi_sendNoteEvent(key,pressed,UINT16_MAX);
+		midi_sendNoteEvent(key,pressed,32768U);
 	}
 	else
 	{
