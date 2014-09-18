@@ -438,6 +438,11 @@ LOWERCODESIZE void assigner_setPoly(void)
 	assigner_setPattern(polyPattern,0);
 }
 
+void assigner_holdEvent(int8_t hold)
+{
+	// stub for now
+}
+
 void assigner_init(void)
 {
 	memset(&assigner,0,sizeof(assigner));

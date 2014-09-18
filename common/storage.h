@@ -28,6 +28,8 @@ typedef enum
 	cpCount
 } continuousParameter_t;
 
+// These start at 48, which means that MIDI hold pedal will end up at
+// offset 16, so don't use that one for a parameter.
 typedef enum
 {
 	spASaw=0,spATri=1,spASqr=2,
@@ -39,7 +41,7 @@ typedef enum
 
 	spTrackingShift=12,
 	spFilEnvExpo=13,spFilEnvSlow=14,
-	spAmpEnvExpo=15,spAmpEnvSlow=16,
+	spAmpEnvExpo=15,holdPedal=16,
 			
 	spUnison=17,
 	spAssignerPriority=18,
@@ -51,6 +53,7 @@ typedef enum
 			
 	spModwheelTarget=23,
 	spVibTarget=24,
+	spAmpEnvSlow=25,
 			
 	// /!\ this must stay last
 	spCount

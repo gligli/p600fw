@@ -192,6 +192,11 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	{
 		synth_wheelEvent(0,value<<9,2,0);
 	}
+	else if(control==64) // hold pedal
+	{
+		assigner_holdEvent(value);
+		return;
+	}
 	
 	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
 		return;
