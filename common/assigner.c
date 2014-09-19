@@ -11,6 +11,7 @@ struct allocation_s
 	uint8_t rootNote;
 	uint8_t note;
 	int8_t assigned;
+	int8_t gated;
 	int8_t keyPressed;
 };
 
@@ -280,6 +281,7 @@ reassign:
 			n=note+assigner.patternOffsets[vi];
 
 			assigner.allocation[v].assigned=1;
+			assigner.allocation[v].gated=1;
 			assigner.allocation[v].keyPressed=1;
 			assigner.allocation[v].velocity=velocity;
 			assigner.allocation[v].rootNote=note;
@@ -337,8 +339,10 @@ reassign:
 				else
 				{
 					assigner.allocation[v].keyPressed=0;
-					if (!assigner.hold)
+					if (!assigner.hold) {
+						assigner.allocation[v].gated=0;
 						synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
+					}
 				}
 			}
 
@@ -456,8 +460,12 @@ void assigner_holdEvent(int8_t hold)
 	assigner.hold=0;
 	// Send gate off to all voices whose corresponding key is up
 	for(v=0;v<SYNTH_VOICE_COUNT;++v) {
-		if (!isVoiceDisabled(v) && !assigner.allocation[v].keyPressed)
+		if (!isVoiceDisabled(v) && 
+		    assigner.allocation[v].gated &&
+		    !assigner.allocation[v].keyPressed) {
 			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
+		    	assigner.allocation[v].gated=0;
+		}
 	}
 }
 
