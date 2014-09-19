@@ -1,0 +1,39 @@
+This document describes compile procedures.
+
+1. Download [MHV_AVR_Tools_20121007]
+2. Download [python-2.7.8.amd64.msi]
+3. install [MHV_AVR_Tools_20121007] to "C:/MHV_AVR_TOOLS"
+4. Install [python-2.7.8.amd64.msi] to "C:/Python27"
+
+5.Set path to "C:/MHV_AVR_TOOLS" and "C:/python-27"
+ e.g. windows7
+    1. open control panel>system>Advanced system settings
+         will open [system property] window
+    2.select [Advanced] tab > [Environment Variables..]
+         will open [Environment Variables] window.
+    3.[System Variables] colum, select [Path] variable > Edit
+    4. Add ";C:/MHV_AVR_Tools/lib;C:/MHV_AVR_Tools/bin;C:/Python27"
+    
+6.Exec " MHV AVR Shell" 
+7.Now you stay "C:/users/yourname>". move to the source code directry.
+  e.g. if you put source code in "d:/dev/p600fw"
+  		C:/users/yourname>d:[enter]
+  		d:/>cd /dev/p600fw/firmware[enter]
+  		d:/dev/p600fw/firmware>
+  
+  	make [.dep] directry
+  		d:/dev/p600fw/firmware>mkdir .dep[enter]
+  	
+  	and last step to compile
+  		d:/dev/p600fw/firmware>make[enter]
+  		
+  	you will get "p600firmware.hex" and "p600firmware.sys"
+  
+  8.if you got  error  like as "[sizebefore] error"
+  	edit Makefile in firmware directry as follow as,.
+  		LINE 423>all: begin gccversion sizebefore build sizeafter end
+  		to	
+  		LINE 423>all: begin gccversion  build  end
+  
+  Good luck and Enjoy!
+  
