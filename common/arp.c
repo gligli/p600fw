@@ -4,6 +4,7 @@
 
 #include "arp.h"
 
+#include "scanner.h"
 #include "assigner.h"
 #include "storage.h"
 #include "midi.h"
@@ -44,10 +45,10 @@ static void finishPreviousNote(void)
 	{
 		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
 		
-		assigner_assignNote(n,0,0);
+		assigner_assignNote(n+SCANNER_BASE_NOTE,0,0);
 		
 		// pass to MIDI out
-		midi_sendNoteEvent(n,0,0);
+		midi_sendNoteEvent(n+SCANNER_BASE_NOTE,0,0);
 	}
 }
 
@@ -127,7 +128,10 @@ int8_t arp_getHold(void)
 void arp_assignNote(uint8_t note, int8_t on)
 {
 	int16_t i;
-	
+
+	// We only arpeggiate from the internal keyboard, so we can keep the
+	// note memory size at 128 if we set the keyboard range to 0 and up.
+	note-=SCANNER_BASE_NOTE;
 	if(on)
 	{
 		// if this is the first note, make sure the arp will start on it as as soon as we update
@@ -232,11 +236,11 @@ void arp_update(void)
 	
 	// send note to assigner
 	
-	assigner_assignNote(n,1,UINT16_MAX);
+	assigner_assignNote(n+SCANNER_BASE_NOTE,1,UINT16_MAX);
 	
 	// pass to MIDI out
 
-	midi_sendNoteEvent(n,1,UINT16_MAX);
+	midi_sendNoteEvent(n+SCANNER_BASE_NOTE,1,UINT16_MAX);
 
 	arp.previousNote=arp.notes[arp.noteIndex];
 }
