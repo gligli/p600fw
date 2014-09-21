@@ -235,7 +235,7 @@ void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity)
 	uint32_t timestamp;
 	uint16_t oldVel;
 	uint8_t restoredNote;
-	int8_t v,vi,i,legato=0,forceLegato=0;
+	int8_t v,vi,i,legato=0;
 	int16_t ni,n;
 	
 	setNoteState(note,gate);
@@ -254,7 +254,6 @@ reassign:
 			// just handle legato & priority
 			
 			v=0;
-			legato=forceLegato;
 
 			if(assigner.priority!=apLast)
 				for(n=0;n<128;++n)
@@ -363,7 +362,7 @@ reassign:
 			note=restoredNote;
 			gate=1;
 			velocity=oldVel;
-			forceLegato=1;
+			legato=1;
 			
 			goto reassign;
 		}
