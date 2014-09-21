@@ -18,6 +18,7 @@ struct allocation_s
 static struct
 {
 	uint8_t noteStates[16]; // 1 bit per note, 128 notes
+	uint16_t noteVelocities[128];
 	struct allocation_s allocation[SYNTH_VOICE_COUNT];
 	uint8_t patternOffsets[SYNTH_VOICE_COUNT];
 	assignerPriority_t priority;
@@ -53,6 +54,17 @@ static inline int8_t getNoteState(uint8_t note)
 	mask=bit2mask[note&7];
 	
 	return (bf&mask)!=0;
+}
+
+static inline void setNoteVelocity(uint8_t note, uint8_t gate, uint16_t velocity)
+{
+	if (gate)
+		assigner.noteVelocities[note]=velocity;
+}
+
+static inline uint16_t getNoteVelocity(uint8_t note)
+{
+	return assigner.noteVelocities[note];
 }
 
 static inline int8_t isVoiceDisabled(int8_t voice)
@@ -227,6 +239,8 @@ void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity)
 	int16_t ni,n;
 	
 	setNoteState(note,gate);
+	// Save velocity for later, in case note needs to be restored
+	setNoteVelocity(note,gate,velocity);
 
 	if(gate)
 	{
@@ -297,7 +311,6 @@ reassign:
 	}
 	else
 	{
-		oldVel=UINT16_MAX;
 		restoredNote=ASSIGNER_NO_NOTE;
 
 		// some still triggered notes might have been stolen, find them
@@ -322,6 +335,7 @@ reassign:
 				if(i==0)
 				{
 					restoredNote=n;
+					oldVel=getNoteVelocity(n);
 					break;
 				}
 			}
@@ -332,11 +346,7 @@ reassign:
 		for(v=0;v<SYNTH_VOICE_COUNT;++v)
 			if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
 			{
-				if(restoredNote!=ASSIGNER_NO_NOTE)
-				{
-					oldVel=assigner.allocation[v].velocity;
-				}
-				else
+				if(restoredNote==ASSIGNER_NO_NOTE)
 				{
 					assigner.allocation[v].keyPressed=0;
 					if (!assigner.hold) {
