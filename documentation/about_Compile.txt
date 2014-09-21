@@ -27,7 +27,7 @@ This document describes compile procedures.
   	and last step to compile
   		d:/dev/p600fw/firmware>make[enter]
   		
-  	you will get "p600firmware.hex" and "p600firmware.sys"
+  	you will get "p600firmware.hex" and "p600firmware.syx"
   
   8.if you got  error  like as "[sizebefore] error"
   	edit Makefile in firmware directry as follow as,.

@@ -29,7 +29,7 @@ Requirements:
 > make
 
 This will produce p600firmware.hex, which you can flash onto your Teensy++ using the Teensy Loader.
-More information about compile procedures, See  documentation/about_Compile.txt.
+For more information about compile procedures, See  documentation/about_Compile.txt.
 
 History
 =======
