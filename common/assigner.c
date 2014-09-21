@@ -235,7 +235,7 @@ void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity)
 	uint32_t timestamp;
 	uint16_t oldVel;
 	uint8_t restoredNote;
-	int8_t v,vi,i,legato=0;
+	int8_t v,vi,legato=0;
 	int16_t ni,n;
 	
 	setNoteState(note,gate);
@@ -323,15 +323,11 @@ reassign:
 			
 			if(getNoteState(n))
 			{
-				i=0;
 				for(v=0;v<SYNTH_VOICE_COUNT;++v)
 					if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==n)
-					{
-						i=1;
 						break;
-					}
 
-				if(i==0)
+				if(v==SYNTH_VOICE_COUNT)
 				{
 					restoredNote=n;
 					oldVel=getNoteVelocity(n);
@@ -340,28 +336,28 @@ reassign:
 			}
 		}
 
-		// hitting a note spawns a pattern of note, not just one
-
-		for(v=0;v<SYNTH_VOICE_COUNT;++v)
-			if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
+		if(restoredNote==ASSIGNER_NO_NOTE)
+		// no note to restore, gate off all voices with rootNote=note
+		{
+			for(v=0;v<SYNTH_VOICE_COUNT;++v)
 			{
-				if(restoredNote==ASSIGNER_NO_NOTE)
+				if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
 				{
 					assigner.allocation[v].keyPressed=0;
-					if (!assigner.hold) {
+					if(!assigner.hold)
+					{
 						assigner.allocation[v].gated=0;
 						synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
 					}
 				}
 			}
-
+		}
+		else
 		// restored notes can be assigned again
-
-		if(restoredNote!=ASSIGNER_NO_NOTE)
 		{
 			note=restoredNote;
-			gate=1;
 			velocity=oldVel;
+			gate=1;
 			legato=1;
 			
 			goto reassign;
