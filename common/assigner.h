@@ -24,6 +24,7 @@ void assigner_setPattern(uint8_t * pattern, int8_t mono);
 void assigner_getPattern(uint8_t * pattern, int8_t * mono);
 void assigner_setPoly(void);
 void assigner_latchPattern(void);
+void assigner_holdEvent(int8_t hold);
 
 void assigner_init(void);
 

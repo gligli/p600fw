@@ -11,16 +11,20 @@ struct allocation_s
 	uint8_t rootNote;
 	uint8_t note;
 	int8_t assigned;
+	int8_t gated;
+	int8_t keyPressed;
 };
 
 static struct
 {
 	uint8_t noteStates[16]; // 1 bit per note, 128 notes
+	uint16_t noteVelocities[128];
 	struct allocation_s allocation[SYNTH_VOICE_COUNT];
 	uint8_t patternOffsets[SYNTH_VOICE_COUNT];
 	assignerPriority_t priority;
 	uint8_t voiceMask;
 	int8_t mono;
+	int8_t hold;
 } assigner;
 
 static const uint8_t bit2mask[8] = {1,2,4,8,16,32,64,128};
@@ -50,6 +54,17 @@ static inline int8_t getNoteState(uint8_t note)
 	mask=bit2mask[note&7];
 	
 	return (bf&mask)!=0;
+}
+
+static inline void setNoteVelocity(uint8_t note, uint8_t gate, uint16_t velocity)
+{
+	if (gate)
+		assigner.noteVelocities[note]=velocity;
+}
+
+static inline uint16_t getNoteVelocity(uint8_t note)
+{
+	return assigner.noteVelocities[note];
 }
 
 static inline int8_t isVoiceDisabled(int8_t voice)
@@ -220,10 +235,12 @@ void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity)
 	uint32_t timestamp;
 	uint16_t oldVel;
 	uint8_t restoredNote;
-	int8_t v,vi,i,legato=0,forceLegato=0;
+	int8_t v,vi,legato=0;
 	int16_t ni,n;
 	
 	setNoteState(note,gate);
+	// Save velocity for later, in case note needs to be restored
+	setNoteVelocity(note,gate,velocity);
 
 	if(gate)
 	{
@@ -237,7 +254,6 @@ reassign:
 			// just handle legato & priority
 			
 			v=0;
-			legato=forceLegato;
 
 			if(assigner.priority!=apLast)
 				for(n=0;n<128;++n)
@@ -278,6 +294,8 @@ reassign:
 			n=note+assigner.patternOffsets[vi];
 
 			assigner.allocation[v].assigned=1;
+			assigner.allocation[v].gated=1;
+			assigner.allocation[v].keyPressed=1;
 			assigner.allocation[v].velocity=velocity;
 			assigner.allocation[v].rootNote=note;
 			assigner.allocation[v].note=n;
@@ -292,7 +310,6 @@ reassign:
 	}
 	else
 	{
-		oldVel=UINT16_MAX;
 		restoredNote=ASSIGNER_NO_NOTE;
 
 		// some still triggered notes might have been stolen, find them
@@ -306,45 +323,42 @@ reassign:
 			
 			if(getNoteState(n))
 			{
-				i=0;
 				for(v=0;v<SYNTH_VOICE_COUNT;++v)
 					if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==n)
-					{
-						i=1;
 						break;
-					}
 
-				if(i==0)
+				if(v==SYNTH_VOICE_COUNT)
 				{
 					restoredNote=n;
+					oldVel=getNoteVelocity(n);
 					break;
 				}
 			}
 		}
 
-		// hitting a note spawns a pattern of note, not just one
-
-		for(v=0;v<SYNTH_VOICE_COUNT;++v)
-			if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
+		if(restoredNote==ASSIGNER_NO_NOTE)
+		// no note to restore, gate off all voices with rootNote=note
+		{
+			for(v=0;v<SYNTH_VOICE_COUNT;++v)
 			{
-				if(restoredNote!=ASSIGNER_NO_NOTE)
+				if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
 				{
-					oldVel=assigner.allocation[v].velocity;
-				}
-				else
-				{
-					synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
+					assigner.allocation[v].keyPressed=0;
+					if(!assigner.hold)
+					{
+						assigner.allocation[v].gated=0;
+						synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
+					}
 				}
 			}
-
+		}
+		else
 		// restored notes can be assigned again
-
-		if(restoredNote!=ASSIGNER_NO_NOTE)
 		{
 			note=restoredNote;
-			gate=1;
 			velocity=oldVel;
-			forceLegato=1;
+			gate=1;
+			legato=1;
 			
 			goto reassign;
 		}
@@ -358,6 +372,7 @@ void assigner_voiceDone(int8_t voice)
 		if(v==voice || voice<0)
 		{
 			assigner.allocation[v].assigned=0;
+			assigner.allocation[v].keyPressed=0;
 			assigner.allocation[v].note=ASSIGNER_NO_NOTE;
 			assigner.allocation[v].rootNote=ASSIGNER_NO_NOTE;
 			if(voice<0)
@@ -436,6 +451,27 @@ LOWERCODESIZE void assigner_setPoly(void)
 {
 	uint8_t polyPattern[SYNTH_VOICE_COUNT]={0,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE,ASSIGNER_NO_NOTE};	
 	assigner_setPattern(polyPattern,0);
+}
+
+void assigner_holdEvent(int8_t hold)
+{
+	int8_t v;
+
+	if (hold) {
+		assigner.hold=1;
+		return;
+	}
+
+	assigner.hold=0;
+	// Send gate off to all voices whose corresponding key is up
+	for(v=0;v<SYNTH_VOICE_COUNT;++v) {
+		if (!isVoiceDisabled(v) && 
+		    assigner.allocation[v].gated &&
+		    !assigner.allocation[v].keyPressed) {
+			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
+		    	assigner.allocation[v].gated=0;
+		}
+	}
 }
 
 void assigner_init(void)
