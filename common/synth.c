@@ -653,9 +653,12 @@ static void handleBitInputs(void)
 		assigner_latchPattern();
 		assigner_getPattern(currentPreset.voicePattern,NULL);
 	}
-	else if(arp_getMode()!=amOff && (cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
+	else if((cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
 	{
-		arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:2);
+		if(arp_getMode()!=amOff)
+			arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:2);
+		else
+			assigner_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
 	}
 
 	// tape in
