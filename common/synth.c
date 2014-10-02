@@ -29,8 +29,6 @@
 #define PANEL_DEADBAND 2048
 #define FULL_RANGE UINT16_MAX
 #define HALF_RANGE (FULL_RANGE/2)
-#define PANEL_DEADBAND_LOW (HALF_RANGE-PANEL_DEADBAND)
-#define PANEL_DEADBAND_HIGH (HALF_RANGE+PANEL_DEADBAND)
 
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
@@ -229,35 +227,30 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	}
 }
 
+static uint16_t addDeadband(uint16_t value, uint16_t middle, uint16_t deadband)
+{
+	uint16_t middleLow=middle-deadband;
+	uint16_t middleHigh=middle+deadband;
+	uint32_t amt=value;
+
+	if(value<middleLow) {
+		amt*=HALF_RANGE;
+		amt/=middleLow;
+	} else if(value>middleHigh) {
+		amt-=middleHigh;
+		amt*=HALF_RANGE;
+		amt/=FULL_RANGE-middleHigh;
+		amt+=HALF_RANGE;
+	} else { // in deadband
+		amt=HALF_RANGE;
+	}
+	// result of our calculations will be 0..UINT16_MAX
+	return amt;
+}
+
 int16_t getAdjustedBenderAmount(void)
 {
-	int32_t amt;
-	uint16_t pos;
-	uint16_t benderMiddleLow=settings.benderMiddle-BEND_DEADBAND;
-	uint16_t benderMiddleHigh=settings.benderMiddle+BEND_DEADBAND;
-
-	pos=potmux_getValue(ppPitchWheel);
-
-	// compute adjusted bender amount
-
-	amt=pos;
-
-	if(pos<benderMiddleLow)
-	{
-		amt=benderMiddleLow-amt;
-		amt*=INT16_MIN;
-		amt/=benderMiddleLow;
-	}
-	else if (pos>benderMiddleHigh)
-	{
-		amt-=benderMiddleHigh;
-		amt*=INT16_MAX;
-		amt/=UINT16_MAX-benderMiddleHigh;
-	} else { // in deadband
-		amt=0;
-	}
-
-	return MIN(MAX(amt,INT16_MIN),INT16_MAX);
+	return addDeadband(potmux_getValue(ppPitchWheel),settings.benderMiddle, BEND_DEADBAND)-HALF_RANGE;
 }
 
 void computeBenderCVs(void)
@@ -580,25 +573,6 @@ void refreshFullState(void)
 	refreshSevenSeg();
 }
 
-static uint16_t panelDeadband(uint16_t value)
-{
-	uint32_t amt=value;
-
-	if(value<PANEL_DEADBAND_LOW) {
-		amt*=HALF_RANGE;
-		amt/=PANEL_DEADBAND_LOW;
-	} else if(value>PANEL_DEADBAND_HIGH) {
-		amt-=PANEL_DEADBAND_HIGH;
-		amt*=HALF_RANGE;
-		amt/=FULL_RANGE-PANEL_DEADBAND_HIGH; // same as DEADBAND_LOW
-		amt+=HALF_RANGE;
-	} else { // in deadband
-		amt=HALF_RANGE;
-	}
-	// result of our calculations will be 0..UINT16_MAX
-	return amt;
-}
-
 static void refreshPresetPots(int8_t force)
 {
 	continuousParameter_t cp;
@@ -610,7 +584,7 @@ static void refreshPresetPots(int8_t force)
 			uint16_t value=potmux_getValue(pp);
 
 			if(potmux_isPotZeroCentered(pp))
-				value=panelDeadband(value);
+				value=addDeadband(value,HALF_RANGE,PANEL_DEADBAND);
 			currentPreset.continuousParameters[cp]=value;
 			ui.presetModified=1;
 		}
