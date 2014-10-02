@@ -24,6 +24,8 @@
 
 #define POT_DEAD_ZONE 512
 
+#define BEND_DEADBAND 4096
+
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
 
@@ -225,6 +227,8 @@ int16_t getAdjustedBenderAmount(void)
 {
 	int32_t amt;
 	uint16_t pos;
+	uint16_t benderMiddleLow=settings.benderMiddle-BEND_DEADBAND;
+	uint16_t benderMiddleHigh=settings.benderMiddle+BEND_DEADBAND;
 
 	pos=potmux_getValue(ppPitchWheel);
 
@@ -232,17 +236,19 @@ int16_t getAdjustedBenderAmount(void)
 
 	amt=pos;
 
-	if(amt<settings.benderMiddle)
+	if(pos<benderMiddleLow)
 	{
-		amt=settings.benderMiddle-amt;
+		amt=benderMiddleLow-amt;
 		amt*=INT16_MIN;
-		amt/=settings.benderMiddle;
+		amt/=benderMiddleLow;
 	}
-	else
+	else if (pos>benderMiddleHigh)
 	{
-		amt-=settings.benderMiddle;
+		amt-=benderMiddleHigh;
 		amt*=INT16_MAX;
-		amt/=UINT16_MAX-settings.benderMiddle;
+		amt/=UINT16_MAX-benderMiddleHigh;
+	} else { // in deadband
+		amt=0;
 	}
 
 	return MIN(MAX(amt,INT16_MIN),INT16_MAX);
