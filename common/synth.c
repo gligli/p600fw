@@ -25,10 +25,11 @@
 #define POT_DEAD_ZONE 512
 
 #define BEND_DEADBAND 4096
+#define BEND_GUARDBAND 512
 
 #define PANEL_DEADBAND 2048
 #define FULL_RANGE UINT16_MAX
-#define HALF_RANGE (FULL_RANGE/2)
+#define HALF_RANGE (FULL_RANGE/2+1)
 
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
@@ -227,19 +228,27 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	}
 }
 
-static uint16_t addDeadband(uint16_t value, uint16_t middle, uint16_t deadband)
+static uint16_t addDeadband(uint16_t value, uint16_t middle, uint16_t guard, uint16_t deadband)
 {
 	uint16_t middleLow=middle-deadband;
 	uint16_t middleHigh=middle+deadband;
-	uint32_t amt=value;
+	uint32_t amt;
+
+	if(value>FULL_RANGE-guard)
+		return FULL_RANGE;
+	if(value<guard)
+		return 0;
+
+	amt=value;
 
 	if(value<middleLow) {
+		amt-=guard;
 		amt*=HALF_RANGE;
-		amt/=middleLow;
+		amt/=middleLow-guard;
 	} else if(value>middleHigh) {
 		amt-=middleHigh;
 		amt*=HALF_RANGE;
-		amt/=FULL_RANGE-middleHigh;
+		amt/=FULL_RANGE-guard-middleHigh;
 		amt+=HALF_RANGE;
 	} else { // in deadband
 		amt=HALF_RANGE;
@@ -250,7 +259,7 @@ static uint16_t addDeadband(uint16_t value, uint16_t middle, uint16_t deadband)
 
 int16_t getAdjustedBenderAmount(void)
 {
-	return addDeadband(potmux_getValue(ppPitchWheel),settings.benderMiddle, BEND_DEADBAND)-HALF_RANGE;
+	return addDeadband(potmux_getValue(ppPitchWheel),settings.benderMiddle,BEND_GUARDBAND,BEND_DEADBAND)-HALF_RANGE;
 }
 
 void computeBenderCVs(void)
@@ -584,7 +593,7 @@ static void refreshPresetPots(int8_t force)
 			uint16_t value=potmux_getValue(pp);
 
 			if(potmux_isPotZeroCentered(pp))
-				value=addDeadband(value,HALF_RANGE,PANEL_DEADBAND);
+				value=addDeadband(value,HALF_RANGE,0,PANEL_DEADBAND);
 			currentPreset.continuousParameters[cp]=value;
 			ui.presetModified=1;
 		}
