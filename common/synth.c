@@ -30,6 +30,7 @@
 #define PANEL_DEADBAND 2048
 #define FULL_RANGE UINT16_MAX
 #define HALF_RANGE (FULL_RANGE/2+1)
+#define HALF_RANGE_L (65536UL*HALF_RANGE) // i.e. HALF_RANGE<<16, as uint32_t
 
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
@@ -87,6 +88,8 @@ struct deadband {
 	uint16_t middle;
 	uint16_t guard;
 	uint16_t deadband;
+	uint32_t precalcLow;
+	uint32_t precalcHigh;
 };
 
 struct deadband bendDeadband = { HALF_RANGE, BEND_GUARDBAND,  BEND_DEADBAND };
@@ -237,6 +240,19 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	}
 }
 
+// Precalculate factor for dead band scaling to avoid time consuming
+// division operation.
+// so instead of doing foo*=32768; foo/=factor; we precalculate
+// precalc=32768<<16/factor, and do foo*=precalc; foo>>=16; runtime.
+static void precalcDeadband(struct deadband *deadband)
+{
+	uint16_t middleLow=deadband->middle-deadband->deadband;
+	uint16_t middleHigh=deadband->middle+deadband->deadband;
+
+	deadband->precalcLow=HALF_RANGE_L/(middleLow-deadband->guard);
+	deadband->precalcHigh=HALF_RANGE_L/(FULL_RANGE-deadband->guard-middleHigh);
+}
+
 static uint16_t addDeadband(uint16_t value, struct deadband *deadband)
 {
 	uint16_t middleLow=deadband->middle-deadband->deadband;
@@ -252,24 +268,28 @@ static uint16_t addDeadband(uint16_t value, struct deadband *deadband)
 
 	if(value<middleLow) {
 		amt-=deadband->guard;
-		amt*=HALF_RANGE;
-		amt/=middleLow-deadband->guard;
+		amt*=deadband->precalcLow; // result is 65536 too big now
 	} else if(value>middleHigh) {
 		amt-=middleHigh;
-		amt*=HALF_RANGE;
-		amt/=FULL_RANGE-deadband->guard-middleHigh;
-		amt+=HALF_RANGE;
+		amt*=deadband->precalcHigh; // result is 65536 too big now
+		amt+=HALF_RANGE_L;
 	} else { // in deadband
-		amt=HALF_RANGE;
+		return HALF_RANGE;
 	}
-	// result of our calculations will be 0..UINT16_MAX
-	return amt;
+	// result of our calculations will be 0..UINT16_MAX<<16
+	return amt>>16;
 }
 
-int16_t getAdjustedBenderAmount(void)
+static int16_t getAdjustedBenderAmount(void)
+{
+	return addDeadband(potmux_getValue(ppPitchWheel),&bendDeadband)-HALF_RANGE;
+}
+
+void synth_updateBender(void)
 {
 	bendDeadband.middle=settings.benderMiddle;
-	return addDeadband(potmux_getValue(ppPitchWheel),&bendDeadband)-HALF_RANGE;
+	precalcDeadband(&bendDeadband);
+	synth_wheelEvent(getAdjustedBenderAmount(),0,1,0);
 }
 
 void computeBenderCVs(void)
@@ -759,6 +779,11 @@ void synth_init(void)
 	
 	scanner_update(1);
 	potmux_update(POTMUX_POT_COUNT);
+
+	// dead band pre calculation
+	precalcDeadband(&panelDeadband);
+	bendDeadband.middle=settings.benderMiddle;
+	precalcDeadband(&bendDeadband);
 
 	// load last preset & do a full refresh
 	
