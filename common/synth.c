@@ -83,6 +83,15 @@ struct synth_s
 extern void refreshAllPresetButtons(void);
 extern const uint16_t attackCurveLookup[]; // for modulation delay
 
+struct deadband {
+	uint16_t middle;
+	uint16_t guard;
+	uint16_t deadband;
+};
+
+struct deadband bendDeadband = { HALF_RANGE, BEND_GUARDBAND,  BEND_DEADBAND };
+struct deadband panelDeadband = { HALF_RANGE, 0, PANEL_DEADBAND };
+
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
 	uint16_t cva,cvb,cvf;
@@ -228,27 +237,27 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	}
 }
 
-static uint16_t addDeadband(uint16_t value, uint16_t middle, uint16_t guard, uint16_t deadband)
+static uint16_t addDeadband(uint16_t value, struct deadband *deadband)
 {
-	uint16_t middleLow=middle-deadband;
-	uint16_t middleHigh=middle+deadband;
+	uint16_t middleLow=deadband->middle-deadband->deadband;
+	uint16_t middleHigh=deadband->middle+deadband->deadband;
 	uint32_t amt;
 
-	if(value>FULL_RANGE-guard)
+	if(value>FULL_RANGE-deadband->guard)
 		return FULL_RANGE;
-	if(value<guard)
+	if(value<deadband->guard)
 		return 0;
 
 	amt=value;
 
 	if(value<middleLow) {
-		amt-=guard;
+		amt-=deadband->guard;
 		amt*=HALF_RANGE;
-		amt/=middleLow-guard;
+		amt/=middleLow-deadband->guard;
 	} else if(value>middleHigh) {
 		amt-=middleHigh;
 		amt*=HALF_RANGE;
-		amt/=FULL_RANGE-guard-middleHigh;
+		amt/=FULL_RANGE-deadband->guard-middleHigh;
 		amt+=HALF_RANGE;
 	} else { // in deadband
 		amt=HALF_RANGE;
@@ -259,7 +268,8 @@ static uint16_t addDeadband(uint16_t value, uint16_t middle, uint16_t guard, uin
 
 int16_t getAdjustedBenderAmount(void)
 {
-	return addDeadband(potmux_getValue(ppPitchWheel),settings.benderMiddle,BEND_GUARDBAND,BEND_DEADBAND)-HALF_RANGE;
+	bendDeadband.middle=settings.benderMiddle;
+	return addDeadband(potmux_getValue(ppPitchWheel),&bendDeadband)-HALF_RANGE;
 }
 
 void computeBenderCVs(void)
@@ -593,7 +603,7 @@ static void refreshPresetPots(int8_t force)
 			uint16_t value=potmux_getValue(pp);
 
 			if(potmux_isPotZeroCentered(pp))
-				value=addDeadband(value,HALF_RANGE,0,PANEL_DEADBAND);
+				value=addDeadband(value,&panelDeadband);
 			currentPreset.continuousParameters[cp]=value;
 			ui.presetModified=1;
 		}
