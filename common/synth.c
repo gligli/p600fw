@@ -24,10 +24,17 @@
 
 #define POT_DEAD_ZONE 512
 
+// Dead band is distance from center of pot to end of dead band area,
+// in either direction.
 #define BEND_DEADBAND 4096
+// Guard band is distance from the end of pot travel until we start
+// reacting. Compensates for the fact that the bend pot cannot reach
+// especially the maximum positive voltage.
 #define BEND_GUARDBAND 512
 
 #define PANEL_DEADBAND 2048
+
+// Some constants for 16 bit ranges */
 #define FULL_RANGE UINT16_MAX
 #define HALF_RANGE (FULL_RANGE/2+1)
 #define HALF_RANGE_L (65536UL*HALF_RANGE) // i.e. HALF_RANGE<<16, as uint32_t
@@ -244,34 +251,34 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 // division operation.
 // so instead of doing foo*=32768; foo/=factor; we precalculate
 // precalc=32768<<16/factor, and do foo*=precalc; foo>>=16; runtime.
-static void precalcDeadband(struct deadband *deadband)
+static void precalcDeadband(struct deadband *d)
 {
-	uint16_t middleLow=deadband->middle-deadband->deadband;
-	uint16_t middleHigh=deadband->middle+deadband->deadband;
+	uint16_t middleLow=d->middle-d->deadband;
+	uint16_t middleHigh=d->middle+d->deadband;
 
-	deadband->precalcLow=HALF_RANGE_L/(middleLow-deadband->guard);
-	deadband->precalcHigh=HALF_RANGE_L/(FULL_RANGE-deadband->guard-middleHigh);
+	d->precalcLow=HALF_RANGE_L/(middleLow-d->guard);
+	d->precalcHigh=HALF_RANGE_L/(FULL_RANGE-d->guard-middleHigh);
 }
 
-static uint16_t addDeadband(uint16_t value, struct deadband *deadband)
+static uint16_t addDeadband(uint16_t value, struct deadband *d)
 {
-	uint16_t middleLow=deadband->middle-deadband->deadband;
-	uint16_t middleHigh=deadband->middle+deadband->deadband;
+	uint16_t middleLow=d->middle-d->deadband;
+	uint16_t middleHigh=d->middle+d->deadband;
 	uint32_t amt;
 
-	if(value>FULL_RANGE-deadband->guard)
+	if(value>FULL_RANGE-d->guard)
 		return FULL_RANGE;
-	if(value<deadband->guard)
+	if(value<d->guard)
 		return 0;
 
 	amt=value;
 
 	if(value<middleLow) {
-		amt-=deadband->guard;
-		amt*=deadband->precalcLow; // result is 65536 too big now
+		amt-=d->guard;
+		amt*=d->precalcLow; // result is 65536 too big now
 	} else if(value>middleHigh) {
 		amt-=middleHigh;
-		amt*=deadband->precalcHigh; // result is 65536 too big now
+		amt*=d->precalcHigh; // result is 65536 too big now
 		amt+=HALF_RANGE_L;
 	} else { // in deadband
 		return HALF_RANGE;
