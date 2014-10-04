@@ -26,11 +26,11 @@
 
 // Dead band is distance from center of pot to end of dead band area,
 // in either direction.
-#define BEND_DEADBAND 4096
+#define BEND_DEADBAND 3072
 // Guard band is distance from the end of pot travel until we start
 // reacting. Compensates for the fact that the bend pot cannot reach
 // especially the maximum positive voltage.
-#define BEND_GUARDBAND 512
+#define BEND_GUARDBAND 400
 
 #define PANEL_DEADBAND 2048
 
