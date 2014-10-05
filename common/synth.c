@@ -552,7 +552,19 @@ static void refreshSevenSeg(void)
 		
 		if(ui.lastActivePotValue>=0)
 		{
-			int16_t v=(ui.adjustedLastActivePotValue*100L)>>16; // 0..100 range
+			int32_t v;
+			
+			if(ui.lastActivePot!=ppPitchWheel)
+			{
+				v=ui.adjustedLastActivePotValue;
+			}
+			else
+			{
+				v=getAdjustedBenderAmount();
+				v-=INT16_MIN;
+			}
+
+			v=(v*100L)>>16; // 0..100 range
 		
 			if(potmux_isPotZeroCentered(ui.lastActivePot))
 			{
