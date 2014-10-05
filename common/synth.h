@@ -33,6 +33,11 @@
 #define TICKER_1S 500
 #define TEMP_BUFFER_SIZE 512
 
+// Some constants for 16 bit ranges */
+#define FULL_RANGE UINT16_MAX
+#define HALF_RANGE (FULL_RANGE/2+1)
+#define HALF_RANGE_L (65536UL*HALF_RANGE) // i.e. HALF_RANGE<<16, as uint32_t
+
 ////////////////////////////////////////////////////////////////////////////////
 // Prophet 600 definitions
 ////////////////////////////////////////////////////////////////////////////////

@@ -236,11 +236,11 @@ void arp_update(void)
 	
 	// send note to assigner, velocity at half (MIDI value 64)
 	
-	assigner_assignNote(n+SCANNER_BASE_NOTE,1,32768U);
+	assigner_assignNote(n+SCANNER_BASE_NOTE,1,HALF_RANGE);
 	
 	// pass to MIDI out
 
-	midi_sendNoteEvent(n+SCANNER_BASE_NOTE,1,32768U);
+	midi_sendNoteEvent(n+SCANNER_BASE_NOTE,1,HALF_RANGE);
 
 	arp.previousNote=arp.notes[arp.noteIndex];
 }

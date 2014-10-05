@@ -34,11 +34,6 @@
 
 #define PANEL_DEADBAND 2048
 
-// Some constants for 16 bit ranges */
-#define FULL_RANGE UINT16_MAX
-#define HALF_RANGE (FULL_RANGE/2+1)
-#define HALF_RANGE_L (65536UL*HALF_RANGE) // i.e. HALF_RANGE<<16, as uint32_t
-
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
 
@@ -557,12 +552,12 @@ static void refreshSevenSeg(void)
 		
 		if(ui.lastActivePotValue>=0)
 		{
-			int16_t v=ui.lastActivePotValue/656; // 0..100 range
+			int16_t v=(ui.adjustedLastActivePotValue*100L)>>16; // 0..100 range
 		
 			if(potmux_isPotZeroCentered(ui.lastActivePot))
 			{
 				v=abs(v-50);
-				led_set(plDot,ui.lastActivePotValue<=INT16_MAX,0); // dot indicates negative
+				led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
 			}
 			
 			sevenSeg_setNumber(v);
@@ -832,6 +827,11 @@ void synth_update(void)
 		if(potVal!=ui.lastActivePotValue)
 		{
 			ui.lastActivePotValue=potVal;
+			ui.adjustedLastActivePotValue=potVal;
+
+			if(potmux_isPotZeroCentered(ui.lastActivePot))
+				ui.adjustedLastActivePotValue=addDeadband(potVal,&panelDeadband);
+
 			refreshSevenSeg();
 
 			// update CVs
@@ -1027,10 +1027,10 @@ void synth_keyEvent(uint8_t key, int pressed)
 	if(arp_getMode()==amOff)
 	{
 		// Set velocity to half (corresponding to MIDI value 64)
-		assigner_assignNote(key,pressed,32768U);
+		assigner_assignNote(key,pressed,HALF_RANGE);
 
 		// pass to MIDI out
-		midi_sendNoteEvent(key,pressed,32768U);
+		midi_sendNoteEvent(key,pressed,HALF_RANGE);
 	}
 	else
 	{

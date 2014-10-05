@@ -22,6 +22,7 @@ struct ui_s
 
 	p600Pot_t lastActivePot;
 	int32_t lastActivePotValue;
+	uint16_t adjustedLastActivePotValue;
 	
 	int32_t previousData;
 	int8_t activeParamIdx;
