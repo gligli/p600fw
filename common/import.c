@@ -90,12 +90,12 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpVolB]=tmp;
 	p.continuousParameters[cpFreqA]=zp->freqA<<10;
 	p.continuousParameters[cpFreqB]=zp->freqB<<10;
-	p.continuousParameters[cpFreqBFine]=(UINT16_MAX/2)+(zp->fineB<<8);
+	p.continuousParameters[cpFreqBFine]=HALF_RANGE+(zp->fineB<<8);
 	p.continuousParameters[cpAPW]=zp->pwA<<9;
 	p.continuousParameters[cpBPW]=zp->pwB<<9;
 	p.continuousParameters[cpCutoff]=zp->cutoff<<8;
 	p.continuousParameters[cpResonance]=zp->reso<<10;
-	p.continuousParameters[cpFilEnvAmt]=0x8000+(zp->filEnvAmt<<11);
+	p.continuousParameters[cpFilEnvAmt]=HALF_RANGE+(zp->filEnvAmt<<11);
 	p.continuousParameters[cpFilRel]=z80EnvCV[zp->filRel]<<8;
 	p.continuousParameters[cpFilSus]=zp->filSus<<12;
 	p.continuousParameters[cpFilDec]=z80EnvCV[zp->filDec]<<8;
@@ -104,7 +104,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpAmpSus]=zp->ampSus<<12;
 	p.continuousParameters[cpAmpDec]=z80EnvCV[zp->ampDec]<<8;
 	p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
-	p.continuousParameters[cpPModFilEnv]=0x8000+(zp->pmodFilEnv<<11);
+	p.continuousParameters[cpPModFilEnv]=HALF_RANGE+(zp->pmodFilEnv<<11);
 	p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
 	p.continuousParameters[cpLFOFreq]=zp->lfoFreq<<10;
 	p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;

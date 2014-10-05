@@ -400,15 +400,15 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 	{
 		memset(&currentPreset,0,sizeof(currentPreset));
 
-		currentPreset.continuousParameters[cpAPW]=UINT16_MAX/2;
-		currentPreset.continuousParameters[cpBPW]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpAPW]=HALF_RANGE;
+		currentPreset.continuousParameters[cpBPW]=HALF_RANGE;
 		currentPreset.continuousParameters[cpCutoff]=UINT16_MAX;
-		currentPreset.continuousParameters[cpFilEnvAmt]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpFilEnvAmt]=HALF_RANGE;
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
-		currentPreset.continuousParameters[cpAmpVelocity]=UINT16_MAX/2;
-		currentPreset.continuousParameters[cpSeqArpClock]=UINT16_MAX/2;
-		currentPreset.continuousParameters[cpVibFreq]=UINT16_MAX/2;
+		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
+		currentPreset.continuousParameters[cpSeqArpClock]=HALF_RANGE;
+		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modVCO;
@@ -430,7 +430,7 @@ LOWERCODESIZE void settings_loadDefault(void)
 	{
 		memset(&settings,0,sizeof(settings));
 		
-		settings.benderMiddle=UINT16_MAX/2;
+		settings.benderMiddle=HALF_RANGE;
 		settings.midiReceiveChannel=-1;
 		settings.voiceMask=0x3f;
 		
