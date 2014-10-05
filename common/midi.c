@@ -12,6 +12,7 @@
 
 #include "../xnormidi/midi_device.h"
 #include "../xnormidi/midi.h"
+#include "../xnormidi/bytequeue/bytequeue.h"
 
 #define MAX_SYSEX_SIZE TEMP_BUFFER_SIZE
 
@@ -21,6 +22,8 @@
 
 static MidiDevice midi;
 static int16_t sysexSize;
+static byteQueue_t sendQueue;
+static uint8_t sendQueueData[32];
 
 extern void refreshFullState(void);
 extern void refreshPresetMode(void);
@@ -283,13 +286,13 @@ static void midi_realtimeEvent(MidiDevice * device, uint8_t event)
 static void midi_sendFunc(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
 {
 	if(count>0)
-		uart_send(b0);
+		bytequeue_enqueue(&sendQueue,b0);
 	
 	if(count>1)
-		uart_send(b1);
+		bytequeue_enqueue(&sendQueue,b1);
 
 	if(count>2)
-		uart_send(b2);
+		bytequeue_enqueue(&sendQueue,b2);
 }
 
 
@@ -306,11 +309,21 @@ void midi_init(void)
 	midi_register_realtime_callback(&midi,midi_realtimeEvent);
 	
 	sysexSize=0;
+	
+	bytequeue_init(&sendQueue, sendQueueData, sizeof(sendQueueData));
 }
 
 void midi_update(void)
 {
 	midi_device_process(&midi);
+	
+	if(bytequeue_length(&sendQueue)>0)
+	{
+		uint8_t b;
+		b=bytequeue_get(&sendQueue,0);
+		bytequeue_remove(&sendQueue,1);
+		uart_send(b);
+	}
 }
 
 void midi_newData(uint8_t data)
