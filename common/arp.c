@@ -105,7 +105,9 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 
 inline void arp_setSpeed(uint16_t speed)
 {
-	if(settings.syncMode==smInternal)
+	if(speed<1024)
+		arp.speed=UINT16_MAX;
+	else if(settings.syncMode==smInternal)
 		arp.speed=exponentialCourse(speed,22000.0f,500.0f);
 	else
 		arp.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
@@ -202,6 +204,9 @@ void arp_update(void)
 	
 	// speed management
 	
+	if(arp.speed==UINT16_MAX)
+		return;
+
 	++arp.counter;
 	
 	if(arp.counter<arp.speed)
