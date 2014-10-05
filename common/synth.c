@@ -260,7 +260,7 @@ static void precalcDeadband(struct deadband *d)
 	d->precalcHigh=HALF_RANGE_L/(FULL_RANGE-d->guard-middleHigh);
 }
 
-static uint16_t addDeadband(uint16_t value, struct deadband *d)
+static inline uint16_t addDeadband(uint16_t value, struct deadband *d)
 {
 	uint16_t middleLow=d->middle-d->deadband;
 	uint16_t middleHigh=d->middle+d->deadband;
@@ -287,7 +287,7 @@ static uint16_t addDeadband(uint16_t value, struct deadband *d)
 	return amt>>16;
 }
 
-static int16_t getAdjustedBenderAmount(void)
+static inline int16_t getAdjustedBenderAmount(void)
 {
 	return addDeadband(potmux_getValue(ppPitchWheel),&bendDeadband)-HALF_RANGE;
 }
