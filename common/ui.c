@@ -189,11 +189,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		refreshPresetMode();
 		refreshFullState();
 	}
-	else if(button==pb7) // reset to a basic patch
-	{
-		preset_loadDefault(1);
-		refreshFullState();
-	}
 	else if(button==pb8) // sync mode
 	{
 		settings.syncMode=(settings.syncMode+1)%3;
@@ -228,6 +223,13 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 			sevenSeg_scrollText("spread off",1);
 		};
 		
+		refreshFullState();
+	}
+	else if(button==pb0) // reset to a basic patch
+	{
+		preset_loadDefault(1);
+		ui.presetModified=1;
+		sevenSeg_scrollText("basic patch",1);
 		refreshFullState();
 	}
 }
