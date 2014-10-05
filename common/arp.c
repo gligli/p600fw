@@ -22,6 +22,7 @@ static struct
 	uint8_t notes[ARP_NOTE_MEMORY];
 	int16_t noteIndex;
 	uint8_t previousNote;
+	int8_t transpose,previousTranspose;
 
 	uint16_t counter,speed;
 	int8_t hold;
@@ -45,10 +46,10 @@ static void finishPreviousNote(void)
 	{
 		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
 		
-		assigner_assignNote(n+SCANNER_BASE_NOTE,0,0);
+		assigner_assignNote(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0);
 		
 		// pass to MIDI out
-		midi_sendNoteEvent(n+SCANNER_BASE_NOTE,0,0);
+		midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0);
 	}
 }
 
@@ -110,6 +111,11 @@ inline void arp_setSpeed(uint16_t speed)
 		arp.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
 }
 
+void arp_setTranspose(int8_t transpose)
+{
+	arp.transpose=transpose;
+}
+
 void arp_resetCounter(void)
 {
 	arp.counter=INT16_MAX; // start on a note
@@ -128,7 +134,7 @@ int8_t arp_getHold(void)
 void arp_assignNote(uint8_t note, int8_t on)
 {
 	int16_t i;
-
+	
 	// We only arpeggiate from the internal keyboard, so we can keep the
 	// note memory size at 128 if we set the keyboard range to 0 and up.
 	note-=SCANNER_BASE_NOTE;
@@ -236,13 +242,14 @@ void arp_update(void)
 	
 	// send note to assigner, velocity at half (MIDI value 64)
 	
-	assigner_assignNote(n+SCANNER_BASE_NOTE,1,HALF_RANGE);
+	assigner_assignNote(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
 	
 	// pass to MIDI out
 
-	midi_sendNoteEvent(n+SCANNER_BASE_NOTE,1,HALF_RANGE);
+	midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
 
 	arp.previousNote=arp.notes[arp.noteIndex];
+	arp.previousTranspose=arp.transpose;
 }
 
 void arp_init(void)

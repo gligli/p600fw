@@ -81,6 +81,8 @@ struct synth_s
 	uint16_t modulationDelayTickCount;
 	
 	uint8_t pendingExtClock;
+	
+	int8_t transpose;
 } synth;
 
 extern void refreshAllPresetButtons(void);
@@ -1039,13 +1041,26 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 
 void synth_keyEvent(uint8_t key, int pressed)
 {
-	if(arp_getMode()==amOff)
+	if(ui.isTransposing)
+	{
+		if(pressed)
+		{
+			char s[16]="transp = ";
+			
+			synth.transpose=(int8_t)key-SCANNER_C2;
+			arp_setTranspose(synth.transpose);
+			
+			itoa(synth.transpose,&s[9],10);
+			sevenSeg_scrollText(s,1);
+		}
+	}
+	else if(arp_getMode()==amOff)
 	{
 		// Set velocity to half (corresponding to MIDI value 64)
-		assigner_assignNote(key,pressed,HALF_RANGE);
+		assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE);
 
 		// pass to MIDI out
-		midi_sendNoteEvent(key,pressed,HALF_RANGE);
+		midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
 	}
 	else
 	{

@@ -26,6 +26,7 @@ struct ui_s
 	
 	int32_t previousData;
 	int8_t activeParamIdx;
+	int8_t isTransposing;
 };
 
 extern struct ui_s ui;

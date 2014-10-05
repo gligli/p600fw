@@ -488,6 +488,11 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 	}
 
+	// keyboard transposition
+	
+	if(button==pbFromTape)
+		ui.isTransposing=pressed;
+	
 	// modes 
 	
 	if(pressed)
