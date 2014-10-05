@@ -371,3 +371,8 @@ void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 		lastMod=modulation;
 	}
 }
+
+void midi_sendSustainEvent(int8_t on)
+{
+	midi_send_cc(&midi,settings.midiSendChannel,64,on?0x7f:0x00);
+}
