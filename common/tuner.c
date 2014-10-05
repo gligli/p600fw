@@ -148,7 +148,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	// display / start maintainting CVs
 	
-	for(int8_t i=0;i<30;++i) // lower this and eg. filter tuning starts behaving badly
+	for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly
 		whileTuning();
 			
 	// prepare flip flop
