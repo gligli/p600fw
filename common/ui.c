@@ -280,7 +280,7 @@ static LOWERCODESIZE void displayUIParameter(int8_t num)
 	switch(prm->type)
 	{
 	case ptCont:
-		ui.lastActivePotValue=currentPreset.continuousParameters[prm->number];
+		ui.lastActivePotValue=ui.adjustedLastActivePotValue=currentPreset.continuousParameters[prm->number];
 		break;
 	case ptStep:
 		strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
