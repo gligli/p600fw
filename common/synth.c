@@ -981,7 +981,7 @@ void synth_timerInterrupt(void)
 			handleFinishedVoices();
 
 		// MIDI processing
-		midi_update();
+		midi_update(0);
 
 		// ticker inc
 		++currentTick;

@@ -283,16 +283,26 @@ static void midi_realtimeEvent(MidiDevice * device, uint8_t event)
 	synth_realtimeEvent(event);
 }
 
+static void sendEnqueue(uint8_t b)
+{
+	for(;;)
+	{
+		if(bytequeue_enqueue(&sendQueue,b))
+			break;
+		midi_update(1);
+	}
+}
+
 static void midi_sendFunc(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
 {
 	if(count>0)
-		bytequeue_enqueue(&sendQueue,b0);
+		sendEnqueue(b0);
 	
 	if(count>1)
-		bytequeue_enqueue(&sendQueue,b1);
+		sendEnqueue(b1);
 
 	if(count>2)
-		bytequeue_enqueue(&sendQueue,b2);
+		sendEnqueue(b2);
 }
 
 
@@ -313,9 +323,10 @@ void midi_init(void)
 	bytequeue_init(&sendQueue, sendQueueData, sizeof(sendQueueData));
 }
 
-void midi_update(void)
+void midi_update(int8_t onlySend)
 {
-	midi_device_process(&midi);
+	if(!onlySend)
+		midi_device_process(&midi);
 	
 	if(bytequeue_length(&sendQueue)>0)
 	{
