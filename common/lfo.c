@@ -146,14 +146,7 @@ inline void lfo_update(struct lfo_s * l)
 
 	// compute output
 	
-	int32_t o;
-	
-	o=l->rawOutput;
-	o+=INT16_MIN;
-	o*=l->levelCV;
-	o/=UINT16_MAX;
-	
-	l->output=o;
+	l->output=scaleU16S16(l->levelCV,(int32_t)l->rawOutput+INT16_MIN);
 }
 
 
