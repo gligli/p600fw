@@ -109,7 +109,7 @@ void synth_uartInterrupt(void);
 
 extern volatile uint32_t currentTick; // 500hz
 extern uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
-
+extern const uint16_t extClockDividers[18];
 
 #endif	/* SYNTH_H */
 

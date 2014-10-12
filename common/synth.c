@@ -52,6 +52,8 @@ const p600Pot_t continuousParameterToPot[cpCount]=
 	ppNone,ppNone,ppNone,ppNone,
 };
 
+const uint16_t extClockDividers[18] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2,1};
+
 volatile uint32_t currentTick=0; // 500hz
 
 struct synth_s

@@ -15,8 +15,6 @@
 
 #define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
 
-const uint16_t extClockDividers[18] = {384,192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2,1};
-
 static struct
 {
 	uint8_t notes[ARP_NOTE_MEMORY];
@@ -259,12 +257,9 @@ void arp_update(void)
 
 void arp_init(void)
 {
-	int16_t i;
-	
 	memset(&arp,0,sizeof(arp));
 
-	for(i=0;i<ARP_NOTE_MEMORY;++i)
-		arp.notes[i]=ASSIGNER_NO_NOTE;
+	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
 	
 	arp.noteIndex=-1;
 	arp.previousNote=ASSIGNER_NO_NOTE;
