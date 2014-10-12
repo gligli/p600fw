@@ -76,7 +76,7 @@ void led_set(p600LED_t led, int8_t on, int8_t blinking)
 	display.ledBlinking&=~mask;
 	
 	if (on) display.ledOn|=mask;
-	if (blinking) display.ledBlinking|=mask;
+	if (on && blinking) display.ledBlinking|=mask;
 }
 
 void display_clear()

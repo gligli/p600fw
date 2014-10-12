@@ -5,6 +5,9 @@
 
 #define SCANNER_BASE_NOTE 24
 #define SCANNER_C2 (SCANNER_BASE_NOTE+24)
+#define SCANNER_C5 (SCANNER_BASE_NOTE+60)
+#define SCANNER_B4 (SCANNER_BASE_NOTE+59)
+#define SCANNER_Bb4 (SCANNER_BASE_NOTE+58)
 
 int8_t scanner_keyState(uint8_t key);
 int8_t scanner_buttonState(p600Button_t button);

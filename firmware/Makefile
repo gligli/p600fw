@@ -63,6 +63,7 @@ SRC = \
 	../common/adsr.c \
 	../common/lfo.c \
 	../common/arp.c \
+	../common/seq.c \
 	../common/tuner.c \
 	../common/potmux.c \
 	../common/assigner.c \

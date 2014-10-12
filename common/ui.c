@@ -4,6 +4,7 @@
 
 #include "ui.h"
 #include "storage.h"
+#include "seq.h"
 #include "arp.h"
 #include "scanner.h"
 #include "display.h"
@@ -425,6 +426,35 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		tuner_tuneSynth();
 	}
 	
+	// sequencer
+	
+	if(pressed && (button==pbSeq1 || button==pbSeq2))
+	{
+		int8_t track=(button==pbSeq2)?1:0;
+		
+		switch(seq_getMode(track))
+		{
+		case smOff:
+			seq_setMode(track,smWaiting);
+			break;
+		case smWaiting:
+		case smRecording:
+			seq_setMode(track,smPlaying);
+			break;
+		case smPlaying:
+			seq_setMode(track,smOff);
+			break;
+		}
+	}
+	
+	if((seq_getMode(0)!=smOff || seq_getMode(1)!=smOff) && pressed && button==pbRecord)
+	{
+		int8_t track=(seq_getMode(1)!=smOff)?1:0;
+
+		seq_setMode(track,(seq_getMode(track)==smRecording)?smPlaying:smRecording);
+		return; // override normal record action
+	}
+
 	// arp
 	
 	if(pressed && button==pbArpUD)

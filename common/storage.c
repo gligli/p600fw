@@ -368,7 +368,35 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 	}
 }
 
-LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * size)
+LOWERCODESIZE int8_t storage_loadSequencer(int8_t track, uint8_t * data, uint8_t size)
+{
+	BLOCK_INT
+	{
+		if (!storageLoad(SEQUENCER_START_PAGE+track,1))
+			return 0;
+		
+		while(size--)
+			*data++=storageRead8();
+	}
+	
+	return 1;
+}
+
+LOWERCODESIZE void storage_saveSequencer(int8_t track, uint8_t * data, uint8_t size)
+{
+	BLOCK_INT
+	{
+		storagePrepareStore();
+
+		while(size--)
+			storageWrite8(*data++);
+		
+		// this must stay last
+		storageFinishStore(SEQUENCER_START_PAGE+track,1);
+	}
+}
+
+LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * loadedSize)
 {
 	int16_t actualSize;
 
@@ -384,7 +412,7 @@ LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * size
 		
 		buf[0]=number;		
 		memcpy(&buf[1],storage.buffer,actualSize);
-		*size=actualSize+1;
+		*loadedSize=actualSize+1;
 	}
 }
 

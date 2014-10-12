@@ -6,6 +6,7 @@
 #include "assigner.h"
 
 #define MANUAL_PRESET_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-5)
+#define SEQUENCER_START_PAGE 200
 
 typedef enum
 {
@@ -98,8 +99,12 @@ void preset_saveCurrent(uint16_t number);
 void preset_loadDefault(int8_t makeSound);
 void settings_loadDefault(void);
 
-void storage_export(uint16_t number, uint8_t * buf, int16_t * size);
+void storage_simpleExport(uint16_t number, uint8_t * buf, int16_t size);
+void storage_export(uint16_t number, uint8_t * buf, int16_t * loadedSize);
 void storage_import(uint16_t number, uint8_t * buf, int16_t size);
+
+int8_t storage_loadSequencer(int8_t track, uint8_t * data, uint8_t size);
+void storage_saveSequencer(int8_t track, uint8_t * data, uint8_t size);
 
 #endif	/* STORAGE_H */
 

@@ -21,6 +21,7 @@
 #include "ui.h"
 #include "midi.h"
 #include "../xnormidi/midi.h"
+#include "seq.h"
 
 #define POT_DEAD_ZONE 512
 
@@ -550,7 +551,14 @@ static void refreshLfoSettings(void)
 
 static void refreshSevenSeg(void)
 {
-	if(ui.digitInput<diLoadDecadeDigit)
+	if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+	{
+		int8_t track=(seq_getMode(1)==smRecording)?1:0;
+		uint8_t count=seq_getNoteCount(track);
+		sevenSeg_setNumber(count);
+		led_set(plDot,count>=100,count==SEQ_NOTE_MEMORY);
+	}
+	else if(ui.digitInput<diLoadDecadeDigit)
 	{
 		led_set(plDot,0,0);
 		
@@ -602,20 +610,15 @@ static void refreshSevenSeg(void)
 	led_set(plPreset,settings.presetMode,0);
 	led_set(plToTape,ui.digitInput==diSynth && settings.presetMode,0);
 	led_set(plFromTape,scanner_buttonState(pbFromTape),0);
-	
-	if(arp_getMode()!=amOff)
-	{
-		led_set(plRecord,arp_getHold(),0);
-		led_set(plArpUD,arp_getMode()==amUpDown,0);
-		led_set(plArpAssign,arp_getMode()!=amUpDown,arp_getMode()==amRandom);
-	}
+	led_set(plSeq1,seq_getMode(0)!=smOff,seq_getMode(0)!=smPlaying);
+	led_set(plSeq2,seq_getMode(1)!=smOff,seq_getMode(1)!=smPlaying);
+	led_set(plArpUD,arp_getMode()==amUpDown,0);
+	led_set(plArpAssign,arp_getMode()>=amRandom,arp_getMode()==amRandom);
+
+	if(arp_getMode()!=amOff || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+		led_set(plRecord,arp_getHold() || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording,0);
 	else
-	{
 		led_set(plRecord,ui.digitInput==diStoreDecadeDigit,ui.digitInput==diStoreDecadeDigit);
-		led_set(plArpUD,0,0);
-		led_set(plArpAssign,0,0);
-	}
-	
 }
 
 void refreshFullState(void)
@@ -762,6 +765,7 @@ void synth_init(void)
 	tuner_init();
 	assigner_init();
 	uart_init();
+	seq_init();
 	arp_init();
 	ui_init();
 	midi_init();
@@ -901,6 +905,7 @@ void synth_update(void)
 		// arp
 		
 		arp_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
+		seq_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
 		
 		break;
 	}
@@ -993,14 +998,22 @@ void synth_timerInterrupt(void)
 	
 		handleBitInputs();
 		
-		// arpeggiator
-
-		if(arp_getMode()!=amOff && (settings.syncMode==smInternal || synth.pendingExtClock))
+		// sequencer & arpeggiator
+		
+		if(settings.syncMode==smInternal || synth.pendingExtClock)
 		{
 			if(synth.pendingExtClock)
 				--synth.pendingExtClock;
+
+			// sequencer
+
+			if(seq_getMode(0)!=smOff || seq_getMode(1)!=smOff)
+				seq_update();
 			
-			arp_update();
+			// arpeggiator
+
+			if(arp_getMode()!=amOff)
+				arp_update();
 		}
 
 		// glide
@@ -1050,23 +1063,58 @@ void synth_keyEvent(uint8_t key, int pressed)
 			char s[16]="transp = ";
 			
 			synth.transpose=(int8_t)key-SCANNER_C2;
+			seq_setTranspose(synth.transpose);
 			arp_setTranspose(synth.transpose);
 			
 			itoa(synth.transpose,&s[9],10);
 			sevenSeg_scrollText(s,1);
 		}
 	}
-	else if(arp_getMode()==amOff)
-	{
-		// Set velocity to half (corresponding to MIDI value 64)
-		assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE);
-
-		// pass to MIDI out
-		midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
-	}
 	else
 	{
-		arp_assignNote(key,pressed);
+		// sequencer start
+		if(pressed)
+			for(int8_t track=0;track<SEQ_TRACK_COUNT;++track)
+				if(seq_getMode(track)==smWaiting)
+				{
+					seq_setMode(track,smPlaying);
+					refreshSevenSeg();
+				}
+
+		if(arp_getMode()==amOff)
+		{
+			// sequencer note input		
+			if(pressed && (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording))
+			{
+				uint8_t note;
+				switch(key)
+				{
+				case SCANNER_C5:
+					note=SEQ_NOTE_REST;
+					break;
+				case SCANNER_B4:
+					note=SEQ_NOTE_TIE;
+					break;
+				case SCANNER_Bb4:
+					note=SEQ_NOTE_UNDO;
+					break;
+				default:
+					note=key;
+				}
+				seq_inputNote(note);
+				refreshSevenSeg();
+			}
+
+			// set velocity to half (corresponding to MIDI value 64)
+			assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE);
+
+			// pass to MIDI out
+			midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
+		}
+		else
+		{
+			arp_assignNote(key,pressed);
+		}
 	}
 }
 
@@ -1150,6 +1198,7 @@ void synth_realtimeEvent(uint8_t midiEvent)
 			++synth.pendingExtClock;
 			break;
 		case MIDI_START:
+			seq_resetCounter();
 			arp_resetCounter();
 			synth.pendingExtClock=0;
 			break;

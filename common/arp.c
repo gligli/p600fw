@@ -111,22 +111,22 @@ inline void arp_setSpeed(uint16_t speed)
 		arp.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
 }
 
-void arp_setTranspose(int8_t transpose)
+FORCEINLINE void arp_setTranspose(int8_t transpose)
 {
 	arp.transpose=transpose;
 }
 
-void arp_resetCounter(void)
+FORCEINLINE void arp_resetCounter(void)
 {
 	arp.counter=INT16_MAX; // start on a note
 }
 
-inline arpMode_t arp_getMode(void)
+FORCEINLINE arpMode_t arp_getMode(void)
 {
 	return arp.mode;
 }
 
-int8_t arp_getHold(void)
+FORCEINLINE int8_t arp_getHold(void)
 {
 	return arp.hold;
 }
@@ -134,6 +134,9 @@ int8_t arp_getHold(void)
 void arp_assignNote(uint8_t note, int8_t on)
 {
 	int16_t i;
+	
+	if(arp.mode==amOff)
+		return;
 	
 	// We only arpeggiate from the internal keyboard, so we can keep the
 	// note memory size at 128 if we set the keyboard range to 0 and up.
