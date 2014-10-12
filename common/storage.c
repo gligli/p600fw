@@ -32,7 +32,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*FilEnvExpo*/1,
 	/*FilEnvSlow*/1,
 	/*AmpEnvExpo*/1,
-	/*AmpEnvSlow*/1,
+	/*HoldPedal*/0,
 	/*Unison*/1,
 	/*AssignerPriority*/2,
 	/*BenderSemitones*/4,
@@ -41,6 +41,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*ChromaticPitch*/2,
 	/*ModwheelTarget*/1,
 	/*VibTarget*/2,
+	/*AmpEnvSlow*/1,
 };
 
 struct settings_s settings;
@@ -310,6 +311,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		steppedParameter_t sp;
 		for(sp=spASaw;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
+		
+		currentPreset.steppedParameters[spAmpEnvSlow]=currentPreset.steppedParameters[holdPedal];
 
 		if (storage.version<2)
 			return 1;
@@ -342,6 +345,8 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		continuousParameter_t cp;
 		for(cp=cpFreqA;cp<=cpFilVelocity;++cp)
 			storageWrite16(currentPreset.continuousParameters[cp]);
+
+		currentPreset.steppedParameters[holdPedal]=currentPreset.steppedParameters[spAmpEnvSlow];
 
 		steppedParameter_t sp;
 		for(sp=spASaw;sp<=spChromaticPitch;++sp)
