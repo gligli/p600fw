@@ -726,7 +726,10 @@ static void handleBitInputs(void)
 	else if((cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
 	{
 		if(arp_getMode()!=amOff)
+		{
 			arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:2);
+			refreshSevenSeg();
+		}
 		else
 		{
 			assigner_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
