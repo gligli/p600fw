@@ -50,6 +50,7 @@
       <itemPath>../common/potmux.c</itemPath>
       <itemPath>print.c</itemPath>
       <itemPath>../common/scanner.c</itemPath>
+      <itemPath>../common/seq.c</itemPath>
       <itemPath>../common/sh.c</itemPath>
       <itemPath>../common/storage.c</itemPath>
       <itemPath>../common/synth.c</itemPath>
@@ -133,6 +134,8 @@
       <item path="../common/scanner.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/scanner.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/seq.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/seq.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -246,6 +249,8 @@
       <item path="../common/scanner.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/scanner.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../common/seq.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="../common/seq.h" ex="false" tool="3" flavor2="0">
       </item>
