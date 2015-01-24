@@ -237,7 +237,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 {
-	int8_t br[]={2,3,5,12};
+	int8_t br[]={2,4,7,12};
 	int8_t mr[]={5,3,1,0};
 
 	switch(num)
