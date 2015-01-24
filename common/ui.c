@@ -415,6 +415,8 @@ void ui_checkIfDataPotChanged(void)
 
 void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
+	int8_t recordOverride=0;
+
 	// button press might change current preset
 
 	refreshPresetButton(button);		
@@ -452,7 +454,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		int8_t track=(seq_getMode(1)!=smOff)?1:0;
 
 		seq_setMode(track,(seq_getMode(track)==smRecording)?smPlaying:smRecording);
-		return; // override normal record action
+		recordOverride=1; // override normal record action
 	}
 
 	// arp
@@ -481,7 +483,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	if(arp_getMode()!=amOff && pressed && button==pbRecord)
 	{
 		arp_setMode(arp_getMode(),arp_getHold()?0:1);
-		return; // override normal record action
+		recordOverride=1; // override normal record action
 	}
 
 	// assigner
@@ -542,7 +544,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			refreshPresetMode();
 			refreshFullState();
 		}
-		else if(button==pbRecord)
+		else if(button==pbRecord && !recordOverride)
 		{
 			if(ui.digitInput==diStoreDecadeDigit)
 			{
