@@ -2,11 +2,14 @@
 // Tunes CVs using the 8253 timer, by measuring audio period
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <stdint.h>
+
 #include "tuner.h"
 #include "storage.h"
 #include "sh.h"
 #include "display.h"
 #include "storage.h"
+#include "scanner.h"
 
 #define FF_P	0x01 // active low
 #define CNTR_EN 0x02
@@ -22,13 +25,13 @@
 #define TUNER_LOWEST_HERTZ (TUNER_MIDDLE_C_HERTZ/16)
 
 #define TUNER_OSC_INIT_OFFSET 5000.0
-#define TUNER_OSC_INIT_SCALE (65536.0/11.0)
+#define TUNER_OSC_INIT_SCALE (65536.0/10.66)
 #define TUNER_OSC_PRECISION -3 // higher is preciser but slower
 #define TUNER_OSC_NTH_C_LO 3
 #define TUNER_OSC_NTH_C_HI 6
 
 #define TUNER_FIL_INIT_OFFSET 10000.0
-#define TUNER_FIL_INIT_SCALE (65536.0/22.0)
+#define TUNER_FIL_INIT_SCALE (65536.0/21.0)
 #define TUNER_FIL_PRECISION -3 // higher is preciser but slower
 #define TUNER_FIL_NTH_C_LO 4
 #define TUNER_FIL_NTH_C_HI 7
@@ -329,6 +332,41 @@ static uint16_t extapolateUpperOctavesTunes(uint8_t oct, p600CV_t cv)
 	return MIN(v,UINT16_MAX);
 }
 
+LOWERCODESIZE static void prepareSynth(void)
+{
+	display_clear();
+	led_set(plTune,1,0);
+
+#ifdef DEBUG
+	sh_setCV(pcMVol,20000,0);
+#else
+	sh_setCV(pcMVol,0,0);
+#endif
+
+	sh_setGate(pgASaw,0);
+	sh_setGate(pgATri,0);
+	sh_setGate(pgBSaw,0);
+	sh_setGate(pgBTri,0);
+	sh_setGate(pgPModFA,0);
+	sh_setGate(pgPModFil,0);
+	sh_setGate(pgSync,0);
+
+	sh_setCV(pcResonance,0,0);
+	sh_setCV(pcAPW,0,0);
+	sh_setCV(pcBPW,0,0);
+	sh_setCV(pcPModOscB,0,0);
+	sh_setCV(pcExtFil,0,0);
+
+	// init 8253
+		// ch 0, mode 0, access 2 bytes, binary count
+	i8253Write(0x3,0b00110000); 
+		// ch 1, mode 0, access 2 bytes, binary count
+	i8253Write(0x3,0b01110000); 
+		// ch 2, mode 1, access 2 bytes, binary count
+	i8253Write(0x3,0b10110010); 
+
+}
+
 NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv)
 {
 	uint8_t loOct,hiOct;
@@ -385,37 +423,8 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		
 		// prepare synth for tuning
 		
-		display_clear();
-		led_set(plTune,1,0);
+		prepareSynth();
 		
-#ifdef DEBUG
-		sh_setCV(pcMVol,20000,0);
-#else
-		sh_setCV(pcMVol,0,0);
-#endif
-
-		sh_setGate(pgASaw,0);
-		sh_setGate(pgATri,0);
-		sh_setGate(pgBSaw,0);
-		sh_setGate(pgBTri,0);
-		sh_setGate(pgPModFA,0);
-		sh_setGate(pgPModFil,0);
-		sh_setGate(pgSync,0);
-
-		sh_setCV(pcResonance,0,0);
-		sh_setCV(pcAPW,0,0);
-		sh_setCV(pcBPW,0,0);
-		sh_setCV(pcPModOscB,0,0);
-		sh_setCV(pcExtFil,0,0);
-		
-		// init 8253
-			// ch 0, mode 0, access 2 bytes, binary count
-		i8253Write(0x3,0b00110000); 
-			// ch 1, mode 0, access 2 bytes, binary count
-		i8253Write(0x3,0b01110000); 
-			// ch 2, mode 1, access 2 bytes, binary count
-		i8253Write(0x3,0b10110010); 
-
 		// tune oscs
 			
 			// init
@@ -478,5 +487,98 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		display_clear();
 		
 		settings_save();
+	}
+}
+
+LOWERCODESIZE void tuner_scalingAdjustment(void)
+{
+	p600CV_t cv=0;
+	int32_t lo,hi,delta;
+	int8_t i;
+	uint8_t ps=0;
+	
+	prepareSynth();
+	
+	for(;;)
+	{
+		BLOCK_INT
+		{
+			io_write(0x08,0);
+
+			CYCLE_WAIT(10);
+
+			ps=io_read(0x0a);
+		}
+
+		if(ps&2) //pb1
+		{
+			cv=(cv+1)%18;
+		}
+		else if(ps&4) //pb2
+		{
+			cv=(cv+18-1)%18;
+		}
+		
+		tuner.currentCV=cv;
+		
+		sh_setCV(pcResonance,cv>=pcFil1?UINT16_MAX:0,0);
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
+		{
+			sh_setCV(pcAmp1+i,cv%SYNTH_VOICE_COUNT==i?UINT16_MAX:0,0);
+			sh_setCV(pcFil1+i,UINT16_MAX,0);
+			sh_setCV(pcOsc1A+i,UINT16_MAX,0);
+			sh_setCV(pcOsc1B+i,UINT16_MAX,0);
+		}
+
+		sh_setCV(pcVolA,cv<pcOsc1B?UINT16_MAX:0,0);
+		sh_setGate(pgASaw,cv<pcOsc1B?UINT16_MAX:0);
+
+		sh_setCV(pcVolB,cv>=pcOsc1B&&cv<pcFil1?UINT16_MAX:0,0);
+		sh_setGate(pgBSaw,cv>=pcOsc1B&&cv<pcFil1?UINT16_MAX:0);
+
+		if(cv<pcFil1)
+		{
+			sh_setCV(cv,TUNER_OSC_INIT_OFFSET+3*TUNER_OSC_INIT_SCALE,0);
+			lo=measureAudioPeriod(8);
+			sh_setCV(cv,TUNER_OSC_INIT_OFFSET+7*TUNER_OSC_INIT_SCALE,0);
+			hi=measureAudioPeriod(128);
+		}
+		else
+		{
+			sh_setCV(cv,TUNER_FIL_INIT_OFFSET+5*TUNER_FIL_INIT_SCALE,0);
+			lo=measureAudioPeriod(8);
+			sh_setCV(cv,TUNER_FIL_INIT_OFFSET+9*TUNER_FIL_INIT_SCALE,0);
+			hi=measureAudioPeriod(128);
+		}
+		
+		for(i=0;i<SYNTH_VOICE_COUNT;++i)
+			sh_setCV(pcAmp1+i,0,0);
+
+		delta=(hi-lo)>>8;
+		
+#ifdef DEBUG
+		phex16(hi>>16);
+		phex16(hi);
+		print("\n");
+		phex16(lo>>16);
+		phex16(lo);
+		print("\n");
+		phex16(delta>>16);
+		phex16(delta);
+		print("\n");
+#endif
+		
+		delta=MIN(delta,99);
+		delta=MAX(delta,-99);
+		
+		sevenSeg_setNumber(abs(delta));
+		led_set(plDot,delta<0,0);
+
+		for(i=0;i<50;++i)
+		{
+			MDELAY(10);
+			display_update(1);
+			sh_update();
+		}
 	}
 }

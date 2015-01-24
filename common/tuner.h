@@ -10,6 +10,7 @@ uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv);
 
 void tuner_init(void);
 void tuner_tuneSynth(void);
+void tuner_scalingAdjustment(void);
 
 #endif	/* TUNER_H */
 

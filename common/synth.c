@@ -789,6 +789,11 @@ void synth_init(void)
 	lfo_setShape(&synth.vibrato,lsTri);
 	lfo_setSpeedShift(&synth.vibrato,4);
 	
+	// go in scaling adjustment mode if needed
+	
+	if(io_read(0x9)&16)
+		tuner_scalingAdjustment();
+	
 	// manual preset
 	
 	if(!preset_loadCurrent(MANUAL_PRESET_PAGE))
