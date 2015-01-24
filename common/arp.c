@@ -75,6 +75,11 @@ static void killHeldNotes(void)
 	for(i=0;i<ARP_NOTE_MEMORY;++i)
 		if(arp.notes[i]&ARP_NOTE_HELD_FLAG)
 			arp.notes[i]=ASSIGNER_NO_NOTE;
+	
+	// gate off for last note
+
+	if(isEmpty())
+		finishPreviousNote();
 }
 
 inline void arp_setMode(arpMode_t mode, int8_t hold)
