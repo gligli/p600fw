@@ -339,6 +339,34 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	}
 }
 
+static LOWERCODESIZE void handleSequencerPage(p600Button_t button)
+{
+	// sequencer note input		
+	if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+	{
+		uint8_t note;
+		switch(button)
+		{
+		case pb3:
+			note=SEQ_NOTE_REST;
+			sevenSeg_scrollText("rest",1);
+			break;
+		case pb2:
+			note=SEQ_NOTE_TIE;
+			sevenSeg_scrollText("tie",1);
+			break;
+		case pb1:
+			note=SEQ_NOTE_UNDO;
+			break;
+		default:
+			note=ASSIGNER_NO_NOTE;
+		}
+		
+		if(note!=ASSIGNER_NO_NOTE)
+			seq_inputNote(note);
+	}
+}
+
 void ui_setNoActivePot(void)
 {
 	potmux_resetChanged();
@@ -433,10 +461,23 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		switch(seq_getMode(track))
 		{
 		case smOff:
-			seq_setMode(track,smWaiting);
+			if(ui.digitInput==diStoreDecadeDigit)
+			{
+				// go directly to record mode when record was previously pressed
+				seq_setMode(track,smRecording);
+				// seq mode
+				ui.digitInput=diSequencer;
+			}
+			else
+			{
+				seq_setMode(track,ui.isShifted?smWaiting:smPlaying);
+			}
 			break;
-		case smWaiting:
 		case smRecording:
+			// cancel seq mode
+			ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+			// fall through
+		case smWaiting:
 			seq_setMode(track,smPlaying);
 			break;
 		case smPlaying:
@@ -450,6 +491,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		int8_t track=(seq_getMode(1)!=smOff)?1:0;
 
 		seq_setMode(track,(seq_getMode(track)==smRecording)?smPlaying:smRecording);
+
+		// seq mode
+		ui.digitInput=diSequencer;
+
 		recordOverride=1; // override normal record action
 	}
 
@@ -516,10 +561,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 	}
 
-	// keyboard transposition
+	// shidted state (keyboard transposition, ...)
 	
 	if(button==pbFromTape)
-		ui.isTransposing=pressed;
+		ui.isShifted=pressed;
 	
 	// modes 
 	
@@ -542,16 +587,21 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbRecord && !recordOverride)
 		{
-			if(ui.digitInput==diStoreDecadeDigit)
+			if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
 			{
 				// cancel record
 				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+				ui.presetAwaitingNumber=-1;
 			}
 			else
 			{
 				// ask for digit
 				ui.digitInput=diStoreDecadeDigit;
 			}
+		}
+		else if(ui.digitInput==diSequencer)
+		{
+			handleSequencerPage(button);
 		}
 		else if(ui.digitInput==diSynth)
 		{

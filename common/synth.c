@@ -616,9 +616,14 @@ static void refreshSevenSeg(void)
 	led_set(plArpAssign,arp_getMode()>=amRandom,arp_getMode()==amRandom);
 
 	if(arp_getMode()!=amOff || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+	{
 		led_set(plRecord,arp_getHold() || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording,0);
+	}
 	else
-		led_set(plRecord,ui.digitInput==diStoreDecadeDigit,ui.digitInput==diStoreDecadeDigit);
+	{
+		int8_t b=ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit;
+		led_set(plRecord,b,b);
+	}
 }
 
 void refreshFullState(void)
@@ -1059,8 +1064,9 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 
 void synth_keyEvent(uint8_t key, int pressed)
 {
-	if(ui.isTransposing)
+	if(ui.isShifted)
 	{
+		// keyboard transposition
 		if(pressed)
 		{
 			char s[16]="transp = ";
@@ -1089,22 +1095,7 @@ void synth_keyEvent(uint8_t key, int pressed)
 			// sequencer note input		
 			if(pressed && (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording))
 			{
-				uint8_t note;
-				switch(key)
-				{
-				case SCANNER_C5:
-					note=SEQ_NOTE_REST;
-					break;
-				case SCANNER_B4:
-					note=SEQ_NOTE_TIE;
-					break;
-				case SCANNER_Bb4:
-					note=SEQ_NOTE_UNDO;
-					break;
-				default:
-					note=key;
-				}
-				seq_inputNote(note);
+				seq_inputNote(key);
 				refreshSevenSeg();
 			}
 

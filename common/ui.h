@@ -3,7 +3,7 @@
 
 #include "synth.h"
 
-enum uiDigitInput_e {diSynth,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit};
+enum uiDigitInput_e {diSynth,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit,diSequencer};
 enum uiParamType_e {ptCont,ptStep,ptCust};
 
 struct uiParam_s
@@ -26,7 +26,7 @@ struct ui_s
 	
 	int32_t previousData;
 	int8_t activeParamIdx;
-	int8_t isTransposing;
+	int8_t isShifted;
 };
 
 extern struct ui_s ui;
