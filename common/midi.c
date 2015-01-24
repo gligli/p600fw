@@ -172,6 +172,7 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
 {
 	int16_t param;
+	int8_t change=0;
 	
 	if(!midiFilterChannel(channel))
 		return;
@@ -207,29 +208,44 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	if(control>=MIDI_BASE_COARSE_CC && control<MIDI_BASE_COARSE_CC+cpCount)
 	{
 		param=control-MIDI_BASE_COARSE_CC;
-
-		currentPreset.continuousParameters[param]&=0x01fc;
-		currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-		ui_setPresetModified(1);	
+		
+		if((currentPreset.continuousParameters[param]>>9)!=value)
+		{
+			currentPreset.continuousParameters[param]&=0x01fc;
+			currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
+			change=1;	
+		}
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
 	{
 		param=control-MIDI_BASE_FINE_CC;
 
-		currentPreset.continuousParameters[param]&=0xfe00;
-		currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-		ui_setPresetModified(1);	
+		if(((currentPreset.continuousParameters[param]>>2)&0x7f)!=value)
+		{
+			currentPreset.continuousParameters[param]&=0xfe00;
+			currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
+			change=1;	
+		}
 	}
 	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
 	{
 		param=control-MIDI_BASE_STEPPED_CC;
+		uint8_t v;
 		
-		currentPreset.steppedParameters[param]=value>>(7-steppedParametersBits[param]);
-		ui_setPresetModified(1);	
+		v=value>>(7-steppedParametersBits[param]);
+		
+		if(currentPreset.steppedParameters[param]!=v)
+		{
+			currentPreset.steppedParameters[param]=v;
+			change=1;	
+		}
 	}
 
-	if(ui_isPresetModified())
+	if(change)
+	{
+		ui_setPresetModified(1);
 		refreshFullState();
+	}
 }
 
 static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t program)

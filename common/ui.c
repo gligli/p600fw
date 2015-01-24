@@ -351,11 +351,6 @@ FORCEINLINE void ui_setPresetModified(int8_t modified)
 	ui.presetModified=modified;
 }
 
-FORCEINLINE int8_t ui_isPresetModified(void)
-{
-	return ui.presetModified;
-}
-
 void ui_checkIfDataPotChanged(void)
 {
 	ui.lastActivePot = potmux_lastChanged() != ppNone ? potmux_lastChanged() : ui.lastActivePot;
