@@ -262,6 +262,7 @@ static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 		break;
 	case 4: // bend range 
 		currentPreset.steppedParameters[spBenderSemitones]=br[data];
+		synth_updateBender(); // immediate update
 		break;
 	case 5: // mod range
 		currentPreset.steppedParameters[spModwheelShift]=mr[data];
