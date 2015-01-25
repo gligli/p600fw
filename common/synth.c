@@ -321,22 +321,21 @@ void computeBenderCVs(void)
 		{
 			bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
 			bend*=synth.benderAmount;
-			bend/=UINT16_MAX;
-			synth.benderCVs[cv]=bend;
+			synth.benderCVs[cv]=bend>>16; // /65536
 		}
 		break;
 	case modVCF:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=synth.benderAmount;
-		bend/=12;
+		bend*=FULL_RANGE/12; // Fixed point /12 ...
 		for(cv=pcFil1;cv<=pcFil6;++cv)
-			synth.benderCVs[cv]=bend;
+			synth.benderCVs[cv]=bend>>16; // ... after >>16
 		break;
 	case modVCA:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=synth.benderAmount;
-		bend/=12;
-		synth.benderVolumeCV=bend;
+		bend*=FULL_RANGE/12; // Fixed point /12...
+		synth.benderVolumeCV=bend>>16; // ... after >>16
 		break;
 	default:
 		;
