@@ -35,6 +35,9 @@
 
 #define PANEL_DEADBAND 2048
 
+// The P600 VCA completely closes before the CV reaches 0, this accounts for it
+#define VCA_DEADBAND 768
+
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
 
@@ -706,7 +709,12 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		// amplifier
 
 		adsr_update(&synth.ampEnvs[v]);
-		sh_setCV_FastPath(pcAmp1+v,synth.ampEnvs[v].output);
+		
+		envVal=synth.ampEnvs[v].output;
+		if(envVal)
+			envVal=satAddU16U16(envVal, VCA_DEADBAND);
+		
+		sh_setCV_FastPath(pcAmp1+v,envVal);
 	}
 }
 
