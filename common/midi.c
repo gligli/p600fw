@@ -239,6 +239,21 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 			currentPreset.steppedParameters[param]=v;
 			change=1;	
 		}
+		
+		// special case for unison (pattern latch)
+		
+		if(param==spUnison)
+		{
+			if(v)
+			{
+				assigner_latchPattern();
+			}
+			else
+			{
+				assigner_setPoly();
+			}
+			assigner_getPattern(currentPreset.voicePattern,NULL);
+		}
 	}
 
 	if(change)
