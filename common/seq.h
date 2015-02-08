@@ -4,6 +4,7 @@
 #include "synth.h"
 
 #define SEQ_NOTE_MEMORY 128
+#define SEQ_NOTE_CLEAR 129
 #define SEQ_TRACK_COUNT 2
 
 #define SEQ_NOTE_REST UINT8_MAX-1

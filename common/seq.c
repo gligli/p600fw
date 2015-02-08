@@ -122,7 +122,12 @@ void seq_inputNote(uint8_t note)
 		if(seq.mode[track]!=smRecording)
 			continue;
 		
-		if(note==SEQ_NOTE_UNDO)
+		if(note==SEQ_NOTE_CLEAR)
+		{
+			seq.noteCount[track]=0;
+			memset(seq.notes[track],ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
+		}
+		else if(note==SEQ_NOTE_UNDO)
 		{
 			if(seq.noteCount[track])
 				seq.notes[track][--seq.noteCount[track]]=ASSIGNER_NO_NOTE;
