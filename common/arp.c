@@ -62,13 +62,6 @@ static void killAllNotes(void)
 	assigner_voiceDone(-1);
 }
 
-static void markNotesAsHeld(void)
-{
-	int16_t i;
-	for(i=0;i<ARP_NOTE_MEMORY;++i)
-		arp.notes[i]|=ARP_NOTE_HELD_FLAG;
-}
-
 static void killHeldNotes(void)
 {
 	int16_t i;
@@ -94,13 +87,8 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 			arp_resetCounter();
 	}
 	
-	if(hold!=arp.hold)
-	{
-		if(hold)
-			markNotesAsHeld();
-		else
-			killHeldNotes();
-	}
+	if(!hold && arp.hold)
+		killHeldNotes();
 
 	arp.mode=mode;
 	arp.hold=hold;
@@ -170,33 +158,52 @@ void arp_assignNote(uint8_t note, int8_t on)
 			arp.notes[note]=note;
 			arp.notes[ARP_LAST_NOTE-note]=note;
 		}
-		
-		if(arp.hold==1)
-			markNotesAsHeld();
 	}
-	else if(!arp.hold)
+	else
 	{
-		// deassign note if not in hold mode
-		
-		if(arp.mode!=amUpDown)
+		if(arp.hold)
 		{
-			for(i=0;i<ARP_NOTE_MEMORY;++i)
-				if(arp.notes[i]==note)
-				{
-					arp.notes[i]=ASSIGNER_NO_NOTE;
-					break;
-				}
+			// mark deassigned notes as held
+
+			if(arp.mode!=amUpDown)
+			{
+				for(i=0;i<ARP_NOTE_MEMORY;++i)
+					if(arp.notes[i]==note)
+					{
+						arp.notes[i]|=ARP_NOTE_HELD_FLAG;
+						break;
+					}
+			}
+			else
+			{
+				arp.notes[note]|=ARP_NOTE_HELD_FLAG;
+				arp.notes[ARP_LAST_NOTE-note]|=ARP_NOTE_HELD_FLAG;
+			}
 		}
 		else
 		{
-			arp.notes[note]=ASSIGNER_NO_NOTE;
-			arp.notes[ARP_LAST_NOTE-note]=ASSIGNER_NO_NOTE;
+			// deassign note if not in hold mode
+
+			if(arp.mode!=amUpDown)
+			{
+				for(i=0;i<ARP_NOTE_MEMORY;++i)
+					if(arp.notes[i]==note)
+					{
+						arp.notes[i]=ASSIGNER_NO_NOTE;
+						break;
+					}
+			}
+			else
+			{
+				arp.notes[note]=ASSIGNER_NO_NOTE;
+				arp.notes[ARP_LAST_NOTE-note]=ASSIGNER_NO_NOTE;
+			}
+
+			// gate off for last note
+
+			if(isEmpty())
+				finishPreviousNote();
 		}
-		
-		// gate off for last note
-		
-		if(isEmpty())
-			finishPreviousNote();
 	}
 }
 

@@ -739,7 +739,7 @@ static void handleBitInputs(void)
 	{
 		if(arp_getMode()!=amOff)
 		{
-			arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:2);
+			arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:1);
 			refreshSevenSeg();
 		}
 		else

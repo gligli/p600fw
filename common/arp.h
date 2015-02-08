@@ -12,7 +12,7 @@ typedef enum
 void arp_init(void);
 void arp_update(void);
 
-void arp_setMode(arpMode_t mode, int8_t hold);  // hold: 0 = not held; 1 = hold pressed and future presses; 2 = hold only pressed
+void arp_setMode(arpMode_t mode, int8_t hold);
 void arp_setSpeed(uint16_t speed);
 void arp_setTranspose(int8_t transpose);
 arpMode_t arp_getMode(void);
