@@ -1204,7 +1204,8 @@ void synth_realtimeEvent(uint8_t midiEvent)
 			++synth.pendingExtClock;
 			break;
 		case MIDI_START:
-			seq_resetCounter();
+			seq_resetCounter(0);
+			seq_resetCounter(1);
 			arp_resetCounter();
 			synth.pendingExtClock=0;
 			break;

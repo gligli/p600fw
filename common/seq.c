@@ -79,11 +79,7 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	}	
 	
 	if(mode==smPlaying)
-	{
-		// reinit
-		seq.noteIndex[track]=-1;
-		seq_resetCounter();
-	}
+		seq_resetCounter(track);
 
 	seq.mode[track]=mode;
 }
@@ -103,8 +99,9 @@ FORCEINLINE void seq_setTranspose(int8_t transpose)
 	seq.transpose=transpose;
 }
 
-FORCEINLINE void seq_resetCounter(void)
+FORCEINLINE void seq_resetCounter(int8_t track)
 {
+	seq.noteIndex[track]=-1; // reinit
 	seq.counter=INT16_MAX; // start on a note
 }
 

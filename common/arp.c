@@ -123,6 +123,7 @@ FORCEINLINE void arp_setTranspose(int8_t transpose)
 
 FORCEINLINE void arp_resetCounter(void)
 {
+	arp.noteIndex=-1; // reinit
 	arp.counter=INT16_MAX; // start on a note
 }
 

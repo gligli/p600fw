@@ -24,7 +24,7 @@ void seq_setSpeed(uint16_t speed);
 void seq_setTranspose(int8_t transpose);
 seqMode_t seq_getMode(int8_t track);
 uint8_t seq_getNoteCount(int8_t track);
-void seq_resetCounter(void);
+void seq_resetCounter(int8_t track);
 
 void seq_inputNote(uint8_t note);
 
