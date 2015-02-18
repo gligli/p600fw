@@ -46,37 +46,37 @@ void scanner_update(int8_t fullScan)
 	uint8_t i,j,stateIdx;
 	uint8_t ps,flag,curState;		
 
-	BLOCK_INT
+	for(i=fullScan?0:(SCANNER_KEYS_START/8);i<SCANNER_BYTES;++i)
 	{
-		for(i=fullScan?0:(SCANNER_KEYS_START/8);i<SCANNER_BYTES;++i)
+		BLOCK_INT
 		{
 			io_write(0x08,i);
 
 			CYCLE_WAIT(10);
 
 			ps=io_read(0x0a);
+		}
 
-			for(j=0;j<8;++j)
+		for(j=0;j<8;++j)
+		{
+			stateIdx=i*8+j;
+			flag=ps&1;
+			curState=scanner.state[stateIdx];
+
+			// debounce timeouts
+			if(curState&0xfe)
 			{
-				stateIdx=i*8+j;
-				flag=ps&1;
-				curState=scanner.state[stateIdx];
-
-				// debounce timeouts
-				if(curState&0xfe)
-				{
-					scanner.state[stateIdx]=curState-2;
-				}
-				else if(flag ^ (curState&1)) // if state change and not in debounce
-				{
-					// update state & start debounce timeout
-					scanner.state[stateIdx]=flag|(SCANNER_DEBOUNCE_TIMEOUT<<1);
-					// do event
-					scanner_event(stateIdx,flag);
-				}
-
-				ps>>=1;
+				scanner.state[stateIdx]=curState-2;
 			}
+			else if(flag ^ (curState&1)) // if state change and not in debounce
+			{
+				// update state & start debounce timeout
+				scanner.state[stateIdx]=flag|(SCANNER_DEBOUNCE_TIMEOUT<<1);
+				// do event
+				scanner_event(stateIdx,flag);
+			}
+
+			ps>>=1;
 		}
 	}
 }
