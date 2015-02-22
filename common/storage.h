@@ -76,6 +76,7 @@ struct settings_s
 	int8_t syncMode;
 	
 	int8_t spread;
+	int8_t vcfLimit;
 };
 
 struct preset_s

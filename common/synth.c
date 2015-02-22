@@ -75,6 +75,8 @@ struct synth_s
 	uint16_t oscBTargetCV[SYNTH_VOICE_COUNT];
 	uint16_t filterTargetCV[SYNTH_VOICE_COUNT];
 
+	uint16_t filterMaxCV[SYNTH_VOICE_COUNT]; 
+
 	uint16_t modwheelAmount;
 	int16_t benderAmount;
 	int16_t benderCVs[pcFil6-pcOsc1A+1];
@@ -630,6 +632,18 @@ static void refreshSevenSeg(void)
 	}
 }
 
+void refreshFilterMaxCV(void)
+{
+	// optional VCF limit at around 22Khz max frequency, to avoid harshness due to strange filter behavior in the ultrasound range
+
+	for(int8_t v=0;v<SYNTH_VOICE_COUNT;++v)
+		if(settings.vcfLimit)
+			synth.filterMaxCV[v]=tuner_computeCVFromNote(126,0,pcFil1+v);
+		else
+			synth.filterMaxCV[v]=UINT16_MAX;
+}
+
+
 void refreshFullState(void)
 {
 	refreshModulationDelay(1);
@@ -638,6 +652,7 @@ void refreshFullState(void)
 	refreshLfoSettings();
 	refreshEnvSettings();
 	computeBenderCVs();
+	refreshFilterMaxCV();
 	
 	refreshSevenSeg();
 }
@@ -706,6 +721,10 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		vf=filterLfoVal;
 		vf+=scaleU16S16(envVal,filEnvAmt);
 		vf+=synth.filterNoteCV[v];
+		
+		if(vf>synth.filterMaxCV[v])
+			vf=synth.filterMaxCV[v];
+		
 		sh_setCV32Sat_FastPath(pcFil1+v,vf);
 
 		// amplifier

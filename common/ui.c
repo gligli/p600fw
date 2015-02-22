@@ -123,7 +123,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 {
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
 	static int8_t voice=0;
-	char s[20];
+	char s[50];
 	
 	
 
@@ -210,20 +210,41 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 		refreshFullState();
 	}
-	else if(button==pb9) // spread
+	else if(button==pb9) // spread / vcf limit
 	{
-		settings.spread=(settings.spread+1)%2;
+		uint8_t v;
+		
+		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
+		v=(v+1)%4;
+		settings.spread=v&1;
+		settings.vcfLimit=(v>>1)&1;
+		
 		settings_save();
 		
+		strcpy(s,"spread ");
+
 		if(settings.spread)
 		{
-			sevenSeg_scrollText("spread on",1);
+			strcat(s,"on");
 		}
 		else
 		{
-			sevenSeg_scrollText("spread off",1);
+			strcat(s,"off");
 		};
 		
+		strcat(s," / Vcf lim ");
+		
+		if(settings.vcfLimit)
+		{
+			strcat(s,"on");
+		}
+		else
+		{
+			strcat(s,"off");
+		};
+
+		sevenSeg_scrollText(s,1);
+
 		refreshFullState();
 	}
 	else if(button==pb0) // reset to a basic patch

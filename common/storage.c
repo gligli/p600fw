@@ -193,6 +193,7 @@ LOWERCODESIZE int8_t settings_load(void)
 
 		settings.voiceMask=0x3f;
 		settings.spread=0;
+		settings.vcfLimit=0;
 
 		if (storage.version<1)
 			return 1;
@@ -235,8 +236,12 @@ LOWERCODESIZE int8_t settings_load(void)
 
 		// v5
 		
-		// ...
-	
+		settings.vcfLimit=storageReadS8();
+
+		if (storage.version<6)
+			return 1;
+
+		// ...	
 	
 	}
 	
@@ -277,6 +282,8 @@ LOWERCODESIZE void settings_save(void)
 		
 		// v5
 		
+		storageWriteS8(settings.vcfLimit);
+
 		// ...
 
 		// this must stay last
