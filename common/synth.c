@@ -1230,5 +1230,9 @@ void synth_realtimeEvent(uint8_t midiEvent)
 			arp_resetCounter();
 			synth.pendingExtClock=0;
 			break;
+		case MIDI_STOP:
+			seq_silence(0);
+			seq_silence(1);
+			break;
 	}
 }

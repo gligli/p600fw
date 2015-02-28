@@ -105,6 +105,12 @@ FORCEINLINE void seq_resetCounter(int8_t track)
 	seq.counter=INT16_MAX; // start on a note
 }
 
+void seq_silence(int8_t track)
+{
+	if(seq.mode[track]==smPlaying)
+		finishPreviousNote(track,0);
+}
+
 FORCEINLINE seqMode_t seq_getMode(int8_t track)
 {
 	return seq.mode[track];
