@@ -302,11 +302,12 @@ static LOWERCODESIZE void displayUIParameter(int8_t num)
 	ui_setNoActivePot();
 	
 	strcpy(s,prm->name);
-	strcat(s," = ");
+	strcat(s,"= ");
 	
 	switch(prm->type)
 	{
 	case ptCont:
+		s[strlen(s)-1]='\0'; // remove trailing space
 		ui.lastActivePotValue=ui.adjustedLastActivePotValue=currentPreset.continuousParameters[prm->number];
 		break;
 	case ptStep:
