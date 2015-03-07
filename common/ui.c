@@ -514,18 +514,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 	}
 	
-	if((seq_getMode(0)!=smOff || seq_getMode(1)!=smOff) && pressed && button==pbRecord)
-	{
-		int8_t track=(seq_getMode(1)!=smOff)?1:0;
-
-		seq_setMode(track,(seq_getMode(track)==smRecording)?smPlaying:smRecording);
-
-		// seq mode
-		ui.digitInput=diSequencer;
-
-		recordOverride=1; // override normal record action
-	}
-
 	// arp
 	
 	if(pressed && button==pbArpUD)
