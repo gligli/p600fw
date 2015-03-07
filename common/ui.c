@@ -26,7 +26,7 @@ const struct uiParam_s uiParameters[] =
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
 	/*second press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
-	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b"}},
+	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b","ab-Vca"}},
 	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
 	/*3*/ {.type=ptCust,.number=5,.name="mod ran",.values={"min","low","high","full"}},
 	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
@@ -90,7 +90,7 @@ static void refreshPresetButton(p600Button_t button)
 	case pbLFOPW:
 	case pbLFOFil:
 		currentPreset.steppedParameters[spLFOTargets]=
-			(currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB)) | // keep those as-is
+			(currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
 			(scanner_buttonState(pbLFOFreq)?mtVCO:0) |
 			(scanner_buttonState(pbLFOPW)?mtPW:0) |
 			(scanner_buttonState(pbLFOFil)?mtVCF:0);
@@ -267,11 +267,13 @@ static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 		currentPreset.steppedParameters[spLFOShape]=(currentPreset.steppedParameters[spLFOShape]&1) | (data<<1);
 		break;
 	case 1: // lfo tgt
-		currentPreset.steppedParameters[spLFOTargets]&=~(mtOnlyA|mtOnlyB);
+		currentPreset.steppedParameters[spLFOTargets]&=~(mtOnlyA|mtOnlyB|mtVCA);
 		if(data==1)
 			currentPreset.steppedParameters[spLFOTargets]|=mtOnlyA;
 		else if(data==2)
 			currentPreset.steppedParameters[spLFOTargets]|=mtOnlyB;
+		else if(data==3)
+			currentPreset.steppedParameters[spLFOTargets]|=mtVCA;
 		break;					
 	case 2: // amp shape
 		currentPreset.steppedParameters[spAmpEnvExpo]=1-(data&1);

@@ -690,7 +690,7 @@ void refreshPresetMode(void)
 	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
 }
 
-static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchALfoVal,int16_t pitchBLfoVal,int16_t filterLfoVal)
+static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchALfoVal,int16_t pitchBLfoVal,int16_t filterLfoVal,uint16_t ampLfoVal)
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
@@ -731,11 +731,11 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 
 		adsr_update(&synth.ampEnvs[v]);
 		
-		envVal=synth.ampEnvs[v].output;
-		if(envVal)
-			envVal=satAddU16U16(envVal, VCA_DEADBAND);
+		va=scaleU16U16(synth.ampEnvs[v].output,ampLfoVal);
+		if(va)
+			va+=VCA_DEADBAND;
 		
-		sh_setCV_FastPath(pcAmp1+v,envVal);
+		sh_setCV32Sat_FastPath(pcAmp1+v,va);
 	}
 }
 
@@ -970,6 +970,7 @@ void synth_timerInterrupt(void)
 {
 	int32_t va,vf;
 	int16_t pitchALfoVal,pitchBLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt;
+	uint16_t ampLfoVal;
 	int8_t v,hz63,hz250;
 
 	static uint8_t frc=0;
@@ -980,6 +981,7 @@ void synth_timerInterrupt(void)
 	
 	pitchALfoVal=pitchBLfoVal=synth.vibrato.output;
 	filterLfoVal=0;
+	ampLfoVal=UINT16_MAX;
 	
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
 	{
@@ -992,6 +994,9 @@ void synth_timerInterrupt(void)
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCF)
 		filterLfoVal=synth.lfo.output;
 	
+	if(currentPreset.steppedParameters[spLFOTargets]&mtVCA)
+		ampLfoVal=synth.lfo.output+(UINT16_MAX-(synth.lfo.levelCV>>1));
+
 	// global env computations
 	
 	vf=currentPreset.continuousParameters[cpFilEnvAmt];
@@ -1010,12 +1015,12 @@ void synth_timerInterrupt(void)
 	// per voice stuff
 	
 		// SYNTH_VOICE_COUNT calls
-	refreshVoice(0,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
-	refreshVoice(1,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
-	refreshVoice(2,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
-	refreshVoice(3,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
-	refreshVoice(4,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
-	refreshVoice(5,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal);
+	refreshVoice(0,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
+	refreshVoice(1,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
+	refreshVoice(2,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
+	refreshVoice(3,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
+	refreshVoice(4,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
+	refreshVoice(5,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
 	
 	// slower updates
 	
