@@ -15,26 +15,26 @@ const struct uiParam_s uiParameters[] =
 {
 	/*first press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
-	/*1*/ {.type=ptCust,.number=0,.name="lfo shape",.values={"pulse-tri","rand-sin","noise-saw"}},
+	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"puls-tri","rnd-sin","nois-saw"}},
 	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
-	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod delay"},
-	/*5*/ {.type=ptCust,.number=2,.name="amp shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
+	/*5*/ {.type=ptCust,.number=2,.name="amp shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
 	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
-	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Velo"},
+	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
 	/*second press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
 	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b"}},
-	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo range",.values={"low","high"}},
-	/*3*/ {.type=ptCust,.number=5,.name="mod range",.values={"min","low","high","full"}},
+	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
+	/*3*/ {.type=ptCust,.number=5,.name="mod ran",.values={"min","low","high","full"}},
 	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
-	/*5*/ {.type=ptCust,.number=3,.name="fil shape",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptCust,.number=4,.name="bend range",.values={"2nd","3rd","5th","Oct"}},
+	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
 	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
-	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semitone","octaVe"}},
-	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Velo"},
+	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
+	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 };
 
 struct ui_s ui;
