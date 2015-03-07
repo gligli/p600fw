@@ -9,7 +9,7 @@
 #define STORAGE_VERSION 4
 
 #define STORAGE_MAGIC 0x006116a5
-#define STORAGE_MAX_SIZE 512
+#define STORAGE_MAX_SIZE 384
 
 #define SETTINGS_PAGE_COUNT 2
 #define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-4)
@@ -414,7 +414,7 @@ LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * load
 		// don't export trailing zeroes		
 		
 		actualSize=STORAGE_PAGE_SIZE;
-		while(storage.buffer[actualSize-1]==0)
+		while(actualSize>0 && storage.buffer[actualSize-1]==0)
 			--actualSize;
 		
 		buf[0]=number;		

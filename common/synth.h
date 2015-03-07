@@ -26,12 +26,12 @@
 #define SYSEX_ID_1 0x61
 #define SYSEX_ID_2 0x16
 
-#define SYSEX_COMMAND_BANK_A 1
-#define SYSEX_COMMAND_BANK_B 2
+#define SYSEX_COMMAND_PATCH_DUMP 1
+#define SYSEX_COMMAND_PATCH_DUMP_REQUEST 2
 #define SYSEX_COMMAND_UPDATE_FW 0x6b
 
 #define TICKER_1S 500
-#define TEMP_BUFFER_SIZE 512
+#define TEMP_BUFFER_SIZE 384
 
 // Some constants for 16 bit ranges */
 #define FULL_RANGE UINT16_MAX
