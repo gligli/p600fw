@@ -28,6 +28,16 @@ static uint8_t sendQueueData[32];
 extern void refreshFullState(void);
 extern void refreshPresetMode(void);
 
+static void sendEnqueue(uint8_t b)
+{
+	for(;;)
+	{
+		if(bytequeue_enqueue(&sendQueue,b))
+			break;
+		midi_update(1);
+	}
+}
+
 uint16_t midiCombineBytes(uint8_t first, uint8_t second)
 {
    uint16_t _14bit;
@@ -46,24 +56,24 @@ static void sysexSend(uint8_t command, int16_t size)
 	{
 		chunkCount=((size-1)>>2)+1;
 
-		uart_send(0xf0);
-		uart_send(SYSEX_ID_0);
-		uart_send(SYSEX_ID_1);
-		uart_send(SYSEX_ID_2);
-		uart_send(command);
+		sendEnqueue(0xf0);
+		sendEnqueue(SYSEX_ID_0);
+		sendEnqueue(SYSEX_ID_1);
+		sendEnqueue(SYSEX_ID_2);
+		sendEnqueue(command);
 
 		for(i=0;i<chunkCount;++i)
 		{
 			memcpy(chunk,&tempBuffer[i<<2],4);
 
-			uart_send(chunk[0]&0x7f);
-			uart_send(chunk[1]&0x7f);
-			uart_send(chunk[2]&0x7f);
-			uart_send(chunk[3]&0x7f);
-			uart_send(((chunk[0]>>7)&1) | ((chunk[1]>>6)&2) | ((chunk[2]>>5)&4) | ((chunk[3]>>4)&8));
+			sendEnqueue(chunk[0]&0x7f);
+			sendEnqueue(chunk[1]&0x7f);
+			sendEnqueue(chunk[2]&0x7f);
+			sendEnqueue(chunk[3]&0x7f);
+			sendEnqueue(((chunk[0]>>7)&1) | ((chunk[1]>>6)&2) | ((chunk[2]>>5)&4) | ((chunk[3]>>4)&8));
 		}
 
-		uart_send(0xf7);
+		sendEnqueue(0xf7);
 	}
 }
 
@@ -113,9 +123,12 @@ static void sysexReceiveByte(uint8_t b)
 			
 			switch(tempBuffer[3])
 			{
-			case SYSEX_COMMAND_BANK_A:
+			case SYSEX_COMMAND_PATCH_DUMP:
 				size=sysexDescrambleBuffer(4);
 				storage_import(tempBuffer[4],&tempBuffer[5],size-1);
+				break;
+			case SYSEX_COMMAND_PATCH_DUMP_REQUEST:
+				midi_dumpPreset(tempBuffer[4]);
 				break;
 			}
 		}
@@ -314,16 +327,6 @@ static void midi_realtimeEvent(MidiDevice * device, uint8_t event)
 	synth_realtimeEvent(event);
 }
 
-static void sendEnqueue(uint8_t b)
-{
-	for(;;)
-	{
-		if(bytequeue_enqueue(&sendQueue,b))
-			break;
-		midi_update(1);
-	}
-}
-
 static void midi_sendFunc(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
 {
 	if(count>0)
@@ -373,6 +376,17 @@ void midi_newData(uint8_t data)
 	midi_device_input(&midi,1,&data);
 }
 
+void midi_dumpPreset(int8_t number)
+{
+	int16_t size=0;
+	
+	if(number<0 || number>99)
+		return;
+	
+	storage_export(number,tempBuffer,&size);
+	sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
+}
+
 void midi_dumpPresets(void)
 {
 	int8_t i;
@@ -383,7 +397,7 @@ void midi_dumpPresets(void)
 		if(preset_loadCurrent(i))
 		{
 			storage_export(i,tempBuffer,&size);
-			sysexSend(SYSEX_COMMAND_BANK_A,size);
+			sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
 		}
 	}
 }
