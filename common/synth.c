@@ -560,9 +560,10 @@ static void refreshSevenSeg(void)
 	if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
 	{
 		int8_t track=(seq_getMode(1)==smRecording)?1:0;
-		uint8_t count=seq_getNoteCount(track);
+		uint8_t count=seq_getStepCount(track);
+		int8_t full=seq_full(track);
 		sevenSeg_setNumber(count);
-		led_set(plDot,count>=100,count==SEQ_NOTE_MEMORY);
+		led_set(plDot,count>=100||full,full);
 	}
 	else if(ui.digitInput<diLoadDecadeDigit)
 	{
@@ -1131,9 +1132,9 @@ void synth_keyEvent(uint8_t key, int pressed)
 		if(arp_getMode()==amOff)
 		{
 			// sequencer note input		
-			if(pressed && (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording))
+			if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
 			{
-				seq_inputNote(key);
+				seq_inputNote(key, pressed);
 				refreshSevenSeg();
 			}
 
