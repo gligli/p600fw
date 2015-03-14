@@ -32,6 +32,16 @@ static struct
 } seq;
 
 
+static int8_t anyTrackPlaying(void)
+{
+	int8_t track;
+
+	for (track = 0; track < SEQ_TRACK_COUNT; track++)
+		if (seq.tracks[track].mode==smPlaying)
+			return 1;
+	return 0;
+}
+
 static void finishPreviousNotes(struct track *tp)
 {	
 	uint8_t s,n;
@@ -60,14 +70,60 @@ static void finishPreviousNotes(struct track *tp)
 	} while(s&SEQ_CONT);
 }
 
+static FORCEINLINE void playStep(int8_t track)
+{
+	uint8_t s,n;
+	struct track *tp = &seq.tracks[track];
+
+	// seq not playing -> nothing to do
+
+	if(tp->mode!=smPlaying)
+		return;
+
+	// nothing to play ?
+
+	if(!tp->eventCount)
+		return;
+
+	s=tp->events[tp->eventIndex];
+	if(s!=SEQ_TIE) // terminate previous unless it's a tie
+		finishPreviousNotes(tp);
+	if(s!=SEQ_REST&&s!=SEQ_TIE) // a note
+	{
+		// save note index so we can do note off later
+		tp->prevEventIndex=tp->eventIndex;
+		tp->previousTranspose=seq.transpose;
+	}
+	do {
+		s&=SEQ_NOTEBITS;
+		if(s!=SEQ_REST&&s!=SEQ_TIE) // a note
+		{	
+			// handle notes
+			n=s+SCANNER_BASE_NOTE+seq.transpose;
+
+			// send note to assigner, velocity at half (MIDI value 64)
+			assigner_assignNote(n,1,HALF_RANGE);
+
+			// pass to MIDI out
+			midi_sendNoteEvent(n,1,HALF_RANGE);
+
+		}
+		tp->eventIndex=(tp->eventIndex+1)%tp->eventCount;
+		s=tp->events[tp->eventIndex];
+	} while(s&SEQ_CONT);
+}
+
 inline void seq_setMode(int8_t track, seqMode_t mode)
 {
 	struct track *tp = &seq.tracks[track];
+	int8_t alreadyPlaying;
 
 	seqMode_t oldMode=tp->mode;
 
 	if(mode==oldMode)
 		return;
+
+	alreadyPlaying=anyTrackPlaying();
 
 	if(oldMode==smOff)
 	{
@@ -105,6 +161,23 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 		seq.addTies=0;
 
 	tp->mode=mode;
+
+	// We need to put this after setting tp->mode to play, or playStep 
+	// won't play anything.
+	// The /2 bit is to determine if the second sequence has been
+	// started just before or just after a step has been played of
+	// the first. If seq.counter is closer to 0 than to seq.speed,
+	// then the second sequence was started just after the first had
+	// played its step, so we play the first step of the second sequence
+	// as fast as we can so it is heard (almost) simulatenously with
+	// the step of the first sequence. Conversely, if seq.counter is closer
+	// to seq.speed, the second sequence was started slightly before
+	// the first had played its step (this only happens when the second
+	// sequence is started after the first has already played (at least)
+	// one step), so we don't play the step here, but let it be played
+	// as usual from seq_update().
+	if(mode==smPlaying&&alreadyPlaying&&seq.speed!=UINT16_MAX&&seq.counter<seq.speed/2)
+		playStep(track);
 }
 
 inline void seq_setSpeed(uint16_t speed)
@@ -125,8 +198,9 @@ FORCEINLINE void seq_setTranspose(int8_t transpose)
 FORCEINLINE void seq_resetCounter(int8_t track)
 {
 	seq.tracks[track].eventIndex=0; // reinit
-	seq.counter=INT16_MAX; // start on a note
 	seq.tracks[track].prevEventIndex=-1;
+	if(!anyTrackPlaying())
+		seq.counter=INT16_MAX; // start on a note
 }
 
 void seq_silence(int8_t track)
@@ -266,38 +340,6 @@ void seq_inputNote(uint8_t note, uint8_t pressed)
 		inputNote(&seq.tracks[track], note, pressed);
 }
 
-static FORCEINLINE void playStep(struct track *tp)
-{
-	uint8_t s,n;
-
-	s=tp->events[tp->eventIndex];
-	if(s!=SEQ_TIE) // terminate previous unless it's a tie
-		finishPreviousNotes(tp);
-	if(s!=SEQ_REST&&s!=SEQ_TIE) // a note
-	{
-		// save note index so we can do note off later
-		tp->prevEventIndex=tp->eventIndex;
-		tp->previousTranspose=seq.transpose;
-	}
-	do {
-		s&=SEQ_NOTEBITS;
-		if(s!=SEQ_REST&&s!=SEQ_TIE) // a note
-		{	
-			// handle notes
-			n=s+SCANNER_BASE_NOTE+seq.transpose;
-
-			// send note to assigner, velocity at half (MIDI value 64)
-			assigner_assignNote(n,1,HALF_RANGE);
-
-			// pass to MIDI out
-			midi_sendNoteEvent(n,1,HALF_RANGE);
-
-		}
-		tp->eventIndex=(tp->eventIndex+1)%tp->eventCount;
-		s=tp->events[tp->eventIndex];
-	} while(s&SEQ_CONT);
-}
-
 void seq_update(void)
 {
 	// speed management
@@ -313,20 +355,7 @@ void seq_update(void)
 	seq.counter=0;
 
 	for(int8_t track=0;track<SEQ_TRACK_COUNT;++track)
-	{
-		struct track *tp = &seq.tracks[track];
-		// seq not playing -> nothing to do
-
-		if(tp->mode!=smPlaying)
-			continue;
-
-		// nothing to play ?
-
-		if(!tp->eventCount)
-			continue;
-
-		playStep(tp);
-	}
+		playStep(track);
 }
 
 void seq_init(void)
