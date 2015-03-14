@@ -227,10 +227,22 @@ static FORCEINLINE void inputNote(struct track *tp, uint8_t note, uint8_t presse
 		seq.noteOns++;
 		if(!spaceAvail(tp))
 			return;
-		tp->events[tp->eventCount++]=(note-SCANNER_BASE_NOTE)|(first?0:SEQ_CONT);
+		note-=SCANNER_BASE_NOTE;
 		// Advance step count when we hit first note of a chord.
 		if (first)
 			tp->stepCount++;
+		else
+		{
+			// check for duplicates
+			int8_t searchIndex=tp->eventCount-1;
+			uint8_t event;
+			do {
+				event=tp->events[searchIndex];
+				if((event&SEQ_NOTEBITS)==note)
+					return; // duplicate, so don't use
+			} while((event&SEQ_CONT)&&--searchIndex>=0);
+		}
+		tp->events[tp->eventCount++]=note|(first?0:SEQ_CONT);
 	}
 	else
 	{
