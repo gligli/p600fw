@@ -320,9 +320,14 @@ static int16_t NRWW_SECTION(".nrww_misc") getMidiByte(void)
 	return data;
 }
 
+static uint16_t NRWW_SECTION(".nrww_misc") updateCRC(uint16_t crc,uint8_t data)
+{
+	return _crc_xmodem_update(crc,data);
+}
+
 #define UPDATER_GET_BYTE { b=getMidiByte(); if(b<0) break; }
 #define UPDATER_WAIT_BYTE(waited) { UPDATER_GET_BYTE; if(b!=(waited)) break; }
-#define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=_crc_xmodem_update(crc,b); }
+#define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=updateCRC(crc,b); }
 
 void NRWW_SECTION(".updater") updater_main(void)
 {
@@ -475,7 +480,7 @@ void NRWW_SECTION(".updater") updater_main(void)
 		CYCLE_WAIT(8);
 
 		// program page
-		blHack_program_page(pageIdx*SPM_PAGESIZE,page);
+		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE,page);
 	}
 	
 	// show 'S' or 'E' on the 7seg, depending on success or error
