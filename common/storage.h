@@ -77,6 +77,8 @@ struct settings_s
 	
 	int8_t spread;
 	int8_t vcfLimit;
+	
+	uint16_t seqArpClock;
 };
 
 struct preset_s

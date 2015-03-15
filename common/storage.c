@@ -6,7 +6,7 @@
 #include "uart_6850.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 5
+#define STORAGE_VERSION 6
 
 #define STORAGE_MAGIC 0x006116a5
 
@@ -195,6 +195,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.voiceMask=0x3f;
 		settings.spread=0;
 		settings.vcfLimit=0;
+		settings.seqArpClock=HALF_RANGE;
 
 		if (storage.version<1)
 			return 1;
@@ -242,7 +243,14 @@ LOWERCODESIZE int8_t settings_load(void)
 		if (storage.version<6)
 			return 1;
 
-		// ...	
+		// v6
+		
+		settings.seqArpClock=storageRead16();
+
+		if (storage.version<7)
+			return 1;
+
+		// ...
 	
 	}
 	
@@ -284,6 +292,11 @@ LOWERCODESIZE void settings_save(void)
 		// v5
 		
 		storageWriteS8(settings.vcfLimit);
+
+		// v6
+		
+		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
+		storageWrite16(settings.seqArpClock);
 
 		// ...
 
@@ -335,6 +348,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
+
+		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 	}
 	
 	return 1;
@@ -371,6 +386,8 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			storageWrite8(currentPreset.voicePattern[i]);
 		
+		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
+
 		// this must stay last
 		storageFinishStore(number,1);
 	}
@@ -474,6 +491,7 @@ LOWERCODESIZE void settings_loadDefault(void)
 		settings.benderMiddle=HALF_RANGE;
 		settings.midiReceiveChannel=-1;
 		settings.voiceMask=0x3f;
+		settings.seqArpClock=HALF_RANGE;
 		
 		tuner_init(); // use theoretical tuning
 	}
