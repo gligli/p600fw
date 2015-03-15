@@ -9,7 +9,7 @@
 
 #define FORCEINLINE inline __attribute__((always_inline))
 #define NOINLINE __attribute__ ((noinline)) 
-#define LOWERCODESIZE NOINLINE __attribute__((optimize ("Os")))
+#define LOWERCODESIZE
 
 #undef MAX
 #undef MIN
