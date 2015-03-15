@@ -6,13 +6,14 @@
 #include "uart_6850.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 4
+#define STORAGE_VERSION 5
 
 #define STORAGE_MAGIC 0x006116a5
-#define STORAGE_MAX_SIZE 384
 
 #define SETTINGS_PAGE_COUNT 2
 #define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-4)
+
+#define STORAGE_MAX_SIZE (SETTINGS_PAGE_COUNT*STORAGE_PAGE_SIZE)
 
 const uint8_t steppedParametersBits[spCount] = 
 {
