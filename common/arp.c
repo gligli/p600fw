@@ -8,6 +8,8 @@
 #include "assigner.h"
 #include "storage.h"
 #include "midi.h"
+#include "clock.h"
+#include "seq.h"
 
 #define ARP_NOTE_MEMORY 128 // must stay>=128 for up/down mode
 
@@ -22,7 +24,6 @@ static struct
 	uint8_t previousNote;
 	int8_t transpose,previousTranspose;
 
-	uint16_t counter,speed;
 	int8_t hold;
 	arpMode_t mode;
 } arp;
@@ -94,16 +95,6 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 	arp.hold=hold;
 }
 
-inline void arp_setSpeed(uint16_t speed)
-{
-	if(speed<1024)
-		arp.speed=UINT16_MAX;
-	else if(settings.syncMode==smInternal)
-		arp.speed=exponentialCourse(speed,22000.0f,500.0f);
-	else
-		arp.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
-}
-
 FORCEINLINE void arp_setTranspose(int8_t transpose)
 {
 	arp.transpose=transpose;
@@ -112,7 +103,7 @@ FORCEINLINE void arp_setTranspose(int8_t transpose)
 FORCEINLINE void arp_resetCounter(void)
 {
 	arp.noteIndex=-1; // reinit
-	arp.counter=INT16_MAX; // start on a note
+	clock_reset(); // start on a note
 }
 
 FORCEINLINE arpMode_t arp_getMode(void)
@@ -139,8 +130,9 @@ void arp_assignNote(uint8_t note, int8_t on)
 	{
 		// if this is the first note, make sure the arp will start on it as as soon as we update
 		
-		if(isEmpty() && settings.syncMode==smInternal)
-			arp.counter=INT16_MAX; // not UINT16_MAX, to avoid overflow
+		if(isEmpty() && settings.syncMode==smInternal &&
+		   seq_getMode(0)!=smPlaying && seq_getMode(1)!=smPlaying)
+			clock_reset();
 
 		// assign note			
 		
@@ -215,18 +207,6 @@ void arp_update(void)
 	
 	if(arp.mode==amOff)
 		return;
-	
-	// speed management
-	
-	if(arp.speed==UINT16_MAX)
-		return;
-
-	++arp.counter;
-	
-	if(arp.counter<arp.speed)
-		return;
-	
-	arp.counter=0;
 	
 	// nothing to play ?
 	
