@@ -103,7 +103,8 @@ FORCEINLINE void arp_setTranspose(int8_t transpose)
 FORCEINLINE void arp_resetCounter(void)
 {
 	arp.noteIndex=-1; // reinit
-	clock_reset(); // start on a note
+	if (seq_getMode(0)!=smPlaying && seq_getMode(1)!=smPlaying)
+		clock_reset(); // start on a note
 }
 
 FORCEINLINE arpMode_t arp_getMode(void)
