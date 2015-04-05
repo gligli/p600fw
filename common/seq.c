@@ -195,18 +195,19 @@ FORCEINLINE void seq_setTranspose(int8_t transpose)
 	seq.transpose=transpose;
 }
 
+FORCEINLINE void seq_silence(int8_t track)
+{
+	if(seq.tracks[track].mode==smPlaying)
+		finishPreviousNotes(&seq.tracks[track]);
+}
+
 FORCEINLINE void seq_resetCounter(int8_t track)
 {
+	seq_silence(track);
 	seq.tracks[track].eventIndex=0; // reinit
 	seq.tracks[track].prevEventIndex=-1;
 	if(!anyTrackPlaying())
 		seq.counter=INT16_MAX; // start on a note
-}
-
-void seq_silence(int8_t track)
-{
-	if(seq.tracks[track].mode==smPlaying)
-		finishPreviousNotes(&seq.tracks[track]);
 }
 
 FORCEINLINE seqMode_t seq_getMode(int8_t track)
