@@ -1234,9 +1234,10 @@ void synth_realtimeEvent(uint8_t midiEvent)
 			++synth.pendingExtClock;
 			break;
 		case MIDI_START:
-			seq_resetCounter(0);
-			seq_resetCounter(1);
-			arp_resetCounter();
+			seq_resetCounter(0,0);
+			seq_resetCounter(1,0);
+			arp_resetCounter(0);
+			clock_reset(); // always do a beat reset on MIDI START
 			synth.pendingExtClock=0;
 			break;
 		case MIDI_STOP:

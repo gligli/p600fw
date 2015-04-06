@@ -42,7 +42,7 @@ void seq_setTranspose(int8_t transpose);
 seqMode_t seq_getMode(int8_t track);
 uint8_t seq_getStepCount(int8_t track);
 int8_t seq_full(int8_t track);
-void seq_resetCounter(int8_t track);
+void seq_resetCounter(int8_t track, int8_t beatReset);
 void seq_silence(int8_t track);
 
 void seq_inputNote(uint8_t note, uint8_t pressed);

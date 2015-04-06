@@ -84,8 +84,8 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 	{
 		killAllNotes();
 		
-		if(settings.syncMode!=smInternal)
-			arp_resetCounter();
+		if (mode!=amOff)
+			arp_resetCounter(settings.syncMode==smInternal);
 	}
 	
 	if(!hold && arp.hold)
@@ -100,11 +100,11 @@ FORCEINLINE void arp_setTranspose(int8_t transpose)
 	arp.transpose=transpose;
 }
 
-FORCEINLINE void arp_resetCounter(void)
+FORCEINLINE void arp_resetCounter(int8_t beatReset)
 {
 	arp.noteIndex=-1; // reinit
-	if (seq_getMode(0)!=smPlaying && seq_getMode(1)!=smPlaying)
-		clock_reset(); // start on a note
+	if (beatReset&&seq_getMode(0)!=smPlaying&&seq_getMode(1)!=smPlaying)
+		clock_reset(); // start immediately
 }
 
 FORCEINLINE arpMode_t arp_getMode(void)
@@ -131,9 +131,8 @@ void arp_assignNote(uint8_t note, int8_t on)
 	{
 		// if this is the first note, make sure the arp will start on it as as soon as we update
 		
-		if(isEmpty() && settings.syncMode==smInternal &&
-		   seq_getMode(0)!=smPlaying && seq_getMode(1)!=smPlaying)
-			clock_reset();
+		if(isEmpty())
+			arp_resetCounter(settings.syncMode==smInternal);
 
 		// assign note			
 		

@@ -156,7 +156,7 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	}	
 
 	if(mode==smPlaying)
-		seq_resetCounter(track);
+		seq_resetCounter(track,settings.syncMode==smInternal);
 
 	if(mode==smRecording)
 		seq.addTies=0;
@@ -193,13 +193,13 @@ FORCEINLINE void seq_silence(int8_t track)
 		finishPreviousNotes(&seq.tracks[track]);
 }
 
-FORCEINLINE void seq_resetCounter(int8_t track)
+FORCEINLINE void seq_resetCounter(int8_t track, int8_t beatReset)
 {
 	seq_silence(track);
 	seq.tracks[track].eventIndex=0; // reinit
 	seq.tracks[track].prevEventIndex=-1;
-	if(!anyTrackPlaying()&&arp_getMode()==amOff)
-		clock_reset(); // start on a note
+	if(beatReset&&!anyTrackPlaying()&&arp_getMode()==amOff)
+		clock_reset(); // start immediately
 }
 
 FORCEINLINE seqMode_t seq_getMode(int8_t track)
