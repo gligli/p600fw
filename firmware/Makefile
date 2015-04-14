@@ -62,6 +62,7 @@ SRC = \
 	../common/sh.c \
 	../common/adsr.c \
 	../common/lfo.c \
+	../common/clock.c \
 	../common/arp.c \
 	../common/seq.c \
 	../common/tuner.c \

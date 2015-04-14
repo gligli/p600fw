@@ -8,6 +8,8 @@
 #include "assigner.h"
 #include "storage.h"
 #include "midi.h"
+#include "clock.h"
+#include "arp.h"
 
 struct track
 {
@@ -25,7 +27,6 @@ static struct
 	struct track tracks[SEQ_TRACK_COUNT];
 
 	int8_t transpose;
-	uint16_t counter,speed;
 	// During note entry:
 	uint8_t addTies; // how many ties to add
 	uint8_t noteOns; // how many keys are down
@@ -155,7 +156,7 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	}	
 
 	if(mode==smPlaying)
-		seq_resetCounter(track);
+		seq_resetCounter(track,settings.syncMode==smInternal);
 
 	if(mode==smRecording)
 		seq.addTies=0;
@@ -176,18 +177,9 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	// sequence is started after the first has already played (at least)
 	// one step), so we don't play the step here, but let it be played
 	// as usual from seq_update().
-	if(mode==smPlaying&&alreadyPlaying&&seq.speed!=UINT16_MAX&&seq.counter<seq.speed/2)
+	uint16_t speed=clock_getSpeed();
+	if(mode==smPlaying&&alreadyPlaying&&speed!=UINT16_MAX&&clock_getCounter()<speed/2)
 		playStep(track);
-}
-
-inline void seq_setSpeed(uint16_t speed)
-{
-	if(speed<1024)
-		seq.speed=UINT16_MAX;
-	else if(settings.syncMode==smInternal)
-		seq.speed=exponentialCourse(speed,22000.0f,500.0f);
-	else
-		seq.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
 }
 
 FORCEINLINE void seq_setTranspose(int8_t transpose)
@@ -201,13 +193,13 @@ FORCEINLINE void seq_silence(int8_t track)
 		finishPreviousNotes(&seq.tracks[track]);
 }
 
-FORCEINLINE void seq_resetCounter(int8_t track)
+FORCEINLINE void seq_resetCounter(int8_t track, int8_t beatReset)
 {
 	seq_silence(track);
 	seq.tracks[track].eventIndex=0; // reinit
 	seq.tracks[track].prevEventIndex=-1;
-	if(!anyTrackPlaying())
-		seq.counter=INT16_MAX; // start on a note
+	if(beatReset&&!anyTrackPlaying()&&arp_getMode()==amOff)
+		clock_reset(); // start immediately
 }
 
 FORCEINLINE seqMode_t seq_getMode(int8_t track)
@@ -343,18 +335,6 @@ void seq_inputNote(uint8_t note, uint8_t pressed)
 
 void seq_update(void)
 {
-	// speed management
-
-	if(seq.speed==UINT16_MAX)
-		return;
-
-	++seq.counter;
-
-	if(seq.counter<seq.speed)
-		return;
-
-	seq.counter=0;
-
 	for(int8_t track=0;track<SEQ_TRACK_COUNT;++track)
 		playStep(track);
 }

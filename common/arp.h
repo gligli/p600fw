@@ -17,7 +17,7 @@ void arp_setSpeed(uint16_t speed);
 void arp_setTranspose(int8_t transpose);
 arpMode_t arp_getMode(void);
 int8_t arp_getHold(void);
-void arp_resetCounter(void);
+void arp_resetCounter(int8_t beatReset);
 
 void arp_assignNote(uint8_t note, int8_t on);
 

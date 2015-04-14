@@ -22,6 +22,7 @@
 #include "midi.h"
 #include "../xnormidi/midi.h"
 #include "seq.h"
+#include "clock.h"
 
 #define POT_DEAD_ZONE 512
 
@@ -944,10 +945,9 @@ void synth_update(void)
 		synth.glideAmount=exponentialCourse(currentPreset.continuousParameters[cpGlide],11000.0f,2100.0f);
 		synth.gliding=synth.glideAmount<2000;
 		
-		// arp
+		// arp and seq
 		
-		arp_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
-		seq_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
+		clock_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
 		
 		break;
 	}
@@ -1052,15 +1052,18 @@ void synth_timerInterrupt(void)
 			if(synth.pendingExtClock)
 				--synth.pendingExtClock;
 
-			// sequencer
+			if (clock_update())
+			{
+				// sequencer
 
-			if(seq_getMode(0)!=smOff || seq_getMode(1)!=smOff)
-				seq_update();
+				if(seq_getMode(0)!=smOff || seq_getMode(1)!=smOff)
+					seq_update();
 			
-			// arpeggiator
+				// arpeggiator
 
-			if(arp_getMode()!=amOff)
-				arp_update();
+				if(arp_getMode()!=amOff)
+					arp_update();
+			}
 		}
 
 		// glide
@@ -1231,9 +1234,10 @@ void synth_realtimeEvent(uint8_t midiEvent)
 			++synth.pendingExtClock;
 			break;
 		case MIDI_START:
-			seq_resetCounter(0);
-			seq_resetCounter(1);
-			arp_resetCounter();
+			seq_resetCounter(0,0);
+			seq_resetCounter(1,0);
+			arp_resetCounter(0);
+			clock_reset(); // always do a beat reset on MIDI START
 			synth.pendingExtClock=0;
 			break;
 		case MIDI_STOP:
