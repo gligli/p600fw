@@ -10,6 +10,8 @@
 
 #include "synth.h"
 
+#define CLOBBERED(reg)	__asm__ __volatile__ ("" : : : reg);
+
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 #define CPU_16MHz       0x00
 #define CPU_8MHz        0x01
@@ -521,6 +523,12 @@ void storage_write(uint32_t pageIdx, uint8_t *buf)
 	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
 	{
 		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR,buf);
+
+		// Somewhere R16 appears to get clobbered even though the
+		// compiler is not aware of it, possibly in the SPM routine
+		// called by blHack_call_SPM. So to avoid potential problems
+		// in callers higher up in the stack we mark R16 as clobbered here.
+		CLOBBERED("r16");
 	}
 }
 

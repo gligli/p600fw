@@ -373,25 +373,19 @@ static LOWERCODESIZE void handleSequencerPage(p600Button_t button)
 		{
 		case pb0:
 			note=SEQ_NOTE_CLEAR;
-			sevenSeg_scrollText("clear",1);
-			break;
-		case pb3:
-			note=SEQ_NOTE_REST;
-			sevenSeg_scrollText("rest",1);
-			break;
-		case pb2:
-			note=SEQ_NOTE_TIE;
-			sevenSeg_scrollText("tie",1);
 			break;
 		case pb1:
 			note=SEQ_NOTE_UNDO;
+			break;
+		case pb2:
+			note=SEQ_NOTE_STEP;
 			break;
 		default:
 			note=ASSIGNER_NO_NOTE;
 		}
 		
 		if(note!=ASSIGNER_NO_NOTE)
-			seq_inputNote(note);
+			seq_inputNote(note,1);
 	}
 }
 

@@ -9,79 +9,175 @@
 #include "storage.h"
 #include "midi.h"
 
+struct track
+{
+	seqMode_t mode;
+	uint8_t events[SEQ_NOTE_MEMORY];
+	uint8_t eventCount;
+	int16_t eventIndex;
+	int16_t prevEventIndex;
+	uint8_t stepCount;
+	int8_t previousTranspose;
+};
+
 static struct
 {
-	seqMode_t mode[SEQ_TRACK_COUNT];
-	uint8_t notes[SEQ_TRACK_COUNT][SEQ_NOTE_MEMORY];
-	uint8_t noteCount[SEQ_TRACK_COUNT];
-	int16_t noteIndex[SEQ_TRACK_COUNT];
+	struct track tracks[SEQ_TRACK_COUNT];
 
-	int8_t transpose,previousTranspose[SEQ_TRACK_COUNT];
+	int8_t transpose;
 	uint16_t counter,speed;
+	// During note entry:
+	uint8_t addTies; // how many ties to add
+	uint8_t noteOns; // how many keys are down
 } seq;
 
 
-static void finishPreviousNote(int8_t track, int8_t offset)
+static int8_t anyTrackPlaying(void)
+{
+	int8_t track;
+
+	for (track = 0; track < SEQ_TRACK_COUNT; track++)
+		if (seq.tracks[track].mode==smPlaying)
+			return 1;
+	return 0;
+}
+
+static void finishPreviousNotes(struct track *tp)
 {	
-	uint8_t n;
-	int16_t ni;
-	
-	if(!seq.noteCount[track])
+	uint8_t s,n;
+
+	if(!tp->eventCount||tp->prevEventIndex<0)
 		return;
-	
-	// find prev note, acounting for ties
-	
-	ni=seq.noteIndex[track]+1+offset;
-	do
-	{
-		ni=(ni+seq.noteCount[track]-1)%seq.noteCount[track];
-		n=seq.notes[track][ni];
-	}
-	while(ni!=seq.noteIndex[track]+1 && n==SEQ_NOTE_TIE);
-	
-	// silence it, in case it's not a rest
-	
-	if(n!=SEQ_NOTE_TIE && n!=SEQ_NOTE_REST)
-	{
-		assigner_assignNote(n+seq.previousTranspose[track],0,0);
-		
+
+	s=tp->events[tp->prevEventIndex];
+	do {
+		s&=SEQ_NOTEBITS;
+
+		if(s==SEQ_REST||s==SEQ_TIE)
+			break;
+
+		// handle notes
+		n=s+SCANNER_BASE_NOTE+tp->previousTranspose;
+
+		// send note to assigner, velocity at half (MIDI value 64)
+		assigner_assignNote(n,0,0);
+
 		// pass to MIDI out
-		midi_sendNoteEvent(n+seq.previousTranspose[track],0,0);
+		midi_sendNoteEvent(n,0,0);
+
+		tp->prevEventIndex=(tp->prevEventIndex+1)%tp->eventCount;
+		s=tp->events[tp->prevEventIndex];
+	} while(s&SEQ_CONT);
+}
+
+static FORCEINLINE void playStep(int8_t track)
+{
+	uint8_t s,n;
+	struct track *tp = &seq.tracks[track];
+
+	// seq not playing -> nothing to do
+
+	if(tp->mode!=smPlaying)
+		return;
+
+	// nothing to play ?
+
+	if(!tp->eventCount)
+		return;
+
+	s=tp->events[tp->eventIndex];
+	if(s!=SEQ_TIE) // terminate previous unless it's a tie
+		finishPreviousNotes(tp);
+	if(s!=SEQ_REST&&s!=SEQ_TIE) // a note
+	{
+		// save note index so we can do note off later
+		tp->prevEventIndex=tp->eventIndex;
+		tp->previousTranspose=seq.transpose;
 	}
+	do {
+		s&=SEQ_NOTEBITS;
+		if(s!=SEQ_REST&&s!=SEQ_TIE) // a note
+		{	
+			// handle notes
+			n=s+SCANNER_BASE_NOTE+seq.transpose;
+
+			// send note to assigner, velocity at half (MIDI value 64)
+			assigner_assignNote(n,1,HALF_RANGE);
+
+			// pass to MIDI out
+			midi_sendNoteEvent(n,1,HALF_RANGE);
+
+		}
+		tp->eventIndex=(tp->eventIndex+1)%tp->eventCount;
+		s=tp->events[tp->eventIndex];
+	} while(s&SEQ_CONT);
 }
 
 inline void seq_setMode(int8_t track, seqMode_t mode)
 {
-	seqMode_t oldMode=seq.mode[track];
-	
+	struct track *tp = &seq.tracks[track];
+	int8_t alreadyPlaying;
+
+	seqMode_t oldMode=tp->mode;
+
 	if(mode==oldMode)
 		return;
+
+	alreadyPlaying=anyTrackPlaying();
 
 	if(oldMode==smOff)
 	{
 		// load sequence from storage on start
-		if(!storage_loadSequencer(track,seq.notes[track],SEQ_NOTE_MEMORY))
-			memset(seq.notes[track],ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
+		if(!storage_loadSequencer(track,tp->events,SEQ_NOTE_MEMORY))
+			memset(tp->events,ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
 
-		// compute note count
-		seq.noteCount[track]=SEQ_NOTE_MEMORY;
-		while(seq.noteCount[track] && seq.notes[track][seq.noteCount[track]-1]==ASSIGNER_NO_NOTE)
-			--seq.noteCount[track];
+		// compute note and step count
+		tp->eventCount=0;
+		tp->stepCount=0;
+		while(tp->eventCount<SEQ_NOTE_MEMORY)
+		{
+			uint8_t s=tp->events[tp->eventCount];
+			if(!(s&SEQ_CONT))
+				tp->stepCount++;
+			if(s==ASSIGNER_NO_NOTE)
+				break;
+			tp->eventCount++;
+		}
 	}
 	else if(oldMode==smRecording)
 	{
 		// store sequence to storage on record end
-		storage_saveSequencer(track,seq.notes[track],SEQ_NOTE_MEMORY);
+		storage_saveSequencer(track,tp->events,SEQ_NOTE_MEMORY);
 	}
 	else if(oldMode==smPlaying)
 	{
-		finishPreviousNote(track,0);
+		finishPreviousNotes(tp);
 	}	
-	
+
 	if(mode==smPlaying)
 		seq_resetCounter(track);
 
-	seq.mode[track]=mode;
+	if(mode==smRecording)
+		seq.addTies=0;
+
+	tp->mode=mode;
+
+	// We need to put this after setting tp->mode to play, or playStep 
+	// won't play anything.
+	// The /2 bit is to determine if the second sequence has been
+	// started just before or just after a step has been played of
+	// the first. If seq.counter is closer to 0 than to seq.speed,
+	// then the second sequence was started just after the first had
+	// played its step, so we play the first step of the second sequence
+	// as fast as we can so it is heard (almost) simulatenously with
+	// the step of the first sequence. Conversely, if seq.counter is closer
+	// to seq.speed, the second sequence was started slightly before
+	// the first had played its step (this only happens when the second
+	// sequence is started after the first has already played (at least)
+	// one step), so we don't play the step here, but let it be played
+	// as usual from seq_update().
+	if(mode==smPlaying&&alreadyPlaying&&seq.speed!=UINT16_MAX&&seq.counter<seq.speed/2)
+		playStep(track);
 }
 
 inline void seq_setSpeed(uint16_t speed)
@@ -99,57 +195,154 @@ FORCEINLINE void seq_setTranspose(int8_t transpose)
 	seq.transpose=transpose;
 }
 
-FORCEINLINE void seq_resetCounter(int8_t track)
+FORCEINLINE void seq_silence(int8_t track)
 {
-	seq.noteIndex[track]=-1; // reinit
-	seq.counter=INT16_MAX; // start on a note
+	if(seq.tracks[track].mode==smPlaying)
+		finishPreviousNotes(&seq.tracks[track]);
 }
 
-void seq_silence(int8_t track)
+FORCEINLINE void seq_resetCounter(int8_t track)
 {
-	if(seq.mode[track]==smPlaying)
-		finishPreviousNote(track,0);
+	seq_silence(track);
+	seq.tracks[track].eventIndex=0; // reinit
+	seq.tracks[track].prevEventIndex=-1;
+	if(!anyTrackPlaying())
+		seq.counter=INT16_MAX; // start on a note
 }
 
 FORCEINLINE seqMode_t seq_getMode(int8_t track)
 {
-	return seq.mode[track];
+	return seq.tracks[track].mode;
 }
 
-FORCEINLINE uint8_t seq_getNoteCount(int8_t track)
+FORCEINLINE uint8_t seq_getStepCount(int8_t track)
 {
-	return seq.noteCount[track];
+	return seq.tracks[track].stepCount;
 }
 
-void seq_inputNote(uint8_t note)
+FORCEINLINE int8_t seq_full(int8_t track)
 {
-	for(int8_t track=0;track<SEQ_TRACK_COUNT;++track)
+	return seq.tracks[track].eventCount+seq.addTies>=SEQ_NOTE_MEMORY;
+}
+
+static FORCEINLINE void noteOnCount(void)
+{
+	seq.noteOns++;
+}
+
+static FORCEINLINE void noteOffCount(void)
+{
+	if (seq.noteOns) // should not be needed, but for robustness
+		seq.noteOns--;
+}
+
+static int8_t spaceAvail(struct track *tp)
+{
+  // We need to have space not only for notes but also for any added
+  // tie events.
+  return tp->eventCount+seq.addTies<SEQ_NOTE_MEMORY;
+}
+
+static FORCEINLINE void inputNote(struct track *tp, uint8_t note, uint8_t pressed)
+{
+	if(tp->mode!=smRecording)
+		return;
+
+	if(note==SEQ_NOTE_CLEAR)
 	{
-		if(seq.mode[track]!=smRecording)
-			continue;
-		
-		if(note==SEQ_NOTE_CLEAR)
+		tp->eventCount=0;
+		tp->stepCount=0;
+		seq.addTies=0;
+		memset(tp->events,ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
+		return;
+	}
+
+	if(note==SEQ_NOTE_UNDO)
+	{
+		if(!tp->stepCount) // break if no events in sequence
+			return;
+		tp->stepCount--; // back up one step
+		if (seq.addTies) // currently entering tie
 		{
-			seq.noteCount[track]=0;
-			memset(seq.notes[track],ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
+			seq.addTies--;
+			return;
 		}
-		else if(note==SEQ_NOTE_UNDO)
+		// erase all events back to previous one
+		while(tp->eventCount)
 		{
-			if(seq.noteCount[track])
-				seq.notes[track][--seq.noteCount[track]]=ASSIGNER_NO_NOTE;
+			uint8_t s=tp->events[--tp->eventCount];
+			tp->events[tp->eventCount]=ASSIGNER_NO_NOTE;
+			if(!(s&SEQ_CONT))
+				break;
 		}
+		return;
+	}
+
+	if(note==SEQ_NOTE_STEP)
+	{
+		// If there are no events, simply insert a rest event..
+		// Otherwise we bump the #ties counter.
+		if(!spaceAvail(tp))
+			return;
+		tp->stepCount++;
+		if (!seq.noteOns) // no notes down => add rest
+		{
+			tp->events[tp->eventCount]=SEQ_REST;
+			tp->eventCount++;
+		}
+		else // just count tie events to be added later
+			seq.addTies++;
+		return;
+	}
+
+	// ordinary note on/off
+	if (pressed)
+	{
+		int8_t first=!seq.noteOns; // first of chord
+		seq.noteOns++;
+		if(!spaceAvail(tp))
+			return;
+		note-=SCANNER_BASE_NOTE;
+		// Advance step count when we hit first note of a chord.
+		if (first)
+			tp->stepCount++;
 		else
 		{
-			if(seq.noteCount[track]<SEQ_NOTE_MEMORY)
-				seq.notes[track][seq.noteCount[track]++]=note;
+			// check for duplicates
+			int8_t searchIndex=tp->eventCount-1;
+			uint8_t event;
+			do {
+				event=tp->events[searchIndex];
+				if((event&SEQ_NOTEBITS)==note)
+					return; // duplicate, so don't use
+			} while((event&SEQ_CONT)&&--searchIndex>=0);
 		}
+		tp->events[tp->eventCount++]=note|(first?0:SEQ_CONT);
 	}
+	else
+	{
+		if(seq.noteOns)
+			seq.noteOns--;
+		if(seq.noteOns) // still notes down
+			return;
+		// When last note in chord released,
+		// put down additional tie events
+		// We know there's space for these, as spaceAvail()
+		// during note entry takes it into account
+		memset(&tp->events[tp->eventCount],SEQ_TIE,seq.addTies);
+		tp->eventCount+=seq.addTies;
+		seq.addTies=0;
+	}
+}
+
+void seq_inputNote(uint8_t note, uint8_t pressed)
+{
+	for(int8_t track=0;track<SEQ_TRACK_COUNT;++track)
+		inputNote(&seq.tracks[track], note, pressed);
 }
 
 void seq_update(void)
 {
-	uint8_t n;
-	
 	// speed management
 
 	if(seq.speed==UINT16_MAX)
@@ -163,51 +356,18 @@ void seq_update(void)
 	seq.counter=0;
 
 	for(int8_t track=0;track<SEQ_TRACK_COUNT;++track)
-	{
-		// seq not playing -> nothing to do
-
-		if(seq.mode[track]!=smPlaying)
-			continue;
-
-		// nothing to play ?
-
-		if(!seq.noteCount[track])
-			continue;
-
-		// to next note
-		
-		seq.noteIndex[track]=(seq.noteIndex[track]+1)%seq.noteCount[track];
-		n=seq.notes[track][seq.noteIndex[track]];
-
-		// handle note
-
-		if(n!=SEQ_NOTE_TIE)
-		{
-			finishPreviousNote(track,-1);
-		}
-		
-		if(n!=SEQ_NOTE_TIE && n!=SEQ_NOTE_REST)
-		{
-			// send note to assigner, velocity at half (MIDI value 64)
-			assigner_assignNote(n+seq.transpose,1,HALF_RANGE);
-
-			// pass to MIDI out
-			midi_sendNoteEvent(n+seq.transpose,1,HALF_RANGE);
-		
-			seq.previousTranspose[track]=seq.transpose;
-		}
-	}
+		playStep(track);
 }
 
 void seq_init(void)
 {
 	int8_t track;
-	
+
 	memset(&seq,0,sizeof(seq));
 
 	for(track=0;track<SEQ_TRACK_COUNT;++track)
 	{
-		seq.noteIndex[track]=-1;
-		memset(seq.notes[track],ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
+		seq.tracks[track].eventIndex=0;
+		memset(seq.tracks[track].events,ASSIGNER_NO_NOTE,SEQ_NOTE_MEMORY);
 	}		
 }
