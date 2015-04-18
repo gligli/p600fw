@@ -1130,6 +1130,13 @@ void synth_keyEvent(uint8_t key, int pressed)
 			
 			itoa(synth.transpose,&s[9],10);
 			sevenSeg_scrollText(s,1);
+
+			// Disable double-click transpose if transpose is
+			// set using FROM TAPE as shift.
+			// The point of this is to allow user an easy way
+			// out of the toggled double click mode.
+			if (ui.isShifted)
+				ui.isDoubleClicked=0;
 		}
 	}
 	else
