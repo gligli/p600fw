@@ -14,6 +14,7 @@ int8_t scanner_buttonState(p600Button_t button);
 
 void scanner_init(void);
 void scanner_update(int8_t fullScan);
+int8_t scanner_isKeyDown(uint8_t note);
 
 #endif	/* SCANNER_H */
 

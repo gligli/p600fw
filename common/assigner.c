@@ -2,6 +2,7 @@
 // Voice assigner
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "scanner.h"
 #include "assigner.h"
 
 struct allocation_s
@@ -382,12 +383,15 @@ void assigner_voiceDone(int8_t voice)
 
 // This is different from assigner_voiceDone(-1) in that it does note silence
 // the voice immediately but lets it go through its release phase as usual.
-void assigner_allNotesOff(void)
+// Also, only voices corresponding to keys that are down on the keyboard
+// are released.
+void assigner_allKeysOff(void)
 {
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
-		if (!isVoiceDisabled(v) && assigner.allocation[v].gated)
+		if (!isVoiceDisabled(v) && assigner.allocation[v].gated &&
+		    scanner_isKeyDown(assigner.allocation[v].rootNote))
 		{
 			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
 		    	assigner.allocation[v].gated=0;

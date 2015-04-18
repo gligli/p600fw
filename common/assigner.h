@@ -19,7 +19,7 @@ int8_t assigner_getAnyAssigned(void);
 
 void assigner_assignNote(uint8_t note, int8_t gate, uint16_t velocity);
 void assigner_voiceDone(int8_t voice); // -1 -> all voices finished
-void assigner_allNotesOff(void);
+void assigner_allKeysOff(void);
 
 void assigner_setPattern(uint8_t * pattern, int8_t mono);
 void assigner_getPattern(uint8_t * pattern, int8_t * mono);

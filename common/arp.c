@@ -60,7 +60,7 @@ static void killAllNotes(void)
 	arp.previousNote=ASSIGNER_NO_NOTE;
 
 	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
-	assigner_allNotesOff();
+	assigner_allKeysOff();
 }
 
 static void killHeldNotes(void)
