@@ -595,7 +595,19 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(button==pbFromTape)
 	{
+		if (pressed)
+		{
+			if (ui.doubleClickTimer)
+			// Button pressed < 1 second ago
+			{
+				ui.doubleClickTimer=0; // reset timer
+				ui.isDoubleClicked=!ui.isDoubleClicked;
+			}
+			else
+				ui.doubleClickTimer = 63; // 1 second
+		}
 		ui.isShifted=pressed;
+		led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 		// reset Misc Settings to 'display only' whenever
 		// pbFromTape is released.
 		ui.prevMiscButton=-1;
@@ -698,4 +710,11 @@ void ui_init(void)
 	ui.presetModified=1;
 	ui.activeParamIdx=-1;
 	ui.prevMiscButton=-1;
+}
+
+// Called at 63Hz
+void ui_update(void)
+{
+	if (ui.doubleClickTimer)
+		ui.doubleClickTimer--;
 }

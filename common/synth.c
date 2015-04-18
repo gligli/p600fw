@@ -626,7 +626,6 @@ static void refreshSevenSeg(void)
 
 	led_set(plPreset,settings.presetMode,0);
 	led_set(plToTape,ui.digitInput==diSynth && settings.presetMode,0);
-	led_set(plFromTape,scanner_buttonState(pbFromTape),0);
 	led_set(plSeq1,seq_getMode(0)!=smOff,seq_getMode(0)!=smPlaying);
 	led_set(plSeq2,seq_getMode(1)!=smOff,seq_getMode(1)!=smPlaying);
 	led_set(plArpUD,arp_getMode()==amUpDown,0);
@@ -1098,6 +1097,8 @@ void synth_timerInterrupt(void)
 		{
 			scanner_update(hz63);
 			display_update(hz63);
+			if (hz63)
+				ui_update();
 		}
 		break;
 	}
@@ -1116,7 +1117,7 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 
 void synth_keyEvent(uint8_t key, int pressed)
 {
-	if(ui.isShifted)
+	if(ui.isShifted||ui.isDoubleClicked)
 	{
 		// keyboard transposition
 		if(pressed)

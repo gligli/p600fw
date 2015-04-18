@@ -28,6 +28,8 @@ struct ui_s
 	int8_t activeParamIdx;
 	int8_t isShifted;
 
+	int8_t isDoubleClicked;
+	int8_t doubleClickTimer;
 	p600Button_t prevMiscButton;
 	int8_t voice;
 };
@@ -39,6 +41,7 @@ void ui_checkIfDataPotChanged(void);
 void ui_handleButton(p600Button_t button, int pressed);
 void ui_setPresetModified(int8_t modified);
 void ui_setNoActivePot(void);
+void ui_update(void);
 
 #endif	/* UI_H */
 
