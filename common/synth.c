@@ -111,7 +111,7 @@ struct deadband panelDeadband = { HALF_RANGE, 0, PANEL_DEADBAND };
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
 	uint16_t cva,cvb,cvf;
-	uint8_t note,baseCutoffNote;
+	uint8_t note=SCANNER_BASE_NOTE,baseCutoffNote;
 	int8_t v;
 
 	uint16_t baseAPitch,baseBPitch,baseCutoff;
@@ -182,7 +182,16 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
-		if ((forceVoice>=0 && v!=forceVoice) || !assigner_getAssignment(v,&note))
+		// When force is set to -1 (and forceVoice too), update
+		// all voices, whether assigned or not, in order to get a
+		// reasonable filter CV after power on. Otherwise some voices
+		// in some synths, which have a rather large filter CV
+		// feedthrough, output a fairly large 'thump' when the first
+		// note is triggered, as the filter CV jumps from almost 0
+		// to its preset value. In this case, use the default
+		// value of SCANNER_BASE_NOTE for note (see declaration above),
+		// as the assigner does not yet have a valid note for the voice.
+		if ((forceVoice>=0 && v!=forceVoice) || (!assigner_getAssignment(v,&note) && force!=-1))
 			continue;
 
 		// Subtract bottom C, signed result. Here a value of 0
@@ -857,6 +866,7 @@ void synth_init(void)
 	
 	refreshPresetMode();
 	refreshFullState();
+	computeTunedCVs(-1,-1); // force init CV's for all voices
 	
 	// a nice welcome message, and we're ready to go :)
 	
