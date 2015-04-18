@@ -380,17 +380,23 @@ void assigner_voiceDone(int8_t voice)
 		}
 }
 
-// This is different from assigner_voiceDone(-1) in that it does a 'proper'
-// key assignment, releasing all notes that are on.
+// This is different from assigner_voiceDone(-1) in that it does note silence
+// the voice immediately but lets it go through its release phase as usual.
 void assigner_allNotesOff(void)
 {
-	uint8_t note;
-
-	for (note=0;note<128;note++)
+	int8_t v;
+	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
-		if(getNoteState(note))
-			assigner_assignNote(note,0,0);
+		if (!isVoiceDisabled(v) && assigner.allocation[v].gated)
+		{
+			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
+		    	assigner.allocation[v].gated=0;
+		    	assigner.allocation[v].keyPressed=0;
+		}
 	}
+	// Release all keys and future holds too
+	memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
+	assigner.hold=0;
 }
 
 LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)
