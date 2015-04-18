@@ -45,7 +45,7 @@ static void finishPreviousNote(void)
 	{
 		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
 		
-		assigner_assignNote(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0);
+		assigner_assignNote(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0,0);
 		
 		// pass to MIDI out
 		midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0);
@@ -241,7 +241,7 @@ void arp_update(void)
 	
 	// send note to assigner, velocity at half (MIDI value 64)
 	
-	assigner_assignNote(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
+	assigner_assignNote(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE,0);
 	
 	// pass to MIDI out
 

@@ -1152,7 +1152,7 @@ void synth_keyEvent(uint8_t key, int pressed)
 			}
 
 			// set velocity to half (corresponding to MIDI value 64)
-			assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE);
+			assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE,1);
 
 			// pass to MIDI out
 			midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);

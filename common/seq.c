@@ -61,7 +61,7 @@ static void finishPreviousNotes(struct track *tp)
 		n=s+SCANNER_BASE_NOTE+tp->previousTranspose;
 
 		// send note to assigner, velocity at half (MIDI value 64)
-		assigner_assignNote(n,0,0);
+		assigner_assignNote(n,0,0,0);
 
 		// pass to MIDI out
 		midi_sendNoteEvent(n,0,0);
@@ -103,7 +103,7 @@ static FORCEINLINE void playStep(int8_t track)
 			n=s+SCANNER_BASE_NOTE+seq.transpose;
 
 			// send note to assigner, velocity at half (MIDI value 64)
-			assigner_assignNote(n,1,HALF_RANGE);
+			assigner_assignNote(n,1,HALF_RANGE,0);
 
 			// pass to MIDI out
 			midi_sendNoteEvent(n,1,HALF_RANGE);
