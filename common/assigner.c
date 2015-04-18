@@ -380,6 +380,19 @@ void assigner_voiceDone(int8_t voice)
 		}
 }
 
+// This is different from assigner_voiceDone(-1) in that it does a 'proper'
+// key assignment, releasing all notes that are on.
+void assigner_allNotesOff(void)
+{
+	uint8_t note;
+
+	for (note=0;note<128;note++)
+	{
+		if(getNoteState(note))
+			assigner_assignNote(note,0,0);
+	}
+}
+
 LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)
 {
 	int8_t i,count=0;
