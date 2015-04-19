@@ -119,7 +119,9 @@ LOWERCODESIZE void refreshAllPresetButtons(void)
 		refreshPresetButton(b);
 }
 
-static void changeMiscSetting(p600Button_t button)
+// Return 1 if an action has been completed which does not require any
+// further printouts (e.g. init patch).
+static int8_t changeMiscSetting(p600Button_t button)
 {
 	uint8_t v;
 
@@ -129,24 +131,38 @@ static void changeMiscSetting(p600Button_t button)
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
 		
-		break;
+		return 0;
 	case pb2: // midi send channel
 		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
 		settings_save();
-		break;
+		return 0;
+	case pb3: // pitch wheel calibration
+		settings.benderMiddle=potmux_getValue(ppPitchWheel);
+		settings_save();
+
+		synth_updateBender(); // immediate update
+
+		sevenSeg_scrollText("bender calibrated",1);
+		return 1;
 	case pb4: // voice selection
 		ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
-		break;
+		return 0;
 	case pb5: // selected voice defeat
 		settings.voiceMask^=(1<<ui.voice);
 		settings_save();
 		refreshFullState();
-		break;
+		return 0;
+	case pb6: // preset dump
+		midi_dumpPresets();
+		sevenSeg_scrollText("presets dumped",1);
+		refreshPresetMode();
+		refreshFullState();
+		return 1;
 	case pb8: // sync mode
 		settings.syncMode=(settings.syncMode+1)%3;
 		settings_save();
 		refreshFullState();
-		break;
+		return 0;
 	case pb9: // spread / vcf limit
 		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
 		v=(v+1)%4;
@@ -154,20 +170,30 @@ static void changeMiscSetting(p600Button_t button)
 		settings.vcfLimit=(v>>1)&1;
 		settings_save();
 		refreshFullState();
-		break;
+		return 0;
+	case pb0: // reset to a basic patch
+		preset_loadDefault(1);
+		ui.presetModified=1;
+		sevenSeg_scrollText("basic patch",1);
+		refreshFullState();
+		return 1;
 	default:
 		break;
 	}
+	return 0;
 }
 
 static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 {
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
 	char s[50];
+	int8_t nothingToDisplay=0;
 
 	if (button==ui.prevMiscButton)
-		changeMiscSetting(button);
+		nothingToDisplay=changeMiscSetting(button);
 	ui.prevMiscButton=button;
+	if (nothingToDisplay)
+		return;
 	
 	switch(button)
 	{
@@ -184,12 +210,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb3: // pitch wheel calibration
-		settings.benderMiddle=potmux_getValue(ppPitchWheel);
-		settings_save();
-
-		synth_updateBender(); // immediate update
-
-		sevenSeg_scrollText("bender calibrated",1);
+		sevenSeg_scrollText("press again for bender calibration",1);
 		break;
 	case pb4: // voice selection
 		strcpy(s,"Vc-");
@@ -206,10 +227,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb6: // preset dump
-		midi_dumpPresets();
-		sevenSeg_scrollText("presets dumped",1);
-		refreshPresetMode();
-		refreshFullState();
+		sevenSeg_scrollText("press again to dump presets",1);
 		break;
 	case pb8: // sync mode
 		switch(settings.syncMode)
@@ -251,10 +269,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb0: // reset to a basic patch
-		preset_loadDefault(1);
-		ui.presetModified=1;
-		sevenSeg_scrollText("basic patch",1);
-		refreshFullState();
+		sevenSeg_scrollText("press again for basic patch",1);
 		break;
 	default:
 		break;
