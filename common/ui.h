@@ -27,6 +27,9 @@ struct ui_s
 	int32_t previousData;
 	int8_t activeParamIdx;
 	int8_t isShifted;
+
+	p600Button_t prevMiscButton;
+	int8_t voice;
 };
 
 extern struct ui_s ui;

@@ -119,28 +119,65 @@ LOWERCODESIZE void refreshAllPresetButtons(void)
 		refreshPresetButton(b);
 }
 
-static LOWERCODESIZE void handleMiscAction(p600Button_t button)
+static void changeMiscSetting(p600Button_t button)
 {
-	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
-	static int8_t voice=0;
 	uint8_t v;
-	char s[50];
-	
+
 	switch(button)
 	{
 	case pb1: // midi receive channel
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
 		
+		break;
+	case pb2: // midi send channel
+		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
+		settings_save();
+		break;
+	case pb4: // voice selection
+		ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
+		break;
+	case pb5: // selected voice defeat
+		settings.voiceMask^=(1<<ui.voice);
+		settings_save();
+		refreshFullState();
+		break;
+	case pb8: // sync mode
+		settings.syncMode=(settings.syncMode+1)%3;
+		settings_save();
+		refreshFullState();
+		break;
+	case pb9: // spread / vcf limit
+		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
+		v=(v+1)%4;
+		settings.spread=v&1;
+		settings.vcfLimit=(v>>1)&1;
+		settings_save();
+		refreshFullState();
+		break;
+	default:
+		break;
+	}
+}
+
+static LOWERCODESIZE void handleMiscAction(p600Button_t button)
+{
+	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
+	char s[50];
+
+	if (button==ui.prevMiscButton)
+		changeMiscSetting(button);
+	ui.prevMiscButton=button;
+	
+	switch(button)
+	{
+	case pb1: // midi receive channel
 		strcpy(s,chs[settings.midiReceiveChannel+1]);
 		strcat(s," recv");
 		
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb2: // midi send channel
-		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
-		settings_save();
-		
 		strcpy(s,chs[settings.midiSendChannel+1]);
 		strcat(s," send");
 		
@@ -155,29 +192,18 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText("bender calibrated",1);
 		break;
 	case pb4: // voice selection
-		voice=(voice+1)%SYNTH_VOICE_COUNT;
-
 		strcpy(s,"Vc-");
-		s[2]='1'+voice;
+		s[2]='1'+ui.voice;
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb5: // selected voice defeat
-		if(settings.voiceMask&(1<<voice))
-		{
-			strcpy(s,"Vc- off");
-			settings.voiceMask&=~(1<<voice);
-		}
-		else
-		{
+		if(settings.voiceMask&(1<<ui.voice))
 			strcpy(s,"Vc- on");
-			settings.voiceMask|=(1<<voice);
-		}
+		else
+			strcpy(s,"Vc- off");
 
-		settings_save();
-
-		s[2]='1'+voice;
+		s[2]='1'+ui.voice;
 		sevenSeg_scrollText(s,1);
-		refreshFullState();
 		break;
 	case pb6: // preset dump
 		midi_dumpPresets();
@@ -186,9 +212,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		refreshFullState();
 		break;
 	case pb8: // sync mode
-		settings.syncMode=(settings.syncMode+1)%3;
-		settings_save();
-		
 		switch(settings.syncMode)
 		{
 			case smInternal:
@@ -201,17 +224,8 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 				sevenSeg_scrollText("tape sync",1);
 				break;
 		}
-
-		refreshFullState();
 		break;
 	case pb9: // spread / vcf limit
-		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
-		v=(v+1)%4;
-		settings.spread=v&1;
-		settings.vcfLimit=(v>>1)&1;
-		
-		settings_save();
-		
 		strcpy(s,"spread ");
 
 		if(settings.spread)
@@ -235,8 +249,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		};
 
 		sevenSeg_scrollText(s,1);
-
-		refreshFullState();
 		break;
 	case pb0: // reset to a basic patch
 		preset_loadDefault(1);
@@ -567,7 +579,12 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	// shidted state (keyboard transposition, ...)
 	
 	if(button==pbFromTape)
+	{
 		ui.isShifted=pressed;
+		// reset Misc Settings to 'display only' whenever
+		// pbFromTape is released.
+		ui.prevMiscButton=-1;
+	}
 	
 	// modes 
 	
@@ -665,4 +682,5 @@ void ui_init(void)
 	ui.lastActivePotValue=-1;
 	ui.presetModified=1;
 	ui.activeParamIdx=-1;
+	ui.prevMiscButton=-1;
 }
