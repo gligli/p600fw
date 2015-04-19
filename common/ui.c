@@ -617,8 +617,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if(scanner_buttonState(pbFromTape))
+		if(scanner_buttonState(pbFromTape) && button>=pb0 && button<=pb9)
 		{
+			// Disable double click mode which might confuse
+			// user if he presses FROM TAPE within the double
+			// click interval while fiddling with the misc params.
+			ui.doubleClickTimer=0; // reset timer
+			ui.isDoubleClicked=0;
+			led_set(plFromTape,0,0);
 			handleMiscAction(button);
 		}
 		else if(button==pbPreset)
