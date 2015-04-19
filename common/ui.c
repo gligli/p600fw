@@ -123,12 +123,12 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 {
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
 	static int8_t voice=0;
+	uint8_t v;
 	char s[50];
 	
-	
-
-	if(button==pb1) // midi receive channel
+	switch(button)
 	{
+	case pb1: // midi receive channel
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
 		
@@ -136,9 +136,8 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		strcat(s," recv");
 		
 		sevenSeg_scrollText(s,1);
-	}
-	else if(button==pb2) // midi send channel
-	{
+		break;
+	case pb2: // midi send channel
 		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
 		settings_save();
 		
@@ -146,26 +145,23 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		strcat(s," send");
 		
 		sevenSeg_scrollText(s,1);
-	}
-	else if(button==pb3) // pitch wheel calibration
-	{
+		break;
+	case pb3: // pitch wheel calibration
 		settings.benderMiddle=potmux_getValue(ppPitchWheel);
 		settings_save();
 
 		synth_updateBender(); // immediate update
 
 		sevenSeg_scrollText("bender calibrated",1);
-	}
-	else if(button==pb4) // voice selection
-	{
+		break;
+	case pb4: // voice selection
 		voice=(voice+1)%SYNTH_VOICE_COUNT;
 
 		strcpy(s,"Vc-");
 		s[2]='1'+voice;
 		sevenSeg_scrollText(s,1);
-	}
-	else if(button==pb5) // selected voice defeat
-	{
+		break;
+	case pb5: // selected voice defeat
 		if(settings.voiceMask&(1<<voice))
 		{
 			strcpy(s,"Vc- off");
@@ -182,16 +178,14 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		s[2]='1'+voice;
 		sevenSeg_scrollText(s,1);
 		refreshFullState();
-	}
-	else if(button==pb6) // preset dump
-	{
+		break;
+	case pb6: // preset dump
 		midi_dumpPresets();
 		sevenSeg_scrollText("presets dumped",1);
 		refreshPresetMode();
 		refreshFullState();
-	}
-	else if(button==pb8) // sync mode
-	{
+		break;
+	case pb8: // sync mode
 		settings.syncMode=(settings.syncMode+1)%3;
 		settings_save();
 		
@@ -209,11 +203,8 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		}
 
 		refreshFullState();
-	}
-	else if(button==pb9) // spread / vcf limit
-	{
-		uint8_t v;
-		
+		break;
+	case pb9: // spread / vcf limit
 		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
 		v=(v+1)%4;
 		settings.spread=v&1;
@@ -246,13 +237,15 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 
 		refreshFullState();
-	}
-	else if(button==pb0) // reset to a basic patch
-	{
+		break;
+	case pb0: // reset to a basic patch
 		preset_loadDefault(1);
 		ui.presetModified=1;
 		sevenSeg_scrollText("basic patch",1);
 		refreshFullState();
+		break;
+	default:
+		break;
 	}
 }
 
