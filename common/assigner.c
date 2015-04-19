@@ -381,6 +381,12 @@ void assigner_voiceDone(int8_t voice)
 			if(voice<0)
 				assigner.allocation[v].timestamp=0; // reset to voice 0 in case all voices stopped at once
 		}
+	// If we have requested all voices to silence, we probably want to
+	// clear any pending key assignments too, or we might get a note
+	// seemingly popping up from nowhere later on if there are keys
+	// to release.
+	if (voice==-1)
+		memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
 }
 
 // This is different from assigner_voiceDone(-1) in that it does note silence
