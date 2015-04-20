@@ -597,11 +597,17 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	{
 		if (pressed)
 		{
-			if (ui.doubleClickTimer)
+			// If we're in double click mode, exit it when
+			// button pressed once. Otherwise enter double click
+			// mode if button pressed < 1 second ago, else it
+			// counts as first time, so set up double click timer.
+			if (ui.isDoubleClicked)
+				ui.isDoubleClicked=0;
+			else if (ui.doubleClickTimer)
 			// Button pressed < 1 second ago
 			{
 				ui.doubleClickTimer=0; // reset timer
-				ui.isDoubleClicked=!ui.isDoubleClicked;
+				ui.isDoubleClicked=1;
 			}
 			else
 				ui.doubleClickTimer = 63; // 1 second
@@ -609,7 +615,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		ui.isShifted=pressed;
 		led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 		// reset Misc Settings to 'display only' whenever
-		// pbFromTape is released.
+		// pbFromTape is pressed (or released).
 		ui.prevMiscButton=-1;
 	}
 	
