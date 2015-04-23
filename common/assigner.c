@@ -187,7 +187,7 @@ void assigner_voiceDone(int8_t voice)
 	assigner.allocation[voice].rootNote=ASSIGNER_NO_NOTE;
 }
 
-static void voicesDone(void)
+static void voicesDone(int8_t releaseNotes)
 {
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
@@ -195,11 +195,12 @@ static void voicesDone(void)
 		assigner_voiceDone(v);
 		assigner.allocation[v].timestamp=0; // reset to voice 0 in case all voices stopped at once
 	}
-	// If we have requested all voices to silence, we probably want to
-	// clear all pending key status too, or we might get a note
-	// seemingly popping up from nowhere later on if there are keys
-	// to release after this call has been performed.
-	memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
+	if (releaseNotes)
+		// If we have requested all voices to silence, we might want to
+		// clear all pending key status too, or we might get a note
+		// seemingly popping up from nowhere later on if there are keys
+		// to release after this call has been performed.
+		memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
 }
 
 // This is different from voicesDone() in that it does not silence
@@ -219,7 +220,9 @@ void assigner_allKeysOff(void)
 		    	assigner.allocation[v].keyPressed=0;
 		}
 	}
-	// Release all keys and future holds too
+	// Release all keys and future holds too. This avoids potential
+	// problems with notes seemingly popping up from nowhere due to
+	// reassignment when future keys are released.
 	memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
 	assigner.hold=0;
 }
@@ -229,7 +232,7 @@ void assigner_setPriority(assignerPriority_t prio)
 	if(prio==assigner.priority)
 		return;
 	
-	voicesDone();
+	voicesDone(1);
 	
 	if(prio>2)
 		prio=0;
@@ -242,7 +245,7 @@ void assigner_setVoiceMask(uint8_t mask)
 	if(mask==assigner.voiceMask)
 		return;
 	
-	voicesDone();
+	voicesDone(1);
 	assigner.voiceMask=mask;
 }
 
@@ -424,7 +427,13 @@ LOWERCODESIZE void assigner_setPattern(uint8_t * pattern, int8_t mono)
 		return;
 
 	if(mono!=assigner.mono)
-		voicesDone();
+		// We don't want to clear the note status in this case,
+		// as the result would be that if we get any contact bounce
+		// in the Unison switch, we will get Unison rather than
+		// Chord Memory if there are keys held, as the keys would have
+		// been considered released by the time the second bounce to
+		// the Unison position was registered.
+		voicesDone(0);
 	
 	assigner.mono=mono;
 	memset(&assigner.patternOffsets[0],ASSIGNER_NO_NOTE,SYNTH_VOICE_COUNT);
