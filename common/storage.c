@@ -354,9 +354,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		if (storage.version<7)
 			return 1;
 
-    // v7
+		// v7
+		
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
-		  currentPreset.perNoteTuningInCents[i]=storageRead16();
+			currentPreset.perNoteTuningInCents[i]=storageRead16();
 	}
 	
 	return 1;
@@ -491,7 +492,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 
 		// Default tuning is equal tempered
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
-      currentPreset.perNoteTuningInCents[i] = i * 100;          
+			currentPreset.perNoteTuningInCents[i] = i * 100;          
 
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
