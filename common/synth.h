@@ -36,7 +36,7 @@
 #define SYSEX_SUBID2_BULK_TUNING_DUMP 0x01
 
 #define TICKER_1S 500
-#define TEMP_BUFFER_SIZE 384
+#define TEMP_BUFFER_SIZE 406 // need at least 406 bytes for MTS sysexes
 
 // Some constants for 16 bit ranges */
 #define FULL_RANGE UINT16_MAX

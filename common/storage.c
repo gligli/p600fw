@@ -6,7 +6,7 @@
 #include "uart_6850.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 6
+#define STORAGE_VERSION 7
 
 #define STORAGE_MAGIC 0x006116a5
 
@@ -351,7 +351,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 
-    // TODO: put correct v# here
+		if (storage.version<7)
+			return 1;
+
+    // v7
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
 		  currentPreset.perNoteTuningInCents[i]=storageRead16();
 	}
