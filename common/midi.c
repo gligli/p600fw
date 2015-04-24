@@ -102,17 +102,61 @@ static int16_t sysexDescrambleBuffer(int16_t start)
 	return out-start;
 }
 
+typedef struct {
+	uint8_t semitone;
+	uint8_t semitone_fraction_one;
+	uint8_t semitone_fraction_two;
+} semitone_t;
+
+static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size)
+{
+	if (size!=402) {
+#ifdef DEBUG
+	print("ERROR: in mtsReceiveBulkTuningDump(), size should be 402, but its "); phex16(size); print("\n");
+#endif
+		return;
+	}
+	
+	char * tuningName = (char *)&buf[1]; // 16 byte 'tuning name'
+	semitone_t *semitones = (semitone_t *)&buf[17]; // 128 in length	
+
+	// FIXME: do something with these...
+	// uint8_t tuningProgramNumber = buf[0]; // 0-127, 'tuning program'
+	// uint8_t checksum = buf[size-1];
+	
+	double fractionalSemitones;
+	semitone_t *semitone;
+	uint16_t fractionalComponent; // fraction of semitone, in .0061-cent units as per MTS
+	int i;
+	
+#ifdef DEBUG
+	print("Loading tuning: '");
+	for(i=0; i < 16; i++) {
+		pchar(tuningName[i]);
+	}
+	print("'\n");
+#endif
+	
+	for (i=0; i < 128; i++) {
+		semitone = &semitones[i];
+		fractionalComponent = (semitone->semitone_fraction_one << 7) + semitone->semitone_fraction_two;
+		fractionalSemitones = ((double)semitone->semitone) + (0.000061 * fractionalComponent);
+		tuner_setNoteTuning(i, fractionalSemitones);
+	}
+
+}
+
 static void sysexReceiveByte(uint8_t b)
 {
 	int16_t size;
 
 	switch(b)
 	{
-	case 0xF0:
+	case 0xF0: // Begin SysEx message
 		sysexSize=0;
 		memset(tempBuffer,0,MAX_SYSEX_SIZE);
 		break;
-	case 0xF7:
+	case 0xF7: // End SysEx message
 		if(tempBuffer[0]==0x01 && tempBuffer[1]==0x02) // SCI P600 program dump
 		{
 			import_sysex(tempBuffer,sysexSize);
@@ -132,6 +176,24 @@ static void sysexReceiveByte(uint8_t b)
 				break;
 			}
 		}
+		else if(tempBuffer[0]==SYSEX_ID_UNIVERSAL_NON_REALTIME)
+		{
+			switch(tempBuffer[2])
+			{
+			case SYSEX_SUBID1_BULK_TUNING_DUMP:			
+				switch(tempBuffer[3])
+				{
+					case SYSEX_SUBID2_BULK_TUNING_DUMP:
+						// We've received an MTS bulk tuning dump
+						mtsReceiveBulkTuningDump(&tempBuffer[4],sysexSize-4);
+					break;
+					case SYSEX_SUBID2_BULK_TUNING_DUMP_REQUEST:
+						// TODO: send a sysex MTS with our current tuning 
+					break;
+				}
+				break;
+			}
+		}    
 
 		sysexSize=0;
 		refreshFullState();

@@ -87,6 +87,8 @@ struct preset_s
 	uint16_t continuousParameters[cpCount];
 	
 	uint8_t voicePattern[SYNTH_VOICE_COUNT];
+  
+  uint16_t perNoteTuningInCents[TUNER_NOTE_COUNT];  
 };
 
 extern struct settings_s settings;
