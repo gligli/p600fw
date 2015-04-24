@@ -348,13 +348,12 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
-    
+
+		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
+
     // TODO: put correct v# here
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
 		  currentPreset.perNoteTuningInCents[i]=storageRead16();
-    
-
-		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 	}
 	
 	return 1;
@@ -362,7 +361,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 {
-	int8_t i;
+	uint8_t i;
 	
 	BLOCK_INT
 	{
@@ -392,6 +391,9 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 			storageWrite8(currentPreset.voicePattern[i]);
 		
 		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
+
+		for (i=0; i<TUNER_NOTE_COUNT; i++)
+			storageWrite16(currentPreset.perNoteTuningInCents[i]);
 
 		// this must stay last
 		storageFinishStore(number,1);
@@ -459,6 +461,8 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 
 LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 {
+	uint8_t i;
+    
 	BLOCK_INT
 	{
 		memset(&currentPreset,0,sizeof(currentPreset));
@@ -481,6 +485,10 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
+
+		// Default tuning is equal tempered
+		for (i=0; i<TUNER_NOTE_COUNT; i++)
+      currentPreset.perNoteTuningInCents[i] = i * 100;          
 
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
