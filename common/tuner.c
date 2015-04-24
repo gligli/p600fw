@@ -270,6 +270,19 @@ static LOWERCODESIZE int8_t tuneOffset(p600CV_t cv,uint8_t nthC, uint8_t lowestN
 	return 0;
 }
 
+void tuner_setNoteTuning(uint8_t note, double numSemitonesAboveFundamental)
+{
+	uint16_t cents;
+	
+	if (note >= TUNER_NOTE_COUNT) {
+		return;
+	}
+	
+	cents = numSemitonesAboveFundamental * 100l;
+	
+	currentPreset.perNoteTuningInCents[note] = cents;
+}
+
 static LOWERCODESIZE void tuneCV(p600CV_t oscCV, p600CV_t ampCV)
 {
 #ifdef DEBUG		

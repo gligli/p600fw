@@ -307,7 +307,7 @@ LOWERCODESIZE void settings_save(void)
 
 LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 {
-	int8_t i;
+	uint8_t i;
 	
 	BLOCK_INT
 	{
@@ -348,6 +348,11 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
+    
+    // TODO: put correct v# here
+		for (i=0; i<TUNER_NOTE_COUNT; i++)
+		  currentPreset.perNoteTuningInCents[i]=storageRead16();
+    
 
 		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 	}
