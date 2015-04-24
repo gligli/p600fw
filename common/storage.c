@@ -316,7 +316,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 
 		// defaults
 		
-		currentPreset.steppedParameters[spAssignerPriority]=apLast;
+		preset_loadDefault(0);
+		
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
 		
