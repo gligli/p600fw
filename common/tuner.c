@@ -384,8 +384,9 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 {
 	uint8_t loOct,hiOct;
 	uint16_t value,loVal,hiVal;
-	uint32_t semiTone;
-	
+	uint32_t semiTone, scaledScaleDegree;
+	uint8_t scaleDegree;
+  
 	loOct=note/12;
 	hiOct=loOct+1;
 	
@@ -399,7 +400,12 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 	else
 		hiVal=extapolateUpperOctavesTunes(hiOct,cv);
 	
-	semiTone=(((uint32_t)(note%12)<<16)+((uint16_t)nextInterp<<8))/12;
+	scaleDegree=(note % 12);
+	// scaledScaleDegree = scaleDegree << 16;
+	// scaledScaleDegree = scaleDegree * 65536;
+	scaledScaleDegree=(currentPreset.perNoteTuningInCents[scaleDegree] * 65536L) / 100 /* drop the cents */;
+	
+	semiTone=(scaledScaleDegree + ((uint16_t) nextInterp<<8) ) / 12;
 	
 	value=loVal;
 	value+=(semiTone*(hiVal-loVal))>>16;
