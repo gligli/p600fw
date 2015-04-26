@@ -1231,8 +1231,23 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t ou
 	
 	if(mask&2)
 	{
-		synth.modwheelAmount=modulation;
-		refreshLfoSettings();
+		if (ui.retuneLastNotePressedMode)
+		{
+			uint8_t note = 0;
+			if (assigner_getLatestNotePressed(&note))
+			{
+				uint8_t scaleDegree = note % TUNER_NOTE_COUNT;
+				double numSemitones = (modulation * (2.0f / UINT16_MAX)) + (scaleDegree-1); // wheel adjusts +/- 1 semitone from Equal Tempered
+				tuner_setNoteTuning(scaleDegree, numSemitones);	
+				computeBenderCVs();
+				computeTunedCVs(1,-1);					
+			}
+		}
+		else
+		{		
+			synth.modwheelAmount=modulation;
+			refreshLfoSettings();
+		}
 	}
 	
 	// pass to MIDI out

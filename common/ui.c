@@ -478,6 +478,16 @@ void ui_checkIfDataPotChanged(void)
 	}
 }
 
+static LOWERCODESIZE void cancelRecordMode(void)
+{
+	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+	ui.presetAwaitingNumber=-1;	
+}
+
+static LOWERCODESIZE int inRecordMode(void)
+{
+	return ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit;
+}
 
 void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
@@ -488,10 +498,16 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	refreshPresetButton(button);		
 
 	// tuning
-
 	if(!pressed && button==pbTune)
 	{
-		tuner_tuneSynth();
+		if (inRecordMode()) {
+			// If record was pressed and we press tune, enter "retune last note played" mode
+			// Pitch wheel will now modify preset.perNoteTuning rather than bend whole synth
+			cancelRecordMode();
+			ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;
+		} else {
+			tuner_tuneSynth();			
+		}
 	}
 	
 	// sequencer
@@ -646,11 +662,9 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbRecord && !recordOverride)
 		{
-			if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
+			if(inRecordMode())
 			{
-				// cancel record
-				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-				ui.presetAwaitingNumber=-1;
+				cancelRecordMode();
 			}
 			else
 			{
