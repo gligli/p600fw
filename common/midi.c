@@ -117,7 +117,7 @@ static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size)
 		return;
 	}
 	
-	//char * tuningName = (char *)&buf[1]; // 16 byte 'tuning name'
+	char * tuningName = (char *)&buf[1]; // 16 byte 'tuning name'
 	semitone_t *semitones = (semitone_t *)&buf[17]; // 128 in length	
 
 	// FIXME: do something with these...
