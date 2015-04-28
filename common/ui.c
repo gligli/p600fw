@@ -274,6 +274,16 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	default:
 		break;
 	}
+	else if(button==pbTune) // Pitch wheel will now modify preset.perNoteTuning rather than bend whole synth
+	{
+		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
+		
+#ifdef DEBUG
+		print("retuneLastNotePressedMode=");
+		phex(ui.retuneLastNotePressedMode);
+		print("\n");
+#endif
+	}
 }
 
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
@@ -478,17 +488,6 @@ void ui_checkIfDataPotChanged(void)
 	}
 }
 
-static LOWERCODESIZE void cancelRecordMode(void)
-{
-	ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-	ui.presetAwaitingNumber=-1;	
-}
-
-static LOWERCODESIZE int inRecordMode(void)
-{
-	return ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit;
-}
-
 void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
@@ -497,19 +496,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 
 	refreshPresetButton(button);		
 
-	// tuning
-	if(!pressed && button==pbTune)
-	{
-		if (inRecordMode()) {
-			// If record was pressed and we press tune, enter "retune last note played" mode
-			// Pitch wheel will now modify preset.perNoteTuning rather than bend whole synth
-			cancelRecordMode();
-			ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;
-		} else {
-			tuner_tuneSynth();			
-		}
-	}
-	
 	// sequencer
 	
 	if(pressed && (button==pbSeq1 || button==pbSeq2))
@@ -649,6 +635,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			led_set(plFromTape,0,0);
 			handleMiscAction(button);
 		}
+		else if(button==pbTune)
+		{
+			tuner_tuneSynth();	
+		}
 		else if(button==pbPreset)
 		{
 			// save manual preset
@@ -662,9 +652,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbRecord && !recordOverride)
 		{
-			if(inRecordMode())
+			if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
 			{
-				cancelRecordMode();
+				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+				ui.presetAwaitingNumber=-1;	
 			}
 			else
 			{
