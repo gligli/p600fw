@@ -119,82 +119,117 @@ LOWERCODESIZE void refreshAllPresetButtons(void)
 		refreshPresetButton(b);
 }
 
-static LOWERCODESIZE void handleMiscAction(p600Button_t button)
+// Return 1 if an action has been completed which does not require any
+// further printouts (e.g. init patch).
+static int8_t changeMiscSetting(p600Button_t button)
 {
-	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
-	static int8_t voice=0;
-	char s[50];
-	
-	
+	uint8_t v;
 
-	if(button==pb1) // midi receive channel
+	switch(button)
 	{
+	case pb1: // midi receive channel
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
 		
-		strcpy(s,chs[settings.midiReceiveChannel+1]);
-		strcat(s," recv");
-		
-		sevenSeg_scrollText(s,1);
-	}
-	else if(button==pb2) // midi send channel
-	{
+		return 0;
+	case pb2: // midi send channel
 		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
 		settings_save();
-		
-		strcpy(s,chs[settings.midiSendChannel+1]);
-		strcat(s," send");
-		
-		sevenSeg_scrollText(s,1);
-	}
-	else if(button==pb3) // pitch wheel calibration
-	{
+		return 0;
+	case pb3: // pitch wheel calibration
 		settings.benderMiddle=potmux_getValue(ppPitchWheel);
 		settings_save();
 
 		synth_updateBender(); // immediate update
 
 		sevenSeg_scrollText("bender calibrated",1);
-	}
-	else if(button==pb4) // voice selection
-	{
-		voice=(voice+1)%SYNTH_VOICE_COUNT;
-
-		strcpy(s,"Vc-");
-		s[2]='1'+voice;
-		sevenSeg_scrollText(s,1);
-	}
-	else if(button==pb5) // selected voice defeat
-	{
-		if(settings.voiceMask&(1<<voice))
-		{
-			strcpy(s,"Vc- off");
-			settings.voiceMask&=~(1<<voice);
-		}
-		else
-		{
-			strcpy(s,"Vc- on");
-			settings.voiceMask|=(1<<voice);
-		}
-
+		return 1;
+	case pb4: // voice selection
+		ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
+		return 0;
+	case pb5: // selected voice defeat
+		settings.voiceMask^=(1<<ui.voice);
 		settings_save();
-
-		s[2]='1'+voice;
-		sevenSeg_scrollText(s,1);
 		refreshFullState();
-	}
-	else if(button==pb6) // preset dump
-	{
+		return 0;
+	case pb6: // preset dump
 		midi_dumpPresets();
 		sevenSeg_scrollText("presets dumped",1);
 		refreshPresetMode();
 		refreshFullState();
-	}
-	else if(button==pb8) // sync mode
-	{
+		return 1;
+	case pb8: // sync mode
 		settings.syncMode=(settings.syncMode+1)%3;
 		settings_save();
+		refreshFullState();
+		return 0;
+	case pb9: // spread / vcf limit
+		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
+		v=(v+1)%4;
+		settings.spread=v&1;
+		settings.vcfLimit=(v>>1)&1;
+		settings_save();
+		refreshFullState();
+		return 0;
+	case pb0: // reset to a basic patch
+		preset_loadDefault(1);
+		ui.presetModified=1;
+		sevenSeg_scrollText("basic patch",1);
+		refreshFullState();
+		return 1;
+	default:
+		break;
+	}
+	return 0;
+}
+
+static LOWERCODESIZE void handleMiscAction(p600Button_t button)
+{
+	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
+	char s[50];
+	int8_t nothingToDisplay=0;
+
+	if (button==ui.prevMiscButton)
+		nothingToDisplay=changeMiscSetting(button);
+	ui.prevMiscButton=button;
+	if (nothingToDisplay)
+		return;
+	
+	switch(button)
+	{
+	case pb1: // midi receive channel
+		strcpy(s,chs[settings.midiReceiveChannel+1]);
+		strcat(s," recv");
 		
+		sevenSeg_scrollText(s,1);
+		break;
+	case pb2: // midi send channel
+		strcpy(s,chs[settings.midiSendChannel+1]);
+		strcat(s," send");
+		
+		sevenSeg_scrollText(s,1);
+		break;
+	case pb3: // pitch wheel calibration
+		sevenSeg_scrollText("press again for bender calibration",1);
+		break;
+	case pb4: // voice selection
+		strcpy(s,"Vc-");
+		s[2]='1'+ui.voice;
+		sevenSeg_scrollText(s,1);
+		break;
+	case pb5: // selected voice defeat
+		if(settings.voiceMask&(1<<ui.voice))
+			strcpy(s,"Vc- on");
+		else
+			strcpy(s,"Vc- off");
+
+		s[2]='1'+ui.voice;
+		sevenSeg_scrollText(s,1);
+		break;
+	case pb6: // preset dump
+		sevenSeg_scrollText("press again to dump presets",1);
+		break;
+	case pb8: // sync mode
 		switch(settings.syncMode)
 		{
 			case smInternal:
@@ -207,20 +242,8 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 				sevenSeg_scrollText("tape sync",1);
 				break;
 		}
-
-		refreshFullState();
-	}
-	else if(button==pb9) // spread / vcf limit
-	{
-		uint8_t v;
-		
-		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
-		v=(v+1)%4;
-		settings.spread=v&1;
-		settings.vcfLimit=(v>>1)&1;
-		
-		settings_save();
-		
+		break;
+	case pb9: // spread / vcf limit
 		strcpy(s,"spread ");
 
 		if(settings.spread)
@@ -244,15 +267,12 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		};
 
 		sevenSeg_scrollText(s,1);
-
-		refreshFullState();
-	}
-	else if(button==pb0) // reset to a basic patch
-	{
-		preset_loadDefault(1);
-		ui.presetModified=1;
-		sevenSeg_scrollText("basic patch",1);
-		refreshFullState();
+		break;
+	case pb0: // reset to a basic patch
+		sevenSeg_scrollText("press again for basic patch",1);
+		break;
+	default:
+		break;
 	}
 }
 
@@ -574,14 +594,43 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	// shidted state (keyboard transposition, ...)
 	
 	if(button==pbFromTape)
+	{
+		if (pressed)
+		{
+			// If we're in double click mode, exit it when
+			// button pressed once. Otherwise enter double click
+			// mode if button pressed < 1 second ago, else it
+			// counts as first time, so set up double click timer.
+			if (ui.isDoubleClicked)
+				ui.isDoubleClicked=0;
+			else if (ui.doubleClickTimer)
+			// Button pressed < 1 second ago
+			{
+				ui.doubleClickTimer=0; // reset timer
+				ui.isDoubleClicked=1;
+			}
+			else
+				ui.doubleClickTimer = 63; // 1 second
+		}
 		ui.isShifted=pressed;
+		led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
+		// reset Misc Settings to 'display only' whenever
+		// pbFromTape is pressed (or released).
+		ui.prevMiscButton=-1;
+	}
 	
 	// modes 
 	
 	if(pressed)
 	{
-		if(scanner_buttonState(pbFromTape))
+		if(scanner_buttonState(pbFromTape) && button>=pb0 && button<=pb9)
 		{
+			// Disable double click mode which might confuse
+			// user if he presses FROM TAPE within the double
+			// click interval while fiddling with the misc params.
+			ui.doubleClickTimer=0; // reset timer
+			ui.isDoubleClicked=0;
+			led_set(plFromTape,0,0);
 			handleMiscAction(button);
 		}
 		else if(button==pbPreset)
@@ -672,4 +721,12 @@ void ui_init(void)
 	ui.lastActivePotValue=-1;
 	ui.presetModified=1;
 	ui.activeParamIdx=-1;
+	ui.prevMiscButton=-1;
+}
+
+// Called at 63Hz
+void ui_update(void)
+{
+	if (ui.doubleClickTimer)
+		ui.doubleClickTimer--;
 }

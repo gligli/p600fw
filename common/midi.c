@@ -228,7 +228,7 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	print("\n");
 #endif
 
-	assigner_assignNote(note,velocity!=0,(((uint32_t)velocity+1)<<9)-1);
+	assigner_assignNote(note,velocity!=0,(((uint32_t)velocity+1)<<9)-1,0);
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -242,7 +242,7 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	print("\n");
 #endif
 
-	assigner_assignNote(note,0,0);
+	assigner_assignNote(note,0,0,0);
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)

@@ -355,6 +355,9 @@ LOWERCODESIZE static void prepareSynth(void)
 #else
 	sh_setCV(pcMVol,0,0);
 #endif
+	// Update CV's and give final volume VCA CV filter time to close
+	sh_update();
+	MDELAY(150);
 
 	sh_setGate(pgASaw,0);
 	sh_setGate(pgATri,0);

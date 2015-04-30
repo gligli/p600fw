@@ -41,6 +41,13 @@ static FORCEINLINE void scanner_event(uint8_t key, int8_t pressed)
 		synth_keyEvent(key-SCANNER_KEYS_START+SCANNER_BASE_NOTE,pressed);
 }
 
+int8_t scanner_isKeyDown(uint8_t note)
+{
+	if (note<SCANNER_BASE_NOTE || note>SCANNER_C5)
+		return 0;
+	return scanner.state[note-SCANNER_BASE_NOTE+SCANNER_KEYS_START]&1;
+}
+
 void scanner_update(int8_t fullScan)
 {
 	uint8_t i,j,stateIdx;
