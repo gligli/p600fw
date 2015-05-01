@@ -141,7 +141,7 @@ static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size)
 	for (i=0; i < 128; i++) {
 		semitone = &semitones[i];
 		fractionalComponent = (semitone->semitone_fraction_one << 7) + semitone->semitone_fraction_two;
-		fractionalSemitones = ((double)semitone->semitone) + (0.000061 * fractionalComponent);
+		fractionalSemitones = ((double)semitone->semitone) + (0.006103515625 /*= 100 / pow(2,14) */ * fractionalComponent);
 		tuner_setNoteTuning(i, fractionalSemitones);
 	}
 
