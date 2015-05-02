@@ -1220,8 +1220,43 @@ void synth_uartEvent(uint8_t data)
 	midi_newData(data);
 }
 
+static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mask)
+{
+	uint8_t note = 0;
+	
+	if (assigner_getLatestNotePressed(&note))
+	{
+		uint8_t scaleDegree = note % TUNER_NOTE_COUNT;
+		double numSemitones = scaleDegree;
+		
+		if(mask&1)
+		{
+			// TODO: pitch wheel / bend should set coarse tuning
+			return;
+		}
+		
+		if(mask&2)
+		{
+			// TODO: mod wheel should provide a last-position-relative 'nudge' fine tuning
+			// but currently it works like the pitch-wheel will in the future:
+			// absolute adjusts +/- 1 semitone from Equal Tempered
+			
+			numSemitones = (modulation * (1.0f / UINT16_MAX)) + (((double)scaleDegree)-0.5f);
+			tuner_setNoteTuning(scaleDegree, numSemitones);
+			computeBenderCVs();
+			computeTunedCVs(1,-1);			
+		}		
+	}
+}
+
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi)
 {
+	if (ui.retuneLastNotePressedMode)
+	{
+		retuneLastNotePressed(bend, modulation, mask);
+		return;
+	}
+
 	if(mask&1)
 	{
 		synth.benderAmount=bend;
@@ -1231,26 +1266,8 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t ou
 	
 	if(mask&2)
 	{
-		if (ui.retuneLastNotePressedMode)
-		{
-			uint8_t note = 0;
-			if (assigner_getLatestNotePressed(&note))
-			{
-				uint8_t scaleDegree = note % TUNER_NOTE_COUNT;
-				// wheel adjusts +/- 1 semitone from Equal Tempered
-				double numSemitones = (modulation * (1.0f / UINT16_MAX)) + (((double)scaleDegree)-0.5f); 
-				
-				tuner_setNoteTuning(scaleDegree, numSemitones);	
-				
-				computeBenderCVs();
-				computeTunedCVs(1,-1);					
-			}
-		}
-		else
-		{		
-			synth.modwheelAmount=modulation;
-			refreshLfoSettings();
-		}
+		synth.modwheelAmount=modulation;
+		refreshLfoSettings();
 	}
 	
 	// pass to MIDI out
