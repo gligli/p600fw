@@ -273,7 +273,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		break;
 	case pbTune:
 		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
-		led_set(plTune, ui.retuneLastNotePressedMode, ui.retuneLastNotePressedMode);
 		
 #ifdef DEBUG
 		print("retuneLastNotePressedMode=");
@@ -616,7 +615,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				ui.doubleClickTimer = 63; // 1 second
 		}
 		ui.isShifted=pressed;
-		led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 		// reset Misc Settings to 'display only' whenever
 		// pbFromTape is pressed (or released).
 		ui.prevMiscButton=-1;
@@ -633,7 +631,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			// click interval while fiddling with the misc params.
 			ui.doubleClickTimer=0; // reset timer
 			ui.isDoubleClicked=0;
-			led_set(plFromTape,0,0);
 			handleMiscAction(button);
 		}
 		else if(button==pbTune)

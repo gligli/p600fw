@@ -630,6 +630,8 @@ static void refreshSevenSeg(void)
 	led_set(plSeq2,seq_getMode(1)!=smOff,seq_getMode(1)!=smPlaying);
 	led_set(plArpUD,arp_getMode()==amUpDown,0);
 	led_set(plArpAssign,arp_getMode()>=amRandom,arp_getMode()==amRandom);
+	led_set(plTune, ui.retuneLastNotePressedMode, ui.retuneLastNotePressedMode);
+	led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 
 	if(arp_getMode()!=amOff || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
 	{
