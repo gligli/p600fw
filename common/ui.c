@@ -271,6 +271,17 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	case pb0: // reset to a basic patch
 		sevenSeg_scrollText("press again for basic patch",1);
 		break;
+	case pbTune:
+		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
+		led_set(plTune, ui.retuneLastNotePressedMode, ui.retuneLastNotePressedMode);
+		
+#ifdef DEBUG
+		print("retuneLastNotePressedMode=");
+		phex(ui.retuneLastNotePressedMode);
+		print("\n");
+#endif
+		
+		break;
 	default:
 		break;
 	}
@@ -478,7 +489,6 @@ void ui_checkIfDataPotChanged(void)
 	}
 }
 
-
 void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
@@ -487,13 +497,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 
 	refreshPresetButton(button);		
 
-	// tuning
-
-	if(!pressed && button==pbTune)
-	{
-		tuner_tuneSynth();
-	}
-	
 	// sequencer
 	
 	if(pressed && (button==pbSeq1 || button==pbSeq2))
@@ -623,7 +626,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if(scanner_buttonState(pbFromTape) && button>=pb0 && button<=pb9)
+		if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
 		{
 			// Disable double click mode which might confuse
 			// user if he presses FROM TAPE within the double
@@ -632,6 +635,10 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			ui.isDoubleClicked=0;
 			led_set(plFromTape,0,0);
 			handleMiscAction(button);
+		}
+		else if(button==pbTune)
+		{
+			tuner_tuneSynth();	
 		}
 		else if(button==pbPreset)
 		{
@@ -648,9 +655,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		{
 			if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
 			{
-				// cancel record
 				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-				ui.presetAwaitingNumber=-1;
+				ui.presetAwaitingNumber=-1;	
 			}
 			else
 			{

@@ -358,7 +358,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		// v7
 		
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
-			currentPreset.perNoteTuningInCents[i]=storageRead16();
+			currentPreset.perNoteTuning[i]=storageRead16();
 	}
 	
 	return 1;
@@ -398,7 +398,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
 
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
-			storageWrite16(currentPreset.perNoteTuningInCents[i]);
+			storageWrite16(currentPreset.perNoteTuning[i]);
 
 		// this must stay last
 		storageFinishStore(number,1);
@@ -493,7 +493,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 
 		// Default tuning is equal tempered
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
-			currentPreset.perNoteTuningInCents[i] = i * 100;          
+			currentPreset.perNoteTuning[i] = i * TUNING_UNITS_PER_SEMITONE;
 
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
