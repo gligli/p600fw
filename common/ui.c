@@ -273,6 +273,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		break;
 	case pbTune:
 		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
+		led_set(plTune, ui.retuneLastNotePressedMode, ui.retuneLastNotePressedMode);
 		
 #ifdef DEBUG
 		print("retuneLastNotePressedMode=");
