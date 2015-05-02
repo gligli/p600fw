@@ -276,6 +276,11 @@ void tuner_setNoteTuning(uint8_t note, double numSemitones)
 		return;
 	}
 	
+	if (numSemitones < 0.0)
+		numSemitones = 0.0;
+	else if (numSemitones > 12.0)
+		numSemitones = 12.0;
+	
 	currentPreset.perNoteTuning[note] = numSemitones * TUNING_UNITS_PER_SEMITONE;
 }
 
