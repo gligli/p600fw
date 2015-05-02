@@ -271,11 +271,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	case pb0: // reset to a basic patch
 		sevenSeg_scrollText("press again for basic patch",1);
 		break;
-	default:
-		break;
-	}
-	else if(button==pbTune) // Pitch wheel will now modify preset.perNoteTuning rather than bend whole synth
-	{
+	case pbTune:
 		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
 		
 #ifdef DEBUG
@@ -283,6 +279,10 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		phex(ui.retuneLastNotePressedMode);
 		print("\n");
 #endif
+		
+		break;
+	default:
+		break;
 	}
 }
 
