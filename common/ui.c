@@ -625,7 +625,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if(scanner_buttonState(pbFromTape) && button>=pb0 && button<=pb9)
+		if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
 		{
 			// Disable double click mode which might confuse
 			// user if he presses FROM TAPE within the double
