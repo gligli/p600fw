@@ -1238,7 +1238,7 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t ou
 			{
 				uint8_t scaleDegree = note % TUNER_NOTE_COUNT;
 				// wheel adjusts +/- 1 semitone from Equal Tempered
-				double numSemitones = (modulation * (1.2f / UINT16_MAX)) + (((double)scaleDegree)-0.6f); 
+				double numSemitones = (modulation * (1.0f / UINT16_MAX)) + (((double)scaleDegree)-0.5f); 
 				
 				tuner_setNoteTuning(scaleDegree, numSemitones);	
 				

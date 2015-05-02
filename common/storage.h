@@ -81,6 +81,8 @@ struct settings_s
 	uint16_t seqArpClock;
 };
 
+#define TUNING_UNITS_PER_SEMITONE 5461.3333333 // 1/5461 of a semitone (== pow(2,16)/12)
+
 struct preset_s
 {
 	uint8_t steppedParameters[spCount];
@@ -88,7 +90,7 @@ struct preset_s
 	
 	uint8_t voicePattern[SYNTH_VOICE_COUNT];
   
-  uint16_t perNoteTuningInCents[TUNER_NOTE_COUNT];  
+  uint16_t perNoteTuning[TUNER_NOTE_COUNT]; // see TUNING_UNITS_PER_SEMITONE
 };
 
 extern struct settings_s settings;
