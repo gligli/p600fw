@@ -403,8 +403,8 @@ NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600
 	else
 		hiOctVal=extapolateUpperOctavesTunes(hiOct,cv);
 	
-	noteTuning=currentPreset.perNoteTuning[note % 12];
-	noteTuning+=((uint16_t) nextInterp<<8) / 12; // FIXME: avoid this divide?
+	noteTuning=currentPreset.perNoteTuning[note%12];
+	noteTuning+=((uint32_t)nextInterp<<8)/12; // FIXME: avoid this divide?
 	
 	value=loOctVal;
 	value+=(noteTuning*(hiOctVal-loOctVal))>>16;
