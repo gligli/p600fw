@@ -21,9 +21,6 @@ This document describes compile procedures.
   		d:/>cd /dev/p600fw/firmware[enter]
   		d:/dev/p600fw/firmware>
   
-  	make [.dep] directry
-  		d:/dev/p600fw/firmware>mkdir .dep[enter]
-  	
   	and last step to compile
   		d:/dev/p600fw/firmware>make[enter]
   		
