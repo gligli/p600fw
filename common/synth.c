@@ -431,9 +431,7 @@ static inline void refreshPulseWidth(int8_t pwm)
 {
 	int32_t pa,pb;
 	
-	// datasheet specifies that pa should default to max and pb should default to min to avoid issues with sync and polymod
-	pa=UINT16_MAX; 
-	pb=0;
+	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
 
 	uint8_t sqrA=currentPreset.steppedParameters[spASqr];
 	uint8_t sqrB=currentPreset.steppedParameters[spBSqr];
