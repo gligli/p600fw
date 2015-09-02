@@ -189,7 +189,9 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	char s[50];
 	int8_t nothingToDisplay=0;
 
-	if (button==ui.prevMiscButton)
+	if (button==ui.prevMiscButton ||
+		button==pb4 || // pb4 is for voice selection, this one should be immediate
+		(button==pb5 && ui.prevMiscButton==pb4)) // pb5 voice defeat after pb4 should be immediate too
 		nothingToDisplay=changeMiscSetting(button);
 	ui.prevMiscButton=button;
 	if (nothingToDisplay)
@@ -213,10 +215,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText("press again for bender calibration",1);
 		break;
 	case pb4: // voice selection
-		strcpy(s,"Vc-");
-		s[2]='1'+ui.voice;
-		sevenSeg_scrollText(s,1);
-		break;
 	case pb5: // selected voice defeat
 		if(settings.voiceMask&(1<<ui.voice))
 			strcpy(s,"Vc- on");
