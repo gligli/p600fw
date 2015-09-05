@@ -1122,13 +1122,13 @@ void synth_keyEvent(uint8_t key, int pressed)
 		// keyboard transposition
 		if(pressed)
 		{
-			char s[16]="transp = ";
+			char s[16]="trn = ";
 			
 			synth.transpose=(int8_t)key-SCANNER_C2;
 			seq_setTranspose(synth.transpose);
 			arp_setTranspose(synth.transpose);
 			
-			itoa(synth.transpose,&s[9],10);
+			itoa(synth.transpose,&s[6],10);
 			sevenSeg_scrollText(s,1);
 
 			// Disable double-click transpose if transpose is

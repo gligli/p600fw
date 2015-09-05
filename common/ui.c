@@ -14,7 +14,7 @@
 const struct uiParam_s uiParameters[] =
 {
 	/*first press*/
-	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
+	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
 	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"puls-tri","rnd-sin","nois-saw"}},
 	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
@@ -25,7 +25,7 @@ const struct uiParam_s uiParameters[] =
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
 	/*second press*/
-	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="speed"},
+	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
 	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b","ab-Vca"}},
 	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
 	/*3*/ {.type=ptCust,.number=5,.name="mod ran",.values={"min","low","high","full"}},
@@ -212,7 +212,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb3: // pitch wheel calibration
-		sevenSeg_scrollText("press again for bender calibration",1);
+		sevenSeg_scrollText("again calibrates bender",1);
 		break;
 	case pb4: // voice selection
 	case pb5: // selected voice defeat
@@ -225,7 +225,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb6: // preset dump
-		sevenSeg_scrollText("press again to dump presets",1);
+		sevenSeg_scrollText("again dumps presets",1);
 		break;
 	case pb8: // sync mode
 		switch(settings.syncMode)
@@ -267,7 +267,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb0: // reset to a basic patch
-		sevenSeg_scrollText("press again for basic patch",1);
+		sevenSeg_scrollText("again sets basic patch",1);
 		break;
 	case pbTune:
 		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
