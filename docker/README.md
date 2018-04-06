@@ -9,7 +9,7 @@ How-To
 ------
 
 1. Clone this repo to your local system.
-2. First, install Docker CE; at least version 17.06
+2. Install Docker CE; at least version 17.06
 3. Follow instructions for your OS below to do the build and obtain the
    firmware file.
 4. After completing the build, the file p600firmware.syx in the current
