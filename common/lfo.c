@@ -7,6 +7,7 @@
 static uint16_t sineShape[256];
 static uint16_t lfoSeq[16];  // NEW LFO shapes JHHL
 
+
 static void updateIncrement(struct lfo_s * lfo)
 {
 	lfo->increment=lfo->speed*(1-lfo->halfPeriod*2);
@@ -42,8 +43,8 @@ static void handlePhaseOverflow(struct lfo_s * l)
 	}
 }
 // NEW LFO shapes JHHL
-// void LOWERCODESIZE newSeq(void)  //V2.29 remed mout to see if this has an effect on the UI
-//;
+void LOWERCODESIZE newSeq(void)  //V2.29 remed out to see if this has an effect on the UI -- V2.33 added back in to see if changes UI speed
+;
 
 void LOWERCODESIZE lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 {
@@ -58,6 +59,7 @@ void LOWERCODESIZE lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 }
 
 // NEW LFO shapes JHHL the idea here is to make up a little melody with some redundancy.
+
 void LOWERCODESIZE newSeq(void)
 {
     for(int i = 0 ; i<16;i++)
@@ -92,6 +94,7 @@ void LOWERCODESIZE newSeq(void)
     }
 }
 
+
 static lfoShape_t lastShape;
 
 void LOWERCODESIZE lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
@@ -102,8 +105,9 @@ void LOWERCODESIZE lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
 		srandom(currentTick);
 	
 	lfo->noise=random();
+    
     // NEW LFO shapes JHHL
-    if((shape !=lastShape) &&(shape == lsSeq))
+    if((shape != lastShape) && (shape == lsSeq))
     {
         newSeq();
     }
@@ -177,6 +181,7 @@ short keep_bits_from_16(short input, int keepBits) {
     return (input & (-1 << (16-keepBits)));
 }
 
+
 inline void lfo_update(struct lfo_s * l)
 {
 	// if bit 24 or higher is set, it's an overflow -> a half period is done!
@@ -243,6 +248,12 @@ inline void lfo_update(struct lfo_s * l)
         l->rawOutput=keep_bits_from_16(l->rawOutput, 6);
         break;
             
+    //Pink noise V2.33 --- note sounds no different than white noise for LFO so I remmed it out
+   // case lsPkNoise:
+   //     l->noise=lfsr(l->noise,(l->speedCV>>12)+1);
+   //     l->rawOutput=LPF(l->noise);
+    //    break;
+            
     default:
         ;
 	}
@@ -271,7 +282,7 @@ inline void lfo_update(struct lfo_s * l)
 
 	// compute output
 	
-	l->output=scaleU16S16(l->levelCV,(int32_t)l->rawOutput+INT16_MIN); // code below causes UI slowdown
+	l->output=scaleU16S16(l->levelCV,(int32_t)l->rawOutput+INT16_MIN); // code below this line causes UI slowdown
 
     /*   this is for the SEQ waveform
      int32_t o;

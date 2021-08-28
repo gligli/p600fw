@@ -43,7 +43,9 @@
 #define BIT_INTPUT_TAPE_IN 0x01
 
 uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
-uint16_t prevMVol,newMVol,tempmVol;
+uint16_t prevMVol,newMVol,tempmVol,detune,dtrack; // V2.28 ... detune and detrack added V2.33  maybe move this to synth_s
+int16_t polyModEnvPWA; // added V2.33 PWM polymod env
+int16_t polyModEnvPWB; // added V2.33 PWM polymod env
 
 const p600Pot_t continuousParameterToPot[cpCount]=
 {
@@ -117,8 +119,9 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	int8_t v;
 
 	uint16_t baseAPitch,baseBPitch,baseCutoff;
-	int16_t mTune,fineBFreq,detune;
-
+	//int16_t mTune,fineBFreq,detune; //remed out and added detune globally v2.33 added next line w/o detune
+    int16_t mTune,fineBFreq;
+    
 	// We use int16_t here because we want to be able to use negative
 	// values for intermediate calculations, while still retaining a
 	// maximum value of at least UINT8_T.
@@ -165,7 +168,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	
 	baseCutoff&=0xff;
 	
-	if(chrom>0)
+	if(chrom>0)   // V2.33 maybe change here to set VCOB to free
 	{
 		baseAPitch=0;
 		baseBPitch=0;
@@ -237,7 +240,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		
 		if(currentPreset.steppedParameters[spUnison] || settings.spread)
 		{
-			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8);
+			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8); // V2.33 maybe add plus after detune
 
 			cva=satAddU16S16(cva,detune);
 			cvb=satAddU16S16(cvb,detune);
@@ -332,11 +335,12 @@ void computeBenderCVs(void)
 	
 		// reset old bends
 		
-	for(cv=pcOsc1A;cv<=pcFil6;++cv)
+    for(cv=pcOsc1A;cv<=pcFil6;++cv)
 		synth.benderCVs[cv]=0;
+    
     synth.benderVolumeCV=0;
-    synth.benderPW=0; // added for BenderPW
-	
+    synth.benderPW=0;
+        
 		// compute new
 
 	switch(currentPreset.steppedParameters[spBenderTarget])
@@ -349,6 +353,7 @@ void computeBenderCVs(void)
 			synth.benderCVs[cv]=bend>>16; // /65536
 		}
 		break;
+            
 	case modVCF:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
 		bend*=synth.benderAmount;
@@ -372,6 +377,7 @@ void computeBenderCVs(void)
             synth.benderCVs[cv]=bend>>16; // /65536
         }
         break;
+            
     case modPW:
         bend=currentPreset.steppedParameters[spBenderSemitones]; // modulate PW VCO A
         bend*=synth.benderAmount;
@@ -455,13 +461,12 @@ static void refreshGates(void)
 
 static inline void refreshPulseWidth(int8_t pwm)
 {
-	int32_t pa,pb;
+	int32_t pb, pa;
 	// reverted reversion of "fixing wrong OscA pitch when polymod routes OscB to FreqA." V2.24 JRS
 	// pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
     // datasheet specifies that pa should default to max and pb should default to min to avoid issues with sync and polymod
     pa=UINT16_MAX;
     pb=0;
-    
     
 	uint8_t sqrA=currentPreset.steppedParameters[spASqr];
 	uint8_t sqrB=currentPreset.steppedParameters[spBSqr];
@@ -469,9 +474,11 @@ static inline void refreshPulseWidth(int8_t pwm)
 	if(sqrA)
 		pa=currentPreset.continuousParameters[cpAPW];
         pa+=synth.benderPW; // Bender target PW -  revised code Aug 25 2020 V2.24 JRS
+        pa+=polyModEnvPWA; // V2.33 Polymod env target PW -- note seems to be working only in unison or every 6th voice Feb 15, 2021
 
 	if(sqrB)
 		pb=currentPreset.continuousParameters[cpBPW];
+        pb+=polyModEnvPWB; // V2.33 Polymod env target PW
 
 	if(pwm)
 	{
@@ -481,8 +488,11 @@ static inline void refreshPulseWidth(int8_t pwm)
 		if(sqrB && !(currentPreset.steppedParameters[spLFOTargets]&mtOnlyA))
 			pb+=synth.lfo.output;
 	}
-
-	BLOCK_INT
+    
+    // I had these in sqrA and sqrB above -  may need to put in those two and (pwm)
+  
+	
+    BLOCK_INT
 	{
 		sh_setCV32Sat_FastPath(pcAPW,pa);
 		sh_setCV32Sat_FastPath(pcBPW,pb);
@@ -750,7 +760,12 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
-	
+
+/* moved above
+     polyModEnvPWA=0; //V2.33 may need to remove
+     polyModEnvPWB=0; //V2.33
+ */
+    
 	BLOCK_INT
 	{
 		// update envs, compute CVs & apply them
@@ -765,16 +780,22 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
         switch(currentPreset.steppedParameters[spPolyModEnv])
         {
             case 0:
-                va+=scaleU16S16(envVal,oscEnvAmt);
+                va+=scaleU16S16(envVal,oscEnvAmt);  //mod VCO A only by filter env
                 break;
             case 1:
-                vb+=scaleU16S16(envVal,oscEnvAmt);
+                vb+=scaleU16S16(envVal,oscEnvAmt); // Mod VCO B only by filter env
                 break;
             case 2:
-                vb+=scaleU16S16(envVal,oscEnvAmt);
+                vb+=scaleU16S16(envVal,oscEnvAmt); //mod both VCOs
                 va+=scaleU16S16(envVal,oscEnvAmt);
                 break;
-          
+            case 3:
+                polyModEnvPWA+=(scaleU16S16(envVal,oscEnvAmt))>>2; //V2.33 added polymod env PWM VCO A
+                break;
+            case 4:
+                polyModEnvPWB+=(scaleU16S16(envVal,oscEnvAmt))<<2; //V2.33 added polymod env PWM VCO B
+            break;
+                
         }
         
 		// osc B
@@ -788,6 +809,7 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		va+=synth.oscANoteCV[v];
 		sh_setCV32Sat_FastPath(pcOsc1A+v,va);
 
+
 		// filter
 
 		vf=filterLfoVal;
@@ -797,17 +819,20 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		if(vf>synth.filterMaxCV[v])
 			vf=synth.filterMaxCV[v];
 		
-		sh_setCV32Sat_FastPath(pcFil1+v,vf);
+		sh_setCV32Sat_FastPath(pcFil1+v,vf); //update filter for each voice
 
 		// amplifier
 
 		adsr_update(&synth.ampEnvs[v]);
 		
 		va=scaleU16U16(synth.ampEnvs[v].output,ampLfoVal);
+        
 		if(va)
 			va+=VCA_DEADBAND;
 		
-		sh_setCV32Sat_FastPath(pcAmp1+v,va);
+		sh_setCV32Sat_FastPath(pcAmp1+v,va); //update amp for each voice
+        
+
 	}
 }
 
@@ -999,8 +1024,9 @@ void synth_update(void)
 					ui.lastActivePot==ppFilSus || ui.lastActivePot==ppFilRel)
 				refreshEnvSettings();
 		}
-        synth_refresh_MVol_Knob(); //moved here V2.32 to speed up volume knob
+        //synth_refresh_MVol_Knob(); //moved here V2.32 to speed up volume knob - 5/23/21 V2.33 maybe move to before if(potVal!=ui.lastActivePotValue)
 	}
+    synth_refresh_MVol_Knob(); // moved for v2.33, old spot would drop in volume
 	
 	switch(frc&0x03) // 4 phases
 	{
@@ -1011,7 +1037,6 @@ void synth_update(void)
 		break;
 	case 1:
 		// 'fixed' CVs
-		
 		sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
 		sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
 		break;
@@ -1019,10 +1044,6 @@ void synth_update(void)
 		// 'fixed' CVs
 		sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
 		sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
-            // set a flag when volume pot or pitchbendVolume is changed and if the flag is high then do this Command
-        //synth_refresh_MVol_Knob();
-		//sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),synth.benderVolumeCV),SH_FLAG_IMMEDIATE); // revise this to implement midi volume - maybe volume should not be set like this immediately... maybe store?
-        
 		break;
 	case 3:
 		// gates
@@ -1059,7 +1080,7 @@ void synth_uartInterrupt(void)
 void synth_timerInterrupt(void)
 {
 	int32_t va,vf;
-	int16_t pitchALfoVal,pitchBLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt,noiseLfoVal,resonanceLfoVal;// added V2.31
+    int16_t pitchALfoVal,pitchBLfoVal,filterLfoVal,filEnvAmt,oscEnvAmt,noiseLfoVal,resonanceLfoVal,PModOscBLFOVal;// added V2.31
 	uint16_t ampLfoVal;
 	int8_t v,hz63,hz250;
 
@@ -1076,6 +1097,7 @@ void synth_timerInterrupt(void)
 	filterLfoVal=0;
     noiseLfoVal=0; // added modulate noise
     resonanceLfoVal=0; // added V2.31 modulate Resonance
+    PModOscBLFOVal=0; // added V2.33 modulate Polymod VCOB
 	ampLfoVal=UINT16_MAX;
 	
 	if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
@@ -1117,6 +1139,14 @@ void synth_timerInterrupt(void)
         case 5:
             resonanceLfoVal+=synth.vibrato.output<<2;//added V2.31 to modulate resonance
             sh_setCV(pcResonance,satAddU16S16(currentPreset.continuousParameters[cpResonance],resonanceLfoVal),SH_FLAG_IMMEDIATE);
+            break;
+        case 6:
+            if(currentPreset.steppedParameters[spUnison]) //added V2.33 to modulate detune when unison is on
+                detune+=synth.vibrato.output>>1;
+            break;
+        case 7:
+            PModOscBLFOVal+=synth.vibrato.output<<4;//added V2.31 to modulate resonance
+            sh_setCV(pcPModOscB,satAddU16S16(currentPreset.continuousParameters[cpPModOscB],PModOscBLFOVal),SH_FLAG_IMMEDIATE);
             break;
     }
 
@@ -1176,23 +1206,17 @@ void synth_timerInterrupt(void)
 			if(synth.pendingExtClock)
 				--synth.pendingExtClock;
             
-            //added to stop seq from pummeling the timing V2.3JS
-            if(hz250)
-            {
+ 
                 if (clock_update())
                 {
                     // sequencer
-
                     if(seq_getMode(0)!=smOff || seq_getMode(1)!=smOff)
                         seq_update();
                 
                     // arpeggiator
-
                     if(arp_getMode()!=amOff)
                         arp_update();
                 }
-                
-            }
 		}
 
 		// glide
@@ -1212,6 +1236,7 @@ void synth_timerInterrupt(void)
 		lfo_update(&synth.vibrato); //V2.3JS can we rem this out?
 		refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
 		break;
+            
 	case 3:
 		if(hz250)
 		{

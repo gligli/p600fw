@@ -26,7 +26,7 @@
 
 #define TUNER_OSC_INIT_OFFSET 5000.0
 #define TUNER_OSC_INIT_SCALE (65536.0/10.66)
-#define TUNER_OSC_PRECISION -3 // higher is preciser but slower
+#define TUNER_OSC_PRECISION -3 // higher is preciser but slower was 3
 #define TUNER_OSC_NTH_C_LO 3
 #define TUNER_OSC_NTH_C_HI 6
 
@@ -151,7 +151,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	// display / start maintainting CVs
 	
-	for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly
+	for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly -- was 25
 		whileTuning();
 			
 	// prepare flip flop

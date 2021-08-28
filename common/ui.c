@@ -37,10 +37,10 @@ const struct uiParam_s uiParameters[] =
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
     /*third press*/ //added V2.25
     /*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
-    /*1*/ {.type=ptStep,.number=spVibShape,.name="vib shp",.values={"puls","tri","rnd","sin","nois","saw","step8","revsaw","seq","step4","bit_tri","bit_sine"}}, // Added vib LFO waveforms
-    /*2*/ {.type=ptStep,.number=spVibTargets,.name="vib tgt",.values={"ab","a","b","ab-Vca","noise","reso"}},  // added new vib targets .. add to storage V2.31
+    /*1*/ {.type=ptStep,.number=spVibShape,.name="vib shp",.values={"puls","tri","rnd","sin","nois","saw","step8","revsaw","seq","step4","bit_tri","bit_sine"}}, // added V2.25
+    /*2*/ {.type=ptStep,.number=spVibTargets,.name="vib tgt",.values={"ab","a","b","ab-Vca","noise","reso","detune","PMod-VcoB"}},  // added new vib targets V2.33 added detune target and polymod->VCO B
     /*3*/ {.type=ptStep,.number=spVibShift,.name="vib ran",.values={"low","high"}},  //added new vib range   add spVibShift to ui.H and to storage
-    /*4*/ {.type=ptStep,.number=spPolyModEnv,.name="poly-mod env tgt",.values={"vco-a","vco-b","vco"}}, //added V2.28 polymod env to both pitches
+    /*4*/ {.type=ptStep,.number=spPolyModEnv,.name="poly-mod env tgt",.values={"vco-a","vco-b","vco","Pw-a","Pw-b"}}, //added V2.28 polymod env to both pitches - V2.33 added polymod PWM
     /*5*/ {.type=ptCust,.number=2,.name="amp shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
     /*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol","PW","Vco-b"}},
     /*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
