@@ -11,7 +11,8 @@ struct uiParam_s
 	enum uiParamType_e type;
 	int8_t number;
 	const char * name;
-	const char * values[6]; // changed from 4 to to add VCOB as a Bendertarget
+	const char * values[12]; // changed from 4 to to add VCOB as a Bendertarget
+							// JAM changed from 6 to 12 
 };
 
 struct ui_s

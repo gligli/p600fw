@@ -21,5 +21,10 @@ void arp_resetCounter(int8_t beatReset);
 
 void arp_assignNote(uint8_t note, int8_t on);
 
+
+/*JAM utility functions for new UP/DOWN mode calculation */
+uint8_t arp_get_lowest(void);
+uint8_t arp_get_highest(void);
+
 #endif	/* ARP_H */
 

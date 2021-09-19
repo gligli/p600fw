@@ -31,6 +31,10 @@ History
 - V2.28 JS - added polymod VCO A, VCO B, VCO A-B targets
 - V2.29 JS - fixed error with CC 57 and 74 (LFO Shape and Vibe Shape) where not all shapes were selectable, sped up UI to V2.26B speed, Added CC 77 (Poly Mod Filter Env to modulate VCO A, VCO B, or VCO AB)
 - V2.31 JS - added filter resonance as a vibrato target and increased range on the noise (or CV in for an unmodified P600) target for the vibrato
+- V2.32 JS - tried to speed up volume knob
+- V2.33 JS - Polymod env target PWM VCOA and VCOB, fixed bug introduced in V2.32 causing volume to drop over time
+- V2.34 JS - JAM revised Arp to remove double notes and added new random mode (Thanks!!) The new random mode prevent notes to play several times in a row; each note is always different than the previous one (except if only one note is played, obviously).
+
 
 V2.25 includes -
 LFO has 6 new waveforms:
@@ -55,6 +59,9 @@ To use vibrato waveforms "to tape" + 1 three times
 To use vibrato range "to tape" + 2 three times
 
 To use vibrato targets "to tape" + 3 three times
+
+To use the New Random Mode Arp: press assign button twice
+
 
 License
 =======

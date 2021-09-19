@@ -43,7 +43,7 @@ const uint8_t steppedParametersBits[spCount] =
 	/*ModwheelTarget*/1,
 	/*VibTarget(modwheel target)*/2,
 	/*AmpEnvSlow*/1,
-    /*VibShape*/4,
+    /*VibShape*/12,  //JAM updated to new array size
     /*VibShift*/2,
     /*VibTargets*/3,
     /*PolyModEnvTargets*/2,
