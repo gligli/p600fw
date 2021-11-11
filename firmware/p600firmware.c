@@ -10,6 +10,8 @@
 
 #include "synth.h"
 
+#define CLOBBERED(reg)	__asm__ __volatile__ ("" : : : reg);
+
 #define CPU_PRESCALE(n)	(CLKPR = 0x80, CLKPR = (n))
 #define CPU_16MHz       0x00
 #define CPU_8MHz        0x01
@@ -169,7 +171,7 @@ static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 	v =(c<<7)&0x80;
 	v|=(c>>1)&0x03;
 	
-	v|=(d	 )&0x10;
+	v|=(d   )&0x10;
 	v|=(d>>2)&0x08;
 	v|=(d>>1)&0x60;
 	
@@ -182,27 +184,27 @@ static FORCEINLINE uint8_t hardware_read(int8_t io, uint16_t addr)
 	return v;
 }
 
-inline void mem_write(uint16_t address, uint8_t value)
+FORCEINLINE void mem_write(uint16_t address, uint8_t value)
 {
 	hardware_write(0,address,value);
 }
 
-inline void io_write(uint8_t address, uint8_t value)
+FORCEINLINE void io_write(uint8_t address, uint8_t value)
 {
 	hardware_write(1,address,value);
 }
 
-inline uint8_t mem_read(uint16_t address)
+FORCEINLINE uint8_t mem_read(uint16_t address)
 {
 	return hardware_read(0,address);
 }
 
-inline uint8_t io_read(uint8_t address)
+FORCEINLINE uint8_t io_read(uint8_t address)
 {
 	return hardware_read(1,address);
 }
 
-inline int8_t hardware_getNMIState(void)
+FORCEINLINE int8_t hardware_getNMIState(void)
 {
 	return !(PINC&0x10);
 }
@@ -320,9 +322,14 @@ static int16_t NRWW_SECTION(".nrww_misc") getMidiByte(void)
 	return data;
 }
 
+static uint16_t NRWW_SECTION(".nrww_misc") updateCRC(uint16_t crc,uint8_t data)
+{
+	return _crc_xmodem_update(crc,data);
+}
+
 #define UPDATER_GET_BYTE { b=getMidiByte(); if(b<0) break; }
 #define UPDATER_WAIT_BYTE(waited) { UPDATER_GET_BYTE; if(b!=(waited)) break; }
-#define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=_crc_xmodem_update(crc,b); }
+#define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=updateCRC(crc,b); }
 
 void NRWW_SECTION(".updater") updater_main(void)
 {
@@ -475,7 +482,7 @@ void NRWW_SECTION(".updater") updater_main(void)
 		CYCLE_WAIT(8);
 
 		// program page
-		blHack_program_page(pageIdx*SPM_PAGESIZE,page);
+		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE,page);
 	}
 	
 	// show 'S' or 'E' on the 7seg, depending on success or error
@@ -516,6 +523,12 @@ void storage_write(uint32_t pageIdx, uint8_t *buf)
 	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
 	{
 		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR,buf);
+
+		// Somewhere R16 appears to get clobbered even though the
+		// compiler is not aware of it, possibly in the SPM routine
+		// called by blHack_call_SPM. So to avoid potential problems
+		// in callers higher up in the stack we mark R16 as clobbered here.
+		CLOBBERED("r16");
 	}
 }
 
