@@ -77,7 +77,7 @@ typedef enum
 
 typedef enum
 {
-	pb0=0,pb1,pb2,pb3,pb4,pb5,pb6,pb7,                                            
+	pb0=0,pb1,pb2,pb3,pb4,pb5,pb6,pb7,
 	pb8=8,pb9,pbArpUD,pbArpAssign,pbPreset,pbRecord,pbToTape,pbFromTape,          
 	pbSeq1=16,pbSeq2,pbTune,                                                      
 	pbASqr=24,pbBSqr,pbFilFull,pbFilHalf,pbLFOShape,pbLFOFreq,pbLFOPW,pbLFOFil,   
@@ -105,6 +105,7 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 void synth_uartEvent(uint8_t data);
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi);
 void synth_updateBender(void);
+void synth_updateMasterVolume(void); // to fix volume bug in 2.25
 void synth_realtimeEvent(uint8_t midiEvent);
 
 void synth_init(void);

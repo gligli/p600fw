@@ -314,6 +314,11 @@ void synth_updateBender(void)
 	synth_wheelEvent(getAdjustedBenderAmount(),0,1,0);
 }
 
+void synth_updateMasterVolume(void)
+{
+ 	sh_setCV(pcMVol,potmux_getValue(ppMVol),SH_FLAG_IMMEDIATE); // adapted from J. Sepulveda's V2.26B
+}
+
 void computeBenderCVs(void)
 {
 	int32_t bend;

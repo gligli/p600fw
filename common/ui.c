@@ -633,7 +633,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbTune)
 		{
-			tuner_tuneSynth();	
+			tuner_tuneSynth();
+			synth_updateMasterVolume(); // V2.26 to fix tuner volume issue	
 		}
 		else if(button==pbPreset)
 		{
