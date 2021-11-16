@@ -128,6 +128,7 @@ static int8_t changeMiscSetting(p600Button_t button)
 	switch(button)
 	{
 	case pb1: // midi receive channel
+		 
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
 		

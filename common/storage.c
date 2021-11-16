@@ -210,7 +210,10 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.benderMiddle=storageRead16();
 		settings.presetMode=storageRead8();
 		settings.midiReceiveChannel=storageReadS8();
-		
+		// in order to prevent array out of bound problems
+		if (settings.midiReceiveChannel<-1) settings.midiReceiveChannel=-1; 
+		if (settings.midiReceiveChannel>15) settings.midiReceiveChannel=15;
+
 		if (storage.version<2)
 			return 1;
 
@@ -218,6 +221,9 @@ LOWERCODESIZE int8_t settings_load(void)
 
 		settings.voiceMask=storageRead8();
 		settings.midiSendChannel=storageReadS8();
+		// in order to prevent array out of bound problems
+		if (settings.midiSendChannel<0) settings.midiSendChannel=0; 
+		if (settings.midiSendChannel>15) settings.midiSendChannel=15;
 		
 		if (storage.version<3)
 			return 1;
@@ -479,7 +485,6 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
-		currentPreset.continuousParameters[cpSeqArpClock]=HALF_RANGE;
 		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;

@@ -436,11 +436,12 @@ static inline void refreshPulseWidth(int8_t pwm)
 {
 	int32_t pa,pb;
 	
-	// reverted reversion of "fixing wrong OscA pitch when polymod routes OscB to FreqA." V2.24 JRS
-	// pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
-	// datasheet specifies that pa should default to max and pb should default to min to avoid issues with sync and polymod
-    	pa=UINT16_MAX;
-    	pb=0;
+	//	the following is a fix of a bug in 2.0: "fixing wrong OscA pitch when polymod routes OscB to FreqA."
+	//	datasheet specifies that pa should default to max and pb should default to min to avoid issues with sync and polymod
+    //	pa=UINT16_MAX;
+    //	pb=0;
+	// 	this ways reversed because it makes patches stored using 2.0 (and also imported from Z80?) sound wrong 
+	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
     
 	uint8_t sqrA=currentPreset.steppedParameters[spASqr];
 	uint8_t sqrB=currentPreset.steppedParameters[spBSqr];
@@ -859,6 +860,8 @@ void synth_init(void)
 		tuner_tuneSynth();
 #endif	
 	}
+	
+	settings_save();
 
 	// initial input state
 	
