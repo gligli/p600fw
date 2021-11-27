@@ -4,13 +4,14 @@
 
 #include "storage.h"
 #include "uart_6850.h"
+#include "synth.h"
 
 // increment this each time the binary format is changed
-#define STORAGE_VERSION 7
+#define STORAGE_VERSION 8
 
 #define STORAGE_MAGIC 0x006116a5
 
-#define SETTINGS_PAGE_COUNT 2
+#define SETTINGS_PAGE_COUNT 3
 #define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-4)
 
 #define STORAGE_MAX_SIZE (SETTINGS_PAGE_COUNT*STORAGE_PAGE_SIZE)
@@ -43,6 +44,8 @@ const uint8_t steppedParametersBits[spCount] =
 	/*ModwheelTarget*/1,
 	/*VibTarget*/2,
 	/*AmpEnvSlow*/1,
+	/*EnvRouting*/2,
+	/*LFOSync*/4
 };
 
 struct settings_s settings;
@@ -196,7 +199,16 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.spread=0;
 		settings.vcfLimit=0;
 		settings.seqArpClock=HALF_RANGE;
-
+		settings.presetNumber=1; // if no other info, set selected preset to 1
+		settings.benderMiddle=HALF_RANGE;
+		settings.presetMode=0; // if no info, default start up is in live mode
+		settings.midiReceiveChannel=-1; // default is 'OMNI'
+		settings.voiceMask=0x3f; // default is: all on
+		settings.midiSendChannel=0; // deault is: 1
+		settings.syncMode=smInternal; // default ist internal clock
+		settings.spread=0; // default is: no spread
+		settings.vcfLimit=0; // default is: no limit on the VCF
+        
 		if (storage.version<1)
 			return 1;
 
@@ -207,11 +219,13 @@ LOWERCODESIZE int8_t settings_load(void)
 				settings.tunes[j][i]=storageRead16();
 
 		settings.presetNumber=storageRead16();
-		settings.benderMiddle=storageRead16();
+		// ensure that preset channel is valid, default to 1:
+		if (settings.presetNumber>99 || settings.presetNumber<0) settings.presetNumber=1;
+	    settings.benderMiddle=storageRead16();
 		settings.presetMode=storageRead8();
+		// ensure that MIDI channel ist valid to void array out of bounds problems:
 		settings.midiReceiveChannel=storageReadS8();
-		// in order to prevent array out of bound problems
-		if (settings.midiReceiveChannel<-1) settings.midiReceiveChannel=-1; 
+		if (settings.midiReceiveChannel<-1) settings.midiReceiveChannel=-1;
 		if (settings.midiReceiveChannel>15) settings.midiReceiveChannel=15;
 
 		if (storage.version<2)
@@ -220,9 +234,9 @@ LOWERCODESIZE int8_t settings_load(void)
 		// v2
 
 		settings.voiceMask=storageRead8();
-		settings.midiSendChannel=storageReadS8();
-		// in order to prevent array out of bound problems
-		if (settings.midiSendChannel<0) settings.midiSendChannel=0; 
+		// ensure that MIDI channel ist valid to void array out of bounds problems:
+		settings.midiSendChannel=storageReadS8();	     
+		if (settings.midiSendChannel<0) settings.midiSendChannel=0;
 		if (settings.midiSendChannel>15) settings.midiSendChannel=15;
 		
 		if (storage.version<3)
@@ -314,6 +328,7 @@ LOWERCODESIZE void settings_save(void)
 LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 {
 	uint8_t i;
+	int8_t readVar;
 	
 	BLOCK_INT
 	{
@@ -365,6 +380,20 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
 			currentPreset.perNoteTuning[i]=storageRead16();
+			
+		if (storage.version<8)
+			return 1;
+
+		// V8
+		
+		readVar=storageRead8();
+		if (readVar<=3) // only accept valid values, otherwise default stays
+			currentPreset.steppedParameters[spEnvRouting]=readVar;
+		
+		readVar=storageRead8();
+		if (readVar<=7) // only accept valid values, otherwise default stays
+			currentPreset.steppedParameters[spLFOSync]=readVar;
+		 
 	}
 	
 	return 1;
@@ -405,6 +434,12 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
 			storageWrite16(currentPreset.perNoteTuning[i]);
+			
+		// v8
+		
+		storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
+		storageWrite8(currentPreset.steppedParameters[spLFOSync]);
+	
 
 		// this must stay last
 		storageFinishStore(number,1);
@@ -493,6 +528,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spAmpEnvExpo]=1;
 		currentPreset.steppedParameters[spModwheelShift]=1;
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
+		currentPreset.steppedParameters[spEnvRouting]=0; // standard
+		currentPreset.steppedParameters[spLFOSync]=0; // off
 		
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
 

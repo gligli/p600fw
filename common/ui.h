@@ -11,7 +11,7 @@ struct uiParam_s
 	enum uiParamType_e type;
 	int8_t number;
 	const char * name;
-	const char * values[4];
+	const char * values[8];
 };
 
 struct ui_s

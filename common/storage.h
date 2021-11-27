@@ -55,7 +55,9 @@ typedef enum
 	spModwheelTarget=23,
 	spVibTarget=24,
 	spAmpEnvSlow=25,
-			
+	spEnvRouting=26,			
+	spLFOSync=27,
+
 	// /!\ this must stay last
 	spCount
 } steppedParameter_t;
@@ -79,6 +81,7 @@ struct settings_s
 	int8_t vcfLimit;
 	
 	uint16_t seqArpClock;
+
 };
 
 #define TUNING_UNITS_PER_SEMITONE 5461.3333333 // 1/5461 of a semitone (== pow(2,16)/12)

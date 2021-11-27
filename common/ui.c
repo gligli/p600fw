@@ -19,7 +19,7 @@ const struct uiParam_s uiParameters[] =
 	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
 	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
-	/*5*/ {.type=ptCust,.number=2,.name="amp shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*5*/ {.type=ptCust,.number=2,.name="env shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
 	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
@@ -35,6 +35,13 @@ const struct uiParam_s uiParameters[] =
 	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
 	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
+	/*third press*/
+	/*0*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo sync",.values={"off","1","2","3","4","5","6","8"}},
+	/*2*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*3*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="env rtg",.values={"std","poly-amp","poly","gate"}},
 };
 
 struct ui_s ui;
@@ -373,7 +380,12 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			ui.activeParamIdx-=10;
+			{if (new==pb5||new==pb1) 
+				{ui.activeParamIdx+=10;}
+			else
+				ui.activeParamIdx-=10;}
+		else if (prev==new+20)
+			ui.activeParamIdx-=20;
 		else
 			ui.activeParamIdx=new;
 		ui.previousData=-1;
@@ -461,10 +473,10 @@ void ui_checkIfDataPotChanged(void)
 			ui_setNoActivePot();
 			
 			valCount=0;
-			while(valCount<4 && prm.values[valCount]!=NULL)
+			while(valCount<8 && prm.values[valCount]!=NULL) // 8 is the current max of choices
 				++valCount;
 			
-			data=(data*valCount)>>16;
+			data=(data*valCount)>>16; // this divides the total range (16 bits) into valCount pieces using effectively a floor() function
 
 			if(data!=ui.previousData)
 				sevenSeg_scrollText(prm.values[data],1);
@@ -533,22 +545,24 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed && button==pbArpUD)
 	{
-		arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
+		//if (!arp_getHold()||arp_getMode()==amUpDown) // cannot handle a switch of arp type in latch/hold mode
+			arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
 	}
 	else if(pressed && button==pbArpAssign)
 	{
 		switch(arp_getMode())
 		{
-		case amOff:
-		case amUpDown:
-			arp_setMode(amAssign,arp_getHold());
-			break;
-		case amAssign:
-			arp_setMode(amRandom,arp_getHold());
-			break;
-		case amRandom:
-			arp_setMode(amOff,arp_getHold());
-			break;
+			case amOff:
+			case amUpDown:
+					arp_setMode(amAssign,arp_getHold());
+				
+				break;
+			case amAssign:
+				arp_setMode(amRandom,arp_getHold());
+				break;
+			case amRandom:
+				arp_setMode(amOff,arp_getHold());
+				break;
 		}
 	}
 	
@@ -634,7 +648,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbTune)
 		{
-			tuner_tuneSynth();
+			synth_tuneSynth();
 			synth_updateMasterVolume(); // V2.26 to fix tuner volume issue	
 		}
 		else if(button==pbPreset)
