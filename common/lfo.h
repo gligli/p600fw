@@ -29,6 +29,7 @@ struct lfo_s
 void lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl);
 void lfo_setShape(struct lfo_s * lfo, lfoShape_t shape);
 void lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift);
+void lfo_resetPhase(struct lfo_s * lfo);
 
 int16_t lfo_getOutput(struct lfo_s * lfo);
 const char * lfo_shapeName(lfoShape_t shape);

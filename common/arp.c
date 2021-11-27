@@ -21,6 +21,7 @@ static struct
 {
 	uint8_t notes[ARP_NOTE_MEMORY];
 	int16_t noteIndex;
+	int16_t previousIndex;
 	uint8_t previousNote;
 	int8_t transpose,previousTranspose;
 
@@ -58,7 +59,6 @@ static void killAllNotes(void)
 
 	arp.noteIndex=-1;
 	arp.previousNote=ASSIGNER_NO_NOTE;
-
 	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
 	assigner_allKeysOff();
 }
@@ -73,7 +73,9 @@ static void killHeldNotes(void)
 	// gate off for last note
 
 	if(isEmpty())
+	{
 		finishPreviousNote();
+	}
 }
 
 inline void arp_setMode(arpMode_t mode, int8_t hold)
@@ -104,7 +106,10 @@ FORCEINLINE void arp_resetCounter(int8_t beatReset)
 {
 	arp.noteIndex=-1; // reinit
 	if (beatReset&&seq_getMode(0)!=smPlaying&&seq_getMode(1)!=smPlaying)
+	{
 		clock_reset(); // start immediately
+		synth_resetClockBar(); // reset the LFO sync counter
+	}
 }
 
 FORCEINLINE arpMode_t arp_getMode(void)
@@ -141,14 +146,15 @@ void arp_assignNote(uint8_t note, int8_t on)
 			for(i=0;i<ARP_NOTE_MEMORY;++i)
 				if(arp.notes[i]==ASSIGNER_NO_NOTE)
 				{
-					arp.notes[i]=note;
+					arp.notes[i]=note; // plase the note on the first "empty" place
 					break;
 				}
 		}
 		else
 		{
-			arp.notes[note]=note;
-			arp.notes[ARP_LAST_NOTE-note]=note;
+			// up-down construction
+			arp.notes[note]=note; // place the note on the place corresponding to the index of the note (up part) 
+			arp.notes[ARP_LAST_NOTE-note]=note; // place the note also on the notes place from the top (down part)
 		}
 	}
 	else
@@ -162,7 +168,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 				for(i=0;i<ARP_NOTE_MEMORY;++i)
 					if(arp.notes[i]==note)
 					{
-						arp.notes[i]|=ARP_NOTE_HELD_FLAG;
+						arp.notes[i]|=ARP_NOTE_HELD_FLAG; // assumes that the note can only be in one place
 						break;
 					}
 			}
@@ -249,6 +255,7 @@ void arp_update(void)
 
 	arp.previousNote=arp.notes[arp.noteIndex];
 	arp.previousTranspose=arp.transpose;
+	arp.previousIndex=arp.noteIndex;
 }
 
 void arp_init(void)
@@ -256,7 +263,6 @@ void arp_init(void)
 	memset(&arp,0,sizeof(arp));
 
 	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
-	
 	arp.noteIndex=-1;
 	arp.previousNote=ASSIGNER_NO_NOTE;
 }

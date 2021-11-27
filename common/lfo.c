@@ -63,6 +63,12 @@ void LOWERCODESIZE lfo_setShape(struct lfo_s * lfo, lfoShape_t shape)
 	lfo->noise=random();
 }
 
+void LOWERCODESIZE lfo_resetPhase(struct lfo_s * lfo)
+{
+	lfo->phase = 0;
+}
+
+
 void LOWERCODESIZE lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift)
 {
 	if(shift!=lfo->speedShift)

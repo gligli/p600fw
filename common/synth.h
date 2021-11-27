@@ -107,6 +107,8 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t ou
 void synth_updateBender(void);
 void synth_updateMasterVolume(void); // to fix volume bug in 2.25
 void synth_realtimeEvent(uint8_t midiEvent);
+void synth_resetClockBar(void);
+void synth_tuneSynth(void);
 
 void synth_init(void);
 void synth_update(void);
