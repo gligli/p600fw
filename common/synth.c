@@ -68,6 +68,12 @@ struct synth_s
 
 	struct lfo_s lfo,vibrato;
 	
+	// store slowly changing partial results so that specific updates can be made faster 
+	int32_t tunedBenderCVs[pcOsc6B-pcOsc1A+1];
+	uint16_t oscABaseCV[SYNTH_VOICE_COUNT]; 
+	uint16_t oscBBaseCV[SYNTH_VOICE_COUNT];
+	uint16_t filterBaseCV[SYNTH_VOICE_COUNT]; 
+
 	uint16_t oscANoteCV[SYNTH_VOICE_COUNT];
 	uint16_t oscBNoteCV[SYNTH_VOICE_COUNT];
 	uint16_t filterNoteCV[SYNTH_VOICE_COUNT]; 
@@ -92,6 +98,9 @@ struct synth_s
 	uint8_t pendingExtClock;
 	
 	int8_t transpose;
+
+	int8_t clockBar;
+	
 } synth;
 
 extern void refreshAllPresetButtons(void);
@@ -108,8 +117,77 @@ struct deadband {
 struct deadband bendDeadband = { HALF_RANGE, BEND_GUARDBAND,  BEND_DEADBAND };
 struct deadband panelDeadband = { HALF_RANGE, 0, PANEL_DEADBAND };
 
+static void addWheelToTunedCVs(void) // this function is specific for the case in which there are only wheel changes. Could also be moved to inside wheel event...
+{
+	uint16_t cva,cvb,cvf;
+	int16_t mTune,fineBFreq;
+	static uint16_t mTuneRaw,fineBFreqRaw;
+	static uint8_t track;
+	int8_t v;
+	
+	track=currentPreset.steppedParameters[spTrackingShift];
+	mTuneRaw=potmux_getValue(ppMTune);
+	mTune=(mTuneRaw>>7)+INT8_MIN*2;
+	fineBFreqRaw=currentPreset.continuousParameters[cpFreqBFine];
+	fineBFreq=(fineBFreqRaw>>7)+INT8_MIN*2;
+	
+	// compute shifs for oscs & filters
+
+	for(v=0;v<SYNTH_VOICE_COUNT;++v)
+	{
+
+		// bender and tune  
+
+		cva=satAddU16S32(synth.oscABaseCV[v],(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
+		cvb=satAddU16S32(synth.oscBBaseCV[v],(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		cvf=satAddU16S16(synth.filterBaseCV[v],synth.benderCVs[pcFil1+v]);
+
+		
+		// glide
+		
+		if(synth.gliding)
+		{
+			synth.oscATargetCV[v]=cva;
+			synth.oscBTargetCV[v]=cvb;
+			synth.filterTargetCV[v]=cvf;
+
+			if(!track)
+				synth.filterNoteCV[v]=cvf; // no glide if no tracking for filter
+		}
+		else			
+		{
+			synth.oscANoteCV[v]=cva;
+			synth.oscBNoteCV[v]=cvb;
+			synth.filterNoteCV[v]=cvf;
+		}
+				
+	}
+}
+
+
+static void computeTunedBenderCVs(void) // this function must always be called after tuning or after the semitones setting of the bender changes (inkl. preset change)
+{
+	p600CV_t cv;
+	for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
+	{
+		synth.tunedBenderCVs[cv]=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
+	}	
+}
+
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
+
+	// with this function the folowing changes are reflected in the CVs
+	// master Tune, fine Tune OSC B
+	// filter cut-off, frequency settings of OSC A and B (inkl. mode setting)
+	// Tracking setting
+	// Unison / detune
+	// Bender
+	// assigned notes
+	//
+	// --> all these are slowly changing, therefore the function can be called according to ressources
+	// --> for bender events there is separate, reduced and faster function, because there can be a lot of these events 
+
 	uint16_t cva,cvb,cvf;
 	uint8_t note=SCANNER_BASE_NOTE,baseCutoffNote;
 	int8_t v;
@@ -209,8 +287,8 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		if (BNote<0)
 			BNote=0;
 		
-		cva=satAddU16S32(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
-		cvb=satAddU16S32(tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v),(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		synth.oscABaseCV[v]=tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v);
+		synth.oscBBaseCV[v]=tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v);
 		
 		// filter
 		
@@ -228,7 +306,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 				trackingNote=0;
 		}
 			
-		cvf=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),synth.benderCVs[pcFil1+v]);
+		synth.filterBaseCV[v]=tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v); 		
 
 		// detune
 		
@@ -236,10 +314,17 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 		{
 			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8);
 
-			cva=satAddU16S16(cva,detune);
-			cvb=satAddU16S16(cvb,detune);
-			cvf=satAddU16S16(cvf,detune);
+			synth.oscABaseCV[v]=satAddU16S16(synth.oscABaseCV[v],detune);
+			synth.oscBBaseCV[v]=satAddU16S16(synth.oscBBaseCV[v],detune);
+			synth.filterBaseCV[v]=satAddU16S16(synth.filterBaseCV[v],detune);
 		}
+
+		// bender and tune  
+
+		cva=satAddU16S32(synth.oscABaseCV[v],(int32_t)synth.benderCVs[pcOsc1A+v]+mTune);
+		cvb=satAddU16S32(synth.oscBBaseCV[v],(int32_t)synth.benderCVs[pcOsc1B+v]+mTune+fineBFreq);
+		cvf=satAddU16S16(synth.filterBaseCV[v],synth.benderCVs[pcFil1+v]);
+
 		
 		// glide
 		
@@ -311,15 +396,22 @@ void synth_updateBender(void)
 {
 	bendDeadband.middle=settings.benderMiddle;
 	precalcDeadband(&bendDeadband);
+	computeTunedBenderCVs();
 	synth_wheelEvent(getAdjustedBenderAmount(),0,1,0);
 }
+
+void synth_resetClockBar(void) // this function can be called from other places to reset the LFO sync 
+{
+	synth.clockBar=0x9; // LFO clock is built on a 9 loop
+}
+
 
 void synth_updateMasterVolume(void)
 {
  	sh_setCV(pcMVol,potmux_getValue(ppMVol),SH_FLAG_IMMEDIATE); // adapted from J. Sepulveda's V2.26B
 }
 
-void computeBenderCVs(void)
+static void computeBenderCVs(void) // this function always needs to be called when the bender position changes
 {
 	int32_t bend;
 	p600CV_t cv;
@@ -339,8 +431,10 @@ void computeBenderCVs(void)
 	case modVCO:
 		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 		{
-			bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
-			bend*=synth.benderAmount;
+			//bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
+			//bend*=synth.benderAmount;
+			//computeTunedBenderCVs();
+			bend=synth.tunedBenderCVs[cv]*synth.benderAmount;
 			synth.benderCVs[cv]=bend>>16; // /65536
 		}
 		break;
@@ -671,6 +765,7 @@ void refreshFullState(void)
 	refreshAssignerSettings();
 	refreshLfoSettings();
 	refreshEnvSettings();
+	computeTunedBenderCVs();
 	computeBenderCVs();
 	refreshFilterMaxCV();
 	
@@ -714,6 +809,7 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 {
 	int32_t va,vb,vf;
 	uint16_t envVal;
+	uint16_t ampEnvVal;
 	
 	BLOCK_INT
 	{
@@ -721,6 +817,9 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 
 		adsr_update(&synth.filEnvs[v]);
 		envVal=synth.filEnvs[v].output;
+
+		adsr_update(&synth.ampEnvs[v]);
+		ampEnvVal =synth.ampEnvs[v].output;
 
 		va=pitchALfoVal;
 		vb=pitchBLfoVal;
@@ -732,7 +831,11 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 
 		// osc A
 
-		va+=scaleU16S16(envVal,oscEnvAmt);	
+		if (currentPreset.steppedParameters[spEnvRouting]==0) // the normal case
+			va+=scaleU16S16(envVal,oscEnvAmt);	
+		else // all other cases
+			va+=scaleU16S16(ampEnvVal,oscEnvAmt);
+				
 		va+=synth.oscANoteCV[v];
 		sh_setCV32Sat_FastPath(pcOsc1A+v,va);
 
@@ -747,11 +850,19 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
 		
 		sh_setCV32Sat_FastPath(pcFil1+v,vf);
 
-		// amplifier
+		// apply amplifier
 
-		adsr_update(&synth.ampEnvs[v]);
+		if (currentPreset.steppedParameters[spEnvRouting]==2) // the poly case, e.g. amplitude via filter envelope
+			va=scaleU16U16(envVal,ampLfoVal);
+		else if (currentPreset.steppedParameters[spEnvRouting]==3) // this is the gate case for amplitude
+		{
+			va=0;
+			if (adsr_getStage(&synth.ampEnvs[v])>=sAttack&&adsr_getStage(&synth.ampEnvs[v])<=sSustain)
+				va=scaleU16U16(INT16_MAX,ampLfoVal); // this behaves like a gate shape
+		}
+		else // standard
+			va=scaleU16U16(ampEnvVal,ampLfoVal);
 		
-		va=scaleU16U16(synth.ampEnvs[v].output,ampLfoVal);
 		if(va)
 			va+=VCA_DEADBAND;
 		
@@ -862,6 +973,14 @@ void synth_init(void)
 	}
 	
 	settings_save();
+	
+	// TODO: it would be prudent to check if the storage version found is different from the current one
+	// this would be the first start up after an upgrade
+	// in this case one could resave all presets with the version specific default values of new parameters
+	// that would add to stability. In any case, like it is at the moment, check the storage version in the 
+	// load of the preset is not realiable, because while the settings have been updated, the individual presets 
+	// may still be stored in the old storage version. Some (random) values read in from those may unstabilized or crash the OS 
+	// then again, it might also be natural to programm this into the upgrading procedure itself...
 
 	// initial input state
 	
@@ -978,6 +1097,14 @@ void synth_update(void)
 	computeTunedCVs(0,-1);
 }
 
+void synth_tuneSynth(void)
+{
+
+	tuner_tuneSynth();
+	computeTunedBenderCVs();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // P600 interrupts
 ////////////////////////////////////////////////////////////////////////////////
@@ -1075,11 +1202,24 @@ void synth_timerInterrupt(void)
 
 			if (clock_update())
 			{
+
+				// sync of the LFO using the clockBar counter
+
+				synth.clockBar=(synth.clockBar+1)%0x9; // make sure the counter stays within the counter range, here 0...9
+				if((seq_getMode(0)!=smOff || seq_getMode(1)!=smOff || arp_getMode()!=amOff) && currentPreset.steppedParameters[spLFOSync]!=0)
+				{
+					if ((synth.clockBar==8 && steppedParameters[spLFOSync]==7) || synth.clockBar==currentPreset.steppedParameters[spLFOSync]) 
+					{
+						synth.clockBar=0;
+						lfo_resetPhase(&synth.lfo);
+					}
+				}
+
 				// sequencer
 
 				if(seq_getMode(0)!=smOff || seq_getMode(1)!=smOff)
 					seq_update();
-			
+
 				// arpeggiator
 
 				if(arp_getMode()!=amOff)
@@ -1255,6 +1395,7 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 			
 			numSemitones = (modulation * (1.0f / UINT16_MAX)) + (((double)scaleDegree)-0.5f);
 			tuner_setNoteTuning(scaleDegree, numSemitones);
+			computeTunedBenderCVs();			
 			computeBenderCVs();
 			computeTunedCVs(1,-1);			
 		}		
@@ -1263,17 +1404,17 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi)
 {
-	if (ui.retuneLastNotePressedMode)
-	{
-		retuneLastNotePressed(bend, modulation, mask);
-		return;
-	}
+	//if (ui.retuneLastNotePressedMode)
+	//{
+	//	retuneLastNotePressed(bend, modulation, mask);
+	//	return;
+	//}
 
 	if(mask&1)
 	{
 		synth.benderAmount=bend;
 		computeBenderCVs();
-		computeTunedCVs(1,-1);
+		addWheelToTunedCVs();
 	}
 	
 	if(mask&2)
