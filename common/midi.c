@@ -108,7 +108,7 @@ typedef struct {
 	uint8_t semitone_fraction_two;
 } semitone_t;
 
-static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size)
+static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size) // imogen: this function is not used anf there is no clear use case for it - maybe it should be removed
 {
 	if (size!=402) {
 #ifdef DEBUG
@@ -179,7 +179,7 @@ static void sysexReceiveByte(uint8_t b)
 				break;
 			}
 		}
-		else if(tempBuffer[0]==SYSEX_ID_UNIVERSAL_NON_REALTIME)
+		else if(tempBuffer[0]==SYSEX_ID_UNIVERSAL_NON_REALTIME) // imogen: if SysEx tuning data usage is removed (see above), this part will be obsolete as well  
 		{
 			switch(tempBuffer[2])
 			{
