@@ -1208,7 +1208,7 @@ void synth_timerInterrupt(void)
 				synth.clockBar=(synth.clockBar+1)%0x9; // make sure the counter stays within the counter range, here 0...9
 				if((seq_getMode(0)!=smOff || seq_getMode(1)!=smOff || arp_getMode()!=amOff) && currentPreset.steppedParameters[spLFOSync]!=0)
 				{
-					if ((synth.clockBar==8 && steppedParameters[spLFOSync]==7) || synth.clockBar==currentPreset.steppedParameters[spLFOSync]) 
+					if ((synth.clockBar==8 && currentPreset.steppedParameters[spLFOSync]==7) || synth.clockBar==currentPreset.steppedParameters[spLFOSync]) 
 					{
 						synth.clockBar=0;
 						lfo_resetPhase(&synth.lfo);
@@ -1404,11 +1404,11 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi)
 {
-	//if (ui.retuneLastNotePressedMode)
-	//{
-	//	retuneLastNotePressed(bend, modulation, mask);
-	//	return;
-	//}
+	if (ui.retuneLastNotePressedMode)
+	{
+		retuneLastNotePressed(bend, modulation, mask);
+		return;
+	}
 
 	if(mask&1)
 	{
