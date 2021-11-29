@@ -371,7 +371,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
 
-		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
+		//currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 
 		if (storage.version<7)
 			return 1;
