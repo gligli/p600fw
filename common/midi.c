@@ -272,7 +272,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	}
 	else if(control==1) // modwheel
 	{
-		synth_wheelEvent(0,value<<9,2,0);
+		synth_wheelEvent(0,value<<9,2,0,0);
 	}
 	else if(control==64) // hold pedal
 	{
@@ -369,7 +369,7 @@ static void midi_pitchBendEvent(MidiDevice * device, uint8_t channel, uint8_t v1
 	value-=0x2000;
 	value<<=2;
 	
-	synth_wheelEvent(value,0,1,0);
+	synth_wheelEvent(value,0,1,0,0);
 }
 
 static void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)

@@ -38,6 +38,18 @@ inline uint16_t satAddU16S16(uint16_t a, int16_t b)
 	return r;
 }
 
+inline int32_t satAddS16S16(int16_t a, int16_t b)
+{
+	int32_t r;
+
+	r=a+b;
+	
+	//r=MAX(r,INT16_MIN);
+	//r=MIN(r,INT16_MAX);
+	
+	return r;
+}
+
 inline uint16_t lerp(uint16_t a,uint16_t b,uint8_t x)
 {
 	return a+(x*((b-a)>>8));

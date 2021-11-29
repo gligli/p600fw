@@ -85,7 +85,8 @@ struct synth_s
 	uint16_t filterMaxCV[SYNTH_VOICE_COUNT]; 
 
 	uint16_t modwheelAmount;
-	int16_t benderAmount;
+	int16_t benderAmountInternal;
+	int16_t benderAmountExternal;
 	int16_t benderCVs[pcFil6-pcOsc1A+1];
 	int16_t benderVolumeCV;
 
@@ -170,7 +171,7 @@ static void computeTunedBenderCVs(void) // this function must always be called a
 	p600CV_t cv;
 	for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 	{
-		synth.tunedBenderCVs[cv]=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
+		synth.tunedBenderCVs[cv]=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*4,0,cv)-tuner_computeCVFromNote(0,0,cv);
 	}	
 }
 
@@ -392,12 +393,12 @@ static inline int16_t getAdjustedBenderAmount(void)
 	return addDeadband(potmux_getValue(ppPitchWheel),&bendDeadband)-HALF_RANGE;
 }
 
-void synth_updateBender(void)
+void synth_updateBender(void) // this function must be called when the bender middle changes, also when bender range changes
 {
 	bendDeadband.middle=settings.benderMiddle;
 	precalcDeadband(&bendDeadband);
 	computeTunedBenderCVs();
-	synth_wheelEvent(getAdjustedBenderAmount(),0,1,0);
+	synth_wheelEvent(getAdjustedBenderAmount(),0,1,1,0);
 }
 
 void synth_resetClockBar(void) // this function can be called from other places to reset the LFO sync 
@@ -431,23 +432,20 @@ static void computeBenderCVs(void) // this function always needs to be called wh
 	case modVCO:
 		for(cv=pcOsc1A;cv<=pcOsc6B;++cv)
 		{
-			//bend=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*2,0,cv)-tuner_computeCVFromNote(0,0,cv);
-			//bend*=synth.benderAmount;
-			//computeTunedBenderCVs();
-			bend=synth.tunedBenderCVs[cv]*synth.benderAmount;
+			bend=synth.tunedBenderCVs[cv]*satAddS16S16(synth.benderAmountInternal, synth.benderAmountExternal);
 			synth.benderCVs[cv]=bend>>16; // /65536
 		}
 		break;
 	case modVCF:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
-		bend*=synth.benderAmount;
+		bend*=satAddS16S16(synth.benderAmountInternal,synth.benderAmountExternal);
 		bend*=FULL_RANGE/12; // Fixed point /12 ...
 		for(cv=pcFil1;cv<=pcFil6;++cv)
 			synth.benderCVs[cv]=bend>>16; // ... after >>16
 		break;
 	case modVCA:
 		bend=currentPreset.steppedParameters[spBenderSemitones];
-		bend*=synth.benderAmount;
+		bend*=satAddS16S16(synth.benderAmountInternal, synth.benderAmountExternal);
 		bend*=FULL_RANGE/12; // Fixed point /12...
 		synth.benderVolumeCV=bend>>16; // ... after >>16
 		break;
@@ -667,9 +665,10 @@ static void refreshLfoSettings(void)
 	}
 }
 
-static void refreshSevenSeg(void)
+static void refreshSevenSeg(void) // imogen: this function would be more suited for ui.c than synth.c
 {
-	if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+	//if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording) // sequence record mode
+	if(ui.digitInput==diSequencer) // sequence record mode and no parameter selection override, e.g. the input is sequencer
 	{
 		int8_t track=(seq_getMode(1)==smRecording)?1:0;
 		uint8_t count=seq_getStepCount(track);
@@ -677,7 +676,7 @@ static void refreshSevenSeg(void)
 		sevenSeg_setNumber(count);
 		led_set(plDot,count>=100||full,full);
 	}
-	else if(ui.digitInput<diLoadDecadeDigit)
+	else if(ui.digitInput<diLoadDecadeDigit) // effectively =diSynth, live mode show values of last touched control 
 	{
 		led_set(plDot,0,0);
 		
@@ -1043,9 +1042,9 @@ void synth_update(void)
 			// update CVs
 
 			if(ui.lastActivePot==ppModWheel)
-				synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1);
+				synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1,1);
 			else if(ui.lastActivePot==ppPitchWheel)
-				synth_wheelEvent(getAdjustedBenderAmount(),0,1,1);
+				synth_wheelEvent(getAdjustedBenderAmount(),0,1,1,1);
 			else if (ui.lastActivePot==ppAmpAtt || ui.lastActivePot==ppAmpDec ||
 					ui.lastActivePot==ppAmpSus || ui.lastActivePot==ppAmpRel ||
 					ui.lastActivePot==ppFilAtt || ui.lastActivePot==ppFilDec ||
@@ -1099,9 +1098,9 @@ void synth_update(void)
 
 void synth_tuneSynth(void)
 {
-
 	tuner_tuneSynth();
 	computeTunedBenderCVs();
+	synth_updateMasterVolume(); // V2.26 to fix tuner volume issue	
 }
 
 
@@ -1402,7 +1401,7 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 	}
 }
 
-void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi)
+void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi)
 {
 	if (ui.retuneLastNotePressedMode)
 	{
@@ -1412,7 +1411,14 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t ou
 
 	if(mask&1)
 	{
-		synth.benderAmount=bend;
+		if (isInternal)
+		{
+			synth.benderAmountInternal=bend/2;
+		}
+		else
+		{
+			synth.benderAmountExternal=bend/2;			
+		}	
 		computeBenderCVs();
 		addWheelToTunedCVs();
 	}
@@ -1424,9 +1430,9 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t ou
 	}
 	
 	// pass to MIDI out
+		if(outputToMidi) // internal event is sent to MIDI
+			midi_sendWheelEvent(bend,modulation,mask);
 	
-	if(outputToMidi)
-		midi_sendWheelEvent(bend,modulation,mask);
 }
 
 void synth_realtimeEvent(uint8_t midiEvent)

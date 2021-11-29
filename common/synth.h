@@ -103,7 +103,7 @@ void synth_buttonEvent(p600Button_t button, int pressed);
 void synth_keyEvent(uint8_t key, int pressed);
 void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
 void synth_uartEvent(uint8_t data);
-void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi);
+void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi);
 void synth_updateBender(void);
 void synth_updateMasterVolume(void); // to fix volume bug in 2.25
 void synth_realtimeEvent(uint8_t midiEvent);

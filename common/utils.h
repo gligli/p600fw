@@ -19,6 +19,7 @@
 uint16_t satAddU16U16(uint16_t a, uint16_t b);
 uint16_t satAddU16S32(uint16_t a, int32_t b);
 uint16_t satAddU16S16(uint16_t a, int16_t b);
+int32_t satAddS16S16(int16_t a, int16_t b);
 
 uint16_t scaleU16U16(uint16_t a, uint16_t b);
 int16_t scaleU16S16(uint16_t a, int16_t b);
