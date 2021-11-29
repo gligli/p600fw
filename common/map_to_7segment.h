@@ -26,10 +26,10 @@
  * See: http://en.wikipedia.org/wiki/Seven_segment_display
  *
  * Notation:	+-a-+
- *		f   b
- *		+-g-+
- *		e   c
- *		+-d-+
+ *		        f   b
+ *		        +-g-+
+ *		        e   c
+ *		        +-d-+
  *
  * Usage:
  *

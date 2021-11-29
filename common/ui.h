@@ -3,7 +3,13 @@
 
 #include "synth.h"
 
-enum uiDigitInput_e {diSynth,diLoadDecadeDigit,diStoreDecadeDigit,diLoadUnitDigit,diStoreUnitDigit,diSequencer};
+enum uiDigitInput_e {
+	diSynth, // live mode
+	diLoadDecadeDigit, // waiting for the first number for preset select 
+	diStoreDecadeDigit, // waiting for the first number for preset store 
+	diLoadUnitDigit, // waiting for the second number for preset select
+	diStoreUnitDigit, // waiting for the second number for preset store
+	diSequencer}; // sequencer record mode
 enum uiParamType_e {ptCont,ptStep,ptCust};
 
 struct uiParam_s
