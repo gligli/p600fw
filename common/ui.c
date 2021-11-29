@@ -380,7 +380,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb5||new==pb1) 
+			{if (new==pb5||new==pb1) // 1 and 5 are currently the only slots with a 3rd page parameter
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -545,8 +545,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed && button==pbArpUD)
 	{
-		//if (!arp_getHold()||arp_getMode()==amUpDown) // cannot handle a switch of arp type in latch/hold mode
-			arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
+		arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
 	}
 	else if(pressed && button==pbArpAssign)
 	{
@@ -596,17 +595,24 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed && button==pbToTape && settings.presetMode)
 	{
-		if(ui.digitInput!=diSynth)
+		if(ui.digitInput!=diSynth) // preset select or store mode, sequencer mode
 		{
-			ui.digitInput=diSynth;
+			ui.digitInput=diSynth; // parameter select mode
 		}
-		else
+		else // parameter select mode
 		{
-			ui.digitInput=diLoadDecadeDigit;
+			if (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+			{
+				ui.digitInput=diSequencer;			
+			}
+			else
+			{
+				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
+			}
 		}
 	}
 
-	// shidted state (keyboard transposition, ...)
+	// shifted state (keyboard transposition, ...)
 	
 	if(button==pbFromTape)
 	{
@@ -649,7 +655,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		else if(button==pbTune)
 		{
 			synth_tuneSynth();
-			synth_updateMasterVolume(); // V2.26 to fix tuner volume issue	
 		}
 		else if(button==pbPreset)
 		{
@@ -681,23 +686,24 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(ui.digitInput==diSynth)
 		{
+			// parameter selection and display shows last touched control value
 			handleSynthPage(button);
 		}
 		else if(ui.digitInput>=diLoadDecadeDigit && button>=pb0 && button<=pb9)
 		{
-			// preset number input 
+			// preset number input for load an store
 			switch(ui.digitInput)
 			{
-			case diLoadDecadeDigit:
+			case diLoadDecadeDigit: // this is the first press of the preset select
 				ui.presetAwaitingNumber=button-pb0;
 				ui.digitInput=diLoadUnitDigit;
 				break;
-			case diStoreDecadeDigit:
+			case diStoreDecadeDigit: // this is the first press of the prese store
 				ui.presetAwaitingNumber=button-pb0;
 				ui.digitInput=diStoreUnitDigit;
 				break;
-			case diLoadUnitDigit:
-			case diStoreUnitDigit:
+			case diLoadUnitDigit: // this is the first press of the preset select
+			case diStoreUnitDigit: // this is the second press of the preset store
 				ui.presetAwaitingNumber=ui.presetAwaitingNumber*10+(button-pb0);
 
 				// store?
