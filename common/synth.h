@@ -49,7 +49,16 @@
 
 typedef enum
 {
-	plSeq1=0,plSeq2=1,plArpUD=2,plArpAssign=3,plPreset=4,plRecord=5,plToTape=6,plFromTape=7,plTune=8,plDot=9
+	plSeq1=0,
+	plSeq2=1,
+	plArpUD=2,
+	plArpAssign=3,
+	plPreset=4,
+	plRecord=5,
+	plToTape=6,
+	plFromTape=7,
+	plTune=8,
+	plDot=9
 } p600LED_t;
 
 typedef enum

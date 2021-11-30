@@ -59,24 +59,30 @@ void LOWERCODESIZE sevenSeg_setNumber(int32_t n)
 int led_getOn(p600LED_t led)
 {
 	uint16_t mask=1<<led;
-	return !!(display.ledOn&mask);
+	return !!(display.ledOn&mask); // return the status of the on/off bit at position LED
 }
 
 int led_getBlinking(p600LED_t led)
 {
 	uint16_t mask=1<<led;
-	return !!(display.ledBlinking&mask);
+	return !!(display.ledBlinking&mask); // return the status of the blinking bit at position LED
 }
 
 void led_set(p600LED_t led, int8_t on, int8_t blinking)
 {
-	uint16_t mask=1<<led;
+	uint16_t mask=1<<led; // set a single bit at the position of the LED
+
+	if (on)
+	{
+		display.ledOn|=mask; // switch on the LED
+		if (blinking) display.ledBlinking|=mask; // set it blinking if flag is set
+	}
+	else
+	{
+		display.ledOn&=~mask; // switch off the LED
+		display.ledBlinking&=~mask; // deactivate blinking of the LED
+	}
 	
-	display.ledOn&=~mask;
-	display.ledBlinking&=~mask;
-	
-	if (on) display.ledOn|=mask;
-	if (on && blinking) display.ledBlinking|=mask;
 }
 
 void display_clear()
@@ -100,7 +106,7 @@ void display_update(int8_t fullUpdate)
 	{
 		uint8_t localSevenSegs[2];
 		
-		// blinker
+		// blinker, e.g. set the current state (on or off) according to the counter
 
 		display.blinkCounter++;
 
@@ -122,6 +128,7 @@ void display_update(int8_t fullUpdate)
 			p=display.scrollPos;
 			p2=(display.scrollPos+1)%l;
 
+			// this sets the ASCII characters of position and next position from the text to be displayed
 			localSevenSegs[0]=map_to_seg7(&sevenSeg_map,display.scrollText[p]);
 			localSevenSegs[1]=map_to_seg7(&sevenSeg_map,display.scrollText[p2]);
 
@@ -136,29 +143,39 @@ void display_update(int8_t fullUpdate)
 		}
 		else
 		{
+			// if nothing to scroll, then continue to display current value or content
 			localSevenSegs[0]=display.sevenSegs[0];
 			localSevenSegs[1]=display.sevenSegs[1];
 		}
 
-		// update one third of display at a time
+		// this is the way the P600 hardware (the LED matrix) is built:
+		// S&H in three waves,  8 bits in each wave are sent to
+		// 1) 8 button LEDs (all except tune)
+		// 2) the 7 segments of the left display digit + the dot
+		// 3) the 7 segments of the right display digit + the tune LED
+		// other parts of the display (other dots) are not connected
+		// 
+		// see also service manual board 1, LED matrix
+		
 
 		uint8_t b=0;
 
 		switch (display.activeCol)
 		{
-		case 0:
-			b=display.ledOn;
-			if (display.blinkState) b^=display.ledBlinking;
+		case 0:	// all the LEDs as set in the bits of ledON (according to enum p600led_t) 
+				// note: this covers all "buttons" except Tune and the display dot (these are the 9th and 10th bit in .ledOn)  
+			b=display.ledOn; // set the bits 
+			if (display.blinkState) b^=display.ledBlinking; // deactivates the dot depending on blink state
 			break;
-		case 1:
-			b=localSevenSegs[0]&0x7f;
-			if (led_getOn(plDot)) b|=0x80;
-			if (led_getBlinking(plDot) && display.blinkState) b^=0x80;
+		case 1: // left digit + the dot
+			b=localSevenSegs[0]&0x7f; // 7f is the mask that has the 7 elements (and only those) activated 
+			if (led_getOn(plDot)) b|=0x80; // activates the 8th bit (the display dot)
+			if (led_getBlinking(plDot) && display.blinkState) b^=0x80; // deactivates the dot depending on blink state
 			break;
-		case 2:
-			b=localSevenSegs[1]&0x7f;
-			if (led_getOn(plTune)) b|=0x80;
-			if (led_getBlinking(plTune) && display.blinkState) b^=0x80;
+		case 2: // right digit + tune button LED
+			b=localSevenSegs[1]&0x7f; // 7f is the mask that has the 7 elements (and only those) activated 
+			if (led_getOn(plTune)) b|=0x80; // activates the 8th bit (the tune button LED)
+			if (led_getBlinking(plTune) && display.blinkState) b^=0x80; // deactivates the tune LED depending on blink state
 			break;
 		}
 		
@@ -167,11 +184,11 @@ void display_update(int8_t fullUpdate)
 	
 	BLOCK_INT
 	{
-		io_write(0x09,0x00);
+		io_write(0x09,0x00); // switch all bits off at the address 9
 		CYCLE_WAIT(1);
-		io_write(0x08,0x10<<display.activeCol);
+		io_write(0x08,0x10<<display.activeCol); // for LEDs this one bit at position 5, for left digit + dot it is 6, for right digit + tune LED it is 7
 		CYCLE_WAIT(1);
-		io_write(0x09,display.activeRows[display.activeCol]);
+		io_write(0x09,display.activeRows[display.activeCol]); // push the 8 bits into the adress
 	}
 
 	display.activeCol=(display.activeCol+1)%3;
