@@ -40,6 +40,22 @@ static int8_t isEmpty(void)
 	return 1;
 }
 
+static int8_t hasMoreThanOneNote(void)
+{
+	int16_t i;
+	uint8_t count;
+	count = 0;
+	
+	for(i=0;i<ARP_NOTE_MEMORY;++i)
+		if(arp.notes[i]!=ASSIGNER_NO_NOTE)
+		{
+			if (count==1) return 1;
+			count++;
+		}
+	return 0;
+}
+
+
 static void finishPreviousNote(void)
 {
 	if(arp.previousNote!=ASSIGNER_NO_NOTE)
@@ -168,7 +184,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 				for(i=0;i<ARP_NOTE_MEMORY;++i)
 					if(arp.notes[i]==note)
 					{
-						arp.notes[i]|=ARP_NOTE_HELD_FLAG; // assumes that the note can only be in one place
+						arp.notes[i]|=ARP_NOTE_HELD_FLAG;
 						break;
 					}
 			}
@@ -235,14 +251,27 @@ void arp_update(void)
 		break;
 		
 	case amRandom:
-		do
-			arp.noteIndex=random()%ARP_NOTE_MEMORY;
-		while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
+		// note that it would be better to chose randomnly among the notes
+		// not played last - this loop can potentially go on forever... 
+		if (hasMoreThanOneNote()) // more than one note, so random() works
+		{
+			do
+				arp.noteIndex=random()%ARP_NOTE_MEMORY;
+			while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE  && arp.noteIndex!=arp.previousIndex);
+		}
+		else // only one note
+		{
+			do
+				arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY;
+			while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
+		}
+				
 		break;
 	default:
 		return;
 	}
-	
+
+	arp.previousIndex=arp.noteIndex;
 	n=arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG;
 	
 	// send note to assigner, velocity at half (MIDI value 64)
@@ -265,4 +294,5 @@ void arp_init(void)
 	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
 	arp.noteIndex=-1;
 	arp.previousNote=ASSIGNER_NO_NOTE;
+	
 }
