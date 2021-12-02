@@ -5,7 +5,7 @@
 #include "potmux.h"
 #include "dac.h"
 
-#define PRIORITY_POT_COUNT 4
+#define PRIORITY_POT_COUNT 5
 #define CHANGE_DETECT_THRESHOLD 4
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
@@ -18,7 +18,7 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 
 static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
 {
-	ppCutoff,ppPitchWheel,ppFreqA,ppFreqB
+	ppCutoff,ppPitchWheel,ppFreqA,ppFreqB,ppModWheel
 };
 
 
