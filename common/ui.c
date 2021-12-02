@@ -135,10 +135,8 @@ static int8_t changeMiscSetting(p600Button_t button)
 	switch(button)
 	{
 	case pb1: // midi receive channel
-		 
 		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
 		settings_save();
-		
 		return 0;
 	case pb2: // midi send channel
 		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
@@ -147,9 +145,7 @@ static int8_t changeMiscSetting(p600Button_t button)
 	case pb3: // pitch wheel calibration
 		settings.benderMiddle=potmux_getValue(ppPitchWheel);
 		settings_save();
-
 		synth_updateBender(); // immediate update
-
 		sevenSeg_scrollText("bender calibrated",1);
 		return 1;
 	case pb4: // voice selection
@@ -166,6 +162,12 @@ static int8_t changeMiscSetting(p600Button_t button)
 		refreshPresetMode();
 		refreshFullState();
 		return 1;
+	case pb7: // MIDI mode, e.g. local on/off
+		settings.midiMode=((settings.midiMode+1)%2);
+		settings_save();
+		if (settings.midiMode==1)
+			synth_resetForLocalOffMode();
+		return 0;
 	case pb8: // sync mode
 		settings.syncMode=(settings.syncMode+1)%3;
 		settings_save();
@@ -210,7 +212,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	case pb1: // midi receive channel
 		strcpy(s,chs[settings.midiReceiveChannel+1]);
 		strcat(s," recv");
-		
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb2: // midi send channel
@@ -234,6 +235,16 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		break;
 	case pb6: // preset dump
 		sevenSeg_scrollText("again dumps presets",1);
+		break;
+	case pb7: // local on/off
+		if (settings.midiMode==0)
+		{
+			sevenSeg_scrollText("Local on",1);
+		}
+		else
+		{
+			sevenSeg_scrollText("Local off",1);
+		}
 		break;
 	case pb8: // sync mode
 		switch(settings.syncMode)
@@ -276,16 +287,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		break;
 	case pb0: // reset to a basic patch
 		sevenSeg_scrollText("again sets basic patch",1);
-		break;
-	case pbTune:
-		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;	
-		
-#ifdef DEBUG
-		print("retuneLastNotePressedMode=");
-		phex(ui.retuneLastNotePressedMode);
-		print("\n");
-#endif
-		
 		break;
 	default:
 		break;
@@ -629,6 +630,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			{
 				ui.doubleClickTimer=0; // reset timer
 				ui.isDoubleClicked=1;
+				assigner_allKeysOff(); // make sure that voice are finished, as key events will be used for transposition
 			}
 			else
 				ui.doubleClickTimer = 63; // 1 second
@@ -643,18 +645,34 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
+		if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune))
+		//if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
 		{
 			// Disable double click mode which might confuse
-			// user if he presses FROM TAPE within the double
+			// user if she/he presses FROM TAPE within the double
 			// click interval while fiddling with the misc params.
 			ui.doubleClickTimer=0; // reset timer
-			ui.isDoubleClicked=0;
-			handleMiscAction(button);
+			// ui.isDoubleClicked=0; // maybe not?? Let's try without
+
+			if (button==pbTune)
+			{
+				ui.retuneLastNotePressedMode=!ui.retuneLastNotePressedMode;
+			}
+			else
+			{
+				handleMiscAction(button);
+			}
 		}
 		else if(button==pbTune)
 		{
-			synth_tuneSynth();
+			if (!ui.retuneLastNotePressedMode)
+			{
+				synth_tuneSynth();
+			}
+			else
+			{
+				ui.retuneLastNotePressedMode=0;
+			}
 		}
 		else if(button==pbPreset)
 		{
