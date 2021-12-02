@@ -1,0 +1,30 @@
+The upgraded Prophet 600 can operated in the following voice modes
+
+\begin{itemize}
+  \setlength\itemsep{0cm}
+  \item \textit{polyphonic}: This mode is set by setting the \textbf{Unison Switch} on the panel to \textit{off}. In this mode any new note is assigned to one of the 6 voices. 
+  \item \textit{unison}: This mode is activated by switching the panel \textbf{Unison} switch from \textit{off} to \textit{on} while not holding any keyboard key pressed. In this mode all 6 voices play the same note. Note that using the additional patch parameter \textbf{(8) Detune} to detune the single oscialltors is used to create thickened sounds in unison mode.
+  \item \textit{chord}: This mode is activated by switching the panel \textbf{Unison} switch from \textit{off} to \textit{on} while holding down one or more keys (the "chord"). In this mode the synthesizer transposes that chord over the whole keyboard. Note that independently of how many notes the chord contains (and therefore how many voices would be left in principle), only one chord can be played at a time, similar to unison mode.
+\end{itemize} 
+
+The foot switch input can be used to latch a new pattern of notes. The choice of voice mode is a patch parameter e.g. is stored with the patch.
+
+In polyphonic mode the assignment of voices to new played notes can be customized using the additional patch parameter \textbf{(77) Assigner Priority}.New notes will be assigned to voices according to the following priority rules:
+
+\begin{itemize}
+  \setlength\itemsep{0cm}
+  \item \textit{last}: New notes always play and if 6 voices already playing then the oldest played notes is "stolen".
+  \item \textit{low}: A new played note only plays if it is lower than all 6 voices already playing. In \textit{unison} or \textit{chord} mode, legato is active. This is the preferred setting when bass accompaniment is important and the sudden stop of bass notes would create unwanted disruptions. 
+  \item \textit{high}: A new played note only plays if it is higher than the 6 voices already playing. In \textit{unison} or \textit{chord} mode, legato is active. This is the preferred setting for a synthesizer lead situation where the sudden stop of a high note would create unwanted disruptions. 
+\end{itemize}
+
+The assigner priority of voice mode is a patch parameter e.g. is stored with the patch.
+
+\textbf{Ideas for solo voices}
+
+The assigner priority can be used effectively in combination with the voice modes to customize solo voices. For example combine the priority \textit{high} (or \textit{low}) with ...
+\begin{itemize}
+  \item ...\textit{unison} mode for a massive legato solo voice
+  \item ...\textit{chord} mode with a one one "chord" (hold down C3) to achieve a more delicate legato mono solo voice
+  \item ...\textit{chord} mode with octaves (hold down C3 plus C4 plus more if desired) for a more assertive mono solo voice   
+\end{itemize}

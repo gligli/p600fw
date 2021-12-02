@@ -1,0 +1,28 @@
+The live sequencer of the original Prophet 600 has been replaced by a step sequencer which supports polyphony. Two sequences can be stored per patch and can play simultaneously. Sequence 1 is started by pressing the key \textbf{SEQ 1}, sequence 2 is started by pushing the button \textbf{SEQ 2}. The LED of the running sequencer is on. Live sound control via panel controls, menu parameters and MIDI CC as well as playing via keyboard and/or MIDI is fully supported while the sequencer is running. To stop either sequence, press the respective sequencer button again. The LED of the stopped sequencer is off. 
+
+It is possible to sync the LFO to the arpeggiator using the additional patch parameter \textbf{(111) LFO Sync}, see section \ref{lfo}.
+
+By default the sequences are empty, so even with the started sequencer no sound will play. If either sequence is activated and no sound plays, then it is worth checking the following potential reasons: Has a note been added? Is the sync set to \textit{internal} and is the speed greater than zero? If the sync is not \textit{internal} does the instrument receive a clock, e.g. via MIDI on the correct channel or via tape in?
+
+\textbf{Tempo}
+
+The tempo of the sequencer is set by the \textbf{Speed} dial. To activate the tempo function the \textbf{(0) Seq/Arp Speed} parameter must be selected. Note that while in sequencer record mode (see below) the button \textbf{To Tape} has to be activated (its LED is lit solid) to select additional patch parameters via the number pad and also to switch on the speed dial. The  sequencer can be synced to external sources. The miscellaneous setting \textbf{Clock Sync} (setting 8) provides the choices \textit{internal}, \textit{MIDI} or \textit{Tape In} (see also section \ref{sync}).
+
+\textbf{Creating / editing a sequence}
+
+The following is an example work flow for adding notes, rests and ties to a sequence and covers all editing functions needed. 
+
+\begin{enumerate}
+  \item Press the \textbf{Record} button. Its LED starts flashing.
+  \item Press the sequencer button of the sequence you would like to edit (SEQ 1 or SEQ 2). The LED of the respective sequencer button starts flashing, and the Record button light becomes solid. The sequence is in record mode an awaits notes, rest to be added to the sequence.Note: The sequencer is running in this mode, so as soon as the first note is entered this note is repeatedly replayed at the current sequencer/arpeggiator tempo. If notes have previously been added to the sequence, this sequence is played and any new notes are added. 
+  \item Adjuts he tempo as described above. Note that you can set the Speed dial to control the tempot before starting the record mode. The parameter selection is preserved. Be careful when selecting the parameter in record mode. It requires pushing and holding  the \textbf{To Tape} button. Otherwise pushing the "0" button has a different, sequencer specific function: it resets the sequence.  
+  \item Play the notes to be added to the sequence. The display screen shows which step is currently being added, e.g. it is the current length of the recorded sequence including rests and ties.
+  \item Pressing "0" on the keypad resets the sequence and deletes any notes. Note: there is no confirmation step. 
+  \item In sequencer record mode the “2” key on the number pad is used for both rests and ties. It adds a rest when no key is pressed, and a tie when a key is pressed.
+  \item Added notes (or chords), ties and rests can be successively deleted/undone using the "1" key on the number pad. 
+  \item In order to complete the sequence editing and to leave the record mode, press the respective sequencer button (\textbf{SEQ 1} or \textbf{SEQ 2}). The sequencer button LED becomes solid, and the \textbf{RECORD} button LED does off. The sequence is saved. 
+\end{enumerate}
+
+\textbf{Transposing a  sequence}
+
+To transpose a sequence, hold the \textbf{From Tape} button and then press the key on the keyboard to which the sequence should be transposed. The C3 key is zero or standard tuning, and will not transpose. Playing C sharp 3 will transpose the sequence up a half step, playing D3 will transpose the sequence up a whole step, etc.

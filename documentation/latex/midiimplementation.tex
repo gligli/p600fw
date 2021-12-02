@@ -1,0 +1,11 @@
+Two types of MIDI controllers are implemented:
+
+\begin{itemize}
+  \setlength\itemsep{0cm}
+  \item Continuous parameters: 0-16383 using 2 CCs, or 0-127 using only the coarse one
+  \item Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore 2 has choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
+\end{itemize}
+
+The Prophet 600 receives Continuous Controllers (CC) in Preset mode only. The MIDI implementation chart can be found ins section \ref{midi}.
+
+(this nees to be done)
