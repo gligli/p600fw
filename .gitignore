@@ -3,6 +3,13 @@
 *.d
 *.bak
 *.ppu
+*.anjuta
+*.db
+*.toc
+*.aux
+*~
+*.ods
+*.log
 
 firmware/p600firmware.bin
 
@@ -15,3 +22,4 @@ firmware/p600firmware.lss
 firmware/p600firmware.map
 
 firmware/p600firmware.syx
+/common/*~
