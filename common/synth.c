@@ -667,14 +667,14 @@ static void refreshLfoSettings(void)
 
 static void refreshSevenSeg(void) // imogen: this function would be more suited for ui.c than synth.c
 {
-	//if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording) // sequence record mode
+
 	if(ui.digitInput==diSequencer) // sequence record mode and no parameter selection override, e.g. the input is sequencer
 	{
 		int8_t track=(seq_getMode(1)==smRecording)?1:0;
 		uint8_t count=seq_getStepCount(track);
 		int8_t full=seq_full(track);
 		sevenSeg_setNumber(count);
-		led_set(plDot,count>=100||full,full);
+		led_set(plDot,count>=100||full,full); // set blinking when full!
 	}
 	else if(ui.digitInput<diLoadDecadeDigit) // effectively =diSynth, live mode show values of last touched control 
 	{
@@ -895,7 +895,10 @@ static void handleBitInputs(void)
 		}
 		else
 		{
-			assigner_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
+			if (settings.midiMode==0) // this comes a foot pedal, so local, only apply if not in local off mode
+			{
+				assigner_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
+			}
 			midi_sendSustainEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
 		}
 	}
@@ -1311,7 +1314,8 @@ void synth_keyEvent(uint8_t key, int pressed)
 			}
 
 			// set velocity to half (corresponding to MIDI value 64)
-			assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE,1);
+			if (settings.midiMode==0) // only play if not in local off mode
+				assigner_assignNote(key+synth.transpose,pressed,HALF_RANGE,1);
 
 			// pass to MIDI out
 			midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
@@ -1321,6 +1325,14 @@ void synth_keyEvent(uint8_t key, int pressed)
 			arp_assignNote(key,pressed);
 		}
 	}
+}
+
+void synth_resetForLocalOffMode(void)
+{
+	assigner_allVoicesDone();
+	synth_wheelEvent(0, 0, 1, 0, 0);
+	synth_wheelEvent(0, 0, 1, 1, 0);
+	synth_wheelEvent(0, 0, 2, 0, 0);
 }
 
 void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato)
@@ -1403,19 +1415,20 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi)
 {
-	if (ui.retuneLastNotePressedMode)
-	{
-		retuneLastNotePressed(bend, modulation, mask);
-		return;
-	}
-
-	if(mask&1)
+	if (ui.retuneLastNotePressedMode) // all MIDI to bend and mod wheel are disabled in this mode
 	{
 		if (isInternal)
+			retuneLastNotePressed(bend, modulation, mask);
+		return;
+	}
+	
+	if(mask&1)
+	{
+		if (isInternal && settings.midiMode==0) // only apply if not in local on mode)
 		{
 			synth.benderAmountInternal=bend/2;
 		}
-		else
+		else if (!isInternal)
 		{
 			synth.benderAmountExternal=bend/2;			
 		}	
@@ -1425,12 +1438,15 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
 	
 	if(mask&2)
 	{
-		synth.modwheelAmount=modulation;
-		refreshLfoSettings();
+		if ((isInternal && settings.midiMode==0) || !isInternal)
+		{
+			synth.modwheelAmount=modulation;
+			refreshLfoSettings();
+		}
 	}
 	
 	// pass to MIDI out
-		if(outputToMidi) // internal event is sent to MIDI
+		if(outputToMidi) //  event is sent to MIDI
 			midi_sendWheelEvent(bend,modulation,mask);
 	
 }

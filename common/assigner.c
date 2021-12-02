@@ -178,7 +178,7 @@ static inline int8_t getDispensableVoice(uint8_t note)
 	
 void assigner_voiceDone(int8_t voice)
 {
-	if (voice<0||voice>SYNTH_VOICE_COUNT)
+	if (voice<0||voice>=SYNTH_VOICE_COUNT)
 		return;
 
 	assigner.allocation[voice].assigned=0;
@@ -187,7 +187,8 @@ void assigner_voiceDone(int8_t voice)
 	assigner.allocation[voice].rootNote=ASSIGNER_NO_NOTE;
 }
 
-static void voicesDone(int8_t releaseNotes)
+
+void voicesDone(int8_t releaseNotes)
 {
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
@@ -202,6 +203,13 @@ static void voicesDone(int8_t releaseNotes)
 		// to release after this call has been performed.
 		memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
 }
+
+
+void assigner_allVoicesDone(void)
+{
+	voicesDone(1);
+}
+
 
 // This is different from voicesDone() in that it does not silence
 // the voice immediately but lets it go through its release phase as usual.

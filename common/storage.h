@@ -81,6 +81,7 @@ struct settings_s
 	int8_t vcfLimit;
 	
 	uint16_t seqArpClock;
+	uint8_t midiMode;
 
 };
 

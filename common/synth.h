@@ -118,6 +118,8 @@ void synth_updateMasterVolume(void); // to fix volume bug in 2.25
 void synth_realtimeEvent(uint8_t midiEvent);
 void synth_resetClockBar(void);
 void synth_tuneSynth(void);
+void synth_resetForLocalOffMode(void);
+
 
 void synth_init(void);
 void synth_update(void);

@@ -208,6 +208,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.syncMode=smInternal; // default ist internal clock
 		settings.spread=0; // default is: no spread
 		settings.vcfLimit=0; // default is: no limit on the VCF
+		settings.midiMode=0; // normal mode
         
 		if (storage.version<1)
 			return 1;
@@ -267,11 +268,15 @@ LOWERCODESIZE int8_t settings_load(void)
 		
 		settings.seqArpClock=storageRead16();
 
-		if (storage.version<7)
+		if (storage.version<8)
 			return 1;
 
-		// ...
-	
+		// v8
+
+		settings.midiMode=storageRead8();
+		if (settings.midiMode>1) settings.midiMode=0; // unvalid, revert to standard 
+		settings.midiMode=0; // for time being this setting should be reset upon startup
+
 	}
 	
 	return 1;
@@ -318,8 +323,10 @@ LOWERCODESIZE void settings_save(void)
 		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
 		storageWrite16(settings.seqArpClock);
 
-		// ...
+		// v8
 
+		storageWrite8(settings.midiMode);
+		
 		// this must stay last
 		storageFinishStore(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
 	}
