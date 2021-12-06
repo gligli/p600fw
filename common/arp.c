@@ -11,11 +11,11 @@
 #include "clock.h"
 #include "seq.h"
 
-#define ARP_NOTE_MEMORY 128 // must stay>=128 for up/down mode
+#define ARP_NOTE_MEMORY 128 // this is the current maximum. For up/down the number should not be less than 61
 
-#define ARP_NOTE_HELD_FLAG 0x80
-
-#define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
+// this flag is used to indicate which of the current arp notes are latched so that these can be
+// removed when latch mode is deactivated while the currently held keys continue to be played:
+#define ARP_NOTE_HELD_FLAG 0x80 
 
 static struct
 {
@@ -26,6 +26,7 @@ static struct
 	int8_t transpose;
 	int8_t previousTranspose;
 	int8_t numberOfNotes; // only used for the random mode to reduce sampling effort
+	int8_t upDownDirection; // +1 for up and -1 for down
 
 	int8_t hold;
 	arpMode_t mode;
@@ -48,7 +49,7 @@ static void finishPreviousNote(void)
 {
 	if(arp.previousNote!=ASSIGNER_NO_NOTE)
 	{
-		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG;
+		uint8_t n=arp.previousNote&~ARP_NOTE_HELD_FLAG; // remove the HELD bit
 
 		// is it ok to send this event though it should be off in local off mode? What's the side effect?
 		assigner_assignNote(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0,0);
@@ -66,19 +67,41 @@ static void killAllNotes(void)
 	arp.previousNote=ASSIGNER_NO_NOTE;
 	arp.previousIndex=-1;
 	arp.numberOfNotes=0;
+	arp.upDownDirection=1;
 	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
 	assigner_allKeysOff();
 }
 
 static void killHeldNotes(void)
 {
-	int16_t i;
+
+	// to remove all the held notes we need to reorder...
+	int16_t i, j;
+	j=0;
 	for(i=0;i<ARP_NOTE_MEMORY;++i)
-		if(arp.notes[i]&ARP_NOTE_HELD_FLAG)
-			arp.notes[i]=ASSIGNER_NO_NOTE;
+	{
+		if(!(arp.notes[i]&ARP_NOTE_HELD_FLAG))
+		{
+			if (j!=i) // carry this note over
+			{
+				arp.notes[j]=arp.notes[i]; 
+			}
+			j++;
+		}
+	}
+
+	// reset
+	arp.noteIndex=-1;
+	arp.upDownDirection=1;
+	arp.numberOfNotes=j;
+	
+	// now overwrite the remaining slots...
+	for(i=j;i<ARP_NOTE_MEMORY;++i)
+	{
+		arp.notes[i]=ASSIGNER_NO_NOTE;
+	}
 	
 	// gate off for last note
-
 	if(isEmpty())
 	{
 		finishPreviousNote();
@@ -91,10 +114,16 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 	
 	if(mode!=arp.mode)
 	{
-		killAllNotes();
-		
-		if (mode!=amOff)
-			arp_resetCounter(settings.syncMode==smInternal);
+		if ((mode==amRandom && arp.mode==amAssign) || (arp.mode==amRandom && mode==amAssign))
+		{
+			// any action here?
+		}
+		else
+		{
+			killAllNotes();
+			if (mode!=amOff)
+				arp_resetCounter(settings.syncMode==smInternal);
+		}
 	}
 	
 	if(!hold && arp.hold)
@@ -112,6 +141,7 @@ FORCEINLINE void arp_setTranspose(int8_t transpose)
 FORCEINLINE void arp_resetCounter(int8_t beatReset)
 {
 	arp.noteIndex=-1; // reinit
+	arp.upDownDirection=1;
 	if (beatReset&&seq_getMode(0)!=smPlaying&&seq_getMode(1)!=smPlaying)
 	{
 		clock_reset(); // start immediately
@@ -131,7 +161,7 @@ FORCEINLINE int8_t arp_getHold(void)
 
 void arp_assignNote(uint8_t note, int8_t on)
 {
-	int16_t i;
+	int16_t i, findIndex;
 	
 	if(arp.mode==amOff)
 		return;
@@ -146,98 +176,110 @@ void arp_assignNote(uint8_t note, int8_t on)
 		if(isEmpty())
 			arp_resetCounter(settings.syncMode==smInternal);
 
-		if(arp.mode==amAssign) // assign note			
+		if(arp.mode!=amUpDown) // assign or random mode			
 		{
-			for(i=0;i<ARP_NOTE_MEMORY;++i)
-				if(arp.notes[i]==ASSIGNER_NO_NOTE) // plase the note on the first "empty" place
-				{
-					arp.notes[i]=note; 
-					break;
-				}
+			if(arp.numberOfNotes < ARP_NOTE_MEMORY) // only if note can be added
+			{
+				// we know that last added note is at index numberOfNotes-1
+				arp.notes[arp.numberOfNotes]=note;
+				arp.numberOfNotes++;
+			}		
 		}
-		else if(arp.mode==amRandom && arp.numberOfNotes < 128) // random mode and only if note can be added
-		{
-			// we know that in random mode the last added note is at index numberOfNotes-1
-			arp.notes[arp.numberOfNotes]=note;
-			arp.numberOfNotes++;
-		}		
 		else // up/down mode
 		{
-			// up-down construction
-			arp.notes[note]=note; // place the note on the place corresponding to the index of the note (up part) 
-			arp.notes[ARP_LAST_NOTE-note]=note; // place the note also on the notes place from the top (down part)
+			if (arp.numberOfNotes==0)
+			{
+				arp.notes[0]=note;
+				arp.numberOfNotes++;
+			}
+			else
+			{
+				// find the latest note that is grater or equal, start from top
+				findIndex = arp.numberOfNotes-1;
+				while (findIndex>=0)
+				{
+					if ((arp.notes[findIndex]&~ARP_NOTE_HELD_FLAG)<note)
+					{
+						break; // we found the right spot
+					}
+					else if ((arp.notes[findIndex]&~ARP_NOTE_HELD_FLAG)==note)
+					{
+						return; // we already have that note in the pattern
+					}
+					findIndex--;
+				}
+				// now findIndex is the index one below where the new note fits in
+				// now shift higher others notes up, start from top ...
+				for (i=arp.numberOfNotes-1;i>findIndex;--i)
+				{
+					arp.notes[i+1]=arp.notes[i];
+				}
+				// ... and put the new note in the "gap"
+				arp.notes[findIndex+1]=note;
+				arp.numberOfNotes++;
+			}
 		}
 	}
 	else
 	{
+
+		// note: the conditions should in fact be equivalent...
+		if(isEmpty() || arp.numberOfNotes==0) // this can happen if you enter into arp mode with notes held and then released, in this case do nothing
+			return;
+
+		// from this point on arp.numberOfNotes can only be >= 1
+		
 		if(arp.hold)
 		{
-			// mark deassigned notes as held
-
-			if(arp.mode==amAssign)
+			// mark deassigned note as held
+			// for assign/random this will be the latest matching note
+			// for up/down there can only be one anyway
+			// to use just one routine for all cases, start from top...
+			for(i=arp.numberOfNotes-1;i>=0;--i)
 			{
-				for(i=0;i<ARP_NOTE_MEMORY;++i)
-					if(arp.notes[i]==note)
-					{
-						arp.notes[i]|=ARP_NOTE_HELD_FLAG;
-						break;
-					}
-			}
-			else if (arp.mode==amRandom)
-			{
-				// each note can be latched more than once
-				// we need to make sure that all match notes are latched
-				// in random mode we know that all the notes are up to index numberOfNotes-1
-				for(i=0;i<arp.numberOfNotes;++i)
-					if(arp.notes[i]==note)
-					{
-						arp.notes[i]|=ARP_NOTE_HELD_FLAG; // add the note hold flag
-					}
-			}	
-			else // up/down
-			{
-				arp.notes[note]|=ARP_NOTE_HELD_FLAG;
-				arp.notes[ARP_LAST_NOTE-note]|=ARP_NOTE_HELD_FLAG;
+				if(arp.notes[i]==note)
+				{
+					arp.notes[i]|=ARP_NOTE_HELD_FLAG;
+					break;
+				}
 			}
 		}
 		else
 		{
-			// deassign note if not in hold mode
+			// we don't want to leave "holes", therefore rearrange, start from top
+			// note: the first note we find and if we find it CANNOT be held because
+			// either the key was pressed before entering the arp mode in which case notes[] is empty
+			// or the note has been played in arp mode and not yet release in which case the note is not yet held 
+			// so we remove it on key off...
+			findIndex = arp.numberOfNotes-1;
+			while (findIndex>=0)
+			{
+				if (arp.notes[findIndex]==note) // this can only match notes wich are not held
+				{
+					break;
+				} 
+				findIndex--;
+			}
+			
+			if (findIndex<0) // note not found, abort without action
+				return;
 
-			if(arp.mode==amAssign)
+			// findIndex is the index of the matching note
+			// now shift the higher notes down
+			for (i=findIndex;i<arp.numberOfNotes-1;++i)
 			{
-				for(i=0;i<ARP_NOTE_MEMORY;++i)
-					if(arp.notes[i]==note)
-					{
-						arp.notes[i]=ASSIGNER_NO_NOTE;
-						break;
-					}
+				arp.notes[i]=arp.notes[i+1];
 			}
-			if(arp.mode==amRandom)
+			arp.notes[arp.numberOfNotes-1]=ASSIGNER_NO_NOTE;
+			// adjust the index for the running arp if it happens to point to the previously last note
+			// otherwise the up/down arp runs away...
+			if (arp.noteIndex==arp.numberOfNotes-1)
 			{
-				// we don't want to leave "holes", therefore rearrange, start from top
-				uint8_t findIndex; 
-				findIndex = arp.numberOfNotes-1;
-				while (arp.notes[findIndex]!=note && findIndex>=0)
-				{
-					findIndex--;
-				}
-				
-				if (findIndex==-1) // note not found, abort without action
-					return;
-				
-				for (i=findIndex;i<arp.numberOfNotes-1;++i)
-				{
-					arp.notes[i]=arp.notes[i+1];
-				}
-				arp.notes[arp.numberOfNotes-1]=ASSIGNER_NO_NOTE;
-				arp.numberOfNotes--;
+				arp.noteIndex=arp.numberOfNotes-2; 
+				arp.previousIndex=arp.numberOfNotes-2;
 			}
-			else
-			{
-				arp.notes[note]=ASSIGNER_NO_NOTE;
-				arp.notes[ARP_LAST_NOTE-note]=ASSIGNER_NO_NOTE;
-			}
+
+			arp.numberOfNotes--;
 
 			// gate off for last note
 
@@ -252,6 +294,7 @@ void arp_update(void)
 	uint8_t n;
 	
 	// arp off -> nothing to do
+
 	
 	if(arp.mode==amOff)
 		return;
@@ -270,19 +313,27 @@ void arp_update(void)
 	switch(arp.mode)
 	{
 	case amUpDown:
-	case amAssign:
-		do
-			arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY;
-		while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
+		if (arp.numberOfNotes>1)
+		{
+			// could modify the pattern easily by changing the following rules...
+			if (arp.noteIndex==arp.numberOfNotes-1) arp.upDownDirection=-1; // reached the top, start moving down
+			if (arp.noteIndex==0) arp.upDownDirection=1; // reached the bottom, start moving up
+			arp.noteIndex=(arp.noteIndex+arp.upDownDirection)%arp.numberOfNotes; // the mod function is just for safety
+		}
+		else
+		{
+			arp.noteIndex=0;
+		}
 		break;
-		
+	case amAssign:
+		arp.noteIndex=(arp.noteIndex+1)%arp.numberOfNotes; 
+		break;
 	case amRandom:
 		if (arp.numberOfNotes>1)
 		{
-			// the variable numerOfNotes makes it possible to only sample the collection of assigned notes
 			do
 				arp.noteIndex=random()%arp.numberOfNotes;
-			while(arp.noteIndex==arp.previousIndex);
+			while(arp.noteIndex==arp.previousIndex); 
 		}
 		else
 		{
@@ -293,17 +344,18 @@ void arp_update(void)
 		return;
 	}
 
-	arp.previousIndex=arp.noteIndex;
-	n=arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG;
-	
-	// send note to assigner, velocity at half (MIDI value 64)
-	
-	if (settings.midiMode==0) // only play in local on mode
-		assigner_assignNote(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE,0);
-	
-	// pass to MIDI out
+	n=arp.notes[arp.noteIndex]&~ARP_NOTE_HELD_FLAG; // remove the HELD bit
 
-	midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
+	if(arp.notes[arp.noteIndex]!=ASSIGNER_NO_NOTE)
+	{
+		// send note to assigner, velocity at half (MIDI value 64)
+		if (settings.midiMode==0) // only play in local on mode
+			assigner_assignNote(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE,0);
+		
+		// pass to MIDI out
+
+		midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
+	}
 
 	arp.previousNote=arp.notes[arp.noteIndex];
 	arp.previousTranspose=arp.transpose;
@@ -318,5 +370,6 @@ void arp_init(void)
 	arp.noteIndex=-1;
 	arp.previousNote=ASSIGNER_NO_NOTE;
 	arp.numberOfNotes =0;
+	arp.upDownDirection=1;
 	
 }
