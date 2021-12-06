@@ -42,6 +42,9 @@ const struct uiParam_s uiParameters[] =
 	/*3*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="env rtg",.values={"std","poly-amp","poly","gate"}},
+	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*7*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*8*/ {.type=ptStep,.number=spPWMBug,.name="Pulse Sync bug",.values={"on","off"}},
 };
 
 struct ui_s ui;
@@ -381,7 +384,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb5||new==pb1) // 1 and 5 are currently the only slots with a 3rd page parameter
+			{if (new==pb5||new==pb1||new==pb8) // 1 and 5 are currently the only slots with a 3rd page parameter
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}

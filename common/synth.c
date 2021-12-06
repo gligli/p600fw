@@ -533,7 +533,16 @@ static inline void refreshPulseWidth(int8_t pwm)
     //	pa=UINT16_MAX;
     //	pb=0;
 	// 	this ways reversed because it makes patches stored using 2.0 (and also imported from Z80?) sound wrong 
-	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
+	//	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
+	if (currentPreset.steppedParameters[spPWMBug]==0) // this means bug is "switched off"
+	{
+    	pa=UINT16_MAX;
+   		pb=0;
+	}
+	else // bug is "switched on" --> compatible with versions <= 2.1 RC3
+	{
+		pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
+	}
     
 	uint8_t sqrA=currentPreset.steppedParameters[spASqr];
 	uint8_t sqrB=currentPreset.steppedParameters[spBSqr];
@@ -654,7 +663,7 @@ static void refreshLfoSettings(void)
 				 currentPreset.continuousParameters[cpVibFreq],
 				 scaleU16U16(vibAmt,dlyAmt));
 	}
-	else
+	else // targeting vibrato
 	{
 		lfo_setCVs(&synth.lfo,
 				currentPreset.continuousParameters[cpLFOFreq],
@@ -668,7 +677,7 @@ static void refreshLfoSettings(void)
 static void refreshSevenSeg(void) // imogen: this function would be more suited for ui.c than synth.c
 {
 
-	if(ui.digitInput==diSequencer) // sequence record mode and no parameter selection override, e.g. the input is sequencer
+	if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording) // sequence record mode and no parameter selection override, e.g. the input is sequencer
 	{
 		int8_t track=(seq_getMode(1)==smRecording)?1:0;
 		uint8_t count=seq_getStepCount(track);
@@ -727,19 +736,20 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
 
 	led_set(plPreset,settings.presetMode,0);
 	led_set(plToTape,ui.digitInput==diSynth && settings.presetMode,0);
-	led_set(plSeq1,seq_getMode(0)!=smOff,seq_getMode(0)!=smPlaying);
-	led_set(plSeq2,seq_getMode(1)!=smOff,seq_getMode(1)!=smPlaying);
+	led_set(plSeq1,seq_getMode(0)!=smOff,seq_getMode(0)==smRecording);
+	led_set(plSeq2,seq_getMode(1)!=smOff,seq_getMode(1)==smRecording);
 	led_set(plArpUD,arp_getMode()==amUpDown,0);
 	led_set(plArpAssign,arp_getMode()>=amRandom,arp_getMode()==amRandom);
 	led_set(plTune, ui.retuneLastNotePressedMode, ui.retuneLastNotePressedMode);
 	led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 
-	if(arp_getMode()!=amOff || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+	if (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording || (arp_getMode()!=amOff && arp_getHold()))
 	{
-		led_set(plRecord,arp_getHold() || seq_getMode(0)==smRecording || seq_getMode(1)==smRecording,0);
+		led_set(plRecord, 1,0);
 	}
 	else
 	{
+		// waiting for first or second digit for storage, then blink
 		int8_t b=ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit;
 		led_set(plRecord,b,b);
 	}

@@ -57,6 +57,7 @@ typedef enum
 	spAmpEnvSlow=25,
 	spEnvRouting=26,			
 	spLFOSync=27,
+	spPWMBug=28,
 
 	// /!\ this must stay last
 	spCount

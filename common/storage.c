@@ -45,7 +45,8 @@ const uint8_t steppedParametersBits[spCount] =
 	/*VibTarget*/2,
 	/*AmpEnvSlow*/1,
 	/*EnvRouting*/2,
-	/*LFOSync*/4
+	/*LFOSync*/4,
+	/*PWMBug*/2,
 };
 
 struct settings_s settings;
@@ -391,6 +392,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		if (storage.version<8)
 			return 1;
 
+		// compatibility with previous versions require the ""Pulse Width Sync Bug""
+		// --> for loading from old stroage versions also override the default patch value "off"""
+		currentPreset.steppedParameters[spPWMBug]=1; // == bug "on""
+	
 		// V8
 		
 		readVar=storageRead8();
@@ -400,6 +405,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		readVar=storageRead8();
 		if (readVar<=7) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spLFOSync]=readVar;
+
+		readVar=storageRead8 ();
+		if (readVar<=1) // only accept valid values, otherwise default stays
+			currentPreset.steppedParameters[spPWMBug]=readVar;
 		 
 	}
 	
@@ -445,8 +454,8 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		// v8
 		
 		storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
-		storageWrite8(currentPreset.steppedParameters[spLFOSync]);
-	
+		storageWrite8(currentPreset.steppedParameters[spLFOSync]);	
+		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
 
 		// this must stay last
 		storageFinishStore(number,1);
@@ -537,6 +546,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		currentPreset.steppedParameters[spEnvRouting]=0; // standard
 		currentPreset.steppedParameters[spLFOSync]=0; // off
+		currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
 		
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
 
