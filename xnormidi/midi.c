@@ -111,14 +111,17 @@ void midi_send_aftertouch(MidiDevice * device, uint8_t chan, uint8_t note_num, u
 //gli: fixed
 
 void midi_send_pitchbend(MidiDevice * device, uint8_t chan, int16_t amt){
-   uint16_t uAmt;
+    uint16_t uAmt;
+    uint8_t lsb, msb;
 
-   uAmt=(amt-INT16_MIN)>>2;
+    uAmt=(amt-INT16_MIN); // shifts to range 0 ... UNIT16_MAX
+    uAmt=uAmt>>2; // bitshift then makes it a 14bit number, perform the shift after completion of cast to UNIT
 
-   device->send_func(device, 3,
-         MIDI_PITCHBEND | (chan & MIDI_CHANMASK),
-         uAmt & 0x7F,
-         (uAmt >> 7) & 0x7F);
+    lsb=uAmt;
+    lsb&=0x7F; // LSB: project onto the lowest 7 bits
+    msb=uAmt>>7; // MSB: shift down by 7 bits
+
+    device->send_func(device, 3, MIDI_PITCHBEND | (chan & MIDI_CHANMASK), lsb, msb); // midi_var_byte_func_t
 }
 
 void midi_send_programchange(MidiDevice * device, uint8_t chan, uint8_t num){

@@ -1436,11 +1436,11 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
 	{
 		if (isInternal && settings.midiMode==0) // only apply if not in local on mode)
 		{
-			synth.benderAmountInternal=bend/2;
+			synth.benderAmountInternal=bend>>1;
 		}
 		else if (!isInternal)
 		{
-			synth.benderAmountExternal=bend/2;			
+			synth.benderAmountExternal=bend>>1;
 		}	
 		computeBenderCVs();
 		addWheelToTunedCVs();

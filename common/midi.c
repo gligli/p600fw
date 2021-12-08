@@ -480,10 +480,23 @@ void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 	static int16_t lastBend=0;
 	static uint16_t lastMod=0;
 	
-	if(mask&1 && (bend&0xfffc)!=(lastBend&0xfffc))
+	if(mask&1 && (bend&0xfffc)!=(lastBend&0xfffc)) // this avois too many events, e.g. only change or more than 3 (out 8192) triggers an event
 	{
-		midi_send_pitchbend(&midi,settings.midiSendChannel,bend);
+		//midi_send_pitchbend(&midi,settings.midiSendChannel,bend);
 		lastBend=bend;
+
+        uint16_t uAmt;
+        uint8_t lsb, msb;
+
+        uAmt=(bend-INT16_MIN); // shifts to range 0 ... UNIT16_MAX
+        uAmt=uAmt>>2; // bitshift makes it a 14bit number, right shift is of logic type on UNIT
+        //uAmt&=0x3FFF; // force the two highest bits to zero
+
+        lsb=uAmt;
+        lsb&=0x7F; // LSB: project onto the lowest 7 bits
+        msb=(uAmt>>7); // MSB: shift down by 7 bits
+
+        midi.send_func(&midi, 3, MIDI_PITCHBEND | (settings.midiSendChannel & MIDI_CHANMASK), lsb, msb); // midi_var_byte_func_t
 	}
 
 	if(mask&2 && (modulation&0xfe00)!=(lastMod&0xfe00))
