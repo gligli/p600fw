@@ -11,10 +11,10 @@
 
 #define STORAGE_MAGIC 0x006116a5
 
-#define SETTINGS_PAGE_COUNT 3
+#define SETTINGS_PAGE_COUNT 2 // due to the tuning data the settings are too large for one page, with version 8: 305 bytes (one page has 256 bytes)
 #define SETTINGS_PAGE ((STORAGE_SIZE/STORAGE_PAGE_SIZE)-4)
 
-#define STORAGE_MAX_SIZE (SETTINGS_PAGE_COUNT*STORAGE_PAGE_SIZE)
+#define STORAGE_MAX_SIZE (SETTINGS_PAGE_COUNT*STORAGE_PAGE_SIZE) // this is the buffer size, which must at least hold the settings data (see above)
 
 const uint8_t steppedParametersBits[spCount] = 
 {
@@ -458,7 +458,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
 
 		// this must stay last
-		storageFinishStore(number,1);
+		storageFinishStore(number,1); // yes, one page is enough
 	}
 }
 
@@ -492,11 +492,13 @@ LOWERCODESIZE void storage_saveSequencer(int8_t track, uint8_t * data, uint8_t s
 
 LOWERCODESIZE void storage_export(uint16_t number, uint8_t * buf, int16_t * loadedSize)
 {
+    // this function can only export from storage, therefore a patch needs to be stored first before exporting
+    // the function loads from storage into the buf, truncates all unwanted data from the end and ads the number at the beginning
 	int16_t actualSize;
 
 	BLOCK_INT
 	{
-		storageLoad(number,1);
+		storageLoad(number,1); // load one page at position of the patch number
 
 		// don't export trailing zeroes		
 		
@@ -518,6 +520,7 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 		memcpy(storage.buffer,buf,size);
 		storage.bufPtr=storage.buffer+size;
 		storageFinishStore(number,1);
+        if (settings.presetMode && settings.presetNumber == number) refreshPresetMode();
 	}
 }
 
