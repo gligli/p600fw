@@ -136,9 +136,9 @@ The additional patch parameters are stored with a patch. In live mode these para
        
 The list of additional patch parameters can be found in section \ref{patchref}. Each parameter is explained in the respective functional context in the next chapter.
 
-\textbf{Shift mode: miscellaneous settings and transposition}
+\textbf{Shift mode: miscellaneous settings}
 
-The miscellaneous settings are patch independent but they are also stored, e.g. will be loaded the after switching the instrument off and on. The settings are accessed via the \textbf{Shift} mode. In this mode, different keys and buttons have a different function. To use this mode either hold down the button \textbf{From Tape} while selecting one of the additional functions or double click \textbf{From Tape} to enter \textbf{Shift Lock} mode (permanent shift) indicated by a blinking LED. To exit the mode push the button again. In shift mode the numbers 0...9 on the number pad access the miscellaneous settings (see below). The keys on the keyboard are used to set the keyboard transposition. 
+The miscellaneous settings are patch independent but they are also stored, e.g. will be loaded the after switching the instrument off and on. The settings are accessed via the \textbf{Shift} mode. In this mode, different keys and buttons have a different function. To use this mode either hold down the button \textbf{From Tape} while selecting one of the additional functions or double click \textbf{From Tape} to enter \textbf{Shift Lock} mode (permanent shift) indicated by a blinking LED. To exit the mode push the button again. In shift mode the numbers 0...9 on the number pad access the miscellaneous settings (see section \ref{settingsref}). In addition, in shift mode the keys on the keyboard are used to set the keyboard transposition (see section \ref{transposition}) and the tuning button activates a per voice tuning mode (see section \ref{tuning}).
 
 Note that in contrast to the additional patch parameter pages, the miscellaneous settings associated with the numbers 0...9 are edited by pressing number key repeatedly to cycle through values or to initiate actions. The speed dial is not used. The first time a number is pressed (while holding From Tape) the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. The list of miscellaneuous settings can be found in section \ref{settingsref}. Each setting is explained in the respective functional context in the next chapter or in the appropriate section in the setup chapter.
 
@@ -256,7 +256,7 @@ To the right of the panel there two global parameter dials, the \textbf{Master T
 
 In the original Prophet 600 the glide setting (the glide time) had a dedicated dial. In the upgraded Prophet 600 the dial has been re-designated to control the amplitude of OSC B. As a consequence the glide time has been moved to the additional patch parameter \textbf{(7) Glide}. 
 
-\section{Detune}
+\section{Detune}\label{detune}
 
 The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect can be used in particular to make unison sound broader and more lively. The additional patch parameter is \textbf{(77) Detune}
 
@@ -266,11 +266,11 @@ The upgraded Prophet 600 provides a method to detune the 6 voices against one an
 
 The Prophet 600 is a VCO synthesizer, e.g. the frequency of the oscillators A and B are set by apllying a voltage to the control pin of the microchip. The relationship between absolute voltage and resulting frequency is not precise. It depends on many factors, such as smallest differences in the manufacturing process of the chip itself and the surrounding circuit components and operating temparture (the temparture of the components also changes during operation). Therefore the synthesizer need to be tuned regularly. Typically, tuning is best after the instrument (or rather: the chips and components) has been given time to warm up to a stable operating temperature, which could be 10-30 minutes into operation. It may be necessary to retune the synth during operation. The user should trust her or his ear on this.
 
-In addition to a full tuning, each voice can be manually tuned. This per voice tuning is stored as part of the patch (in contrast to the thoverall tuning, which is stored as part of the settings which apply to all presets) an it is retained after full tuning. To enter the per voice tuning hold down From Tape and press Tune. The Tune button flashes. In this mode the last played note is tuned using the mod wheel. From the middle position the tune range is $\pm$1 semitone from equal tempered.
+In addition to a full tuning, each voice can be manually tuned. This per voice tuning is stored as part of the patch (in contrast to the overall tuning, which is stored as part of the settings which apply to all presets) and it is retained after full tuning. To enter the per voice tuning hold down From Tape and press Tune. The Tune button flashes. In this mode the last played note is tuned using the mod wheel. From the middle position the tune range is $\pm$1 semitone from equal tempered.
 
 To leave the per voice tuning mode press Tune again.
 
-\section{MIDI integration}\label{midiintegration.tex}
+\section{MIDI integration}\label{midiintegration}
 
 \include{midiintegration.tex}
 
@@ -285,7 +285,7 @@ The upgrade Prophet 600 provides a method for switching single voices of the Pro
 
 \section{Transposition}
 
-The upgraded Prophet 600 provides a method for transposing the keyboard. Pressing key 7 while holding down From Tape activates a mode in which the user can set the keyboard transposition. The mode is indicated by a flashing From Tape LED. In this mode the last pressed key will define the transposition, the middle C3 being zero transposition. The value is also scrolled through the display for conformation. Pressing From Tape laves the transposition mode and the LED goes off.
+The upgraded Prophet 600 provides a method for transposing the keyboard. In shift mode the last pressed key will define the transposition, the middle C3 being zero transposition. The value is also scrolled through the display for conformation. 
 
 Transposition also applies to arpeggiator and sequencer. The transposition procedure also works in the respective run, latch and record modes.
 
@@ -295,30 +295,31 @@ The sequencer and arpeggiator of the upgraded Prophet 600 can be sync'ed to exte
 
 \section{Spread}\label{spreadsett}
 
-(this needs to be done)
+When the setting \textbf{spread} is activated the detune amount (see section \ref{detune}) is also applied in poly mode (not only in unison mode). 
+
+In the miscellaneous settings menu the spread setting is combined with the VCF limit setting. It can be accessed using the key "9".
 
 \section{VCF limit}\label{limitsett}
 
 In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the filter to 22kHz in order to avoid strange filter behaviour in the ultrasonic range.
 
-In the miscellaneous settings menu this setting is combined with the spread setting (see section \ref{spreadsett} on spread).  
+In the miscellaneous settings menu the VCF limit setting is combined with the spread setting. It can be accessed using the key "9".  
 
 \section{Managing sound libraries via SysEx}\label{mididump}
 
-The following instruction assume that you have your Prophet 600 connected via MIDI to a device where you can manage MIDI SysEx files, e.g. receive, store and send. Note that in the current firmware version the entrie patch bank of the Prophet is received or sent. Single patch transfer is not supported. 
+The following instruction assume that you have your Prophet 600 connected via MIDI to a device where you can manage MIDI SysEx files, e.g. receive, store and send. Make sure that the MIDI receive channel on the Prophet 600 and the MIDI send channel of the sending device are the same see section \ref{midiintegration}.
 
-\textbf{Dumping patches} 
+\textbf{Dumping the patch library as SysEx} 
 
-On the settings menu the number pad "6" (use a second press to confirm) sends a SysEx dump of all presets to MIDI out on the MIDI send channel selected in settings.
+On the settings menu the number pad "6" (use a second press to confirm) sends a SysEx dump of all presets to MIDI out on the MIDI send channel selected in settings. Note that dump export is only supported from storage. Therefore to create a SysEx dump of a current modified patch in live mode, that patch needs to be stored to one of the patch 0...99 first.
+
+\textbf{Dumping single patch library as SysEx} 
+
+Single patches can be dumped by sending a standard MIDI Dump Request to the Prophet 600. The dump request must contain a patch number between 0 and 99. Again, only dump from storage is supported. 
 
 \textbf{Loading patches} 
 
-Loading a SysEx patch library will overwrite all existing stored patches. To load a complete SysEx Library:
-
-\begin{enumerate}
-  \item Make sure that the MIDI receive channel on the Prophet 600 and the MIDI send channel of the sending device are the same
-  \item Transmit the data to the instrument   
-\end{enumerate}
+Load patches is done by sending the standard patch load SysEx containing the data to the Prophet 600. Each patch contains a patch number. If the patch number is  between 0 and 99 the data will stored in tha patch overwriting the existing stored patch. Loading a SysEx patch library will overwrite the entire library stored on the Propht 600.
 
 \section{SysEx firmware upgrade}\label{fwupgrade}
 
