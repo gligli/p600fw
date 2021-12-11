@@ -583,7 +583,7 @@ static void refreshAssignerSettings(void)
 static void refreshEnvSettings(void)
 {
 	int8_t i;
-	uint16_t aa,ad,as,ar,fa,fd,fs,fr;
+	uint16_t as, fs;
 	int16_t spread;
 	
 	as=currentPreset.continuousParameters[cpAmpSus];
@@ -599,18 +599,26 @@ static void refreshEnvSettings(void)
 		
 		spread=0;
 		if(settings.spread)
+        {
 			spread=((1+(i>>1))*(i&1?-1:1))<<8;
 		
-		aa=satAddU16S16(currentPreset.continuousParameters[cpAmpAtt],spread);
-		ad=satAddU16S16(currentPreset.continuousParameters[cpAmpDec],spread);
-		ar=satAddU16S16(currentPreset.continuousParameters[cpAmpRel],spread);
+            uint16_t aa,ad,ar,fa,fd,fr;
+            aa=satAddU16S16(currentPreset.continuousParameters[cpAmpAtt],spread);
+            ad=satAddU16S16(currentPreset.continuousParameters[cpAmpDec],spread);
+            ar=satAddU16S16(currentPreset.continuousParameters[cpAmpRel],spread);
 
-		fa=satAddU16S16(currentPreset.continuousParameters[cpFilAtt],spread);
-		fd=satAddU16S16(currentPreset.continuousParameters[cpFilDec],spread);
-		fr=satAddU16S16(currentPreset.continuousParameters[cpFilRel],spread);
+            fa=satAddU16S16(currentPreset.continuousParameters[cpFilAtt],spread);
+            fd=satAddU16S16(currentPreset.continuousParameters[cpFilDec],spread);
+            fr=satAddU16S16(currentPreset.continuousParameters[cpFilRel],spread);
 
-		adsr_setCVs(&synth.ampEnvs[i],aa,ad,as,ar,0,0x0f);
-		adsr_setCVs(&synth.filEnvs[i],fa,fd,fs,fr,0,0x0f);
+            adsr_setCVs(&synth.ampEnvs[i],aa,ad,as,ar,0,0x0f);
+            adsr_setCVs(&synth.filEnvs[i],fa,fd,fs,fr,0,0x0f);
+        }
+        else
+        {
+            adsr_setCVs(&synth.ampEnvs[i],currentPreset.continuousParameters[cpAmpAtt],currentPreset.continuousParameters[cpAmpDec],as,currentPreset.continuousParameters[cpAmpRel],0,0x0f);
+            adsr_setCVs(&synth.filEnvs[i],currentPreset.continuousParameters[cpFilAtt],currentPreset.continuousParameters[cpFilDec],fs,currentPreset.continuousParameters[cpFilRel],0,0x0f);
+        }
 	}
 }
 
@@ -646,7 +654,9 @@ static void refreshLfoSettings(void)
 		}
 	}
 	
-	mwAmt=synth.modwheelAmount>>currentPreset.steppedParameters[spModwheelShift];
+	float bendValue;
+    bendValue=((expf(((float)synth.modwheelAmount)/120000.0f )-1.0f)*69835.0f);
+	mwAmt=((uint16_t)bendValue)>>currentPreset.steppedParameters[spModwheelShift];
 
 	lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
 	lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
@@ -895,7 +905,8 @@ static void handleBitInputs(void)
 	{
 		assigner_latchPattern();
 		assigner_getPattern(currentPreset.voicePattern,NULL);
-	}
+        midi_sendSustainEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1); // add this here for Midi sustain output
+    }
 	else if((cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
 	{
 		if(arp_getMode()!=amOff)
@@ -905,7 +916,7 @@ static void handleBitInputs(void)
 		}
 		else
 		{
-			if (settings.midiMode==0) // this comes a foot pedal, so local, only apply if not in local off mode
+			if (settings.midiMode==0) // this comes from a foot pedal, so local, only apply if not in local off mode
 			{
 				assigner_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
 			}
@@ -1450,8 +1461,8 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
 	{
 		if ((isInternal && settings.midiMode==0) || !isInternal)
 		{
-			synth.modwheelAmount=modulation;
-			refreshLfoSettings();
+            synth.modwheelAmount=modulation;
+            refreshLfoSettings();
 		}
 	}
 	
