@@ -3,9 +3,18 @@
 
 #include "synth.h"
 
+typedef enum
+{
+    comLess=0,
+    comEqual=1,
+    comGreater=2,
+
+} comparator_t;
+
 void sevenSeg_scrollText(const char * text, int8_t times); // -1 -> infinite / 0 -> off
 void sevenSeg_setAscii(char left, char right);
 void sevenSeg_setNumber(int32_t n);
+void sevenSeg_setRelative(comparator_t comparator);
 
 int led_getOn(p600LED_t led);
 int led_getBlinking(p600LED_t led);

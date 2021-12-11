@@ -56,6 +56,24 @@ void LOWERCODESIZE sevenSeg_setNumber(int32_t n)
 	sevenSeg_setAscii('0'+(n/10),'0'+(n%10));
 }
 
+void sevenSeg_setRelative(comparator_t comparator)
+{
+    display_clear();
+    if (comparator == comEqual)
+    {
+        display.sevenSegs[0]=map_to_seg7(&sevenSeg_map,*">");
+        display.sevenSegs[1]=map_to_seg7(&sevenSeg_map,*"<");
+    }
+    else if (comparator == comGreater)
+    {
+        display.sevenSegs[1]=map_to_seg7(&sevenSeg_map,*">");
+    }
+    else
+    {
+        display.sevenSegs[0]=map_to_seg7(&sevenSeg_map,*"<");
+    }
+}
+
 int led_getOn(p600LED_t led)
 {
 	uint16_t mask=1<<led;
