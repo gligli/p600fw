@@ -475,6 +475,11 @@ void midi_sendNoteEvent(uint8_t note, int8_t gate, uint16_t velocity)
 		midi_send_noteoff(&midi,settings.midiSendChannel,note,velocity>>9);
 }
 
+void midi_sendProgChange(uint8_t prog)
+{
+    midi_send_programchange(&midi, settings.midiSendChannel, prog);
+}
+
 void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 {
 	static int16_t lastBend=0;

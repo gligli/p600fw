@@ -733,12 +733,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 					preset_saveCurrent(ui.presetAwaitingNumber);
 				}
 
-				// always try to load/reload preset
-				if(preset_loadCurrent(ui.presetAwaitingNumber))
-				{
-					settings.presetNumber=ui.presetAwaitingNumber;
-					settings_save();		
-				}
+				// if in local off mode we can still change the program because the incoming MIDI would have no effect
+				// also: always try to load/reload preset
+                if(preset_loadCurrent(ui.presetAwaitingNumber))
+                {
+                    settings.presetNumber=ui.presetAwaitingNumber;
+                    midi_sendProgChange(settings.presetNumber); // always send
+                    settings_save();
+                }
 
 				ui.presetAwaitingNumber=-1;
 				
