@@ -119,6 +119,7 @@ void synth_realtimeEvent(uint8_t midiEvent);
 void synth_resetClockBar(void);
 void synth_tuneSynth(void);
 void synth_resetForLocalOffMode(void);
+void synth_holdEvent(int8_t hold, int8_t sendMidi, uint8_t isInternal);
 void refreshPresetMode(void);
 
 

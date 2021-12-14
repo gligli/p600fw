@@ -22,18 +22,18 @@ const struct uiParam_s uiParameters[] =
 	/*5*/ {.type=ptCust,.number=2,.name="env shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
 	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
-	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
+	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
 	/*second press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
 	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b","ab-Vca"}},
 	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
-	/*3*/ {.type=ptCust,.number=5,.name="mod ran",.values={"min","low","high","full"}},
+	/*3*/ {.type=ptStep,.number=spModwheelShift,.name="mod ran",.values={"min","low","high","full", "hard min","hard low","hard high","hard full"}},
 	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
 	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
 	/*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
 	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
-	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
+	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 	/*third press*/
 	/*0*/ {.type=ptCont,.number=0,.name="dummy"},
@@ -43,8 +43,9 @@ const struct uiParam_s uiParameters[] =
 	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="env rtg",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*7*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*8*/ {.type=ptStep,.number=spPWMBug,.name="Pulse Sync bug",.values={"on","off"}},
+	/*7*/ {.type=ptStep,.number=spDetuneKey,.name="detune key", .values={"off","half", "full"}},
+	/*8*/ {.type=ptStep,.number=spSpread,.name="spread", .values={"off","on"}},
+	/*9*/ {.type=ptStep,.number=spPWMBug,.name="sync like v2",.values={"on","off"}},
 };
 
 struct ui_s ui;
@@ -133,8 +134,6 @@ LOWERCODESIZE void refreshAllPresetButtons(void)
 // further printouts (e.g. init patch).
 static int8_t changeMiscSetting(p600Button_t button)
 {
-	uint8_t v;
-
 	switch(button)
 	{
 	case pb1: // midi receive channel
@@ -165,11 +164,7 @@ static int8_t changeMiscSetting(p600Button_t button)
 		refreshPresetMode();
 		refreshFullState();
 		return 1;
-	case pb7: // MIDI mode, e.g. local on/off
-		settings.midiMode=((settings.midiMode+1)%2);
-		settings_save();
-		if (settings.midiMode==1)
-			synth_resetForLocalOffMode();
+	case pb7:
 		return 0;
 	case pb8: // sync mode
 		settings.syncMode=(settings.syncMode+1)%3;
@@ -177,14 +172,17 @@ static int8_t changeMiscSetting(p600Button_t button)
 		refreshFullState();
 		return 0;
 	case pb9: // spread / vcf limit
-		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
-		v=(v+1)%4;
-		settings.spread=v&1;
-		settings.vcfLimit=(v>>1)&1;
+		settings.vcfLimit=(settings.vcfLimit?0:1); // only on or off
 		settings_save();
 		refreshFullState();
 		return 0;
-	case pb0: // reset to a basic patch
+	case pb0: // MIDI mode, e.g. local on/off
+		settings.midiMode=((settings.midiMode+1)%2);
+		settings_save();
+		if (settings.midiMode==1)
+			synth_resetForLocalOffMode();
+        return 0;
+    case pbPreset: // reset to a basic patch
 		preset_loadDefault(1);
 		ui.presetModified=1;
 		sevenSeg_scrollText("basic patch",1);
@@ -239,15 +237,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	case pb6: // preset dump
 		sevenSeg_scrollText("again dumps presets",1);
 		break;
-	case pb7: // local on/off
-		if (settings.midiMode==0)
-		{
-			sevenSeg_scrollText("Local on",1);
-		}
-		else
-		{
-			sevenSeg_scrollText("Local off",1);
-		}
+	case pb7: // that button doesn't work
 		break;
 	case pb8: // sync mode
 		switch(settings.syncMode)
@@ -263,19 +253,8 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 				break;
 		}
 		break;
-	case pb9: // spread / vcf limit
-		strcpy(s,"spread ");
-
-		if(settings.spread)
-		{
-			strcat(s,"on");
-		}
-		else
-		{
-			strcat(s,"off");
-		};
-		
-		strcat(s," / Vcf lim ");
+	case pb9: // vcf limit
+		strcat(s,"Vcf lim");
 		
 		if(settings.vcfLimit)
 		{
@@ -288,7 +267,17 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 		sevenSeg_scrollText(s,1);
 		break;
-	case pb0: // reset to a basic patch
+	case pb0: // local on/off
+		if (settings.midiMode==0)
+		{
+			sevenSeg_scrollText("Local on",1);
+		}
+		else
+		{
+			sevenSeg_scrollText("Local off",1);
+		}
+		break;
+	case pbPreset: // reset to a basic patch
 		sevenSeg_scrollText("again sets basic patch",1);
 		break;
 	default:
@@ -299,7 +288,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 {
 	int8_t br[]={2,4,7,12};
-	int8_t mr[]={5,3,1,0};
 
 	switch(num)
 	{
@@ -327,9 +315,9 @@ static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 		currentPreset.steppedParameters[spBenderSemitones]=br[data];
 		synth_updateBender(); // immediate update
 		break;
-	case 5: // mod range
-		currentPreset.steppedParameters[spModwheelShift]=mr[data];
-		break;
+	//case 5: // mod range
+	//	currentPreset.steppedParameters[spModwheelShift]=mr[data];
+	//	break;
 	}
 }
 
@@ -384,7 +372,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb5||new==pb1||new==pb8) // 1 and 5 are currently the only slots with a 3rd page parameter
+			{if (new==pb5||new==pb1||new==pb7||new==pb8||new==pb9) // parameters on third press
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -507,6 +495,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
 
+    refreshPresetButton(button);
+
 	// button press might change current preset
 
 	refreshPresetButton(button);		
@@ -581,7 +571,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	{
 		if(pressed)
 		{
-			assigner_latchPattern();
+			assigner_latchPattern(0);
 		}
 		else
 		{
@@ -648,7 +638,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune))
+		if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset))
 		//if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
 		{
 			// Disable double click mode which might confuse

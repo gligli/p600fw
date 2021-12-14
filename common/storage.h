@@ -58,6 +58,8 @@ typedef enum
 	spEnvRouting=26,			
 	spLFOSync=27,
 	spPWMBug=28,
+    spSpread=29,
+    spDetuneKey=30,
 
 	// /!\ this must stay last
 	spCount
@@ -78,7 +80,6 @@ struct settings_s
 	
 	int8_t syncMode;
 	
-	int8_t spread;
 	int8_t vcfLimit;
 	
 	uint16_t seqArpClock;

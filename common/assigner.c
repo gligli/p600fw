@@ -25,8 +25,9 @@ static struct
 	uint8_t patternOffsets[SYNTH_VOICE_COUNT];
 	assignerPriority_t priority;
 	uint8_t voiceMask;
-	int8_t mono;
-	int8_t hold;
+	int8_t mono; // this state variable says if we're in unison mode (mono=1) of poly (mono=0)
+	int8_t hold; // this state variable says, if notes are held (sustained)
+    int8_t latch; // this state variable say, if in unison mode the latch is on (foot down)
 } assigner;
 
 static const uint8_t bit2mask[8] = {1,2,4,8,16,32,64,128};
@@ -334,15 +335,15 @@ reassign:
 		{
 			// just handle legato & priority
 			
-			v=0;
+			v=0; // in mono mode the note is always associated with voice 0 in the assigner (.allocation)
 
 			if(assigner.priority!=apLast)
 				for(n=0;n<128;++n)
 					if(n!=note && getNoteState(n))
 					{
-						if (note>n && assigner.priority==apLow)
+						if (note>n && assigner.priority==apLow) // ignore higher notes is priority low
 							return;
-						if (note<n && assigner.priority==apHigh)
+						if (note<n && assigner.priority==apHigh) // ignore lower notes is priority high
 							return;
 						
 						legato=1;
@@ -394,7 +395,7 @@ reassign:
 	{
 		restoredNote=ASSIGNER_NO_NOTE;
 
-		// some still triggered notes might have been stolen, find them
+		// some still triggered notes might have been stolen, find them. imogen: also in unison mode?
 
 		for(ni=0;ni<128;++ni)
 		{
@@ -409,7 +410,7 @@ reassign:
 					if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==n)
 						break;
 
-				if(v==SYNTH_VOICE_COUNT)
+				if(v==SYNTH_VOICE_COUNT) // note not assigned to a voice but marked as active
 				{
 					restoredNote=n;
 					oldVel=getNoteVelocity(n);
@@ -426,7 +427,7 @@ reassign:
 				if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
 				{
 					assigner.allocation[v].keyPressed=0;
-					if(!assigner.hold)
+					if(!assigner.hold || assigner.mono) // in unison mode there is no "hold" --> always release
 					{
 						assigner.allocation[v].gated=0;
 						synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
@@ -494,13 +495,14 @@ void assigner_getPattern(uint8_t * pattern, int8_t * mono)
 		*mono=assigner.mono;
 }
 
-LOWERCODESIZE void assigner_latchPattern(void)
+LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters unison mode
 {
 	int16_t i;
 	int8_t count;
 	uint8_t pattern[SYNTH_VOICE_COUNT];	
 	count=0;
-	
+
+    assigner_holdEvent(0); // in unison mode hold no longer applies
 	memset(pattern,ASSIGNER_NO_NOTE,SYNTH_VOICE_COUNT);
 	
 	for(i=0;i<128;++i)
@@ -518,6 +520,9 @@ LOWERCODESIZE void assigner_latchPattern(void)
 		}
 
 	assigner_setPattern(pattern,1);
+
+    // now trigger the lowest note
+    if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
 }
 
 LOWERCODESIZE void assigner_setPoly(void)

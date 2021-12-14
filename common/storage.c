@@ -197,7 +197,6 @@ LOWERCODESIZE int8_t settings_load(void)
 		// defaults
 
 		settings.voiceMask=0x3f;
-		settings.spread=0;
 		settings.vcfLimit=0;
 		settings.seqArpClock=HALF_RANGE;
 		settings.presetNumber=1; // if no other info, set selected preset to 1
@@ -207,7 +206,6 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.voiceMask=0x3f; // default is: all on
 		settings.midiSendChannel=0; // deault is: 1
 		settings.syncMode=smInternal; // default ist internal clock
-		settings.spread=0; // default is: no spread
 		settings.vcfLimit=0; // default is: no limit on the VCF
 		settings.midiMode=0; // normal mode
         
@@ -253,7 +251,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		
 		// v4
 		
-		settings.spread=storageReadS8();
+		i=storageRead8(); // this used to be "Spread" move to patch with V8 - need to read and ignore it
 
 		if (storage.version<5)
 			return 1;
@@ -270,7 +268,9 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.seqArpClock=storageRead16();
 
 		if (storage.version<8)
+        {
 			return 1;
+        }
 
 		// v8
 
@@ -313,7 +313,7 @@ LOWERCODESIZE void settings_save(void)
 		
 		// v4
 		
-		storageWriteS8(settings.spread);
+		storageWrite8(0x00); // this 8bit slot is obsolete
 		
 		// v5
 		
@@ -390,7 +390,17 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 			currentPreset.perNoteTuning[i]=storageRead16();
 			
 		if (storage.version<8)
+        {
+            // remap the mod wheel range (which was changed in version 8)
+            int8_t mapmw[]={7,6,6,5,5,4}; // before the values were 5, 3, 1, 0 for min/low/high/full, now map to 4, 5, 6, 7
+            if (currentPreset.steppedParameters[spModwheelShift]>=0 && currentPreset.steppedParameters[spModwheelShift]<6)
+            {
+                currentPreset.steppedParameters[spModwheelShift]=mapmw[currentPreset.steppedParameters[spModwheelShift]];
+            } // otherwise keep default
+
+
 			return 1;
+        }
 
 		// compatibility with previous versions require the ""Pulse Width Sync Bug""
 		// --> for loading from old stroage versions also override the default patch value "off"""
@@ -409,7 +419,12 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		readVar=storageRead8 ();
 		if (readVar<=1) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spPWMBug]=readVar;
-		 
+
+        readVar=storageRead8 ();
+		if (readVar<=1) // only accept valid values, otherwise default stays
+			currentPreset.steppedParameters[spSpread]=readVar;
+
+
 	}
 	
 	return 1;
@@ -456,6 +471,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
 		storageWrite8(currentPreset.steppedParameters[spLFOSync]);	
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
+		storageWrite8(currentPreset.steppedParameters[spSpread]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough
@@ -545,11 +561,12 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spBenderTarget]=modVCO;
 		currentPreset.steppedParameters[spFilEnvExpo]=1;
 		currentPreset.steppedParameters[spAmpEnvExpo]=1;
-		currentPreset.steppedParameters[spModwheelShift]=1;
+		currentPreset.steppedParameters[spModwheelShift]=2; // standard is normal shape / high
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		currentPreset.steppedParameters[spEnvRouting]=0; // standard
 		currentPreset.steppedParameters[spLFOSync]=0; // off
 		currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
+        currentPreset.steppedParameters[spSpread]=0; // the default is: spread off
 		
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
 

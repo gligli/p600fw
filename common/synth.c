@@ -194,7 +194,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 	int8_t v;
 
 	uint16_t baseAPitch,baseBPitch,baseCutoff;
-	int16_t mTune,fineBFreq,detune;
+	int16_t mTune,fineBFreq,detune,detuneA,detuneB;
 
 	// We use int16_t here because we want to be able to use negative
 	// values for intermediate calculations, while still retaining a
@@ -311,12 +311,16 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 
 		// detune
 		
-		if(currentPreset.steppedParameters[spUnison] || settings.spread)
+		if(currentPreset.steppedParameters[spUnison] || currentPreset.steppedParameters[spSpread])
 		{
 			detune=(1+(v>>1))*(v&1?-1:1)*(detuneRaw>>8);
+            // scale with note
+            detuneA=(int16_t)(detune*(1.0f-(currentPreset.steppedParameters[spDetuneKey]*(float)synth.oscABaseCV[v])/131072.0f));
+            detuneB=(int16_t)(detune*(1.0f-(currentPreset.steppedParameters[spDetuneKey]*(float)synth.oscBBaseCV[v])/131072.0f));
+            detune=(int16_t)(detune*(1.0f-(currentPreset.steppedParameters[spDetuneKey]*(float)synth.filterBaseCV[v])/131072.0f));
 
-			synth.oscABaseCV[v]=satAddU16S16(synth.oscABaseCV[v],detune);
-			synth.oscBBaseCV[v]=satAddU16S16(synth.oscBBaseCV[v],detune);
+			synth.oscABaseCV[v]=satAddU16S16(synth.oscABaseCV[v],detuneA);
+			synth.oscBBaseCV[v]=satAddU16S16(synth.oscBBaseCV[v],detuneB);
 			synth.filterBaseCV[v]=satAddU16S16(synth.filterBaseCV[v],detune);
 		}
 
@@ -598,7 +602,7 @@ static void refreshEnvSettings(void)
 		adsr_setSpeedShift(&synth.filEnvs[i],(currentPreset.steppedParameters[spFilEnvSlow])?3:1);
 		
 		spread=0;
-		if(settings.spread)
+		if(currentPreset.steppedParameters[spSpread])
         {
 			spread=((1+(i>>1))*(i&1?-1:1))<<8;
 		
@@ -654,9 +658,43 @@ static void refreshLfoSettings(void)
 		}
 	}
 	
-	float bendValue;
-    bendValue=((expf(((float)synth.modwheelAmount)/120000.0f )-1.0f)*69835.0f);
-	mwAmt=((uint16_t)bendValue)>>currentPreset.steppedParameters[spModwheelShift];
+	// mod wheel shifts:
+    float bendValue;
+
+    switch (currentPreset.steppedParameters[spModwheelShift])
+    {
+        case 0:
+            bendValue=((expf(((float)synth.modwheelAmount)/150000.0f )-1.0f)*3737.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 1:
+            bendValue=((expf(((float)synth.modwheelAmount)/40000.0f )-1.0f)*1975.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 2:
+            bendValue=((expf(((float)synth.modwheelAmount)/20000.0f )-1.0f)*1285.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 3:
+            bendValue=((expf(((float)synth.modwheelAmount)/17000.0f )-1.0f)*1417.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 4:
+            mwAmt=synth.modwheelAmount>>5;
+            break;
+        case 5:
+            mwAmt=synth.modwheelAmount>>3;
+            break;
+        case 6:
+            mwAmt=synth.modwheelAmount>>1;
+            break;
+        case 7:
+            mwAmt=synth.modwheelAmount;
+            break;
+        default:
+            mwAmt=synth.modwheelAmount;
+    }
+
 
 	lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
 	lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
@@ -900,29 +938,19 @@ static void handleBitInputs(void)
 	}
 	
 	// control footswitch 
-	 
-	if(currentPreset.steppedParameters[spUnison] && !(cur&BIT_INTPUT_FOOTSWITCH) && last&BIT_INTPUT_FOOTSWITCH)
-	{
-		assigner_latchPattern();
-		assigner_getPattern(currentPreset.voicePattern,NULL);
-        midi_sendSustainEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1); // add this here for Midi sustain output
-    }
-	else if((cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
-	{
-		if(arp_getMode()!=amOff)
+
+	if ((cur&BIT_INTPUT_FOOTSWITCH)!=(last&BIT_INTPUT_FOOTSWITCH))
+    {
+        if(arp_getMode()!=amOff)
 		{
 			arp_setMode(arp_getMode(),(cur&BIT_INTPUT_FOOTSWITCH)?0:1);
 			refreshSevenSeg();
 		}
 		else
 		{
-			if (settings.midiMode==0) // this comes from a foot pedal, so local, only apply if not in local off mode
-			{
-				assigner_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
-			}
-			midi_sendSustainEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1);
+            synth_holdEvent((cur&BIT_INTPUT_FOOTSWITCH)?0:1, 1, 1);
 		}
-	}
+    }
 
 	// tape in
 	
@@ -1459,7 +1487,7 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
 	
 	if(mask&2)
 	{
-		if ((isInternal && settings.midiMode==0) || !isInternal)
+		if (settings.midiMode==0 || !isInternal)
 		{
             synth.modwheelAmount=modulation;
             refreshLfoSettings();
@@ -1494,4 +1522,24 @@ void synth_realtimeEvent(uint8_t midiEvent)
 			seq_silence(1);
 			break;
 	}
+}
+
+void synth_holdEvent(int8_t hold, int8_t sendMidi, uint8_t isInternal)
+{
+    if (currentPreset.steppedParameters[spUnison])
+    {
+        // this is a hold / latch event
+        if (hold && isInternal) // latching in unison mode is only done on hold change to "on". This is never sent to MIDI but it is applied in local off mode
+        {
+
+            assigner_latchPattern(1);
+            assigner_getPattern(currentPreset.voicePattern,NULL); // this is stored in the patch
+            // never send MIDI
+        }
+    }
+    else
+    {
+        if (settings.midiMode==0 || !isInternal) assigner_holdEvent(hold); // only applied in local on mode
+		if (sendMidi) midi_sendSustainEvent(hold); // add this here for Midi sustain output
+    }
 }

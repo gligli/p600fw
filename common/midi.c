@@ -276,7 +276,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	}
 	else if(control==64) // hold pedal
 	{
-		assigner_holdEvent(value);
+        synth_holdEvent(value, 0, 0); // the distinction between Unison and Poly mode will be handled there
 		return;
 	}
 	
@@ -308,8 +308,9 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
 	{
 		param=control-MIDI_BASE_STEPPED_CC;
-		uint8_t v;
+		uint8_t v, prev;
 		
+        prev=currentPreset.steppedParameters[param];
 		v=value>>(7-steppedParametersBits[param]);
 		
 		if(currentPreset.steppedParameters[param]!=v)
@@ -320,11 +321,12 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		
 		// special case for unison (pattern latch)
 		
-		if(param==spUnison)
+		if(param==spUnison) // the switch to unison
 		{
-			if(v)
+			if(v && !prev)
 			{
-				assigner_latchPattern();
+                // only execute changes into unison mode, not additional latches
+				assigner_latchPattern(0);
 			}
 			else
 			{
@@ -480,6 +482,7 @@ void midi_sendProgChange(uint8_t prog)
     midi_send_programchange(&midi, settings.midiSendChannel, prog);
 }
 
+
 void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 {
 	static int16_t lastBend=0;
@@ -514,4 +517,14 @@ void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 void midi_sendSustainEvent(int8_t on)
 {
 	midi_send_cc(&midi,settings.midiSendChannel,64,on?0x7f:0x00);
+}
+
+void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
+{
+    uint8_t lsb, msb;
+
+    lsb=val;
+    msb=(val>>8);
+
+    midi.send_func(&midi, 3, MIDI_PITCHBEND | (mdchn & MIDI_CHANMASK), lsb, msb);
 }
