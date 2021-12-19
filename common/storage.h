@@ -24,6 +24,7 @@ typedef enum
 	cpVibFreq=26,cpVibAmt=27,
 	cpUnisonDetune=28,
 	cpSeqArpClock=29,
+    cpSpread=30,
 
 	// /!\ this must stay last
 	cpCount
@@ -58,8 +59,6 @@ typedef enum
 	spEnvRouting=26,			
 	spLFOSync=27,
 	spPWMBug=28,
-    spSpread=29,
-    spDetuneKey=30,
 
 	// /!\ this must stay last
 	spCount
@@ -106,7 +105,7 @@ extern const uint8_t steppedParametersBits[spCount];
 int8_t settings_load(void);
 void settings_save(void);
 
-int8_t preset_loadCurrent(uint16_t number);
+int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer);
 void preset_saveCurrent(uint16_t number);
 
 void preset_loadDefault(int8_t makeSound);

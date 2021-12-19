@@ -350,7 +350,7 @@ static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t p
 
 	if(settings.presetMode && program<100  && program!=settings.presetNumber)
 	{
-		if(preset_loadCurrent(program))
+		if(preset_loadCurrent(program,0))
 		{
 			settings.presetNumber=program;
 			ui_setPresetModified(0);	
@@ -461,7 +461,7 @@ void midi_dumpPresets(void)
 
 	for(i=0;i<100;++i)
 	{
-		if(preset_loadCurrent(i))
+		if(preset_loadCurrent(i,0))
 		{
 			storage_export(i,tempBuffer,&size);
 			sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);

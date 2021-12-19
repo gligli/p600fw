@@ -12,6 +12,7 @@ void midi_sendNoteEvent(uint8_t note, int8_t gate, uint16_t velocity);
 void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask);
 void midi_sendSustainEvent(int8_t on);
 void midi_sendProgChange(uint8_t prog);
+void midi_sendThreeBytes(uint8_t mdchn, uint16_t val);
 
 #endif	/* MIDI_H */
 

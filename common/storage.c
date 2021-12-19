@@ -5,6 +5,8 @@
 #include "storage.h"
 #include "uart_6850.h"
 #include "synth.h"
+#include "ui.h"
+
 
 // increment this each time the binary format is changed
 #define STORAGE_VERSION 8
@@ -333,15 +335,32 @@ LOWERCODESIZE void settings_save(void)
 	}
 }
 
-LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
+
+
+LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 {
 	uint8_t i;
 	int8_t readVar;
 	
 	BLOCK_INT
 	{
-		if(!storageLoad(number,1))
-			return 0;
+        if (!loadFromBuffer)
+        {
+            if(!storageLoad(number,1))
+                return 0;
+        }
+        else
+        {
+            // check the storage MAGIC
+            storage.bufPtr=storage.buffer;
+
+            if(storageRead32()!=STORAGE_MAGIC)
+            {
+                memset(storage.buffer,0,sizeof(storage.buffer));
+                return 0;
+            }
+            storage.version=storageRead8();
+        }
 
 		// defaults
 		
@@ -420,10 +439,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number)
 		if (readVar<=1) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spPWMBug]=readVar;
 
-        readVar=storageRead8 ();
-		if (readVar<=1) // only accept valid values, otherwise default stays
-			currentPreset.steppedParameters[spSpread]=readVar;
-
+        currentPreset.steppedParameters[cpSpread]=storageRead16();
 
 	}
 	
@@ -471,7 +487,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
 		storageWrite8(currentPreset.steppedParameters[spLFOSync]);	
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
-		storageWrite8(currentPreset.steppedParameters[spSpread]);
+		storageWrite16(currentPreset.steppedParameters[cpSpread]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough
@@ -532,11 +548,28 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
 {
 	BLOCK_INT
 	{
-		memset(storage.buffer,0,sizeof(storage.buffer));
+        memset(storage.buffer,0,sizeof(storage.buffer));
 		memcpy(storage.buffer,buf,size);
-		storage.bufPtr=storage.buffer+size;
-		storageFinishStore(number,1);
-        if (settings.presetMode && settings.presetNumber == number) refreshPresetMode();
+        // here we distinguish between MIDI to storage an MIDI to controls
+        if (ui.isReadyForSysExPatch)
+        {
+            //  check the STORAGE_MAGIC
+            storage.bufPtr=storage.buffer;
+            if(storageRead32()!=STORAGE_MAGIC)
+            {
+                memset(storage.buffer,0,sizeof(storage.buffer));
+                return;
+            }
+            storage.bufPtr=storage.buffer+size;
+            storageFinishStore(number,1);
+            if (settings.presetMode && settings.presetNumber == number) refreshPresetMode();
+        }
+        else if (settings.presetMode)
+        {
+            // load into the current present
+            preset_loadCurrent(0,1);
+            ui.presetModified=1;
+        }
 	}
 }
 
@@ -556,6 +589,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
 		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
+		currentPreset.continuousParameters[cpSpread]=0; // default is: spread off
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modVCO;
@@ -566,7 +600,6 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spEnvRouting]=0; // standard
 		currentPreset.steppedParameters[spLFOSync]=0; // off
 		currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
-        currentPreset.steppedParameters[spSpread]=0; // the default is: spread off
 		
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
 

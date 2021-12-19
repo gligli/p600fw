@@ -43,8 +43,8 @@ const struct uiParam_s uiParameters[] =
 	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="env rtg",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*7*/ {.type=ptStep,.number=spDetuneKey,.name="detune key", .values={"off","half", "full"}},
-	/*8*/ {.type=ptStep,.number=spSpread,.name="spread", .values={"off","on"}},
+	/*7*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*8*/ {.type=ptCont,.number=cpSpread,.name="spread"},
 	/*9*/ {.type=ptStep,.number=spPWMBug,.name="sync like v2",.values={"on","off"}},
 };
 
@@ -254,8 +254,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		}
 		break;
 	case pb9: // vcf limit
-		strcat(s,"Vcf lim");
-		
+		strcpy(s,"Vcf lim ");
 		if(settings.vcfLimit)
 		{
 			strcat(s,"on");
@@ -372,7 +371,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb5||new==pb1||new==pb7||new==pb8||new==pb9) // parameters on third press
+			{if (new==pb5||new==pb1||new==pb8||new==pb9) // parameters on third press
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -382,7 +381,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 			ui.activeParamIdx=new;
 		ui.previousData=-1;
 	}
-	
+
 	if(ui.activeParamIdx!=prev)
 	{
 		// display param name + value
@@ -457,33 +456,34 @@ void ui_checkIfDataPotChanged(void)
 		
 		switch(prm.type)
 		{
-		case ptCont:
-			currentPreset.continuousParameters[prm.number]=data;
-			break;
-		case ptStep:
-		case ptCust:
-			ui_setNoActivePot();
-			
-			valCount=0;
-			while(valCount<8 && prm.values[valCount]!=NULL) // 8 is the current max of choices
-				++valCount;
-			
-			data=(data*valCount)>>16; // this divides the total range (16 bits) into valCount pieces using effectively a floor() function
+            case ptCont:
+                currentPreset.continuousParameters[prm.number]=data;
+                //midi_sendThreeBytes(12, prm.number); // this is the page position // MIDI logging
+                break;
+            case ptStep:
+            case ptCust:
+                ui_setNoActivePot();
 
-			if(data!=ui.previousData)
-				sevenSeg_scrollText(prm.values[data],1);
+                valCount=0;
+                while(valCount<8 && prm.values[valCount]!=NULL) // 8 is the current max of choices
+                    ++valCount;
 
-			if(prm.type==ptStep)
-			{
-				currentPreset.steppedParameters[prm.number]=data;
-			}
-			else
-			{
-				setCustomParameter(prm.number,data);
-			}
+                data=(data*valCount)>>16; // this divides the total range (16 bits) into valCount pieces using effectively a floor() function
 
-			ui.previousData=data;
-			break;
+                if(data!=ui.previousData)
+                    sevenSeg_scrollText(prm.values[data],1);
+
+                if(prm.type==ptStep)
+                {
+                    currentPreset.steppedParameters[prm.number]=data;
+                }
+                else
+                {
+                    setCustomParameter(prm.number,data);
+                }
+
+                ui.previousData=data;
+                break;
 		}
 		ui.presetModified=1;
 		
@@ -495,10 +495,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
 
-    refreshPresetButton(button);
-
 	// button press might change current preset
-
 	refreshPresetButton(button);		
 
 	// sequencer
@@ -509,29 +506,29 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		
 		switch(seq_getMode(track))
 		{
-		case smOff:
-			if(ui.digitInput==diStoreDecadeDigit)
-			{
-				// go directly to record mode when record was previously pressed
-				seq_setMode(track,smRecording);
-				// seq mode
-				ui.digitInput=diSequencer;
-			}
-			else
-			{
-				seq_setMode(track,ui.isShifted?smWaiting:smPlaying);
-			}
-			break;
-		case smRecording:
-			// cancel seq mode
-			ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-			// fall through
-		case smWaiting:
-			seq_setMode(track,smPlaying);
-			break;
-		case smPlaying:
-			seq_setMode(track,smOff);
-			break;
+            case smOff:
+                if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
+                {
+                    // go directly to record mode when record was previously pressed
+                    seq_setMode(track,smRecording);
+                    // seq mode
+                    ui.digitInput=diSequencer;
+                }
+                else
+                {
+                    seq_setMode(track,ui.isShifted?smWaiting:smPlaying);
+                }
+                break;
+            case smRecording:
+                // cancel seq mode
+                ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+                // fall through
+            case smWaiting:
+                seq_setMode(track,smPlaying);
+                break;
+            case smPlaying:
+                seq_setMode(track,smOff);
+                break;
 		}
 	}
 	
@@ -638,8 +635,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset))
-		//if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
+		if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset || button==pbRecord))
+		// these are the special function buttons in shift mode
 		{
 			// Disable double click mode which might confuse
 			// user if she/he presses FROM TAPE within the double
@@ -651,10 +648,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			{
 				ui.retuneLastNotePressedMode=!ui.retuneLastNotePressedMode;
 			}
-			else
+			else if (button==pbRecord)
 			{
-				handleMiscAction(button);
+				ui.isReadyForSysExPatch=!ui.isReadyForSysExPatch;
 			}
+			else
+            {
+                handleMiscAction(button);
+            }
 		}
 		else if(button==pbTune)
 		{
@@ -669,27 +670,39 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbPreset)
 		{
-			// save manual preset
-			if(!settings.presetMode)
-				preset_saveCurrent(MANUAL_PRESET_PAGE);
+            // if in MIDI expect mode then release the mode
+            if (ui.isReadyForSysExPatch)
+            {
+                ui.isReadyForSysExPatch=0;
+            }
+            else
+            {
+                // save manual preset to recall it later
+                if(!settings.presetMode)
+                    preset_saveCurrent(MANUAL_PRESET_PAGE);
 
-			settings.presetMode=settings.presetMode?0:1;
-			settings_save();
-			refreshPresetMode();
-			refreshFullState();
+                settings.presetMode=settings.presetMode?0:1;
+                settings_save();
+                refreshPresetMode();
+                refreshFullState();
+            }
 		}
-		else if(button==pbRecord && !recordOverride)
+		else if(button==pbRecord && ui.isReadyForSysExPatch)
 		{
-			if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
-			{
-				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-				ui.presetAwaitingNumber=-1;	
-			}
-			else
-			{
-				// ask for digit
-				ui.digitInput=diStoreDecadeDigit;
-			}
+            ui.isReadyForSysExPatch=0; // switch off
+        }
+		else if(button==pbRecord && !recordOverride)
+        {
+                if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
+                {
+                    ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+                    ui.presetAwaitingNumber=-1;
+                }
+                else
+                {
+                    // ask for digit
+                    ui.digitInput=diStoreDecadeDigit;
+                }
 		}
 		else if(ui.digitInput==diSequencer)
 		{
@@ -722,10 +735,9 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				{
 					preset_saveCurrent(ui.presetAwaitingNumber);
 				}
-
 				// if in local off mode we can still change the program because the incoming MIDI would have no effect
 				// also: always try to load/reload preset
-                if(preset_loadCurrent(ui.presetAwaitingNumber))
+                if(preset_loadCurrent(ui.presetAwaitingNumber,0))
                 {
                     settings.presetNumber=ui.presetAwaitingNumber;
                     midi_sendProgChange(settings.presetNumber); // always send
