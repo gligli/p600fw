@@ -122,7 +122,16 @@ inline int16_t scaleU16S16(uint16_t a, int16_t b)
 	return r;
 }
 
+
 #endif
+
+inline int16_t scaleProportionalU16S16(uint16_t a, int16_t b)
+{
+	uint16_t r;
+    r=MIN((int32_t)(a*(1.0f + ((float)b)/65536.0f)),UINT16_MAX);
+	return r;
+}
+
 
 inline uint32_t lfsr(uint32_t v, uint8_t taps)
 {
@@ -143,6 +152,7 @@ uint16_t exponentialCourse(uint16_t v, float ratio, float range)
 {
 	return expf(-(float)v/ratio)*range;
 }
+
 
 int uint16Compare(const void * a,const void * b)
 {

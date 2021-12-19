@@ -23,6 +23,7 @@ int32_t satAddS16S16(int16_t a, int16_t b);
 
 uint16_t scaleU16U16(uint16_t a, uint16_t b);
 int16_t scaleU16S16(uint16_t a, int16_t b);
+int16_t scaleProportionalU16S16(uint16_t a, int16_t b);
 
 uint16_t lerp(uint16_t a,uint16_t b,uint8_t x);
 uint16_t computeShape(uint32_t phase, const uint16_t lookup[], int8_t interpolate);
@@ -30,7 +31,7 @@ uint16_t computeShape(uint32_t phase, const uint16_t lookup[], int8_t interpolat
 uint32_t lfsr(uint32_t v, uint8_t taps);
 
 uint16_t exponentialCourse(uint16_t v, float ratio, float range);
-		
+
 int uint16Compare(const void * a,const void * b); // for qsort
 
 #endif	/* UTILS_H */
