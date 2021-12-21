@@ -1,0 +1,29 @@
+The Teensy++ 2.0 hardware uses a memory which is structured in pages of 256 bytes.
+
+The firmware SysEx has the following structure:
+
+\begin{itemize}
+  \item Chain of data SysEx block, each representing a storage page in the Prophet 600
+  \subitem "F0": SysEx start
+  \subitem Prophet 600 signature: "00 61 16"
+  \subitem Prophet 600 firmware message type: "6B"
+  \subitem Pagesize (constant: "02 00" (= 512)
+  \subitem Page ID: one byte starting from highest ID
+  \subitem 64 sets of 5 MIDI bytes (14 bit) converted into 4 bytes. This makes 256 bytes.
+  \subitem 3 bytes of checksum
+  \subitem "F7": SysEx end
+  \item One termination SysEx
+  \subitem "F0": SysEx start
+  \subitem Prophet 600 signature: "00 61 16"
+  \subitem Prophet 600 firmware message type: "6B"
+  \subitem "00 00", instead of page size, signifying the end of the data stream
+  \subitem "F7": SysEx end  
+\end{itemize}
+
+The data is written into application part of the storage, into the RWW (read-while-write) section of the memory. The number of pages used a firmward version can be obtained by counting the pages contained in the SysEx file.
+
+Patch data is also written into the RWW memory. The patch 0 starts at page...
+
+The settings are stored in 2 pages starting at 220.
+
+The sequencer data is stored in two pages starting at 200. (200 for track 1 and 201 for track 2).
