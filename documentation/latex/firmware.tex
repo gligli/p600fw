@@ -22,8 +22,7 @@ The firmware SysEx has the following structure:
 
 The data is written into application part of the storage, into the RWW (read-while-write) section of the memory. The number of pages used a firmward version can be obtained by counting the pages contained in the SysEx file.
 
-Patch data is also written into the RWW memory. The patch 0 starts at page...
+Patch data is also written into the RWW memory. The patch 0 starts at page pointer 256. The sequencer data is stored in two pages starting at 456. (456 for track 1 and 457 for track 2). The interim storage of the preset page is located on page pointer 475 and the settings are stored in 2 pages starting at pointer 476.
 
-The settings are stored in 2 pages starting at 220.
+Note to developers: the application code must fit into the first 256 pages. This corresponds to a SysEx size of 85258 kB which is the equivalent of 65536 kB hex file. Code beayon this size will overwrite patches and will be corrupted by patche storage operations.
 
-The sequencer data is stored in two pages starting at 200. (200 for track 1 and 201 for track 2).
