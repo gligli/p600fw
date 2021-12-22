@@ -401,12 +401,12 @@ void NRWW_SECTION(".updater") updater_main(void)
 		
 		// wait for sysex begin
 		UPDATER_GET_BYTE;
-		if(b!=0xf0)
+		if(b!=0xf0) // "F0" is the SysEx start byte, so loop until that arrives
 			continue;
 		
 		// check for my ID
 		UPDATER_WAIT_BYTE(SYSEX_ID_0)
-		UPDATER_WAIT_BYTE(SYSEX_ID_1) 
+		UPDATER_WAIT_BYTE(SYSEX_ID_1)
 		UPDATER_WAIT_BYTE(SYSEX_ID_2) 
 		
 		// check for update command
@@ -418,7 +418,7 @@ void NRWW_SECTION(".updater") updater_main(void)
 		UPDATER_CRC_BYTE
 		pageSize|=b&0x7f;
 		
-		if(pageSize!=SPM_PAGESIZE)
+		if(pageSize!=SPM_PAGESIZE) // the last SysEx block comes with pagesize =0 and marks the end of the firmware stream
 		{
 			success=pageSize==0;
 			break;
