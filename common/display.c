@@ -66,11 +66,11 @@ void sevenSeg_setRelative(comparator_t comparator)
     }
     else if (comparator == comGreater)
     {
-        display.sevenSegs[1]=map_to_seg7(&sevenSeg_map,*">");
-    }
-    else
-    {
         display.sevenSegs[0]=map_to_seg7(&sevenSeg_map,*"<");
+    }
+    else if (comparator == comLess)
+    {
+        display.sevenSegs[1]=map_to_seg7(&sevenSeg_map,*">");
     }
 }
 

@@ -57,6 +57,17 @@ const p600Pot_t continuousParameterToPot[cpCount]=
     ppNone,ppNone,ppNone,ppNone,ppNone
 };
 
+const uint8_t potToCP[32]=
+{
+    cpVolA, cpCutoff,cpResonance,cpFilEnvAmt,cpFilRel,cpFilSus,
+	cpFilDec,cpFilAtt,cpAmpRel,cpAmpSus,cpAmpDec,cpAmpAtt,
+	cpVolB,cpBPW,
+    -1, -1, // ppMVol, ppMTune // not part of preset, gap in index
+    -1, -1, -1, -1, -1, -1, // ppPitchWheel,,,,,, // not part of preset, gap in index
+    -1, // ppModWheel, // not part of preset
+	cpSeqArpClock,cpAPW,cpPModFilEnv,cpLFOFreq,cpPModOscB,cpLFOAmt,cpFreqB,cpFreqA,cpFreqBFine
+};
+
 const uint16_t extClockDividers[16] = {192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2};
 
 volatile uint32_t currentTick=0; // 500hz
@@ -739,26 +750,35 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
         if(ui.lastActivePotValue>=0)
         {
             int32_t v;
+            uint8_t lastPotcP;
+            lastPotcP=potToCP[ui.lastActivePot];
 
-            if(ui.lastActivePot!=ppPitchWheel)
-            {
-                v=ui.adjustedLastActivePotValue;
-            }
-            else
+            if(ui.lastActivePot==ppPitchWheel)
             {
                 v=getAdjustedBenderAmount();
                 v-=INT16_MIN;
             }
-
-            v=(v*100L)>>16; // 0..100 range
-
-            if(potmux_isPotZeroCentered(ui.lastActivePot))
+            else
             {
-                v=abs(v-50);
-                led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
+				v=ui.adjustedLastActivePotValue;
             }
 
-            sevenSeg_setNumber(v);
+            v=(v*100L)>>16; // 0..100 range
+            if(potmux_isPotZeroCentered(ui.lastActivePot)) v=abs(v-50);
+
+            if (lastPotcP>=0 && currentPreset.contParamPotStatus[lastPotcP]==1) // preset pot in picked-up state
+            {
+                led_set(plDot,v<0,0); // dot indicates negative
+                sevenSeg_setNumber(v);
+            }
+            else if (currentPreset.contParamPotStatus[lastPotcP]==2)
+            {
+                sevenSeg_setRelative(comGreater);
+            }
+            else if (currentPreset.contParamPotStatus[lastPotcP]==3)
+            {
+                sevenSeg_setRelative(comLess);
+            }
         }
         else
         {
@@ -839,8 +859,25 @@ static void refreshPresetPots(int8_t force)
 
             if(potmux_isPotZeroCentered(pp))
                 value=addDeadband(value,&panelDeadband);
-            currentPreset.continuousParameters[cp]=value;
-            ui.presetModified=1;
+
+            if (currentPreset.contParamPotStatus[cp]==1 || !(settings.presetMode && ui.digitInput<diLoadDecadeDigit)) // synth follows pot, picked up or live mode
+            {
+                currentPreset.continuousParameters[cp]=value;
+                currentPreset.contParamPotStatus[cp]=1;
+                ui.presetModified=1;
+            }
+            else // pot is still off
+            {
+                if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp]))
+                {
+                    currentPreset.contParamPotStatus[cp]=1;
+                    currentPreset.continuousParameters[cp]=value;
+                }
+                else
+                {
+                    currentPreset.contParamPotStatus[cp]=currentPreset.continuousParameters[cp]>value?2:3; // 2 means pot is lower, 3 means pot is higher
+                }
+            }
         }
 }
 
@@ -1072,9 +1109,9 @@ void synth_update(void)
 
     // act on pot change
 
-    ui_checkIfDataPotChanged();
+    ui_checkIfDataPotChanged(); // this sets ui.lastActivePot and handles the menu parameters
 
-    refreshPresetPots(!settings.presetMode);
+    refreshPresetPots(!settings.presetMode); // this updates currentPreset.cp[] if "forced" (function parameter), lastActivePot or changed
 
     if(ui.lastActivePot!=ppNone)
     {

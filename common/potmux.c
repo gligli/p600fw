@@ -16,6 +16,16 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
 };
 
+// through the combination of bit depth and change cutoff (small, 4) there are characteristic max values the potmux returns:
+static const uint16_t potMaxVal[POTMUX_POT_COUNT]=
+{
+	/*Mixer*/0xFC00,/*Cutoff*/0xFCF0,/*Resonance*/0xFC00,/*FilEnvAmt*/0xFCC0,/*FilRel*/0xFC00,/*FilSus*/0xFC00,
+	/*FilDec*/0xFC00,/*FilAtt*/0xFC00,/*AmpRel*/0xFC00,/*AmpSus*/0xFC00,/*AmpDec*/0xFC00,/*AmpAtt*/0xFC00,
+	/*Glide*/0xFC00,/*BPW*/0xFCC0,/*MVol*/0xFC00,/*MTune*/0xFCF0,/*PitchWheel*/0xFCF0,0,0,0,0,0,/*ModWheel*/0xFC00,
+	/*Speed*/0xFCF0,/*APW*/0xFCC0,/*PModFilEnv*/0xFCC0,/*LFOFreq*/0xFCC0,/*PModOscB*/0xFCC0,/*LFOAmt*/0xFCC0,/*FreqB*/0xFCF0,/*FreqA*/0xFCF0,/*FreqBFine*/0xFC00
+};
+
+
 static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
 {
 	ppCutoff,ppPitchWheel,ppFreqA,ppFreqB,ppModWheel
@@ -105,6 +115,13 @@ FORCEINLINE uint16_t potmux_getValue(p600Pot_t pot)
 {
 	return potmux.pots[pot];
 }
+
+FORCEINLINE uint8_t comparePotVal(p600Pot_t pot, uint16_t potValue, uint16_t compareValue)
+{
+    if (potMaxVal[pot]<=potValue && potMaxVal[pot]<=compareValue) return 1;
+    return 0;
+}
+
 
 FORCEINLINE int8_t potmux_hasChanged(p600Pot_t pot)
 {

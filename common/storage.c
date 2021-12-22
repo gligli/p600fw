@@ -135,6 +135,12 @@ static void storageWriteS8(int8_t v)
 	storage.bufPtr+=sizeof(v);
 }
 
+static void resetPickUps(void)
+{
+    uint8_t cp;
+    for (cp=0;cp<cpCount;++cp) currentPreset.contParamPotStatus[cp]=0;
+}
+
 static LOWERCODESIZE int8_t storageLoad(uint16_t pageIdx, uint8_t pageCount)
 {
 	uint16_t i;
@@ -351,6 +357,9 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         }
         else
         {
+
+            resetPickUps();
+
             // check the storage MAGIC
             storage.bufPtr=storage.buffer;
 
@@ -569,6 +578,7 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
             // load into the current present
             preset_loadCurrent(0,1);
             ui.presetModified=1;
+            resetPickUps();
         }
 	}
 }
@@ -609,7 +619,10 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
-	}
+
+        resetPickUps();
+
+    }
 }
 
 LOWERCODESIZE void settings_loadDefault(void)

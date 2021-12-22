@@ -151,7 +151,8 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	// display / start maintainting CVs
 	
-	for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly
+	//for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly
+	for(int8_t i=0;i<30;++i) // lower this and eg. filter tuning starts behaving badly
 		whileTuning();
 			
 	// prepare flip flop
@@ -554,7 +555,7 @@ LOWERCODESIZE void tuner_scalingAdjustment(void)
 		sh_setCV(pcVolB,cv>=pcOsc1B&&cv<pcFil1?UINT16_MAX:0,0);
 		sh_setGate(pgBSaw,cv>=pcOsc1B&&cv<pcFil1?UINT16_MAX:0);
 
-		if(cv<pcFil1)
+		if(cv<pcFil1) // oscillator frequencies, first 6 OSCA and 6 OSCB
 		{
 			sh_setCV(cv,TUNER_OSC_INIT_OFFSET+3*TUNER_OSC_INIT_SCALE,0);
 			lo=measureAudioPeriod(8);

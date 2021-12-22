@@ -14,6 +14,7 @@ void potmux_resetChanged(void);
 void potmux_init(void);
 
 void potmux_update(uint8_t regularPotCount);
+uint8_t comparePotVal(p600Pot_t pot, uint16_t potValue, uint16_t compareValue);
 
 int8_t potmux_isPotZeroCentered(p600Pot_t pot);
 
