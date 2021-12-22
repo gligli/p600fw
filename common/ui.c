@@ -43,7 +43,7 @@ const struct uiParam_s uiParameters[] =
 	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="env rtg",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*7*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*7*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
 	/*8*/ {.type=ptCont,.number=cpSpread,.name="spread"},
 	/*9*/ {.type=ptStep,.number=spPWMBug,.name="sync like v2",.values={"on","off"}},
 };
@@ -63,56 +63,56 @@ static void refreshPresetButton(p600Button_t button)
 	
 	switch(button)
 	{
-	case pbASaw:
-		currentPreset.steppedParameters[spASaw]=bitState;
-		break;
-	case pbATri:
-		currentPreset.steppedParameters[spATri]=bitState;
-		break;
-	case pbASqr:
-		currentPreset.steppedParameters[spASqr]=bitState;
-		break;
-	case pbBSaw:
-		currentPreset.steppedParameters[spBSaw]=bitState;
-		break;
-	case pbBTri:
-		currentPreset.steppedParameters[spBTri]=bitState;
-		break;
-	case pbBSqr:
-		currentPreset.steppedParameters[spBSqr]=bitState;
-		break;
-	case pbSync:
-		currentPreset.steppedParameters[spSync]=bitState;
-		break;
-	case pbPModFA:
-		currentPreset.steppedParameters[spPModFA]=bitState;
-		break;
-	case pbPModFil:
-		currentPreset.steppedParameters[spPModFil]=bitState;
-		break;
-	case pbUnison:
-		currentPreset.steppedParameters[spUnison]=bitState;
-		break;
-	case pbLFOShape:
-		currentPreset.steppedParameters[spLFOShape]&=~1;
-		currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
-		break;
-	case pbLFOFreq:
-	case pbLFOPW:
-	case pbLFOFil:
-		currentPreset.steppedParameters[spLFOTargets]=
-			(currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
-			(scanner_buttonState(pbLFOFreq)?mtVCO:0) |
-			(scanner_buttonState(pbLFOPW)?mtPW:0) |
-			(scanner_buttonState(pbLFOFil)?mtVCF:0);
-		break;
-	case pbFilFull:
-	case pbFilHalf:
-		currentPreset.steppedParameters[spTrackingShift]=
-			(scanner_buttonState(pbFilHalf)?1:0) |
-			(scanner_buttonState(pbFilFull)?2:0);
-		break;
-	default:
+        case pbASaw:
+            currentPreset.steppedParameters[spASaw]=bitState;
+            break;
+        case pbATri:
+            currentPreset.steppedParameters[spATri]=bitState;
+            break;
+        case pbASqr:
+            currentPreset.steppedParameters[spASqr]=bitState;
+            break;
+        case pbBSaw:
+            currentPreset.steppedParameters[spBSaw]=bitState;
+            break;
+        case pbBTri:
+            currentPreset.steppedParameters[spBTri]=bitState;
+            break;
+        case pbBSqr:
+            currentPreset.steppedParameters[spBSqr]=bitState;
+            break;
+        case pbSync:
+            currentPreset.steppedParameters[spSync]=bitState;
+            break;
+        case pbPModFA:
+            currentPreset.steppedParameters[spPModFA]=bitState;
+            break;
+        case pbPModFil:
+            currentPreset.steppedParameters[spPModFil]=bitState;
+            break;
+        case pbUnison:
+            currentPreset.steppedParameters[spUnison]=bitState;
+            break;
+        case pbLFOShape:
+            currentPreset.steppedParameters[spLFOShape]&=~1;
+            currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
+            break;
+        case pbLFOFreq:
+        case pbLFOPW:
+        case pbLFOFil:
+            currentPreset.steppedParameters[spLFOTargets]=
+                (currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
+                (scanner_buttonState(pbLFOFreq)?mtVCO:0) |
+                (scanner_buttonState(pbLFOPW)?mtPW:0) |
+                (scanner_buttonState(pbLFOFil)?mtVCF:0);
+            break;
+        case pbFilFull:
+        case pbFilHalf:
+            currentPreset.steppedParameters[spTrackingShift]=
+                (scanner_buttonState(pbFilHalf)?1:0) |
+                (scanner_buttonState(pbFilFull)?2:0);
+            break;
+        default:
 		change=0;
 	}
 	
@@ -136,59 +136,59 @@ static int8_t changeMiscSetting(p600Button_t button)
 {
 	switch(button)
 	{
-	case pb1: // midi receive channel
-		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
-		settings_save();
-		return 0;
-	case pb2: // midi send channel
-		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
-		settings_save();
-		return 0;
-	case pb3: // pitch wheel calibration
-		settings.benderMiddle=potmux_getValue(ppPitchWheel);
-		settings_save();
-		synth_updateBender(); // immediate update
-		sevenSeg_scrollText("bender calibrated",1);
-		return 1;
-	case pb4: // voice selection
-		ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
-		return 0;
-	case pb5: // selected voice defeat
-		settings.voiceMask^=(1<<ui.voice);
-		settings_save();
-		refreshFullState();
-		return 0;
-	case pb6: // preset dump
-		midi_dumpPresets();
-		sevenSeg_scrollText("presets dumped",1);
-		refreshPresetMode();
-		refreshFullState();
-		return 1;
-	case pb7:
-		return 0;
-	case pb8: // sync mode
-		settings.syncMode=(settings.syncMode+1)%3;
-		settings_save();
-		refreshFullState();
-		return 0;
-	case pb9: // spread / vcf limit
-		settings.vcfLimit=(settings.vcfLimit?0:1); // only on or off
-		settings_save();
-		refreshFullState();
-		return 0;
-	case pb0: // MIDI mode, e.g. local on/off
-		settings.midiMode=((settings.midiMode+1)%2);
-		settings_save();
-		if (settings.midiMode==1)
-			synth_resetForLocalOffMode();
-        return 0;
-    case pbPreset: // reset to a basic patch
-		preset_loadDefault(1);
-		ui.presetModified=1;
-		sevenSeg_scrollText("basic patch",1);
-		refreshFullState();
-		return 1;
-	default:
+        case pb1: // midi receive channel
+            settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
+            settings_save();
+            return 0;
+        case pb2: // midi send channel
+            settings.midiSendChannel=(settings.midiSendChannel+1)%16;
+            settings_save();
+            return 0;
+        case pb3: // pitch wheel calibration
+            settings.benderMiddle=potmux_getValue(ppPitchWheel);
+            settings_save();
+            synth_updateBender(); // immediate update
+            sevenSeg_scrollText("bender calibrated",1);
+            return 1;
+        case pb4: // voice selection
+            ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
+            return 0;
+        case pb5: // selected voice defeat
+            settings.voiceMask^=(1<<ui.voice);
+            settings_save();
+            refreshFullState();
+            return 0;
+        case pb6: // preset dump
+            midi_dumpPresets();
+            sevenSeg_scrollText("presets dumped",1);
+            refreshPresetMode();
+            refreshFullState();
+            return 1;
+        case pb7:
+            return 0;
+        case pb8: // sync mode
+            settings.syncMode=(settings.syncMode+1)%3;
+            settings_save();
+            refreshFullState();
+            return 0;
+        case pb9: // spread / vcf limit
+            settings.vcfLimit=(settings.vcfLimit?0:1); // only on or off
+            settings_save();
+            refreshFullState();
+            return 0;
+        case pb0: // MIDI mode, e.g. local on/off
+            settings.midiMode=((settings.midiMode+1)%2);
+            settings_save();
+            if (settings.midiMode==1)
+                synth_resetForLocalOffMode();
+            return 0;
+        case pbPreset: // reset to a basic patch
+            preset_loadDefault(1);
+            ui.presetModified=1;
+            sevenSeg_scrollText("basic patch",1);
+            refreshFullState();
+            return 1;
+        default:
 		break;
 	}
 	return 0;
@@ -333,26 +333,26 @@ static LOWERCODESIZE void displayUIParameter(int8_t num)
 	
 	switch(prm->type)
 	{
-	case ptCont:
-		s[strlen(s)-1]='\0'; // remove trailing space
-		ui.lastActivePotValue=ui.adjustedLastActivePotValue=currentPreset.continuousParameters[prm->number];
-		break;
-	case ptStep:
-		strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
-		break;
-	case ptCust:
-		// reverse lookup for uiParam value (assumes only steppedParameters will be modified)
-		memcpy(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters));
-		for(i=0;i<4;++i)
-		{
-			setCustomParameter(prm->number,i);
-			if(!memcmp(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters)))
-			{
-				strcat(s,prm->values[i]);
-				break;
-			}
-		}
-		break;
+        case ptCont:
+            s[strlen(s)-1]='\0'; // remove trailing space
+            ui.lastActivePotValue=ui.adjustedLastActivePotValue=currentPreset.continuousParameters[prm->number]; // this is only for menu parameters, not pots
+            break;
+        case ptStep:
+            strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
+            break;
+        case ptCust:
+            // reverse lookup for uiParam value (assumes only steppedParameters will be modified)
+            memcpy(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters));
+            for(i=0;i<4;++i)
+            {
+                setCustomParameter(prm->number,i);
+                if(!memcmp(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters)))
+                {
+                    strcat(s,prm->values[i]);
+                    break;
+                }
+            }
+            break;
 	}
 	
 	sevenSeg_scrollText(s,1);
@@ -371,7 +371,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb5||new==pb1||new==pb8||new==pb9) // parameters on third press
+			{if (new==pb5||new==pb1||new==pb7||new==pb8||new==pb9) // parameters on third press
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}

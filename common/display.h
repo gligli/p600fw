@@ -5,9 +5,9 @@
 
 typedef enum
 {
-    comLess=0,
-    comEqual=1,
+    comEqual=0,
     comGreater=2,
+    comLess=3,
 
 } comparator_t;
 

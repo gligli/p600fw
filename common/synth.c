@@ -54,7 +54,7 @@ const p600Pot_t continuousParameterToPot[cpCount]=
     ppPModFilEnv,ppPModOscB,
     ppLFOFreq,ppLFOAmt,
     ppNone,ppNone,ppNone,ppNone,
-    ppNone,ppNone,ppNone,ppNone,ppNone
+    ppNone,ppNone,ppNone,ppNone,ppNone,ppNone
 };
 
 const uint8_t potToCP[32]=
@@ -62,10 +62,11 @@ const uint8_t potToCP[32]=
     cpVolA, cpCutoff,cpResonance,cpFilEnvAmt,cpFilRel,cpFilSus,
 	cpFilDec,cpFilAtt,cpAmpRel,cpAmpSus,cpAmpDec,cpAmpAtt,
 	cpVolB,cpBPW,
-    -1, -1, // ppMVol, ppMTune // not part of preset, gap in index
-    -1, -1, -1, -1, -1, -1, // ppPitchWheel,,,,,, // not part of preset, gap in index
+    -1, -1, // ppMVol, ppMTune // not part of preset
+    -1, -1, -1, -1, -1, -1, // ppPitchWheel,,,,,, // not part of preset, gap in index (5)
     -1, // ppModWheel, // not part of preset
-	cpSeqArpClock,cpAPW,cpPModFilEnv,cpLFOFreq,cpPModOscB,cpLFOAmt,cpFreqB,cpFreqA,cpFreqBFine
+	-1, // speed dial
+    cpAPW,cpPModFilEnv,cpLFOFreq,cpPModOscB,cpLFOAmt,cpFreqB,cpFreqA,cpFreqBFine
 };
 
 const uint16_t extClockDividers[16] = {192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2};
@@ -492,6 +493,7 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
     }
 }
 
+
 static void refreshModulationDelay(int8_t refreshTickCount)
 {
     int8_t anyPressed, anyAssigned;
@@ -750,8 +752,8 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
         if(ui.lastActivePotValue>=0)
         {
             int32_t v;
-            uint8_t lastPotcP;
-            lastPotcP=potToCP[ui.lastActivePot];
+            int8_t lastPotcP;
+            lastPotcP=potToCP[ui.lastActivePot]; // this is -1 for anything not stored in a patch
 
             if(ui.lastActivePot==ppPitchWheel)
             {
@@ -766,19 +768,21 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
             v=(v*100L)>>16; // 0..100 range
             if(potmux_isPotZeroCentered(ui.lastActivePot)) v=abs(v-50);
 
-            if (lastPotcP>=0 && currentPreset.contParamPotStatus[lastPotcP]==1) // preset pot in picked-up state
+            if (lastPotcP<0) // it's a value not part of the currentPreset.cp
             {
                 led_set(plDot,v<0,0); // dot indicates negative
                 sevenSeg_setNumber(v);
             }
-            else if (currentPreset.contParamPotStatus[lastPotcP]==2)
+            else if (currentPreset.contParamPotStatus[lastPotcP]==1) // it is stored in a patch but already picked up
             {
-                sevenSeg_setRelative(comGreater);
+                led_set(plDot,v<0,0); // dot indicates negative
+                sevenSeg_setNumber(v);
             }
-            else if (currentPreset.contParamPotStatus[lastPotcP]==3)
+            else if (currentPreset.contParamPotStatus[lastPotcP]>=2)
             {
-                sevenSeg_setRelative(comLess);
+                sevenSeg_setRelative(currentPreset.contParamPotStatus[lastPotcP]);
             }
+
         }
         else
         {
@@ -868,7 +872,7 @@ static void refreshPresetPots(int8_t force)
             }
             else // pot is still off
             {
-                if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp]))
+                if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp])) // pick up pot when close enough
                 {
                     currentPreset.contParamPotStatus[cp]=1;
                     currentPreset.continuousParameters[cp]=value;
@@ -962,6 +966,8 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
     }
 }
 
+
+
 static void handleBitInputs(void)
 {
     uint8_t cur;
@@ -1033,6 +1039,9 @@ void synth_init(void)
     lfo_init(&synth.vibrato);
     lfo_setShape(&synth.vibrato,lsTri);
     lfo_setSpeedShift(&synth.vibrato,4);
+
+    //for NOISE stop Noise waveform
+    sh_setCV(pcExtFil,0,SH_FLAG_IMMEDIATE);
 
     // go in scaling adjustment mode if needed
 
@@ -1152,7 +1161,7 @@ void synth_update(void)
 
         sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
         sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
-        sh_setCV(pcExtFil,24576,SH_FLAG_IMMEDIATE); // value from the emulator
+        sh_setCV(pcExtFil,currentPreset.continuousParameters[cpExternal] / 3,SH_FLAG_IMMEDIATE);
         break;
     case 2:
         // 'fixed' CVs

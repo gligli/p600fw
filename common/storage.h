@@ -24,7 +24,8 @@ typedef enum
 	cpVibFreq=26,cpVibAmt=27,
 	cpUnisonDetune=28,
 	cpSeqArpClock=29,
-    cpSpread=30,
+    cpExternal=30,
+    cpSpread=31,
 
 	// /!\ this must stay last
 	cpCount
