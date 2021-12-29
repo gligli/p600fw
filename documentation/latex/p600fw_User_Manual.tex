@@ -1,14 +1,14 @@
 \documentclass[draft,landscape, 11pt, oneside]{report}
 \usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
-\usepackage[T1]{fontenc}
+%\usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{hyperref}
 \usepackage{titlesec}
 \usepackage{scrextend}
 \usepackage{array}
-\usepackage{fontspec}
+%\usepackage{fontspec}
 \usepackage[inline]{showlabels}
-\setmainfont{FiraSans-SemiBold}
+%\setmainfont{FiraSans-SemiBold}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
 \setlength{\leftmargin}{-4cm}
@@ -81,22 +81,41 @@ The following is a compact summary of the improved and the  new features which t
   \item Features with version 2.1 RC3
   \subitem Polyphonic step sequencer
   \subitem Per note tuning
-  \item Features with version 2.2
-  \item Flexible envelope routing allowing the poly-mod to by modulated by either envelope generator
-  \item Possibility to sync the LFO to the thythm of the arpeggiator or sequencer
+  \subitem Support for external CV
+  \subitem Improved UI, introducing display of -50...48 range for bipolar dials and center deadband for better handling  
+  \subitem VCF limit option
+  \subitem Maintenance mode
+  \subitem Support for pedal to sustain notes and to hold chords (in unison)
+  \subitem On-the-lfly transpose function for arpeggiator and sequencer
+  \item Features with version (t.b.d.)
+  \subitem A new UI concept in preset mode in which the dials have a pick-me-up behaviour, in order to avoid discontinuous value changes and to make the differences between panel and internal values transparent 
+  \subitem Flexible envelope routing allowing the poly-mod to by modulated by either envelope generator
+  \subitem Possibility to sync the LFO to the thythm of the arpeggiator or sequencer
+  \subitem Continuous spread parameter introducing voice variations in tune and envelopes
+  \subitem Better MIDI integration possibilities through new local off mode
+  \subitem Improved patch management via MIDI, supporting loading MIDI patch to active controls 
+  \subitem Various improvements such as arppegiator / sequencer speed stability and reconciliation of internal and external bend  
+  
 \end{itemize}
 
 \section{Versions of the firmware upgrade and compatibility}
 
-The Firmware Upgrade project has been set up by GliGli as an open source project with a public code repository on GitHub\cite{repository}. The first stable version of the Firmware Upgrade was version 2.0 \cite{versiontwo}. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 has been available from September 5th 2015 on \cite{gligli}. The current release is version 2.2. 
+The first stable version of the Firmware Upgrade was version 2.0 \cite{versiontwo}. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 has been available from September 5th 2015 on \cite{gligli}. The current release is version (t.b.d.). 
 
 Upgrading the firmware can be done by SysEx (or directly using the USB port of the Teensy board), see section \ref{fwupgrade}. When upgrading the Prophet 600 patch data and settings are preserved. Note that since this is an open source project different variants of the firmware upgrade have been developed by users. In the main development branch, however, backward compatibility is intended to be ensured. This applies in particular to patches and settings as stored in the Prophet 600 memory or dumped SysEx files. It also applies to the panel overlay which some users have acquired to reflect the (slightly) altered function of some dials. 
 
-Despite the fact that many have contributed and have spent considerable time to make this software as useful and consistent as possible and despite the fact that many users continue to enjoy the upgrade, the usage of the software and this documentation are understood to be at the user's own risk.
+\textbf{For users upgrading from version 2.1 RC3}
+
+\textbf{For users upgrading from version 2.0}
 
 \section{Credits and license}
 
+The Firmware Upgrade project has been set up by GliGli as an open source project with a public code repository on GitHub\cite{repository}. 
+
 (this needs to be done)
+
+Despite the fact that many have contributed and have spent considerable time to make this software as useful and consistent as possible and despite the fact that many users continue to enjoy the upgrade, the usage of the software and this documentation are understood to be at the user's own risk.
+
 
 \end{flowtext}
 
@@ -260,7 +279,7 @@ In the original Prophet 600 the glide setting (the glide time) had a dedicated d
 
 The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect can be used in particular to make unison sound broader and more lively. The additional patch parameter is \textbf{(77) Detune}
 
-\chapter{Synthesizer setup}
+\chapter{Synthesizer setup and maintenance}
 
 \section{Tuning}\label{tuning}
 
@@ -287,15 +306,13 @@ The upgraded Prophet 600 provides a method for transposing the keyboard. In shif
 
 Transposition also applies to arpeggiator and sequencer. The transposition procedure also works in the respective run, latch and record modes.
 
-\section{Sequencer/arpeggiator sync}\label{sync}
+\section{External sequencer/arpeggiator sync}\label{sync}
 
 The sequencer and arpeggiator of the upgraded Prophet 600 can be sync'ed to external clock sources. This is done using the miscellaneous setting of number key "8". Pressing key "8" repeatedly cycles through the sync source. The supported sources are \textit{internal} (default setting, the Prophet 600 generates its own clock.), \textit{MIDI} (fraction of the incoming MIDI clock on the received channel will be used as clock) and \textit{tape} (a pulse clock source can be plugged into the “Cassette In” jack and a fraction of it will be used as clock).
 
 \section{Spread}\label{spreadsett}
 
-When the setting \textbf{spread} is activated the detune amount (see section \ref{detune}) is also applied in poly mode (not only in unison mode). In addition the spread applies a slight (constant) variation of envelope behaviour between the voices. Overall, spread is intended to simulate a less accurate synthesizer behaviour with natural variations in parameters. 
-
-In the miscellaneous settings menu the spread setting is combined with the VCF limit setting. It can be accessed using the key "9".
+\include{spread.tex}
 
 \section{VCF limit}\label{limitsett}
 
@@ -305,19 +322,11 @@ In the miscellaneous settings menu the VCF limit setting is combined with the sp
 
 \section{Managing sound libraries via SysEx}\label{mididump}
 
-The following instruction assume that you have your Prophet 600 connected via MIDI to a device where you can manage MIDI SysEx files, e.g. receive, store and send. Make sure that the MIDI receive channel on the Prophet 600 and the MIDI send channel of the sending device are the same see section \ref{midiintegration}.
+\include{patchmgmt.tex}
 
-\textbf{Dumping the patch library as SysEx} 
+\section{Scaling adjustment}\label{maintenance}
 
-On the settings menu the number pad "6" (use a second press to confirm) sends a SysEx dump of all presets to MIDI out on the MIDI send channel selected in settings. Note that dump export is only supported from storage. Therefore to create a SysEx dump of a current modified patch in live mode, that patch needs to be stored to one of the patch 0...99 first.
-
-\textbf{Dumping single patch library as SysEx} 
-
-Single patches can be dumped by sending a standard MIDI Dump Request to the Prophet 600. The dump request must contain a patch number between 0 and 99. Again, only dump from storage is supported. 
-
-\textbf{Loading patches} 
-
-Load patches is done by sending the standard patch load SysEx containing the data to the Prophet 600. Each patch contains a patch number. If the patch number is  between 0 and 99 the data will stored in tha patch overwriting the existing stored patch. Loading a SysEx patch library will overwrite the entire library stored on the Propht 600.
+\include{maintenancemode.tex}
 
 \section{SysEx firmware upgrade}\label{fwupgrade}
 

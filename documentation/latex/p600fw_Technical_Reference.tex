@@ -1,0 +1,89 @@
+\documentclass[draft,landscape, 11pt, oneside]{report}
+\usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
+%\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{scrextend}
+\usepackage{array}
+%\usepackage{fontspec}
+\usepackage[inline]{showlabels}
+%\setmainfont{FiraSans-SemiBold}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+\setlength{\leftmargin}{-4cm}
+\setlength{\paperheight}{210mm}
+\setlength{\paperwidth}{297mm}
+\setlength{\textwidth}{26cm}
+\setlength{\footskip}{2.5cm}
+\renewcommand{\familydefault}{\sfdefault}
+
+\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
+
+\title{[DRAFT] Technical Reference for the GliGli upgraded Prophet 600}
+\author{Florian Merz (Editor)}
+\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet 600}
+\makeatletter
+\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+\makeatother
+\titleformat{\chapter}[display]{\pagebreak\LARGE\bfseries}{}{0.0cm}{}
+\titlespacing{\chapter}{0pt}{*0}{*0}
+%\titleformat{\section}[display]{\Large\bfseries}{}{0.0cm}{}
+\titlespacing{\section}{0pt}{*0}{*0}
+
+\begin{document}
+
+%\maketitle
+\tableofcontents
+
+
+\pagebreak
+
+\chapter{Overview of technical implementation}
+
+\begin{flowtext}
+The Teensy++ 2.0 hardware uses a memory which is structured in 512 pages with 256 bytes each.
+
+(this needs to be done)
+\end{flowtext}
+
+\chapter{Implementation}
+
+\begin{flowtext}
+
+\section{Memory usage}\label{memory}
+
+\include{memory.tex}
+
+\section{SysEx structure}\label{sysex}
+
+\include{sysex.tex}
+
+\end{flowtext}
+
+\chapter{Firmware structure}
+
+(this needs to be done)
+
+\section{Timer interrupt}\label{timeinterrupt}
+
+\section{UART interrupt}\label{uartinterrupt}
+
+\section{Multiplixer / DAC}\label{potmux}
+
+
+\begin{thebibliography}{50} 
+
+\bibitem{gligli}GliGli Projects Page, http://gliglisynth.blogspot.com/
+\bibitem{curtis}Curtis Electro Music on Webarchive, https://web.archive.org/web/20130502132536/http://curtiselectromusic.com/Customers\_and\_Instruments.html
+\bibitem{versiontwo}GliGli upgrade release 2.0,  https://gligli.github.io/p600fw/
+\bibitem{modinstructions} Prophet600 Modification Instructions
+\bibitem{projectsite} Project Site: http://gligli.github.io/p600fw/
+\bibitem{repository} Repository: https://github.com/gligli/p600fw/
+\bibitem{teensy}Teensy Site: http://www.pjrc.com/teensy/index.html
+\bibitem{p600siownersmanual}Prophet 600 Owner's Manual, Sequential Circuits
+\bibitem{p600siservicemanual} Prophet 600 Service Manual, Sequential Circuits
+
+\end{thebibliography}
+
+\end{document}

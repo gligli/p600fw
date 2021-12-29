@@ -1,0 +1,38 @@
+The firmware SysEx has the following structure:
+
+\begin{itemize}
+  \item Chain of data SysEx block, each representing a storage page in the Teensy++ 2.0
+  \subitem "F0": SysEx start
+  \subitem Prophet 600 signature: "00 61 16"
+  \subitem Prophet 600 firmware message type: "6B"
+  \subitem Pagesize (constant: "02 00" = 512 symbols)
+  \subitem Page ID: one byte starting from highest ID
+  \subitem 64 sets of 5 MIDI bytes (14 bit) (5 MIDI bytes are converted to 4 full bytes, this a total of 256 bytes for that page).
+  \subitem 3 bytes of checksum
+  \subitem "F7": SysEx end
+  \item One termination SysEx
+  \subitem "F0": SysEx start
+  \subitem Prophet 600 signature: "00 61 16"
+  \subitem Prophet 600 firmware message type: "6B"
+  \subitem "00 00", instead of page size, signifying the end of the data stream
+  \subitem "F7": SysEx end  
+\end{itemize}
+
+
+\textbf{Conversion of MIDI bytes to full bytes}
+
+Each MIDI byte can hold values up to 127 (14 bit). To encode full bytes, 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first 7 bits of the 4 bytes to be encoded. The 8th bit of the 4 bytes is encoded in the first 4 bits of the 5th MIDI byte.   
+
+Examples:
+
+\begin{itemize}
+  \item "01 00 00 00" is encoded in SysEx MIDI as "01 00 00 00 00"
+  \item "80 00 00 00" is encoded in SysEx MIDI as "00 00 00 00 08"
+  \item "FF 00 00 00" is encoded in SysEx MIDI as "7F 00 00 00 08"
+  \item "00 00 00 FF" is encoded in SysEx MIDI as "00 00 00 7F 01"
+  \item "FF FF FF FF" is encoded in SysEx MIDI as "7F 7F 7F 7F 0F"
+\end{itemize}
+
+\textbf{Checksum}
+
+(this needs to be done)
