@@ -38,7 +38,7 @@ static FORCEINLINE void scanner_event(uint8_t key, int8_t pressed)
 	if (key<SCANNER_KEYS_START)
 		synth_buttonEvent(key,pressed);
 	else
-		synth_keyEvent(key-SCANNER_KEYS_START+SCANNER_BASE_NOTE,pressed);
+		synth_keyEvent(key-SCANNER_KEYS_START+SCANNER_BASE_NOTE,pressed,1,1,HALF_RANGE);
 }
 
 int8_t scanner_isKeyDown(uint8_t note)

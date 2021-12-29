@@ -9,7 +9,7 @@ enum uiDigitInput_e {
 	diStoreDecadeDigit, // waiting for the first number for preset store 
 	diLoadUnitDigit, // waiting for the second number for preset select
 	diStoreUnitDigit, // waiting for the second number for preset store
-	diSequencer}; // sequencer record mode
+	diSequencer,}; // sequencer record mode
 enum uiParamType_e {ptCont,ptStep,ptCust};
 
 struct uiParam_s
@@ -27,6 +27,7 @@ struct ui_s
 	int8_t presetModified;
 
 	p600Pot_t lastActivePot;
+
 	int32_t lastActivePotValue;
 	uint16_t adjustedLastActivePotValue;
 	
@@ -35,7 +36,7 @@ struct ui_s
 	int8_t isShifted;
 
 	int8_t isDoubleClicked;
-    int8_t isReadyForSysExPatch;
+    int8_t isInPatchManagement;
 	int8_t doubleClickTimer;
 	p600Button_t prevMiscButton;
 	int8_t voice;
@@ -49,6 +50,7 @@ void ui_checkIfDataPotChanged(void);
 void ui_handleButton(p600Button_t button, int pressed);
 void ui_setPresetModified(int8_t modified);
 void ui_setNoActivePot(void);
+void ui_setLocalMode(uint8_t on);
 void ui_update(void);
 
 #endif	/* UI_H */

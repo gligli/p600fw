@@ -230,7 +230,8 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	print("\n");
 #endif
 
-	assigner_assignNote(note,velocity!=0,(((uint32_t)velocity+1)<<9)-1,0);
+	//assigner_assignNote(note,velocity!=0,(((uint32_t)velocity+1)<<9)-1,0);
+    synth_keyEvent(note, velocity!=0, 0, 0, (((uint32_t)velocity+1)<<9)-1);
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -244,7 +245,8 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	print("\n");
 #endif
 
-	assigner_assignNote(note,0,0,0);
+	//assigner_assignNote(note,0,0,0);
+    synth_keyEvent(note,0,0,0,0);
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -274,6 +276,10 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	{
 		synth_wheelEvent(0,value<<9,2,0,0);
 	}
+	else if(control==7) // added midi volume
+    {
+        synth_volEvent(((uint16_t)value)<<9);
+    }
 	else if(control==64) // hold pedal
 	{
         synth_holdEvent(value, 0, 0); // the distinction between Unison and Poly mode will be handled there
@@ -335,6 +341,32 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 			assigner_getPattern(currentPreset.voicePattern,NULL);
 		}
 	}
+	else if(control==120) // All Sound off
+    {
+        if (value==127)
+        {
+            int8_t v;
+            for (v=0;v<SYNTH_VOICE_COUNT;++v)
+            {
+                assigner_voiceDone(v);
+            }
+        }
+    }
+    else if(control==122) // All Local ON/OFF
+    {
+        if (value==0) // local ON
+        {
+            ui_setLocalMode(0);
+        }
+        else if (value==127) // local ON
+        {
+            ui_setLocalMode(1);
+        }
+    }
+    else if(control==123) // All Notes off
+    {
+        if (value==127) assigner_allKeysOff();
+    }
 
 	if(change)
 	{
@@ -449,9 +481,12 @@ void midi_dumpPreset(int8_t number)
 	
 	if(number<0 || number>99)
 		return;
-	
-	storage_export(number,tempBuffer,&size);
-	sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
+
+    if(preset_loadCurrent(number,0))
+    {
+        storage_export(number,tempBuffer,&size);
+        sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
+    }
 }
 
 void midi_dumpPresets(void)
@@ -504,7 +539,7 @@ void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
         lsb&=0x7F; // LSB: project onto the lowest 7 bits
         msb=(uAmt>>7); // MSB: shift down by 7 bits
 
-        midi.send_func(&midi, 3, MIDI_PITCHBEND | (settings.midiSendChannel & MIDI_CHANMASK), lsb, msb); // midi_var_byte_func_t
+        midi.send_func(&midi, 3, MIDI_PITCHBEND | (settings.midiSendChannel & MIDI_CHANMASK), lsb, msb); // midi_var_byte_func_t with count 3
 	}
 
 	if(mask&2 && (modulation&0xfe00)!=(lastMod&0xfe00))
@@ -519,7 +554,7 @@ void midi_sendSustainEvent(int8_t on)
 	midi_send_cc(&midi,settings.midiSendChannel,64,on?0x7f:0x00);
 }
 
-void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
+/*void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
 {
     uint8_t lsb, msb;
 
@@ -527,4 +562,4 @@ void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
     msb=(val>>8);
 
     midi.send_func(&midi, 3, MIDI_PITCHBEND | (mdchn & MIDI_CHANMASK), lsb, msb);
-}
+}*/

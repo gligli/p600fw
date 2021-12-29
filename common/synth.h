@@ -95,7 +95,7 @@ typedef enum
 
 typedef enum
 {
-	modOff=0,modVCO=1,modVCF=2,modVCA=3,modPW=4
+	modOff=0,modAB=1,modVCF=2,modVCA=3,modB=4
 } modulation_t;
 
 typedef enum
@@ -109,7 +109,7 @@ typedef enum
 } syncMode_t;
 
 void synth_buttonEvent(p600Button_t button, int pressed);
-void synth_keyEvent(uint8_t key, int pressed);
+void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, uint16_t velocity);
 void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
 void synth_uartEvent(uint8_t data);
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi);
@@ -121,7 +121,7 @@ void synth_tuneSynth(void);
 void synth_resetForLocalOffMode(void);
 void synth_holdEvent(int8_t hold, int8_t sendMidi, uint8_t isInternal);
 void refreshPresetMode(void);
-
+void synth_volEvent(uint16_t value);
 
 void synth_init(void);
 void synth_update(void);

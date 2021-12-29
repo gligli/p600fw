@@ -132,7 +132,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spUnison]=zp->unison;
 	p.steppedParameters[spAssignerPriority]=apLast;
 	p.steppedParameters[spBenderSemitones]=3;
-	p.steppedParameters[spBenderTarget]=modVCO;
+	p.steppedParameters[spBenderTarget]=modAB;
 	p.steppedParameters[spModwheelShift]=2;
 	p.steppedParameters[spChromaticPitch]=1;
 

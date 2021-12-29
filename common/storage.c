@@ -398,7 +398,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 
 		// v2
 
-		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp)
+		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp) // need to read out speed (last param, cpSeqArpClock) but not use it, see below
 			currentPreset.continuousParameters[cp]=storageRead16();
 
 		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
@@ -407,7 +407,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
 
-		//currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
+		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 
 		if (storage.version<7)
 			return 1;
@@ -560,7 +560,7 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
         memset(storage.buffer,0,sizeof(storage.buffer));
 		memcpy(storage.buffer,buf,size);
         // here we distinguish between MIDI to storage an MIDI to controls
-        if (ui.isReadyForSysExPatch)
+        if (ui.isInPatchManagement)
         {
             //  check the STORAGE_MAGIC
             storage.bufPtr=storage.buffer;
@@ -602,7 +602,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpSpread]=0; // default is: spread off
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
-		currentPreset.steppedParameters[spBenderTarget]=modVCO;
+		currentPreset.steppedParameters[spBenderTarget]=modAB;
 		currentPreset.steppedParameters[spFilEnvExpo]=1;
 		currentPreset.steppedParameters[spAmpEnvExpo]=1;
 		currentPreset.steppedParameters[spModwheelShift]=2; // standard is normal shape / high
@@ -610,7 +610,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spEnvRouting]=0; // standard
 		currentPreset.steppedParameters[spLFOSync]=0; // off
 		currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
-		
+        currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
+
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));
 
 		// Default tuning is equal tempered
