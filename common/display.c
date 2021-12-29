@@ -90,17 +90,16 @@ void led_set(p600LED_t led, int8_t on, int8_t blinking)
 {
 	uint16_t mask=1<<led; // set a single bit at the position of the LED
 
-	if (on)
-	{
-		display.ledOn|=mask; // switch on the LED
-		if (blinking) display.ledBlinking|=mask; // set it blinking if flag is set
-	}
+    if (!blinking) display.ledBlinking&=~mask; // deactivate blinking of the LED
+    if (on)
+    {
+        display.ledOn|=mask; // set it blinking if flag is set
+        if (blinking) display.ledBlinking|=mask;
+    }
 	else
 	{
 		display.ledOn&=~mask; // switch off the LED
-		display.ledBlinking&=~mask; // deactivate blinking of the LED
-	}
-	
+    }
 }
 
 void display_clear()
