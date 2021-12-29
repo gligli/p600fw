@@ -1,14 +1,22 @@
 
 The following instruction assume that you have your Prophet 600 connected via MIDI to a device where you can manage MIDI SysEx files, e.g. receive, store and send. Make sure that the MIDI receive channel on the Prophet 600 and the MIDI send channel of the sending device are the same see section \ref{midiintegration}.
 
+In preset mode the Prophet 600 loads patch data sent via MIDI into the active controls. This is like loading a patch from memory: the panel control may not (and typially don't) show the values of the patch being played. You can edit and store the patch. This is useful if you would like to try a patch before deciding if it should be kept or not without having to allocate a storage number in memory. 
+
+In order to manage patches in memory via SysEx you need to enter the \textit{patch management mode}. In patch management mode any patch data received via MIDI SysEx is loaded directly into the storage number as indicated in the SysEx data. This extendes to the load of the entire patch bank. In patch management mode you can also dump single patches as well as the entire patch bank.
+
+To enter the patch management mode so hold down \textbf{From Tape} and press \textbf{Record}. The patch management mode is indicated by a flashing \textbf{Preset} button. To leave the mode, press \textbf{Record}. 
+
 \textbf{Dumping the patch library as SysEx} 
 
-On the settings menu the number pad "6" (use a second press to confirm) sends a SysEx dump of all presets to MIDI out on the MIDI send channel selected in settings. Note that dump export is only supported from storage. Therefore to create a SysEx dump of a current modified patch in live mode, that patch needs to be stored to one of the patch 0...99 first.
+To dump the entire patch bank press the \textbf{Preset} button. The screen will scroll a confirmation message. Note, however, that only valid presets are exported. Any unused patch slots are skipped.
 
-\textbf{Dumping single patch library as SysEx} 
+\textbf{Dumping single patches as SysEx} 
 
-Single patches can be dumped by sending a standard MIDI Dump Request to the Prophet 600. The dump request must contain a patch number between 0 and 99. Again, only dump from storage is supported. 
+To dump a single patch in patch management mode enter the patch number on the number pad. A confirmation will be scrolled on the display. Note, that if there is no valid patch data stored in the selected patch slot, there will be no dump, despite the confrmation message.
+
+Note: the Prophet 600 also supports MIDI Dump Requests. When sending such a request to Prophet 600 you will receive the corresponding single SysEx back (on the specified MIDI send channel). 
 
 \textbf{Loading patches} 
 
-Load patches is done by sending the standard patch load SysEx containing the data to the Prophet 600. Each patch contains a patch number. If the patch number is  between 0 and 99 the data will stored in tha patch overwriting the existing stored patch. Loading a SysEx patch library will overwrite the entire library stored on the Propht 600.
+Load patches is done by sending the standard patch load SysEx containing the data to the Prophet 600. Each patch contains a patch number. If the patch number is  between 0 and 99 the data will stored in tha patch overwriting the existing stored patch, therefore loading a SysEx patch library will overwrite the entire library stored on the Prophe 600 when patch management mode is activated. In normal preset mode patch MIDI is only loaded into the active control values. In live/panel mode incoming patch MIDI SysEx is ignored.

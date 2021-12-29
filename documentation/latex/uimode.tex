@@ -1,3 +1,15 @@
 As with the original Prophet 600 firmware, there are two modes of operation, a \textbf{Preset} mode and a \textbf{Live} mode. The user can change between the two by pressing the \textbf{Preset} button. 
 
 The idea of the live mode is that the patch that is playing corresponds to exactly the parameters as currently set by all dials, switches and additional patch parameters. The synth produces the sound as set and seen. In the preset mode, in contrast, the patch parameter as stored in the patch memory are applied. The synth produces the the sound of the preset. Still, once a dial or a switch on the panel or an additional parameter is changed, this change will take effect (note that this may lead to discontinuous changes if for example the current position of a knob is far from the  value stored in the patch). In this case  "mixed state" applies, partly patch (untouched controls) and partly panel controls (touched controls). The user can then store the current sound in the same patch or a different patch. The patch will be stored as heard. 
+
+\textbf{Preset panel mode}
+
+In preset mode the default setup is that the number pad is used to select and load presets. However, in preset mode the user can also decide to use the number pad and the display to view andaccess  additional patch parameters and patch parameter values. To do so, press \textbf{To Tape}. The LED flashes. In this \textbf{Preset Panel Mode} the display shows the value of the last touched control or additional patch parameter (if numeric) just like in live mode. To leave the preset panel mode, press To Tape again. 
+
+\textbf{Pick-me-up mode in preset panel mode}
+
+The fact that the controls in preset mode may not correspond to the current active parameter values has two disadvantages. Firstly, once a control is touched it is immediately applied, irrespectively of where it is currently pointing to and how far away that value is from the one used in the patch you are hearing. This may lead to unwanted, disruptive sound changes. Secondly, it may be difficult or cumbersome to retrieve the original patch values once changed using the dial. Therefore the upgraded Prophet 600 supports a \textit{pick-me-up} control logic for dials exclusively in preset panel mode, e.g. in preset mode with To Tape activated. It works as follows:
+
+If you touch and change a dial the display indicates if the current active value is below the current dial position (arrow on the left) or above it (arrows on the right). As long a these arrows are shown the value of the dial will not be applied, it is not "picked up". Once you touch the current active value closely enough the display switches to showing the numerical value instead, indicating that the dial is "pick up". From that moment on all movements of the dial are always applied.
+
+Using the "pick-me-up" mechanism disruptive value changes can be avoided and it is possible to dial the current panel into the patch you're hearing. Note, however, that is important to observe the display to avoid confusion. If a direct application of dials is needed then press To Tape to switch back to standard preset mode.
