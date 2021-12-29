@@ -102,7 +102,7 @@ if __name__ == "__main__":
 	if end % page_size !=0:
 		data.extend(repeat(0, (page_size - (end % page_size))))
 
-	print 'Padded size: %d bytes' % (len(data))
+	print 'Padded size: %d bytes uses (%d of a maximum of 256 pages)' % (len(data), len(data)/256)
 
 	syx_data = ''
 
