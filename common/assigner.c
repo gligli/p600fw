@@ -221,12 +221,11 @@ void assigner_allKeysOff(void)
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
-		if (!isVoiceDisabled(v) && assigner.allocation[v].gated &&
-		    assigner.allocation[v].internalKeyboard)
+		if (!isVoiceDisabled(v) && assigner.allocation[v].gated && assigner.allocation[v].internalKeyboard)
 		{
 			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
-		    	assigner.allocation[v].gated=0;
-		    	assigner.allocation[v].keyPressed=0;
+            assigner.allocation[v].gated=0;
+            assigner.allocation[v].keyPressed=0;
 		}
 	}
 	// Release all keys and future holds too. This avoids potential
@@ -395,7 +394,7 @@ reassign:
 	{
 		restoredNote=ASSIGNER_NO_NOTE;
 
-		// some still triggered notes might have been stolen, find them. imogen: also in unison mode?
+		// some still triggered notes might have been stolen, find them
 
 		for(ni=0;ni<128;++ni)
 		{
@@ -502,7 +501,7 @@ LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters uniso
 	uint8_t pattern[SYNTH_VOICE_COUNT];	
 	count=0;
 
-    assigner_holdEvent(0); // in unison mode hold no longer applies
+	assigner.hold=0; // in unison mode hold no longer applies
 	memset(pattern,ASSIGNER_NO_NOTE,SYNTH_VOICE_COUNT);
 	
 	for(i=0;i<128;++i)
@@ -522,6 +521,7 @@ LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters uniso
 	assigner_setPattern(pattern,1);
 
     // now trigger the lowest note
+    // imogen: maybe this should mae dependent on assigner priority instead
     if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
 }
 
@@ -546,7 +546,7 @@ void assigner_holdEvent(int8_t hold)
 		if (!isVoiceDisabled(v) && 
 		    assigner.allocation[v].gated &&
 		    !assigner.allocation[v].keyPressed) {
-			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
+                synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
 		    	assigner.allocation[v].gated=0;
 		}
 	}
