@@ -384,6 +384,27 @@ LOWERCODESIZE static void prepareSynth(void)
 
 }
 
+uint16_t tuner_computeCVPerOct(uint8_t note, p600CV_t cv)
+{
+	uint8_t loOct,hiOct;
+	uint16_t loOctVal,hiOctVal;
+
+	loOct=note/12;
+	hiOct=loOct+1;
+
+	if(loOct<TUNER_OCTAVE_COUNT)
+		loOctVal=settings.tunes[loOct][cv];
+	else
+		loOctVal=extapolateUpperOctavesTunes(loOct,cv);
+
+	if(hiOct<TUNER_OCTAVE_COUNT)
+		hiOctVal=settings.tunes[hiOct][cv];
+	else
+		hiOctVal=extapolateUpperOctavesTunes(hiOct,cv);
+
+    return (hiOctVal-loOctVal);
+}
+
 NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv)
 {
 	uint8_t loOct,hiOct;
