@@ -10,6 +10,7 @@
 #include "display.h"
 #include "potmux.h"
 #include "midi.h"
+#include "stdio.h"
 
 const struct uiParam_s uiParameters[] =
 {
@@ -20,7 +21,7 @@ const struct uiParam_s uiParameters[] =
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
 	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
 	/*5*/ {.type=ptCust,.number=2,.name="env shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol"}},
+	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","ab","Vcf","Vol","b"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
 	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
@@ -158,14 +159,10 @@ static int8_t changeMiscSetting(p600Button_t button)
             settings_save();
             refreshFullState();
             return 0;
-        case pb6: // preset dump
-            midi_dumpPresets();
-            sevenSeg_scrollText("presets dumped",1);
-            refreshPresetMode();
-            refreshFullState();
+        case pb6: // usused;
             return 1;
         case pb7:
-            return 0;
+            return 1;
         case pb8: // sync mode
             settings.syncMode=(settings.syncMode+1)%3;
             settings_save();
@@ -234,10 +231,9 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		s[2]='1'+ui.voice;
 		sevenSeg_scrollText(s,1);
 		break;
-	case pb6: // preset dump
-		sevenSeg_scrollText("again dumps presets",1);
+	case pb6:
 		break;
-	case pb7: // that button doesn't work
+	case pb7: // that button doesn't work, simultaneous press with FromTape not possible
 		break;
 	case pb8: // sync mode
 		switch(settings.syncMode)
@@ -282,6 +278,15 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	default:
 		break;
 	}
+}
+
+void ui_setLocalMode(uint8_t on)
+{
+    if (on==0)
+    {
+        settings.midiMode=0;
+    }
+    settings.midiMode=1;
 }
 
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
@@ -500,7 +505,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 
 	// sequencer
 	
-	if(pressed && (button==pbSeq1 || button==pbSeq2))
+	if(pressed && (button==pbSeq1 || button==pbSeq2) && !ui.isInPatchManagement)
 	{
 		int8_t track=(button==pbSeq2)?1:0;
 		
@@ -522,7 +527,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
             case smRecording:
                 // cancel seq mode
                 ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-                // fall through
+                // fall through to start playing
             case smWaiting:
                 seq_setMode(track,smPlaying);
                 break;
@@ -534,29 +539,31 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	// arp
 	
-	if(pressed && button==pbArpUD)
-	{
-		arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
-	}
-	else if(pressed && button==pbArpAssign)
-	{
-		switch(arp_getMode())
-		{
-			case amOff:
-			case amUpDown:
-					arp_setMode(amAssign,arp_getHold());
-				
-				break;
-			case amAssign:
-				arp_setMode(amRandom,arp_getHold());
-				break;
-			case amRandom:
-				arp_setMode(amOff,arp_getHold());
-				break;
-		}
-	}
+	if (pressed && !ui.isInPatchManagement)
+    {
+        if(button==pbArpUD)
+        {
+            arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
+        }
+        else if(button==pbArpAssign)
+        {
+            switch(arp_getMode())
+            {
+                case amOff:
+                case amUpDown:
+                    arp_setMode(amAssign,arp_getHold());
+                    break;
+                case amAssign:
+                    arp_setMode(amRandom,arp_getHold());
+                    break;
+                case amRandom:
+                    arp_setMode(amOff,arp_getHold());
+                    break;
+            }
+        }
+    }
 	
-	if(arp_getMode()!=amOff && pressed && button==pbRecord)
+	if(arp_getMode()!=amOff && pressed && button==pbRecord && !ui.isInPatchManagement)
 	{
 		arp_setMode(arp_getMode(),arp_getHold()?0:1);
 		recordOverride=1; // override normal record action
@@ -584,7 +591,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 
 	// digit buttons use
 	
-	if(pressed && button==pbToTape && settings.presetMode)
+	if(pressed && button==pbToTape && settings.presetMode && !ui.isInPatchManagement)
 	{
 		if(ui.digitInput!=diSynth) // preset select or store mode, sequencer mode
 		{
@@ -635,7 +642,19 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset || button==pbRecord))
+		if (ui.isInPatchManagement && button==pbRecord)
+        {
+            ui.isInPatchManagement=0;
+            ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+        }
+        else if (ui.isInPatchManagement && button==pbPreset)
+        {
+            // dump the patch bank
+            midi_dumpPresets();
+            sevenSeg_scrollText("presets dumped",1);
+            ui.digitInput=diStoreDecadeDigit;
+        }
+        else if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset || button==pbRecord))
 		// these are the special function buttons in shift mode
 		{
 			// Disable double click mode which might confuse
@@ -650,9 +669,11 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			}
 			else if (button==pbRecord)
 			{
-				ui.isReadyForSysExPatch=!ui.isReadyForSysExPatch;
+				ui.isInPatchManagement=1;
+                ui.digitInput=diStoreDecadeDigit; // the mode should start with expecting a number for single patch export
+                ui.isDoubleClicked=0; // switch this off to avoid confusion with the function of the number pad
 			}
-			else
+			else if (!ui.isInPatchManagement) // otherwise this would potentially go into the shifted function of those keys
             {
                 handleMiscAction(button);
             }
@@ -670,27 +691,15 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		}
 		else if(button==pbPreset)
 		{
-            // if in MIDI expect mode then release the mode
-            if (ui.isReadyForSysExPatch)
-            {
-                ui.isReadyForSysExPatch=0;
-            }
-            else
-            {
-                // save manual preset to recall it later
-                if(!settings.presetMode)
-                    preset_saveCurrent(MANUAL_PRESET_PAGE);
+            // save manual preset to recall it later
+            if(!settings.presetMode)
+                preset_saveCurrent(MANUAL_PRESET_PAGE);
 
-                settings.presetMode=settings.presetMode?0:1;
-                settings_save();
-                refreshPresetMode();
-                refreshFullState();
-            }
+            settings.presetMode=settings.presetMode?0:1;
+            settings_save();
+            refreshPresetMode();
+            refreshFullState();
 		}
-		else if(button==pbRecord && ui.isReadyForSysExPatch)
-		{
-            ui.isReadyForSysExPatch=0; // switch off
-        }
 		else if(button==pbRecord && !recordOverride)
         {
                 if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
@@ -705,51 +714,63 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                 }
 		}
 		else if(ui.digitInput==diSequencer)
-		{
-			handleSequencerPage(button);
-		}
-		else if(ui.digitInput==diSynth)
-		{
-			// parameter selection and display shows last touched control value
-			handleSynthPage(button);
-		}
+        {
+            handleSequencerPage(button);
+        }
+        else if(ui.digitInput==diSynth)
+        {
+            // parameter selection and display shows last touched control value
+            handleSynthPage(button);
+        }
 		else if(ui.digitInput>=diLoadDecadeDigit && button>=pb0 && button<=pb9)
 		{
 			// preset number input for load an store
 			switch(ui.digitInput)
 			{
-			case diLoadDecadeDigit: // this is the first press of the preset select
-				ui.presetAwaitingNumber=button-pb0;
-				ui.digitInput=diLoadUnitDigit;
-				break;
-			case diStoreDecadeDigit: // this is the first press of the prese store
-				ui.presetAwaitingNumber=button-pb0;
-				ui.digitInput=diStoreUnitDigit;
-				break;
-			case diLoadUnitDigit: // this is the first press of the preset select
-			case diStoreUnitDigit: // this is the second press of the preset store
-				ui.presetAwaitingNumber=ui.presetAwaitingNumber*10+(button-pb0);
+                case diLoadDecadeDigit: // this is the first press of the preset select
+                    ui.presetAwaitingNumber=button-pb0;
+                    ui.digitInput=diLoadUnitDigit;
+                    break;
+                case diStoreDecadeDigit: // this is the first press of the prese store
+                    ui.presetAwaitingNumber=button-pb0;
+                    ui.digitInput=diStoreUnitDigit;
+                    break;
+                case diLoadUnitDigit: // this is the first press of the preset select
+                case diStoreUnitDigit: // this is the second press of the preset store
+                    ui.presetAwaitingNumber=ui.presetAwaitingNumber*10+(button-pb0);
 
-				// store?
-				if(ui.digitInput==diStoreUnitDigit)
-				{
-					preset_saveCurrent(ui.presetAwaitingNumber);
-				}
-				// if in local off mode we can still change the program because the incoming MIDI would have no effect
-				// also: always try to load/reload preset
-                if(preset_loadCurrent(ui.presetAwaitingNumber,0))
-                {
-                    settings.presetNumber=ui.presetAwaitingNumber;
-                    midi_sendProgChange(settings.presetNumber); // always send
-                    settings_save();
-                }
+                    if(!ui.isInPatchManagement)
+                    {
+                        // store?
+                        if(ui.digitInput==diStoreUnitDigit)
+                        {
+                            preset_saveCurrent(ui.presetAwaitingNumber);
+                        }
+                        // if in local off mode we can still change the program because the incoming MIDI would have no effect
+                        // also: always try to load/reload preset
+                        if(preset_loadCurrent(ui.presetAwaitingNumber,0))
+                        {
+                            settings.presetNumber=ui.presetAwaitingNumber;
+                            midi_sendProgChange(settings.presetNumber); // always send
+                            settings_save();
+                        }
 
-				ui.presetAwaitingNumber=-1;
-				
-				refreshPresetMode();
-				break;
-			default:
-				;
+                        refreshPresetMode();
+                    }
+                    else
+                    {
+                        char s[50];
+                        midi_dumpPreset(ui.presetAwaitingNumber); // dump that patch
+                        sprintf(s, "patch %u dumped", ui.presetAwaitingNumber);
+                        sevenSeg_scrollText(s,1);
+                        ui.digitInput=diStoreDecadeDigit;
+                    }
+
+                    ui.presetAwaitingNumber=-1;
+
+                    break;
+                default:
+                    ;
 			}
 		}
 	}
@@ -770,6 +791,7 @@ void ui_init(void)
 	ui.presetModified=1;
 	ui.activeParamIdx=-1;
 	ui.prevMiscButton=-1;
+    ui.lastActivePot=ppMVol;
 }
 
 // Called at 63Hz
