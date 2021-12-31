@@ -354,11 +354,11 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
     }
     else if(control==122) // All Local ON/OFF
     {
-        if (value==0) // local ON
+        if (value<=63) // local ON
         {
             ui_setLocalMode(0);
         }
-        else if (value==127) // local ON
+        else if (value>=64) // local OFF
         {
             ui_setLocalMode(1);
         }
