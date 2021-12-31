@@ -99,6 +99,7 @@ struct synth_s
     uint16_t modwheelAmount;
     int16_t benderAmountInternal;
     int16_t benderAmountExternal;
+    uint16_t masterVolume;
     int16_t benderCVs[pcFil6-pcOsc1A+1];
     int16_t benderVolumeCV;
 
@@ -860,7 +861,7 @@ void refreshFullState(void)
     refreshSevenSeg();
 }
 
-static void refreshPresetPots(int8_t force)
+static void refreshPresetPots(int8_t force) // this only affects current preset parameters
 {
     continuousParameter_t cp;
 
@@ -1051,7 +1052,6 @@ void synth_init(void)
 
     //for NOISE stop Noise waveform
     sh_setCV(pcExtFil,0,SH_FLAG_IMMEDIATE);
-    sh_setCV(pcMVol,HALF_RANGE,SH_FLAG_IMMEDIATE);
 
     // go in scaling adjustment mode if needed
 
@@ -1095,6 +1095,9 @@ void synth_init(void)
     refreshPresetMode();
     refreshFullState();
     computeTunedCVs(-1,-1); // force init CV's for all voices
+
+    // set the volume to the current pot value
+    synth.masterVolume=potmux_getValue(ppMVol);
 
     // a nice welcome message, and we're ready to go :)
 
@@ -1153,7 +1156,7 @@ void synth_update(void)
                      ui.lastActivePot==ppFilSus || ui.lastActivePot==ppFilRel)
                 refreshEnvSettings();
             else if (ui.lastActivePot==ppMVol)
-                sh_setCV(pcMVol,satAddU16S16(potmux_getValue(ppMVol),synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
+                synth.masterVolume = potmux_getValue(ppMVol);
         }
     }
 
@@ -1171,9 +1174,9 @@ void synth_update(void)
         break;
     case 2:
         // 'fixed' CVs
-
         sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
         sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
+        sh_setCV(pcMVol,satAddU16S16(synth.masterVolume,synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
         break;
     case 3:
         // gates
@@ -1598,9 +1601,7 @@ void synth_holdEvent(int8_t hold, int8_t sendMidi, uint8_t isInternal)
     }
 }
 
-void synth_volEvent(uint16_t value) // Added for MIDI Volume
+void synth_volEvent(uint16_t value) // Added for MIDI Volume, this overrides the MVol value set by the panel pot (and vice versa)
 {
-    //tempmVol=value;
-    sh_setCV(pcMVol,value,SH_FLAG_IMMEDIATE);
-    return;
+    synth.masterVolume=value;
 }
