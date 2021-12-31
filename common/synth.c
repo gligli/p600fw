@@ -1190,7 +1190,7 @@ void synth_update(void)
 
         // arp and seq
 
-        clock_setSpeed(currentPreset.continuousParameters[cpSeqArpClock]);
+        clock_setSpeed(settings.seqArpClock);
 
         break;
     }

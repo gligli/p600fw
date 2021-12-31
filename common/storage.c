@@ -329,7 +329,7 @@ LOWERCODESIZE void settings_save(void)
 
 		// v6
 		
-		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
+		//settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
 		storageWrite16(settings.seqArpClock);
 
 		// v8
@@ -398,16 +398,16 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 
 		// v2
 
-		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp) // need to read out speed (last param, cpSeqArpClock) but not use it, see below
+		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp) // need to read out speed (last param, cpSeqArpClock) but not use, see below. speed is part of settings
 			currentPreset.continuousParameters[cp]=storageRead16();
+
+		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock; // display uses current preset param, so replicate it from settings
 
 		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
-
-		currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 
 		if (storage.version<7)
 			return 1;
@@ -485,8 +485,6 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			storageWrite8(currentPreset.voicePattern[i]);
-		
-		settings.seqArpClock=currentPreset.continuousParameters[cpSeqArpClock];
 
 		for (i=0; i<TUNER_NOTE_COUNT; i++)
 			storageWrite16(currentPreset.perNoteTuning[i]);

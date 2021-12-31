@@ -462,8 +462,11 @@ void ui_checkIfDataPotChanged(void)
 		switch(prm.type)
 		{
             case ptCont:
+                if (prm.number==cpSeqArpClock) // special treatment of the seq/arp speed --> part of settings, but display uses preset params, so update both
+                {
+                    settings.seqArpClock=data;
+                }
                 currentPreset.continuousParameters[prm.number]=data;
-                //midi_sendThreeBytes(12, prm.number); // this is the page position // MIDI logging
                 break;
             case ptStep:
             case ptCust:
