@@ -365,8 +365,9 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
     }
     else if(control==123) // All Notes off
     {
-        if (value==127) assigner_allKeysOff();
+        if (value==0) assigner_allKeysOff();
     }
+
 
 	if(change)
 	{
