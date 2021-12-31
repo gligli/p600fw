@@ -689,7 +689,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				ui.retuneLastNotePressedMode=0;
 			}
 		}
-		else if(button==pbPreset)
+		else if(button==pbPreset) // toggle between live mode and preset mode
 		{
             // save manual preset to recall it later
             if(!settings.presetMode)
@@ -700,14 +700,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
             refreshPresetMode();
             refreshFullState();
 		}
-		else if(button==pbRecord && !recordOverride)
+		else if(button==pbRecord && !recordOverride) // patch storage mode on/off
         {
-                if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
+                if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit) // storage mode switched off
                 {
                     ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
                     ui.presetAwaitingNumber=-1;
                 }
-                else
+                else // stoage mode switch on
                 {
                     // ask for digit
                     ui.digitInput=diStoreDecadeDigit;

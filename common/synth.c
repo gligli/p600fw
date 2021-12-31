@@ -302,7 +302,8 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
         if (BNote<0)
             BNote=0;
 
-        detune=(1+(v>>1))*(v&1?-1:1)*(spreadRaw>>11); // this is spread detune, e.g. analog out of tune whack
+        detune=0;
+        if (spreadRaw>1000) detune=(1+(v>>1))*(v&1?-1:1)*(spreadRaw>>11); // this is spread detune, e.g. analog out of tune whack
 
         synth.oscABaseCV[v]=satAddU16S16(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),detune);
         synth.oscBBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v),detune);
@@ -619,7 +620,14 @@ static void refreshEnvSettings(void)
         adsr_setSpeedShift(&synth.ampEnvs[i],(currentPreset.steppedParameters[spAmpEnvSlow])?3:1);
         adsr_setSpeedShift(&synth.filEnvs[i],(currentPreset.steppedParameters[spFilEnvSlow])?3:1);
 
-        spread=(int16_t)((1+(i>>1))*(i&1?-1:1)*(currentPreset.continuousParameters[cpSpread]>>4)); // the bit shift determines the overall effect strength of the spread
+        if (currentPreset.continuousParameters[cpSpread]>1000)
+        {
+            spread=(int16_t)((1+(i>>1))*(i&1?-1:1)*(currentPreset.continuousParameters[cpSpread]>>4)); // the bit shift determines the overall effect strength of the spread
+        }
+        else
+        {
+            spread=0;
+        }
 
         aa=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpAtt],spread/1.5f);
         ad=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpDec],spread);
@@ -812,7 +820,18 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
     led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 
     int8_t storageMode=ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit;
-    led_set(plRecord,!ui.isInPatchManagement && (seqRec || arp_getHold() || storageMode), (storageMode&&!seqRec)?1:0);
+    if (ui.isInPatchManagement)
+    {
+        led_set(plRecord,0,0);
+    }
+    else if (seqRec || arp_getHold()) // on but not blinking
+    {
+        led_set(plRecord,1,0);
+    }
+    else if (storageMode)
+    {
+        led_set(plRecord,1,1);
+    }
 }
 
 void refreshFilterMaxCV(void)
