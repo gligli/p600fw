@@ -821,17 +821,17 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
     led_set(plFromTape,ui.isShifted||ui.isDoubleClicked,ui.isDoubleClicked);
 
     int8_t storageMode=ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit;
-    if (ui.isInPatchManagement)
-    {
-        led_set(plRecord,0,0);
-    }
-    else if (seqRec || arp_getHold()) // on but not blinking
+    if (seqRec || arp_getHold()) // on but not blinking
     {
         led_set(plRecord,1,0);
     }
-    else if (storageMode)
+    else if (storageMode) // either storage or MIDI dump awaiting patch number input
     {
         led_set(plRecord,1,1);
+    }
+    else
+    {
+        led_set(plRecord,0,0);
     }
 }
 
@@ -882,7 +882,8 @@ static void refreshPresetPots(int8_t force) // this only affects current preset 
             }
             else // pot is still off
             {
-                if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp])) // pick up pot when close enough
+                //if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp]))
+                if ((currentPreset.continuousParameters[cp]>>8)==(value>>8)) // pick up pot when close enough
                 {
                     currentPreset.contParamPotStatus[cp]=1;
                     currentPreset.continuousParameters[cp]=value;
@@ -909,6 +910,7 @@ void refreshPresetMode(void)
     ui_setNoActivePot();
     ui.presetModified=0;
     ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+
 }
 
 static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAmt,int16_t pitchALfoVal,int16_t pitchBLfoVal,int16_t filterLfoVal,uint16_t ampLfoVal)

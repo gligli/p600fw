@@ -220,6 +220,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		break;
 	case pb3: // pitch wheel calibration
 		sevenSeg_scrollText("again calibrates bender",1);
+        synth_wheelEvent(0,0,1,0,0); // kill external MIDI pitch bend
 		break;
 	case pb4: // voice selection
 	case pb5: // selected voice defeat
@@ -506,6 +507,7 @@ void ui_checkIfDataPotChanged(void)
 void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
+    char s[50];
 
 	// button press might change current preset
 	refreshPresetButton(button);		
@@ -573,7 +575,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	if(arp_getMode()!=amOff && pressed && button==pbRecord && !ui.isInPatchManagement)
 	{
 		arp_setMode(arp_getMode(),arp_getHold()?0:1);
-		recordOverride=1; // override normal record action
+		recordOverride=1; // override normal record action for the rest of the function, already used up for toggling arp hold
 	}
 
 	// assigner
@@ -752,13 +754,20 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         if(ui.digitInput==diStoreUnitDigit)
                         {
                             preset_saveCurrent(ui.presetAwaitingNumber);
+                            sprintf(s, "saved %u", ui.presetAwaitingNumber);
+                            sevenSeg_scrollText(s,1);
                         }
                         // if in local off mode we can still change the program because the incoming MIDI would have no effect
                         // also: always try to load/reload preset
                         if(preset_loadCurrent(ui.presetAwaitingNumber,0))
                         {
                             settings.presetNumber=ui.presetAwaitingNumber;
-                            midi_sendProgChange(settings.presetNumber); // always send
+                            if(ui.digitInput!=diStoreUnitDigit)
+                            {
+                                midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
+                                sprintf(s, "%u", ui.presetAwaitingNumber);
+                                sevenSeg_scrollText(s,1);
+                            }
                             settings_save();
                         }
 
@@ -766,7 +775,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                     }
                     else
                     {
-                        char s[50];
                         midi_dumpPreset(ui.presetAwaitingNumber); // dump that patch
                         sprintf(s, "patch %u dumped", ui.presetAwaitingNumber);
                         sevenSeg_scrollText(s,1);
