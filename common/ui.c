@@ -285,8 +285,12 @@ void ui_setLocalMode(uint8_t on)
     if (on==0)
     {
         settings.midiMode=0;
+
     }
-    settings.midiMode=1;
+    else
+    {
+        settings.midiMode=1;
+    }
 }
 
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
