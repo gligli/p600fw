@@ -425,14 +425,11 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             {
                 currentPreset.steppedParameters[spModwheelShift]=mapmw[currentPreset.steppedParameters[spModwheelShift]];
             } // otherwise keep default
-
-
+            // compatibility with previous versions require the ""Pulse Width Sync Bug""
+            // --> for loading from old stroage versions also override the default patch value "off"""
+            currentPreset.steppedParameters[spPWMBug]=1; // == bug "on""
 			return 1;
         }
-
-		// compatibility with previous versions require the ""Pulse Width Sync Bug""
-		// --> for loading from old stroage versions also override the default patch value "off"""
-		currentPreset.steppedParameters[spPWMBug]=1; // == bug "on""
 	
 		// V8
 		
