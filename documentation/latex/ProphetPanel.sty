@@ -1,0 +1,203 @@
+% Uses modified SevenSeg.sty which can be downloaded from
+% http://www.sciences-indus-cpge.apinc.org/Afficheur-7-Segments-avec-PGF-TIKZ
+% Author:  Germain Gondor
+
+\NeedsTeXFormat{LaTeX2e}[1999/01/01]
+\ProvidesPackage{ProphetPanel}[2009/06/03]
+\RequirePackage{tikz}
+\RequirePackage{xifthen}
+\RequirePackage{xstring}
+\tikzstyle SSGSty=[line cap=round, line width=4pt]
+\tikzstyle SSGStx=[black,line width=6pt, line cap=round]
+\tikzstyle SSGOn=[black, line width=4pt]
+%\tikzstyle SSGOn=[ledred, line width=4pt]
+\tikzstyle SSGOff=[gray!20!white, line width=4pt]
+\usetikzlibrary{calc}
+\def\SSGSpa{0.875}
+\def\SSGSpab{0.125}
+\definecolor{ledred}{RGB}{245, 90, 90}
+
+\newcommand{\SSGDraw}[2][1cm]{
+\def\SSGSize{#1}
+\coordinate(SSGCen)at(#2);
+% segment 1
+\draw[SSGStySA](SSGCen)++(-\SSGSpa*\SSGSize/2+2pt,\SSGSize+2pt)--++(\SSGSpa*\SSGSize-4pt,0);
+\draw[SSGStySA](SSGCen)++(-\SSGSpa*\SSGSize/2+2pt,\SSGSize)--++(\SSGSpa*\SSGSize-4pt,0);
+% Segment 2
+\draw[SSGSty, SSGStySB](SSGCen)++(\SSGSize/2+2pt,\SSGSpab/2*\SSGSize+2pt)--++(0,\SSGSpa*\SSGSize+2pt);
+\draw[SSGStySB](SSGCen)++(\SSGSize/2,\SSGSpab/2*\SSGSize+2pt)--++(0,\SSGSpa*\SSGSize+4.6pt);
+% Segment 3
+\draw[SSGSty, SSGStySC](SSGCen)++(\SSGSize/2+2pt,-\SSGSpab/2*\SSGSize)--++(0,-\SSGSpa*\SSGSize-2pt);
+\draw[SSGStySC](SSGCen)++(\SSGSize/2,-\SSGSpab/2*\SSGSize)--++(0,-\SSGSpa*\SSGSize-4.6pt);
+%Segment 4
+\draw[SSGStySD](SSGCen)++(\SSGSpa*\SSGSize/2-2pt,-\SSGSize)--++(-\SSGSpa*\SSGSize+4pt,0);
+\draw[SSGStySD](SSGCen)++(\SSGSpa*\SSGSize/2-2pt,-\SSGSize+2pt)--++(-\SSGSpa*\SSGSize+4pt,0);
+%Segment 5
+\draw[SSGSty, SSGStySE](SSGCen)++(-\SSGSize/2-2pt,-\SSGSpab/2*\SSGSize)--++(0,-\SSGSpa*\SSGSize-2);
+\draw[SSGStySE](SSGCen)++(-\SSGSize/2,-\SSGSpab/2*\SSGSize)--++(0,-\SSGSpa*\SSGSize-4.6pt);
+%Segment 6
+\draw[SSGSty, SSGStySF](SSGCen)++(-\SSGSize/2-2pt,\SSGSpab/2*\SSGSize+2)--++(0,\SSGSpa*\SSGSize+2pt);
+\draw[SSGStySF](SSGCen)++(-\SSGSize/2,\SSGSpab/2*\SSGSize+2pt)--++(0,\SSGSpa*\SSGSize+4.6pt);
+%Segment 7
+\draw[SSGStx, SSGStySG](SSGCen)++(-\SSGSpa*\SSGSize/2+3,1pt)--++(\SSGSpa*\SSGSize-5pt,0);
+}
+
+
+\newcommand{\SSGBit}[3][1cm]{
+\IfSubStr{#3}{1}{\tikzstyle SSGStySA=[SSGOn]}{\tikzstyle SSGStySA=[SSGOff]}
+\IfSubStr{#3}{2}{\tikzstyle SSGStySB=[SSGOn]}{\tikzstyle SSGStySB=[SSGOff]}
+\IfSubStr{#3}{3}{\tikzstyle SSGStySC=[SSGOn]}{\tikzstyle SSGStySC=[SSGOff]}
+\IfSubStr{#3}{4}{\tikzstyle SSGStySD=[SSGOn]}{\tikzstyle SSGStySD=[SSGOff]}
+\IfSubStr{#3}{5}{\tikzstyle SSGStySE=[SSGOn]}{\tikzstyle SSGStySE=[SSGOff]}
+\IfSubStr{#3}{6}{\tikzstyle SSGStySF=[SSGOn]}{\tikzstyle SSGStySF=[SSGOff]}
+\IfSubStr{#3}{7}{\tikzstyle SSGStySG=[SSGOn]}{\tikzstyle SSGStySG=[SSGOff]}
+
+\ifthenelse{\isempty{#2}}{\SSGDraw[#1]{0,0}}{\SSGDraw[#1]{#2}}
+}
+
+\newcommand\prophetdisplay[4]{
+  \coordinate(disPos)at(#1);
+    \begin{scope}[xslant=0.1]
+      \SSGBit[1cm]{disPos}{#2}
+      \SSGBit[1cm]{$(disPos)+(1.65cm,0cm)$}{#3}
+      \IfSubStr{#4}{1}{\filldraw[color=black] ($(disPos) + (0.82cm,-1cm)$) circle (3pt);}{\filldraw[color=gray!20!white] ($(disPos) + (0.82cm,-1cm)$) circle (3pt);}
+    \end{scope}
+    \draw[rounded corners, line width=1pt](SSGCen) ($(disPos) - (1cm, 1.4cm)$) rectangle ($(disPos)+(2.7cm, 1.4cm)$) {};
+    \node[font=\fontsize{20}{12}\selectfont, text width=4.0cm, text centered, inner sep=0.0mm](butPos) at ($(disPos)+(0.8cm, 1.9cm)$) {PROGRAM};
+}
+
+\newcommand\prophetledbutton[6][1cm]{
+  \def\ButSize{#1}
+  \coordinate(butPos)at(#2);
+    \node[rectangle, draw, rounded corners=7pt, line width=2pt, minimum width = 2cm, minimum height = 2cm](butPos) (r) at (#2) {};
+    \node[font=\fontsize{14}{12}\selectfont, text width=2.0cm, text centered, inner sep=0.0mm](butPos) at (#2) {#3};
+    \IfSubStr{#4}{#6}{
+        \IfSubStr{#5}{#6}{
+          \node[circle, draw, color=ledred, dotted, minimum size=15pt, line width=3pt] at ($ (butPos) + (-0.85, 0.85)$) {};
+          \node[circle, draw, color=gray!20!white, fill=gray!20!white, minimum size=12pt] at ($ (butPos) + (-0.85, 0.85)$) {};      
+        }
+        {
+          \node[circle, draw, color=ledred, fill=ledred, minimum size=12pt] at ($ (butPos) + (-0.85, 0.85)$) {};
+        }
+      }
+      {
+        \node[circle, draw, color=gray!20!white, fill=gray!20!white, minimum size=12pt] at ($ (butPos) + (-0.85, 0.85)$) {};      
+      }
+}
+
+\newcommand\upperbuttons[3]
+{
+  % dimension is (11.8, 9.4) 
+  \coordinate(blockPos)at(#1);
+    \prophetledbutton[1.0cm]{$ (blockPos) + (2.9cm, 8cm)$}{TO TAPE}{#2}{#3}{T} % 2cm,-3cm
+    \prophetledbutton[1.0cm]{$ (blockPos) + (8.9cm, 8cm)$}{FROM TAPE}{#2}{#3}{F} % 8cm,-3cm
+    \draw[line width=2pt]++($ (blockPos) + (0cm, 6.35cm)$)--++(11.8cm,0); % -0.9cm,-4.65cm
+    \prophetledbutton[1.0cm]{$ (blockPos) + (5.9cm, 4.7cm)$}{TUNE}{#2}{#3}{N} % 5cm,-6.3cm
+    \draw[line width=2pt]++($ (blockPos) + (0cm, 3.05)$)--++(11.8cm,0); % -0.8cm, -7.95cm
+    \prophetledbutton[1.0cm]{$ (blockPos) + (2.9cm, 1.4cm)$}{PRESET}{#2}{#3}{P} % 2cm,-9.6cm
+    \prophetledbutton[1.0cm]{$ (blockPos) + (8.9cm, 1.4cm)$}{RECORD}{#2}{#3}{R} % 8cm,-9.6cm
+}
+
+
+\newcommand\buttonblock[3]
+{
+  \coordinate(bblockPos)at(#1);
+  \draw[line width=2pt]++($ (bblockPos) + (0cm,3.05cm)$)--++(11.8cm,0);
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (1.4cm,1.4cm)$}{SEQ\linebreak 1}{#2}{#3}{1}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (4.4cm,1.4cm)$}{SEQ\linebreak 2}{#2}{#3}{2}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (7.4cm,1.4cm)$}{ARPEG UP-DN}{#2}{#3}{U}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (10.4cm,1.4cm)$}{ARPEG ASSIGN}{#2}{#3}{A}
+  \upperbuttons{$ (bblockPos) + (0cm, 3.3cm)$}{#2}{#3}
+}
+
+\newcommand\arpsqbuttons[3]
+{
+  \coordinate(bblockPos)at(#1);
+  \draw[line width=2pt]++($ (bblockPos) + (0cm,3.05cm)$)--++(11.8cm,0);
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (1.4cm,1.4cm)$}{SEQ\linebreak 1}{#2}{#3}{1}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (4.4cm,1.4cm)$}{SEQ\linebreak 2}{#2}{#3}{2}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (7.4cm,1.4cm)$}{ARPEG UP-DN}{#2}{#3}{U}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (10.4cm,1.4cm)$}{ARPEG ASSIGN}{#2}{#3}{A}
+  \prophetledbutton[1.0cm]{$ (bblockPos) + (8.9cm, 4.7cm)$}{RECORD}{#2}{#3}{R} % 8cm,-9.6cm
+}
+
+
+\newcommand\numberbutton[2]
+{
+  \coordinate(butPos)at(#1);
+    \node[rectangle, draw, rounded corners=7pt, line width=2pt, minimum width = 1.7cm, minimum height = 1.7cm] (r) at (butPos) {};
+    \node[font=\fontsize{20}{12}\selectfont, text width=1.8cm, text centered, inner sep=0.0mm] at (butPos) {#2};
+}
+
+\newcommand\numberpad[1]
+{
+  \coordinate(numbutPos)at(#1);
+  \numberbutton{$ (numbutPos) + (4cm, 1.2cm)$}{0}
+  \numberbutton{$ (numbutPos) + (1.2cm, 4cm)$}{7}
+  \numberbutton{$ (numbutPos) + (4cm, 4cm)$}{8}
+  \numberbutton{$ (numbutPos) + (6.8cm, 4cm)$}{9}
+  \numberbutton{$ (numbutPos) + (1.2cm, 6.8cm)$}{4}
+  \numberbutton{$ (numbutPos) + (4cm, 6.8cm)$}{5}
+  \numberbutton{$ (numbutPos) + (6.8cm, 6.8cm)$}{6}
+  \numberbutton{$ (numbutPos) + (1.2cm, 9.6cm)$}{1}
+  \numberbutton{$ (numbutPos) + (4cm, 9.6cm)$}{2}
+  \numberbutton{$ (numbutPos) + (6.8cm, 9.6cm)$}{3}
+}
+
+\newcommand\prophetpotbiplar[3]
+{
+  \prophetpotgen{#1}{#2}{#3}
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.0) {3};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.30) {2};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.60) {1};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.90) {0};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.120) {1};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.150) {2};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.180) {3};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.210) {4};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.240) {5};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.300) {5};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.330) {4};
+}
+
+\newcommand\prophetpot[3]
+{
+  \prophetpotgen{#1}{#2}{#3}
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.0) {8};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.30) {7};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.60) {6};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.90) {5};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.120) {4};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.150) {3};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.180) {2};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.210) {1};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.240) {0};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.300) {10};
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.330) {9};
+}
+
+\newcommand\prophetpotgen[3]
+{
+  \node[circle, draw, color=black, minimum size=2.0cm, line width=2pt, outer sep=0.0mm] (a) at (#1) {};      
+  \node[circle, draw, color=black, minimum size=1.6cm, line width=2pt, outer sep=0.0mm] (b) at (#1) {};      
+    \foreach \i in {0,8,...,359}
+        \draw[line width=1pt] (b.\i)-- (a.\i);
+  \node[circle, minimum size=2.35cm] (c) at (#1) {};
+  \node[circle, minimum size=2.80cm] (d) at (#1) {};
+  \node[circle, minimum size=0cm] (e) at (#1) {};
+  \draw[line width=3pt] (e.#3)-- (a.#3);
+  \draw[line width=2pt] (a.0)-- (c.0);
+  \draw[line width=2pt] (a.30)-- (c.30);
+  \draw[line width=2pt] (a.60)-- (c.60);
+  \draw[line width=2pt] (a.90)-- (c.90);
+  \draw[line width=2pt] (a.120)-- (c.120);
+  \draw[line width=2pt] (a.150)-- (c.150);
+  \draw[line width=2pt] (a.180)-- (c.180);
+  \draw[line width=2pt] (a.210)-- (c.210);
+  \draw[line width=2pt] (a.240)-- (c.240);
+  \draw[line width=2pt] (a.300)-- (c.300);
+  \draw[line width=2pt] (a.330)-- (c.330);
+  \node[font=\fontsize{15}{12}\selectfont, text centered] at (d.0) {8};
+  \node[circle, draw, dotted, color=black, minimum size=1.9cm, line width=2pt] at (#1) {};      
+  \node[font=\fontsize{18}{12}\selectfont, text width=10.8cm, text centered, inner sep=0.0mm, minimum width=10.8cm] at ($(#1)-(0cm,2.2cm)$) {#2};
+}
