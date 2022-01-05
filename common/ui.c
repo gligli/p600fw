@@ -767,8 +767,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                                 midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
                                 sprintf(s, "%u", ui.presetAwaitingNumber);
                                 sevenSeg_scrollText(s,1);
+                                settings_save();
                             }
-                            settings_save();
                         }
 
                         refreshPresetMode();
