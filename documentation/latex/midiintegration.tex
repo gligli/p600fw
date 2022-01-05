@@ -1,0 +1,27 @@
+For supporting the integration of the Prophet 600 in a MIDI setting, e.g. using SysEx, integration in DAW setup or simply attaching an external controller, the MIDI send and receive channels can be set using dedicated miscellaneous settings as follows.
+
+\begin{enumerate}
+  \setlength\itemsep{0cm}
+  \item Setting number 1: pushing key "1" repeatedly while holding down From Tape cycles through the MIDI receive channels, from \textit{OMNI} through channels \textit{Ch1} to \textit{Ch16}
+  \item Setting number 2: pushing key "2" repeatedly while holding down From Tape cycles through the MIDI send channels, from \textit{Ch1} to \textit{Ch16}
+\end{enumerate}
+
+
+\textbf{Local off mode}
+
+The Prophet 600 supports a \textit{local off} mode which is toggled using the setting "7". In \textit{local off} the following internal events are not executed in the Prophet 600 but are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
+
+The following MIDI events can be recorded and are executed by the Prophet 600 when played back to it.
+
+\begin{enumerate}
+  \setlength\itemsep{0cm}
+  \item Key on, key off
+  \item Pitch Bender
+  \item Modulation Wheel
+  \item Hold Pedal (in polyphonic mode, not in unison/chord mode or running arpeggiator or sequencer)
+\end{enumerate}
+
+Note that program changes are sent via MIDI but are executed in the Prophet 600 also in \textit{local off} mode. The Prophet 600 accept and executes program change MIDI messages only in \textit{preset mode}.  
+
+\textbf{Overview of MIDI integration}
+
