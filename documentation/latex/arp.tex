@@ -1,10 +1,22 @@
 The instrument supports three arpeggiator modes.
 
-\begin{enumerate}
-  \item \textit{up/down} plays an up/down note sequence with double trigger on the lowest and highest note. For example, playing C3 C4 E4 G4 will play: C3 C4 E4 G4 G4  E4 C4 C3 C3 C4 and so on. Mathematically, it allows you to work out the time signature.  Three notes result in a 3/4 time, 4 notes in a 4/4 time and 5 notes in 5/4, etc. To start the arpeggitor in \textit{up/down}, press the key \textbf{Arpeg Up/Dn} on the key pad. Its LED will light solid when active.
-  \item in the \textit{assign} mode the arpeggiator plays the sequence of notes in the order in which they are played. To start the the mode press the \textbf{Arpeg Assign} button on the key pad and play the notes in the order you want them sequenced. The key LED will light solid.
-  \item in the \textit{random} mode the arpeggiator replays the played notes at random.  To enter this mode press the \textbf{Arpeg Assign} key twice until its LED blinks and then play the notes. 
-\end{enumerate}
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = north west, text width=30cm] at (0cm,31cm) {Arpeggiator pattern \textit{up/down}:};
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = north west, text width=34cm] at (16cm,27cm) {This pattern plays an up/down note sequence. For example, playing C3 C4 E4 G4 will play: C3 C4 E4 G4 E4 C4 C3 C4 and so on. Mathematically, it allows you to work out the time signature, e.g. $n$ notes will result in a pattern which repeats itself after $2n-2$ beats. To start the arpeggitor in \textit{up/down}, press the key \textbf{Arpeg Up/Dn} on the key pad. Its LED will light solid when active.};
+    \arpsqbuttons{1cm, 22cm}{U}{}
+    
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = north west, text width=30cm] at (0cm,20cm) {Arpeggiator pattern \textit{assign}:};
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = north west, text width=34cm] at (16cm,16cm) {This pattern plays the sequence of notes in the order in which they are played. To start the the mode press the \textbf{Arpeg Assign} button on the key pad and play the notes in the order you want them sequenced. The key LED will light solid.};
+    \arpsqbuttons{1cm, 11cm}{A}{}
+
+    
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = north west, text width=30cm] at (0cm,9cm) {Arpeggiator pattern \textit{random}:};
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = north west, text width=34cm] at (16cm,5cm) {In random  mode the arpeggiator replays the notes at random (never repeating a note). To enter this mode press the \textbf{Arpeg Assign} key twice until its LED blinks and then play the notes.};
+    \arpsqbuttons{1cm, 0cm}{A}{A}
+  \end{tikzpicture}
+}
+
 
 The foot switch input can be used to hold the arpeggiator. Notes send to the Prophet 600 via MIDI are not added to the arpeggiator. It is possible to sync the LFO to the arpeggiator using the additional patch parameter \textbf{(111) LFO Sync}, see section \ref{lfo}.
 
@@ -12,9 +24,16 @@ The foot switch input can be used to hold the arpeggiator. Notes send to the Pro
 
 With all arpeggiator modes, press the \textbf{Record} on the key pad to enter the latch mode where played notes are held. The LED of the button will light solid. Playing additional notes in this mode will add them as additional notes to the existing sequence, up to a maximum of 128 notes. To clear the notes from the sequence, press the Record key to switch it off. The LED of the Record button will go off.
 
-\textbf{Tempo}
+Note that while the random pattern never plays a held note twice in succession. However, since a note can be latched more than once it is possible to 
 
-The tempo of the sequencer is set by the \textbf{Speed} dial. To activate the tempo function the \textbf{(0) Seq/Arp Speed} parameter must be selected. Note that while in latch mode the button \textbf{To Tape} has to be activated (its LED is lit solid) to select additional patch parameters via the number pad and also to switch on the speed dial. The  areggiator can be synced to external sources. The miscellaneous setting \textbf{Clock Sync} (setting 8) pprovides the choices \textit{internal}, \textit{MIDI} or \textit{Tape In} (see also section \ref{sync}).
+\textbf{Transpostion}
+
+The arpeggiator pattern can be transposed on the fly. To do so use the keyboard in shifted or shift-locked mode, see section \ref{transposition}.
+
+\textbf{Controlling the arpeggiator using MIDI}
+
+(this needs to be done)
+
 
 \textbf{Trouble shooting}
 

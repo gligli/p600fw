@@ -3,9 +3,51 @@ The following instruction assume that you have your Prophet 600 connected via MI
 
 In preset mode the Prophet 600 loads patch data sent via MIDI into the active controls. This is like loading a patch from memory: the panel control may not (and typially don't) show the values of the patch being played. You can edit and store the patch. This is useful if you would like to try a patch before deciding if it should be kept or not without having to allocate a storage number in memory. 
 
+\textbf{Patch management mode}
+
 In order to manage patches in memory via SysEx you need to enter the \textit{patch management mode}. In patch management mode any patch data received via MIDI SysEx is loaded directly into the storage number as indicated in the SysEx data. This extendes to the load of the entire patch bank. In patch management mode you can also dump single patches as well as the entire patch bank.
 
-To enter the patch management mode so hold down \textbf{From Tape} and press \textbf{Record}. The patch management mode is indicated by a flashing \textbf{Preset} button. To leave the mode, press \textbf{Record}. 
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Patch management mode:};
+    \upperbuttons{13cm,7cm}{P}{P}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Patch number input, confirmation text};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Patch number entry};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Leave patch management mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Dump entire patch bank};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
+
+To enter the patch management mode use shift or shift-lock and Record. The patch management mode is indicated by a flashing Preset button. To leave the mode, press Record (with or without shift). 
 
 \textbf{Dumping the patch library as SysEx} 
 

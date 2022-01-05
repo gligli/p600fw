@@ -1,14 +1,19 @@
-\documentclass[draft,landscape, 11pt, oneside]{report}
+%\documentclass[draft,landscape, 11pt, oneside]{report}
+\documentclass[landscape, 11pt, oneside]{report}
 \usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
-%\usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{hyperref}
 \usepackage{titlesec}
 \usepackage{scrextend}
 \usepackage{array}
-%\usepackage{fontspec}
-\usepackage[inline]{showlabels}
-%\setmainfont{FiraSans-SemiBold}
+\usepackage{ProphetPanel}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+%\usepackage[inline]{showlabels}
+\setmainfont[
+ BoldFont={FiraSans-Bold}, 
+ ItalicFont={FiraSans-Italic},
+ ]{FiraSans}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
 \setlength{\leftmargin}{-4cm}
@@ -16,7 +21,6 @@
 \setlength{\paperwidth}{297mm}
 \setlength{\textwidth}{26cm}
 \setlength{\footskip}{2.5cm}
-\renewcommand{\familydefault}{\sfdefault}
 
 \newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
 
@@ -26,12 +30,36 @@
 \makeatletter
 \renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
 \makeatother
-\titleformat{\chapter}[display]{\pagebreak\LARGE\bfseries}{}{0.0cm}{}
+\titleformat{\chapter}[display]{\LARGE\bfseries}{}{0.0cm}{}
+%\titleformat{\chapter}[display]{\pagebreak\LARGE\bfseries}{}{0.0cm}{}
 \titlespacing{\chapter}{0pt}{*0}{*0}
 %\titleformat{\section}[display]{\Large\bfseries}{}{0.0cm}{}
 \titlespacing{\section}{0pt}{*0}{*0}
 
 \begin{document}
+
+% this it the title "Prophet 600"
+  \begin{tikzpicture}[scale=0.8]
+    \begin{scope}[xslant=0.1]
+        \SSGBit[1.5cm]{0,0}{12567}
+        \SSGBit[1.5cm]{2.5cm,0}{57}
+        \SSGBit[1.5cm]{5cm,0}{5734}
+        \SSGBit[1.5cm]{7.5,0}{12567}
+        \SSGBit[1.5cm]{10cm,0}{3567}
+        \SSGBit[1.5cm]{12.5cm,0}{14567}
+        \SSGBit[1.5cm]{15cm,0}{4567}
+        \SSGBit[1.5cm]{17.5cm,0}{}
+        \SSGBit[1.5cm]{20cm,0}{134567}
+        \SSGBit[1.5cm]{22.5cm,0}{123456}
+        \SSGBit[1.5cm]{25cm,0}{123456}
+      \end{scope}
+  \end{tikzpicture}
+  
+  \Huge
+  User Manual
+  \normalsize
+
+\pagebreak
 
 %\maketitle
 \tableofcontents
@@ -58,44 +86,52 @@ Developing the software was a major effort with low level functions at the core 
 
 The following is a compact summary of the improved and the  new features which the upgraded Prophet 600 provides on this hardware. The manual refers to version 2.2 and differences between versions are marked or commented in the text. 
 
+\textbf{General features}
+  
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item{General features}
-  \subitem Greater resolution of many of the sound parameters with an improved refresh rate that is making the instrument much more responsive
-  \subitem Faster and smoother ADSR envelopes with support two speed regimes (slow, fast) and two shapes (linear, exponential)
-  \subitem positive and negative envelope amount settings for filter and poly-mod
-  \subitem A new LFO function generator with a wider frequency range from one cycle every 20 seconds to about 60Hz
-  \subitem Assignable, Random And Up/Down Arpeggiator sync-able to MIDI clock
-  \subitem Multiple note assignment modes including last/low/high note priority
-  \subitem Full MIDI In control including amplitude and filter velocity sensitivity with an external keyboard controller, continuous Controllers (CC) of all sound parameters, program change (PC) to choose current preset
-  \subitem A dedicated vibrato which can be controlled by the modulation wheel, or can start progressively after a fixed amount of time
-  \subitem Keyboard mode chord in addition to polyphonic and unison  
-  \subitem Four new waveforms in addition to the original triangle and square including sine, random stepped, noise (like on the original Prophet 5, but non-periodic) and sawtooth (ramp up)
-  \subitem Mix Overdrive which now allows the output from both oscillators to drive the mix VCAs A and B harder as well as the Curtis 4 pole filter resulting in new sonic possibilities
-  \subitem Pitch Wheel interval selection of plus/minus one octave, a whole tone, a minor third and a fifth
-  \subitem Pitch Wheel reassignment to the VCF and Volume or off   
-  \subitem Modulation wheel intensity setting from Maximum to Medium to Minimum
-  \subitem A new and improved tuning procedure
-  \subitem Octave, chromatic and free Oscillator course pitch control
-  \subitem Debounce feature that prevents unintended re-triggering caused by the old keyboard
-  \item Features with version 2.1 RC3
-  \subitem Polyphonic step sequencer
-  \subitem Per note tuning
-  \subitem Support for external CV
-  \subitem Improved UI, introducing display of -50...48 range for bipolar dials and center deadband for better handling  
-  \subitem VCF limit option
-  \subitem Maintenance mode
-  \subitem Support for pedal to sustain notes and to hold chords (in unison)
-  \subitem On-the-lfly transpose function for arpeggiator and sequencer
-  \item Features with version (t.b.d.)
-  \subitem A new UI concept in preset mode in which the dials have a pick-me-up behaviour, in order to avoid discontinuous value changes and to make the differences between panel and internal values transparent 
-  \subitem Flexible envelope routing allowing the poly-mod to by modulated by either envelope generator
-  \subitem Possibility to sync the LFO to the thythm of the arpeggiator or sequencer
-  \subitem Continuous spread parameter introducing voice variations in tune and envelopes
-  \subitem Better MIDI integration possibilities through new local off mode
-  \subitem Improved patch management via MIDI, supporting loading MIDI patch to active controls 
-  \subitem Various improvements such as arppegiator / sequencer speed stability and reconciliation of internal and external bend  
+  \item Greater resolution of many of the sound parameters with an improved refresh rate that is making the instrument much more responsive
+  \item Faster and smoother ADSR envelopes with support two speed regimes (slow, fast) and two shapes (linear, exponential)
+  \item positive and negative envelope amount settings for filter and poly-mod
+  \item A new LFO function generator with a wider frequency range from one cycle every 20 seconds to about 60Hz
+  \item Assignable, Random And Up/Down Arpeggiator sync-able to MIDI clock
+  \item Multiple note assignment modes including last/low/high note priority
+  \item Full MIDI In control including amplitude and filter velocity sensitivity with an external keyboard controller, continuous Controllers (CC) of all sound parameters, program change (PC) to choose current preset
+  \item A dedicated vibrato which can be controlled by the modulation wheel, or can start progressively after a fixed amount of time
+  \item Keyboard mode chord in addition to polyphonic and unison  
+  \item Four new waveforms in addition to the original triangle and square including sine, random stepped, noise (like on the original Prophet 5, but non-periodic) and sawtooth (ramp up)
+  \item Mix Overdrive which now allows the output from both oscillators to drive the mix VCAs A and B harder as well as the Curtis 4 pole filter resulting in new sonic possibilities
+  \item Pitch Wheel interval selection of plus/minus one octave, a whole tone, a minor third and a fifth
+  \item Pitch Wheel reassignment to the VCF and Volume or off   
+  \item Modulation wheel intensity setting from Maximum to Medium to Minimum
+  \item A new and improved tuning procedure
+  \item Octave, chromatic and free Oscillator course pitch control
+  \item Debounce feature that prevents unintended re-triggering caused by the old keyboard
+\end{itemize}
+
+\textbf{Features with version 2.1 RC3}
   
+\begin{itemize}
+  \item Polyphonic step sequencer
+  \item Per note tuning
+  \item Support for external CV
+  \item Improved UI, introducing display of -50...48 range for bipolar dials and center deadband for better handling  
+  \item VCF limit option
+  \item Maintenance mode
+  \item Support for pedal to sustain notes and to hold chords (in unison)
+  \item On-the-lfly transpose function for arpeggiator and sequencer
+\end{itemize}
+
+\textbf{Features with version (t.b.d.)}
+  
+\begin{itemize}
+  \item A new UI concept in preset mode in which the dials have a pick-me-up behaviour, in order to avoid discontinuous value changes and to make the differences between panel and internal values transparent 
+  \item Flexible envelope routing allowing the poly-mod to by modulated by either envelope generator
+  \item Possibility to sync the LFO to the thythm of the arpeggiator or sequencer
+  \item Continuous spread parameter introducing voice variations in tune and envelopes
+  \item Better MIDI integration possibilities through new local off mode
+  \item Improved patch management via MIDI, supporting loading MIDI patch to active controls 
+  \item Various improvements such as arppegiator / sequencer speed stability and reconciliation of internal and external bend  
 \end{itemize}
 
 \section{Versions of the firmware upgrade and compatibility}
@@ -123,43 +159,204 @@ Despite the fact that many have contributed and have spent considerable time to 
 
 \begin{flowtext}
 
-\section{Display}
+The different controls and interfaces of the Prophet 600 are shown schematically below. Through the document the corresponding nomenclature is used. 
 
-The 2 digit 7 segment display is used for different purposes.
+\scalebox{0.22}{
+  \begin{tikzpicture}[scale=0.8]
+
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 70cm, minimum height = 3cm, anchor = south west] (r) at (0cm,22.25cm) {}; % rear
+ 
+  \prophetdisplay{4cm,17.5cm}{123}{12754}{1}
+  \numberpad{1cm,4cm}
+  \node[font=\fontsize{18}{12}\selectfont, text width=8cm, text centered, inner sep=0.0mm, minimum width=8cm] at (5cm,3cm) {PROGRAM SELECT};
+  \draw[line width=2pt]++(10,20)--++(0,-18cm); % -0.9cm,-4.65cm  
+  \buttonblock{11cm,7cm}{P}{}
+  \prophetpot{16.9cm,4.5cm}{SPEED}{75}
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 19cm, minimum height = 16cm, anchor = south west] (r) at (0cm,1cm) {}; % buttons
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 50cm, minimum height = 16cm, anchor = south west] (r) at (25cm,1cm) {}; % panel
+  
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 9cm, minimum height = 6.5cm, anchor = south west] (r) at (26.25cm,11.5cm) {\Large\textit{Poly-Mod Subpanel}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 6.5cm, anchor = south west] (r) at (26.25cm,2cm) {\Large\textit{LFO Subpanel}};
+  
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 6.5cm, anchor = south west] (r) at (45cm,11.5cm) {\Large\textit{OSC A Subpanel}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 6.5cm, anchor = south west] (r) at (45cm,2cm) {\Large\textit{OSC B Subpanel}};
+
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 8.5cm, anchor = south west] (r) at (63.75cm,9cm) {\Large\textit{Filter Subpanel}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 4.5cm, anchor = south west] (r) at (63.75cm,2cm) {\Large\textit{(Amp) Envelope Subpanel}};
+
+  \prophetpot{84.5cm,16.5cm}{MASTER TUNE}{75}
+  \prophetpot{84.5cm,7.5cm}{VOLUME}{75}
+
+  
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 7cm, text centered, minimum height = 8cm, text width=5cm, anchor = north west] (r) at (0cm,-0.25cm) {\Large\textit{Performance Section (Pitch Bend and Modulation Wheel)}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 62cm, minimum height = 8cm, anchor = north west] (r) at (10cm,-0.25cm) {\Large\textit{Keyboard}};
+  
+  % legends
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,-2.5cm) (ps) {Performance Section};
+  \draw[line width=1pt]++(ps.east)--++(2.5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,19.5cm) (pd) {Data Pad};
+  \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,9.35cm) (np) {Number Pad};
+  \draw[line width=1pt]++(np.east)--++(5.8cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,17.5cm) (dis) {Display};
+  \draw[line width=1pt]++(dis.east)--++(5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,15.5cm) (dis) {Function Buttons};
+  \draw[line width=1pt]++(dis.east)--++(16cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,23.75cm) (pd) {Rear};
+  \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
+  
+  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (89.5cm,19cm) (pl) {Panel};
+  \draw[line width=1pt]++(pl.west)--++(-2.5cm,0cm);  
+
+  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (89.5cm,-3.5cm) (kb) {Keyboard};
+  \draw[line width=1pt]++(kb.west)--++(-2.5cm,0cm);  
+
+  
+  \end{tikzpicture}
+}
+
+The remaining section contains a brief explanation of the controls and interfaces: the \textbf{Rear}, \textbf{Data Pad}, \textbf{Panel} (with subpanels), \textbf{Performance Section} and \textbf{Keyboard}.
+
+\section{Data Pad and basic operation}\label{datapad}
+
+The Data Pad consists of the \textbf{Display} (2 two digit 7 segment display with one dot), the \textbf{Number Pad}, the \textbf{Function Buttons} and the \textbf{Data Dial} (denoted as "Speed" dials). 
+
+\textbf{Function Buttons}
+
+The block of 9 Function Buttons is the central starting point from where the operation modes and functions of the Prophet 600 are activated. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below.
+
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=10cm] at (0cm,12cm) {Upper block of Function Buttons:};
+    \upperbuttons{15cm,7cm}{P}{}
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=10cm] at (30cm,12cm) {Buttons relevant for sequencer and arpeggiator:};
+    \arpsqbuttons{45cm, 9cm}{R1}{1}
+  \end{tikzpicture}
+}
+
+The function buttons have LEDs wich can be off, be on solid and on blinking. In the entire document the following convention for representing the button LED status off / on / blinking is used.
+
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (0cm,2.5cm) {LED \\ Status:};
+  \prophetledbutton[1cm]{10cm, 2.5cm}{RECORD}{R}{}{R}
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (11.5cm,2.5cm) {= LED on solid};
+  \prophetledbutton[1cm]{25cm, 2.5cm}{RECORD}{R}{R}{R}
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (26.5cm,2.5cm) {= LED on blinking};
+  \prophetledbutton[1cm]{40cm, 2.5cm}{RECORD}{}{}{R}
+  \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (41.5cm,2.5cm) {= LED off};
+  \end{tikzpicture}
+}
+
+The different functions of the buttons are decribed in the general modes desription in section \ref{uimode} and general throughout the chapter on \textbf{Functionality} wherever the buttons are used for a specific function. 
+
+\textbf{Preset panel mode, live mode and additional patch parameters menu}\label{app}
+
+The Prophet 600 operates in two modes, \textbf{preset} mode and \textbf{live} mode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when pressing the number pad buttons, as shows in the table below.
+
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (-8cm,13cm) {Basic modes:};
+
+    \draw[line width=1pt]++(-6cm,-7.5cm)--++(55cm,0cm);  
+    \draw[line width=1pt]++(-6cm,-5cm)--++(55cm,0cm);  
+    \draw[line width=1pt]++(-6cm,-3cm)--++(55cm,0cm);  
+    \draw[line width=1pt]++(-6cm,-1cm)--++(55cm,0cm);  
+    \draw[line width=1pt]++(-6cm,9.5cm)--++(55cm,0cm);  
+
+    \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=12cm] at (-6cm,5cm) {LED};
+    \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=12cm] at (-6cm,-2cm) {Display};
+    \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=12cm] at (-6cm,-4cm) {Number pad};
+    \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=12cm] at (-6cm,-6.5cm) {Enter / leave};
+
+    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (4cm,10cm) {Live mode};
+    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (19.2cm,10cm) {Preset Patch mode};
+    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (34.2cm,10cm) {Preset Panel mode};
+
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (4cm,-2cm) {Parameter values};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-2cm) {Patch number};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (34.4cm,-2cm) {Parameter values};
+
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (4cm,-4cm) {Select add. parameter};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-4cm) {Select patch};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (34.4cm,-4cm) {Select add. parameter};
+
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (4cm,-6.25cm) {From preset modes using Preset button};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-6.25cm) {From live mode using Preset, from preset panel mode using To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (34.4cm,-6.25cm) {From preset patch mode using To Tape};
+
+    \upperbuttons{6cm, -0.5cm}{}{}   
+    \upperbuttons{21cm, -0.5cm}{P}{}   
+    \upperbuttons{36cm, -0.5cm}{PT}{}   
+    \draw[line width=1pt]++(4cm,-7.5cm)--++(0cm,19cm);  
+    \draw[line width=1pt]++(19.2cm,-7.5cm)--++(0cm,19cm);  
+    \draw[line width=1pt]++(34.4cm,-7.5cm)--++(0cm,19cm);  
+  \end{tikzpicture}
+}
+
+The following section describes how patch parameters are accessed and modified in live mode and in preset panel mode. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the Panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. To changing these parameters can only be done in preset panel mode or in live mode. The user must select the parameter first and then change the value using the \textbf{Data/Speed} dial. A parameter is selected by pressing the buttons 0...9 (or pressing them twice or in some cases three times). If a new parameter is selected respective parameter name is scrolled through the display. The display then shows the current value which is either numeric (permanently shown) or a choice setting (scrolled through the display). 
+
+Each parameter is explained in the respective functional context in the next chapter. For a quick reference of additional patch parameters please see section \ref{patchref}. 
+
+Note: The parameter accessed using the number 0 is an exception. The parameter controls the internal sequencer and arpeggiator speed and this speed is stored as a instrument settings (see next section) and not as a patch parameter. 
+
+Note: In other modes the display and the number pad is reserved for other functions, e.g. in preset patch mode the display shows the patch (preset) number. By default the number pad is reserved for selecting the patch number is preset patch mode, in record mode and in patch management mode.
+
+\textbf{Number Pad}
+
+The Number Pad has three usages depending on mode and selected functions:
 
 \begin{itemize}
-  \setlength\itemsep{0cm}
-  \item Numeric controls: if the synth is in live mode (see section \ref{uimode}) and the user turns a dial, the display shows the value of the dial. A decimal point between the two digits indicates a negative value. Values range from -50 to 48 (signed parameters) or 0 to 98 (positive parameters). Note that this is a limitation of the display only and that the true resolution of the underlying parameters is higher for many parameters.  
-  \item Parameter names and values: additional parameters are "hidden" in menus accessible via the key pad. The chosen parameter name and value are scrolled through the 2 digit display
-  \item Messages such as the welcome message (software version) and confirmative messages (e.g. note of completion after a SysEx dump) are also scrolled through the display
-  \item During the tuning procedure the current status is shown        
+  \item Selecting a patch number either for loading from one of the internal 100 patch storage slots in preset patch mode
+  \item Selecting a patch number either for storing to one of the internal 100 patch storage slots in storage mode (see section \ref{loadstorepatches})
+  \item Selecting a patch number either for export a patch as MIDI SysEx in patch management mode (see section \ref{mididump})
+  \item Selecting a function / setting in shift and shift-lock mode (see below)  
+  \item Selecting a parameter in the additional patch parameter menu (see section \ref{app}) in preset panel mode and in live panel mode
+\end{itemize} 
+
+\textbf{Display}
+
+\input{display.tex}
+
+\textbf{Shift mode and miscellaneous settings}
+
+The miscellaneous settings are patch independent instrument settings. These settings are stored and are loaded after a power cycle. The miscellaneous settings are accessed via the numer pad in \textbf{shift} mode. To activate this mode either hold down the button \textbf{From Tape} while selecting one of the additional functions or double click \textbf{From Tape} to enter \textbf{shift-lock} mode (permanent shift) indicated by a blinking From Tape LED. To exit the mode push the button again. 
+
+In shifted mode the numbers 0...9 on the number pad access the miscellaneous settings. Note that changing the miscellaneous settings is done using the number pad alone without the data/speed dial. The settings are edited by pressing number key repeatedly to cycle through values or to initiate actions. The first time a number is pressed the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. The list of miscellaneuous settings can be found in section \ref{settingsref}. Each setting is explained in the respective functional context in the next chapter or in the appropriate section in the setup chapter.
+
+In addition to miscellaneous settings, shift mode provides access to further functions. In shift mode ...
+\begin{itemize}
+  \item ... the keys on the keyboard are used to set the keyboard transposition (see section \ref{transposition}) 
+  \item ... tuning button activates a per note tuning mode (see section \ref{tuning}).
+  \item ... pressing the record button axtivates the patch management mode (see section \ref{mididump})
+  \item ... pressing the preset button (and confirmation) loads the default patch
 \end{itemize}
 
-\section{Panel control}
+\section{Panel}\label{panel}
 
-(this needs to be done)
+The panel is organized in 6 subpanels plus 3 additional controls (Unison switch, master tune and master volume)\footnote{In the original Prophet 600 the dials "Mix" and "Glide" were also separate from he subpanels but in the upgraded Prophet 600 these two dials take the role of oscillator A volume and oscillator B volume, respectively. So these two dials are now associated with the oscillator A and B subpanels.}. The patch parameters controls on the panel are the following subpanels (from left to right) and the unison switch: 
+
+\begin{itemize}
+  \item Poly-Mod (see section \ref{polymod})
+  \item LFO (see section \ref{LFO}
+  \item Oscillator A (see section \ref{osc}). This includes the oscillator A volume control (in the original panel layout denoted as "Mix").
+  \item Oscillator B (see section \ref{osc}). This includes the oscillator B volume control (in the original panel layout denoted as "Glide").
+  \item Filter (see section \ref{filter} and \ref{envelopes}) 
+  \item (Amp) Envelope (see section \ref{envelopes})
+  \item Unison switch (see section \ref{poly-unison-voice})
+\end{itemize}
+
+The controls in the subpanels and the unison switch are all patch parameters, e.g. stored, loaded, imported and exported with a patch. 
+
+The panel control \textbf{Master Tune} and \textbf{Volume} to the very right of the panel are not part of the patch. These control are always applied as they are set because these are used to adjust the instrument to the environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume).
 
 \section{Keyboard and performance section}
 
-(this needs to be done)
+Without modifications, the Prophet 600 comes with a non-weighted, 5 octave (61 key) keyboard. The keyboard does not support touch sensitivity (although the upgraded Prophet 600 supports velocity sensitivity for amplitude and filter vi MIDI, see section \ref{velocity}). Apart from playing, the keyboard is used for sequencer input (see section \ref{seq}) and transposition (see section \ref{transposition}). 
 
-\section{Key pad and parameter/settings menus}
+\section{Rear, inputs and output)}
 
-With the firmware upgrade the Prophet 600 provides additional patch parameters and instrument settings. These are "hidden" in two new menus. The two menus are accessed using the \textbf{Number Pad} in the following way. 
-
-\textbf{Additional patch parameters}
-
-Note that the Prophet operates in two basic modes (live mode and preset mode, see section \ref{uimode} and the access to the additional patch parameters is different as explained in the text.
-
-The additional patch parameters are stored with a patch. In live mode these parameters are accessed by pressing the buttons 0-9 (or pressing them twice or in some cases three times). The respective parameter name is scrolled through the display. The display then shows the value which is either numeric (shown) or a choice setting (scrolled through the display). The value change is done using the \textbf{Speed Dial} on the \textbf{Key Pad}. Important: in preset mode the display shows the patch (preset) number and by default the number pad is reserved for selecting the patch in this case. In order to access the additional patch parameters in preset mode the button \textbf{To Tape} must be activated (its LED will be lit).
-       
-The list of additional patch parameters can be found in section \ref{patchref}. Each parameter is explained in the respective functional context in the next chapter.
-
-\textbf{Shift mode: miscellaneous settings}
-
-The miscellaneous settings are patch independent but they are also stored, e.g. will be loaded the after switching the instrument off and on. The settings are accessed via the \textbf{Shift} mode. In this mode, different keys and buttons have a different function. To use this mode either hold down the button \textbf{From Tape} while selecting one of the additional functions or double click \textbf{From Tape} to enter \textbf{Shift Lock} mode (permanent shift) indicated by a blinking LED. To exit the mode push the button again. In shift mode the numbers 0...9 on the number pad access the miscellaneous settings (see section \ref{settingsref}). In addition, in shift mode the keys on the keyboard are used to set the keyboard transposition (see section \ref{transposition}) and the tuning button activates a per note tuning mode (see section \ref{tuning}).
-
-Note that in contrast to the additional patch parameter pages, the miscellaneous settings associated with the numbers 0...9 are edited by pressing number key repeatedly to cycle through values or to initiate actions. The speed dial is not used. The first time a number is pressed (while holding From Tape) the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. The list of miscellaneuous settings can be found in section \ref{settingsref}. Each setting is explained in the respective functional context in the next chapter or in the appropriate section in the setup chapter.
+\input{rear.tex}
 
 \section{The work flow concept}
 
@@ -175,101 +372,78 @@ A useful work flow of the upgraded Prophet 600 for creating or editing patches c
 
 Ideally, menu diving should be largely restricted to steps 1 and 3 so that uninterrupted hands-on and interactive work with the synthesizer is possible in step 2. It may not always be possible to finalize step 1 upfront and the user may occasionally have to go back to step 1.Nevertheless, the workflow should be more or less natural.
 
-\section{Inputs and outputs}
-
-\textbf{Power Switch}
-
-When turning on the Prophet 600 with the upgrade installed the version is scrolled through the display. Then, the display will show and remain on the patch number selected when the instrument was last powered off.
-
-Note: some earlier versions immediately went into tuning mode (see section \ref{tuning})  when powered up. From version 2.1 on the OS does not. This is to allow the instrument to warm up and stabilize, which typically takes approximately 10 to 15 minutes. Warm up time can depend on changes in air temperature, humidity and transportation of the instrument, as well as the condition of hardware such as the power supply. Therefore, after powering up, wait at least 5 to 20 minutes, and then, as needed, the TUNE button can be pressed to ensure optimal performance. If practical, allowing the instrument to warm up will result in less need to run the tune procedure and overall longer tuning stability.
-
-\textbf{Line voltage selector}
-
-The selector next to the main plug provides the option to switch between 110V and 220V mains voltage, whichever is appropriate for the line voltage where the instrument is operated. A flat head screw driver can be used to rotate the line voltage selector to the appropriate setting. Instrument should be powered down and unplugged when line voltage selector is adjusted.
-
-\textbf{Fuse holder}
-
-Fit the fuse according to the selected line voltage, e.g. 110V 1/2A, slo-blo, 220V 1/4A slo-blo.
-
-\textbf{Audio out / headphone jack}
-
-To drive a preamp or amp, a standard monophonic cable can be used. Or if there are two audio destinations (perhaps one to remain “dry” while the other is processed), a stereo cable may be more convenient.
-
-The Prophet 600 has a monophonic output signal, but the jack is wired so that both sides of standard stereo headphones can be driven. The headphones have a minimum impedance of 1200 Ohms per element (600 Ohms in parallel).
-
-\textbf{Filter CV In}
-
-This jack accepts a 0-10 Vdc control voltage (CV) which is applied to the filter cutoff frequency (all voices). This enables remote and spontaneous increase (but not decrease) of the filter cutoff, e.g. making the sound brighter. The CV can be usually provided by an accessory voltage pedal or an external LFO.
-
-\textbf{Foot switch}
-
-The foot switch jack allows for the use of a sustain pedal (only supported from GliGli 2.1 onwards). The pedal should be contact open at rest (for example a Fatar PS100 will function correctly).
-
-\textbf{Cassette In/Out (disabled with GliGli mod)}
-
-In the upgrade version there is no way to receive or send patch data via Cassette In/Out. Cassette In can be used for sending a pulsed clock to the Prophet 600 to sync the sequencer and/or arpeggiator.
-
-\textbf{MIDI In/Out}
-
-(this needs to be done)
-
 \chapter{Functionality}
 
 \section{Operating modes: preset and live mode}\label{uimode}
 
-\include{uimode.tex}
+\input{uimode.tex}
 
 \section{Loading and storing presets}\label{loadstorepatches}
 
-\include{loadstorepatches}
+\input{loadstorepatches}
 
 \section{Oscillator and mix}\label{osc}
 
-\include{osc.tex}
+\input{osc.tex}
 
-\section{Volume and global tune}
+\section{Volume and master tune}
 
-To the right of the panel there two global parameter dials, the \textbf{Master Tune} and \textbf{Volume} dials. The master tuning has a range or approximately $\pm$semitone. It's pupose is to be able to tune the synth to other instruments without touching the internal, relative frequencies of the oscillators and thereby potentially changing the patch.
+To the right of the panel there two global parameter dials, the \textbf{Master Tune} and \textbf{Volume} dials. The master tuning has a range or approximately $\pm$semitone. It's purpose is to be able to tune the synth to other instruments without touching the internal, relative frequencies of the oscillators and thereby potentially changing the patch.
+
+(Master) volume and master tune are neither patch parameters nor settings. The two values are applied as set on the panel. The only exception is external MIDI control of volume (see section \ref{midiimplenentation}). When the master volume is set via MIDI CC that volume level applies until either a new value is set by MIDI or if the volume panel control is touched.     
 
 \section{Filter}\label{filter}
 
-\include{filter.tex}
+\input{filter.tex}
 
 \section{Envelopes and routing}\label{envelopes}
 
-\include{envelopes.tex}
+\input{envelopes.tex}
 
 \section{Polyphonic, unison and chord mode, voice assignment priority}\label{poly-unison-voice}
 
-\include{poly-unison-voice.tex}
+\input{poly-unison-voice.tex}
 
 \section{LFO}\label{lfo}
 
-\include{lfo.tex}
+\input{lfo.tex}
 
 \section{Poly-Mod}\label{polymod}
 
-\include{polymod.tex}
+\input{polymod.tex}
+
+\section{Arpeggiator and sequencer clock}\label{sync}
+
+The Prophet 600 offers a polyphonics sequencer with two tracks and an arpeggiator with three distinct patterns. The details of operation are explained in sections \ref{seq} and \ref{arp}.
+
+The sequencer and the arpeggiator share the same clock and on this clock the two sequencer tracks and one of the arpeggiator patterns can run in parallel. In order to be able to operate the sequencer and/or arpeggiator in sync with other instruments, the upgraded Prophet 600 provides three different clock source methods which are set in the miscellaneous setting 8 (e.g. press 8 in shifted or shift-locked mode once to see the current value and press repeatedly to cycle through the options):
+\begin{itemize}
+  \item \textit{internal}: an internal clock is used. The clock speed is edited like an additional patch parameter when press number 0 in preset panel mode or live mode.
+  \item \textit{MIDI}: the clock is synced to the MIDI clocked received on the MIDI receive channel as set in the  miscellaneous settings
+  \item \textit{Tape}: the clock is synced to a fraction of a pulse clock received via the Tape In input on the rear of the instrument
+\end{itemize}  
+
+It is possible to sync the LFO to the sequencer / arpeggiator clock (ir external clock) using the additional patch parameter \textbf{(111) LFO Sync}, see section \ref{lfo}.
 
 \section{Arpeggiator}\label{arp}
 
-\include{arp.tex}
+\input{arp.tex}
 
 \section{Sequencer}\label{seq}
 
-\include{seq.tex}
+\input{seq.tex}
 
 \section{Vibrato}\label{vib}
 
-\include{vibrato.tex}
+\input{vibrato.tex}
 
 \section{Pitch bender}\label{pitchbend}
 
-\include{pitchbend.tex}
+\input{pitchbend.tex}
 
 \section{Modulation wheel and modulation delay}\label{modwheel}
 
-\include{modwheel.tex}
+\input{modwheel.tex}
 
 \section{Glide}\label{glide}
 
@@ -277,19 +451,31 @@ In the original Prophet 600 the glide setting (the glide time) had a dedicated d
 
 \section{Detune}\label{detune}
 
-The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect can be used in particular to make unison sound broader and more lively. The additional patch parameter is \textbf{(77) Detune}
+The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect is used to make unison sounds broader and more lively. In fact, detune is only applied when unison is activated. The additional patch parameter is \textbf{(77) Detune}
+
+Note that the effect of the spread parameter (see section \ref{spreadsett} is applied with and without unison and is therefore added to detune in unison. 
+
+\section{Spread}\label{spreadsett}
+
+\input{spread.tex}
+
+\section{External CV in}\label{extcv}
+
+(this needs to be done)
+
+\section{Velocity sensitivity}\label{velocity}
+
+(this needs to be done)
 
 \chapter{Synthesizer setup and maintenance}
 
 \section{Tuning}\label{tuning}
 
-The Prophet 600 is a VCO synthesizer, e.g. the frequency of the oscillators A and B are set by apllying a voltage to the control pin of the microchip. The relationship between absolute voltage and resulting frequency is not precise. It depends on many factors, such as smallest differences in the manufacturing process of the chip itself and the surrounding circuit components and operating temparture (the temparture of the components also changes during operation). Therefore the synthesizer need to be tuned regularly. Typically, tuning is best after the instrument (or rather: the chips and components) has been given time to warm up to a stable operating temperature, which could be 10-30 minutes into operation. It may be necessary to retune the synth during operation. The user should trust her or his ear on this.
-
-The automated tuning procedure applies 12 note equal tempered tuning. For other tunings each of the 12 notes can be tuned manually. The per note tuning is stored as part of the patch (in contrast to the overall tuning, which is stored as part of the settings and applies to all presets) and it is retained after full tuning. To enter the per note tuning hold down From Tape and press Tune. The Tune button flashes. In this mode the last played note is tuned using the mod wheel. From the middle position the tune range is $\pm$1 semitone from equal tempered. To leave the per note tuning mode press Tune again.
+\input{tuning.tex}
 
 \section{MIDI integration}\label{midiintegration}
 
-\include{midiintegration.tex}
+\input{midiintegration.tex}
 
 \section{Voice deactivation}
 
@@ -300,19 +486,11 @@ The upgrade Prophet 600 provides a method for switching single voices of the Pro
   \item Key 5 toggles between on and off of the voice selected using key 4. In the upgrade Prophet 600 the user can deactivate selected voices in this way.
 \end{enumerate}
 
-\section{Transposition}
+\section{Transposition}\label{transposition}
 
 The upgraded Prophet 600 provides a method for transposing the keyboard. In shift mode the last pressed key will define the transposition, the middle C3 being zero transposition. The value is also scrolled through the display for conformation. 
 
 Transposition also applies to arpeggiator and sequencer. The transposition procedure also works in the respective run, latch and record modes.
-
-\section{External sequencer/arpeggiator sync}\label{sync}
-
-The sequencer and arpeggiator of the upgraded Prophet 600 can be sync'ed to external clock sources. This is done using the miscellaneous setting of number key "8". Pressing key "8" repeatedly cycles through the sync source. The supported sources are \textit{internal} (default setting, the Prophet 600 generates its own clock.), \textit{MIDI} (fraction of the incoming MIDI clock on the received channel will be used as clock) and \textit{tape} (a pulse clock source can be plugged into the “Cassette In” jack and a fraction of it will be used as clock).
-
-\section{Spread}\label{spreadsett}
-
-\include{spread.tex}
 
 \section{VCF limit}\label{limitsett}
 
@@ -320,11 +498,11 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
 
 \section{Managing sound libraries via SysEx}\label{mididump}
 
-\include{patchmgmt.tex}
+\input{patchmgmt.tex}
 
 \section{Scaling adjustment}\label{maintenance}
 
-\include{maintenancemode.tex}
+\input{maintenancemode.tex}
 
 \section{SysEx firmware upgrade}\label{fwupgrade}
 
@@ -348,7 +526,7 @@ The settings and preset parameters are left unchanged by the upgrade, provided t
   \setlength\itemsep{0cm}
   \item Version 2.0
   \item Version 2.1 Release Candidate 3 (not officially released)
-  \item Version 2.2  
+  \item Version XXX
 \end{itemize} 
 
 Downgrading versions is possible but preservation of settings and preset parameters is not guaranteed in that case.
@@ -359,29 +537,311 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \section{Patch parameter overview}\label{patchref}
 
-\include{patchref.tex}
+\input{patchref.tex}
 
 \section{Settings parameter overview}\label{settingsref}
 
-\include{settingsref}
+\input{settingsref}
 
 \section{MIDI control implementation}\label{midiimplenentation}
 
-\include{midiimplementation.tex}
+\input{midiimplementation.tex}
 
-\chapter{Technical reference for the GliGli upgrade}
+\section{Operation modes}\label{modes}
 
-\section{Clock cycle}
+\textbf{Live mode}
 
-(this nees to be done)
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Live mode:};
+    \upperbuttons{13cm,7cm}{}{}
 
-\section{Settings storage}
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Show parameter values};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Select patch parameter};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Enter record mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Leave live mode and enter preset patch mode};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm){Start tuning procedure};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double click)};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
 
-(this nees to be done)
+  \end{tikzpicture}
+}
 
-\section{Patch storage}
+\textbf{Preset panel mode}
 
-(this nees to be done)
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Preset panel mode:};
+    \upperbuttons{13cm,7cm}{PT}{}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {Pick-me-up function};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Pick-me-up display (value or relative position)};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Select patch parameter};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Enter record mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Leave preset mode and enter live mode};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {Start tuning procedure};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double click)};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {Enter preset patch mode};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
+
+\textbf{Preset patch mode}
+
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Preset patch mode:};
+    \upperbuttons{13cm,7cm}{P}{}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Display patch number};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Enter patch number};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Enter record mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Leave preset mode and enter live mode};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {Start tuning procedure};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double click)};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {Enter preset panel mode};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
+
+\textbf{Record mode}
+
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Record mode:};
+    \upperbuttons{13cm,7cm}{R}{R}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Display patch number};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Enter patch number};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Leave record mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {???};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {???};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {???};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
+
+\textbf{Shift-lock mode}
+
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Shift-lock mode:};
+    \upperbuttons{13cm,7cm}{F}{F}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {Transposition};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Display of miscellaneous settings and messages};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Miscellaneous settings};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Enter patch management mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Load default patch (requires confirmation)};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {Enter per note tuning mode};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Leave shifted mode};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {???};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
+
+\textbf{Sequencer editing mode}
+
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Sequencer editing mode:};
+    \upperbuttons{13cm,7cm}{R}{}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {Enter steps in the sequence};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Display the number of steps};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Special functions of buttons 0, 1 and 2};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Leave editing mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {???};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {???};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {Hold to access patch parameters via number pad};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
+
+\textbf{Patch management mode}
+
+\scalebox{0.25}{
+  \begin{tikzpicture}[scale=0.8]
+  \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Patch management mode:};
+    \upperbuttons{13cm,7cm}{P}{P}
+
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,5.25cm) {Panel controls};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,5.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,6cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,6.75cm) {Performance};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,6.75cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,7.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,8.25cm) {Keyboard};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,8.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,9cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,9.75cm) {Display};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,9.75cm) {Patch number input, confirmation text};
+    \draw[line width=1pt]++(29cm,10.5cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,11.25cm) {Number pad};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,11.25cm) {Patch number entry};
+    \draw[line width=1pt]++(29cm,12cm)--++(30cm,0cm);     
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,12.75cm) {Record};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Leave patch management mode};
+    \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Dump entire patch bank};
+    \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {(normal function)};
+    \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {};
+    
+    \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
+
+  \end{tikzpicture}
+}
 
 \chapter{Troubleshooting}
 

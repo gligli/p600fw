@@ -2,7 +2,17 @@ The functions associated with the poly-mod section are very powerful and these f
 
 Modulating the oscillator frequency and cut-off frequency using a \textit{low frequency oscillator (LFO)} is a common feature. An LFO does not operate in the audible frequency range and it is also fixed in frequency, e.g. independent from the note played. Poly-mod is different in that the modulation itself is in the audible range and the non-linearity changes the frequency spectrum drastically. In one or the other form the resulting effect may be compared to FM synthesis, althought in the Prophet 600 it is more raw and fully analog. Importantly, similar to the sync function the oscillator cross-modulation is implemented in the hardware.
 
-The poly-mod control can be found in the poly-mod section of the panel. There are two modulation sources. The \textbf{OSC B} dial sets how strongly the sonic output of VCO B influences poly-mod targets. Before looking at the second source (envelope) it is instructive to consider the effect of VCO B modulation on the two targets, which can be selected using the dedicated switches:
+The poly-mod control can be found in the poly-mod section of the panel. There are two modulation sources. The \textbf{OSC B} dial sets how strongly the sonic output of VCO B influences poly-mod targets. 
+
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 11cm, minimum height = 6.5cm, anchor = south west] (r) at (0,0) {};
+    \prophetpotbiplar{4cm,4cm}{ENVELOPE}{75}
+    \prophetpot{10cm,4cm}{OSC B}{75}
+  \end{tikzpicture}
+}
+
+Before looking at the second source (envelope) it is instructive to consider the effect of VCO B modulation on the two targets, which can be selected using the dedicated switches:
 
 \begin{itemize}
   \item When setting the \textbf{Frequency A} switch to \textit{on}, VCO B modulates the frequency of VCO A. In different variants this is also known as frequency modulation, or short: FM. Depending on the modulation strength the result is a wide and rich freuency spectrum which contains among others the sum and difference of multiples of the two oscillators frequencies . The spetrum strongly depends on the frequency difference and may be totally non-harmonic but also harmonic for carefully adjusted frequency settings. Typical spectra are often described as bell sounding. Note that in contrast to FM synthesizers which use highly accurate sin waves, the oscillator output of the Prophet does not provide the same basic accuracy and the available waveforms already contain many higher harmonics. Therefore the FM result in the Prophet 600 is typically more drastic and dirtier and requires classic subtractive methods for shaping the sound, e.g. the application of the low pass filter. 
