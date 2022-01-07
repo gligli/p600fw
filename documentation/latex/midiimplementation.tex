@@ -6,6 +6,45 @@ Two types of MIDI controllers are implemented:
   \item Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore 2 has choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
 \end{itemize}
 
-The Prophet 600 receives Continuous Controllers (CC) in Preset mode only. The MIDI implementation chart can be found ins section \ref{midi}.
+The Prophet 600 receives Continuous Controllers (CC) in Preset mode only. 
 
-(this nees to be done)
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}[l]{ p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{5cm}|p{2cm}|p{1cm}} 
+\textbf{Continuous Parameter} & \textbf{Type} & \textbf{ CC Coarse} & \textbf{CC Fine} & \textbf{Stepped Parameter} & \textbf{Type} & \textbf{CC} \\ \hline
+Osc A Frequency & Continuous & 16 & 80 & Osc A Saw & Stepped & 48 \\ \hline
+Osc A Volume & Continuous & 17 & 81 & Osc A Triangle & Stepped & 49 \\ \hline
+Osc A Pulse Width & Continuous & 18 & 82 & Osc A Square & Stepped & 50 \\ \hline
+Osc B Frequency & Continuous & 19 & 83 & Osc B Saw & Stepped & 51 \\ \hline
+Osc B Volume & Continuous & 20 & 84 & Osc B Triangle & Stepped & 52 \\ \hline
+Osc B Pulse Width & Continuous & 21 & 85 & Osc B Sqr & Stepped & 53 \\ \hline
+Osc B Fine & Continuous & 22 & 86 & Sync & Stepped & 54 \\ \hline
+Cutoff & Continuous & 23 & 87 & Poly Mod Oscillator A Destination & Stepped & 55 \\ \hline
+Resonance & Continuous & 24 & 88 & Poly Mod Filter Destination & Stepped & 56 \\ \hline
+Filter Envelope Amount & Continuous & 25 & 89 & LFO Shape & Stepped & 57 \\ \hline
+Filter Release & Continuous & 26 & 90 & LFO Speed Range & Stepped & 58 \\ \hline
+Filter Sustain & Continuous & 27 & 91 & LFO Mode Destination & Stepped & 59 \\ \hline
+Filter Decay & Continuous & 28 & 92 & Keyboard Filter Tracking & Stepped & 60 \\ \hline
+Filter Attack & Continuous & 29 & 93 & Filter Envelope Shape & Stepped & 61 \\ \hline
+Amp Release & Continuous & 30 & 94 & Filter Envelope Fast/Slow & Stepped & 62 \\ \hline
+Amp Sustain & Continuous & 31 & 95 & 2nd Envelope Shape & Stepped & 63 \\ \hline
+Amp Decay & Continuous & 32 & 96 & Unison & Stepped & 65 \\ \hline
+Amp Attack & Continuous & 33 & 97 & Assigner Priority Mode & Stepped & 66 \\ \hline
+Poly Mod Filter Amount & Continuous & 34 & 98 & Pitch bender semitones & Stepped & 67 \\ \hline
+Poly Mod Osc B Amount & Continuous & 35 & 99 & Pitch bender target & Stepped & 68 \\ \hline
+LFO Frequency & Continuous & 36 & 100 & Modulation wheel range & Stepped & 69 \\ \hline
+LFO Amount & Continuous & 37 & 101 & Osc pitch mode & Stepped & 70 \\ \hline
+Glide & Continuous & 38 & 102 & Modulation wheel target & Stepped & 71 \\ \hline
+Amp Velocity & Continuous & 39 & 103 & Vibration target & Stepped & 72 \\ \hline
+Filter Velocity & Continuous & 40 & 104 & Vibration target & Stepped & 72 \\ \hline
+Modulation delay & Continuous & 41 & 105 & 2nd Envelope Fast/Slow & Stepped & 73 \\ \hline
+Vibrato frequency & Continuous & 42 & 106 & Envelope Routing & Stepped & 74 \\ \hline
+Vibrato amount & Continuous & 43 & 107 & LFO Sync & Stepped & 75 \\ \hline
+Unison detune & Continuous & 44 & 108 & PW Sync Bug & Stepped & 75 \\ \hline
+Sequencer / arpeggiator clock & Continuous & 45 & 109 &  &  &  \\ \hline
+External CV amount & Continuous & 46 & 110 &  &  &  \\ \hline
+Spread & Continuous & 47 & 111 &  &  &  \\ \hline 
+\end{longtable}
+
+\normalsize
