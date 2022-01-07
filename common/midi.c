@@ -297,7 +297,14 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		{
 			currentPreset.continuousParameters[param]&=0x01fc;
 			currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-			change=1;	
+            if (param==cpSeqArpClock) // the arp / seq clock is a setttings parameter
+            {
+                settings.seqArpClock=currentPreset.continuousParameters[param];
+            }
+            else
+            {
+                change=1;
+            }
 		}
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
@@ -308,8 +315,15 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		{
 			currentPreset.continuousParameters[param]&=0xfe00;
 			currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-			change=1;	
-		}
+            if (param==cpSeqArpClock) // the arp / seq clock is a setttings parameter
+            {
+                settings.seqArpClock=currentPreset.continuousParameters[param];
+            }
+            else
+            {
+                change=1;
+            }
+        }
 	}
 	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
 	{
