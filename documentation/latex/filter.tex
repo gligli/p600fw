@@ -1,3 +1,11 @@
 The mix of the two VCOs is routed through a resonant 24db low pass filter\footnote{The filter is built on a Curtis CEM3372 filter.}. The control for the filter consst of a \textbf{Cut-off} dial regulating the cut-off frequency, and a \textbf{Resonance} dial for the resonance. The \textbf{Filter Envelope} dial regulates how strongly the cut-off frequency is modulated by the filter envelope. This dial support negatives values (effectively an inverse envelope setting) and positive values. The display will show values between -50 and 48 depending on position. This is major enhancement compared to the original Prophet 600 firmware.
 
+\begin{center}
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \filterpanel{0,0}
+  \end{tikzpicture}
+}
+\end{center}
+
 The \textbf{Keyboard Tracking} switch has the setting \textit{Off}, \textit{1/2} and \textit{Full}. It amplifies the cut-off frequency depending on keyboard note, e.g. the cut-off frequency is higher for higher notes. The effect applies to the cut-off frequency resulting from fixed \textbf{Cut-off} dial setting plus envelopeand LFO modulation, e.g. it applies to the sum.  

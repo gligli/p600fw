@@ -1,5 +1,15 @@
 For each of the six voices the Prophet 600 has two voltage controlled oscillators (VCOs) \footnote{The oscillators are Curtis CEM3340 chips}, VCO A and VCO B. Each has a dedicated control field on the panel. The oscillators are identical, offering three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The pulse width of the pulse shape can be adjusted using the corresponding \textbf{Pulse Width} dial. All three shapes can be activated simultaneously. 
 
+\begin{center}
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \oscapanel{0,10cm}
+    \oscbpanel{0,0cm}
+  \end{tikzpicture}
+}
+\end{center}
+
+
 Both oscillators have a \textbf{Frequency} dial which determines the range of the oscillators when played from the keyboard or via MIDI.  The granularity of the Frequency dials can be set to \textit{free}, \textit{semitone} or \textit{octave} (the default) to support the users in the processes. The corresponding parameter is the additional patch parameter \textbf{(88) OSC Pitch Mode} (accessible by pressing 8 twice). An additional \textbf{Fine} dial, available for For VCO B only,  allows for fine tuning of the relative frequency. The man purpose of separate Frequency dials per oscillator as pat of a patch is to be able to detune them against one another. This can be used to create thick and lively patches (when pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of the poly-mod, see section \ref{polymod}. 
 
 VCO A has an additional \textbf{Sync} switch. The hardware of the Prophet 600 offers are hard sync of oscillator A to oscillator B, e.g. VCO A is reset to the cycle start when VCO B completes a cycle. 

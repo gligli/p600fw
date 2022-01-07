@@ -9,6 +9,7 @@
 \usepackage{ProphetPanel}
 \usepackage{fontspec}
 \usepackage[T1]{fontenc}
+\usepackage{longtable}
 %\usepackage[inline]{showlabels}
 \setmainfont[
  BoldFont={FiraSans-Bold}, 
@@ -21,8 +22,10 @@
 \setlength{\paperwidth}{297mm}
 \setlength{\textwidth}{26cm}
 \setlength{\footskip}{2.5cm}
-
 \newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
+\newcommand{\pp}[1]{} % patch parameter
+\newcommand{\app}[2]{} % additional patch parameter, 1: number, 2: name
+
 
 \title{[DRAFT] User Manual for the GliGli upgraded Prophet 600}
 \author{Florian Merz (Editor)}
@@ -35,6 +38,12 @@
 \titlespacing{\chapter}{0pt}{*0}{*0}
 %\titleformat{\section}[display]{\Large\bfseries}{}{0.0cm}{}
 \titlespacing{\section}{0pt}{*0}{*0}
+
+
+%%
+%% Document Start
+%%
+
 
 \begin{document}
 
@@ -161,37 +170,36 @@ Despite the fact that many have contributed and have spent considerable time to 
 
 The different controls and interfaces of the Prophet 600 are shown schematically below. Through the document the corresponding nomenclature is used. 
 
-\scalebox{0.22}{
+\scalebox{0.2}{
   \begin{tikzpicture}[scale=0.8]
 
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 70cm, minimum height = 3cm, anchor = south west] (r) at (0cm,22.25cm) {}; % rear
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 102cm, minimum height = 3cm, anchor = south west] (r) at (0cm,23.25cm) {}; % rear
  
   \prophetdisplay{4cm,17.5cm}{123}{12754}{1}
   \numberpad{1cm,4cm}
-  \node[font=\fontsize{18}{12}\selectfont, text width=8cm, text centered, inner sep=0.0mm, minimum width=8cm] at (5cm,3cm) {PROGRAM SELECT};
+  \node[font=\fontsize{18}{12}\selectfont, text width=8cm, text centered, inner sep=0.0mm, minimum width=8cm] at (5cm,3cm) {\panelfont{PROGRAM SELECT}};
   \draw[line width=2pt]++(10,20)--++(0,-18cm); % -0.9cm,-4.65cm  
   \buttonblock{11cm,7cm}{P}{}
   \prophetpot{16.9cm,4.5cm}{SPEED}{75}
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 19cm, minimum height = 16cm, anchor = south west] (r) at (0cm,1cm) {}; % buttons
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 50cm, minimum height = 16cm, anchor = south west] (r) at (25cm,1cm) {}; % panel
-  
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 9cm, minimum height = 6.5cm, anchor = south west] (r) at (26.25cm,11.5cm) {\Large\textit{Poly-Mod Subpanel}};
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 6.5cm, anchor = south west] (r) at (26.25cm,2cm) {\Large\textit{LFO Subpanel}};
-  
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 6.5cm, anchor = south west] (r) at (45cm,11.5cm) {\Large\textit{OSC A Subpanel}};
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 6.5cm, anchor = south west] (r) at (45cm,2cm) {\Large\textit{OSC B Subpanel}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 19cm, minimum height = 17cm, anchor = south west] (r) at (0cm,1cm) {}; % buttons
 
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 8.5cm, anchor = south west] (r) at (63.75cm,9cm) {\Large\textit{Filter Subpanel}};
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 14cm, minimum height = 4.5cm, anchor = south west] (r) at (63.75cm,2cm) {\Large\textit{(Amp) Envelope Subpanel}};
+  % panel
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 82cm, minimum height = 17cm, anchor = south west] (r) at (25cm,1cm) {}; % panel  
+  \polymodesubpanel{26.25cm,12cm};
+  \lfosubpanel{26.25cm,2.5cm};
+  \pswitch{52cm,17cm}{UNISON}
+  \oscapanel{54.5cm,12cm}
+  \oscbpanel{54.5cm,2.5cm}
+  \adsrpanel{93cm,2cm}
+  \filterpanel{93cm,9cm}
 
-  \prophetpot{84.5cm,16.5cm}{MASTER TUNE}{75}
-  \prophetpot{84.5cm,7.5cm}{VOLUME}{75}
-
+  \prophetpot{123cm,16.5cm}{MASTER TUNE}{75}
+  \prophetpot{123cm,7.5cm}{VOLUME}{75}
   
   \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 7cm, text centered, minimum height = 8cm, text width=5cm, anchor = north west] (r) at (0cm,-0.25cm) {\Large\textit{Performance Section (Pitch Bend and Modulation Wheel)}};
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 62cm, minimum height = 8cm, anchor = north west] (r) at (10cm,-0.25cm) {\Large\textit{Keyboard}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 94cm, minimum height = 8cm, anchor = north west] (r) at (10cm,-0.25cm) {\Large\textit{Keyboard}};
   
-  % legends
+  % legend left
   \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,-2.5cm) (ps) {Performance Section};
   \draw[line width=1pt]++(ps.east)--++(2.5cm,0cm);  
   \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,19.5cm) (pd) {Data Pad};
@@ -202,13 +210,13 @@ The different controls and interfaces of the Prophet 600 are shown schematically
   \draw[line width=1pt]++(dis.east)--++(5cm,0cm);  
   \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,15.5cm) (dis) {Function Buttons};
   \draw[line width=1pt]++(dis.east)--++(16cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,23.75cm) (pd) {Rear};
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,24.75cm) (pd) {Rear};
   \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
   
-  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (89.5cm,19cm) (pl) {Panel};
+  % legend right
+  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (129.5cm,19cm) (pl) {Panel};
   \draw[line width=1pt]++(pl.west)--++(-2.5cm,0cm);  
-
-  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (89.5cm,-3.5cm) (kb) {Keyboard};
+  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (129.5cm,-3.5cm) (kb) {Keyboard};
   \draw[line width=1pt]++(kb.west)--++(-2.5cm,0cm);  
 
   
@@ -535,6 +543,8 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \chapter{Reference}
 
+\begin{flowtext}
+
 \section{Patch parameter overview}\label{patchref}
 
 \input{patchref.tex}
@@ -546,6 +556,8 @@ Downgrading versions is possible but preservation of settings and preset paramet
 \section{MIDI control implementation}\label{midiimplenentation}
 
 \input{midiimplementation.tex}
+
+\end{flowtext}
 
 \section{Operation modes}\label{modes}
 

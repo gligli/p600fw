@@ -1,6 +1,16 @@
 As in the original version the upgraded Prophet 600 offers two ADSR envelopes. The first is the filter envelope, which is associated with and routed to the filter cut-off frequency. Its parameters are located in the filter section of the panel. The second envelope is assignable and the parameters have a dedicated Assignable Envelope section on the panel below the filter section \footnote{In the original Prophet 600 as well as in the uprage up to version 2.1 RC3 the assignable enevelope is in fact a dedicated amplitude envelope. Therefore, in the original and in the upgrade compatible panel overlay the panel section of this envelope is marked "Amplifier". Also with the change from version 2.1 to the version 2.2 the additional patch parameter Amplitude Shape has been consequently renamed Assignable Shape.}.
 
-Both envelopes work identically in that they have a classic ADSR setup with an \textbf{Attack} dial, a \textbf{Decay} dial, a \textbf{Sustain} dial and a \textbf{Release} dial. Compared to the original, the upgraded Prophet 600 provides not only faster and smoother envelopes but also offers new two different envelope speed regimes, \textit{slow} and \textit{fast}, as well as two different envelope shapes, \textit{linear} and \textit{exponential}.
+Both envelopes work identically in that they have a classic ADSR setup with an \textbf{Attack} dial, a \textbf{Decay} dial, a \textbf{Sustain} dial and a \textbf{Release} dial. 
+
+\begin{center}
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+      \adsrpanel{0,0}
+  \end{tikzpicture}
+}
+\end{center}
+
+Compared to the original, the upgraded Prophet 600 provides not only faster and smoother envelopes but also offers new two different envelope speed regimes, \textit{slow} and \textit{fast}, as well as two different envelope shapes, \textit{linear} and \textit{exponential}.
 
 The shape and the speed can be set independently for the filter and the assignable envelope using two additional patch parameters. The parameter \textbf{(5) Assignable Shape} changes the assignable envelope and the parameter \textbf{(55) Filter Shape} changes the filter envelope. Each of the two parameters can take the following values:
 
@@ -11,6 +21,50 @@ The shape and the speed can be set independently for the filter and the assignab
   \item \textit{fast - linear}
   \item \textit{fast - exponential}
 \end{itemize}
+ 
+ The envelope shapes are shown below:
+ 
+ \scalebox{0.5}{
+  \begin{tikzpicture}[scale=0.8]
+    \envelopeexp{0,0}{6}{4}{5}{8}{6}
+
+\end{tikzpicture}
+  }
+
+The attack, decay and release times in the low and fast setting are listed in he following table. These values are approximate and nominal only. Especially at fast rates, there is natural lag i the build up of voltages, so that real time developments are smeared out.
+
+\begin{center}
+  
+  \begin{tabular}{ |c|c|c|} 
+   \hline
+    A, D \& R dial position & slow shape & fast shape \\
+   \hline
+  0 & 5 ms & 1 ms \\
+   \hline
+  1 & 12 ms & 3 ms \\
+   \hline
+  2 & 30 ms & 8 ms \\
+   \hline
+  3 & 80 ms & 20 ms \\
+   \hline
+  4 & 200 ms & 50 ms \\
+   \hline
+  5 & 500 ms & 125 ms \\
+   \hline
+  6 & 1,2 s & 300 ms \\
+   \hline
+  7 & 3 s & 800 ms \\
+   \hline
+  8 & 8 s & 2 s \\
+   \hline
+  9 & 20 s & 5 s \\
+   \hline
+  10 & 50 s & 12 s \\
+   \hline
+
+  \end{tabular} 
+\end{center}
+
  
 In general the envelopes have three potential targets: filter cut-off frequency, amplitude and poly-mod (for this see section \ref{polymod}). The filter envelope is always routed to the filter cut-off frequency and the modulation strength is controlled by the \textbf{Filter Envelope} dial. For the  amplitude and poly-mod targets different routing options exist as described in detail in the section on poly-mod \ref{polymod}. The additional patch parameter \textbf{(555) Envelope Routing} envelope routing is used to select this. The main benefit from the routing options is to make poly-mod independent from the filter dynamics. The default routing is that the poly-mod is target by the filter envelope and the amplitude is modulated by the assignable envelope.
 
