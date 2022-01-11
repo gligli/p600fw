@@ -713,7 +713,7 @@ static void refreshLfoSettings(void)
     lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
     // now scale the LFO amount in analogy to mod wheel
-    lfoAmt=((expf(((float)lfoAmt)/9000.0f )-1.0f)*45.11f);
+    lfoAmt=((expf(((float)lfoAmt)/9000.0f )-1.0f)*45.121f);
 
     vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
     vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
@@ -964,7 +964,7 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
         {
             va=0;
             if (adsr_getStage(&synth.ampEnvs[v])>=sAttack&&adsr_getStage(&synth.ampEnvs[v])<=sSustain)
-                va=scaleU16U16(HALF_RANGE,ampLfoVal); // this behaves like a gate shape
+                va=scaleU16U16(FULL_RANGE,ampLfoVal); // this behaves like a gate shape
         }
         else // standard
             va=scaleU16U16(ampEnvVal,ampLfoVal);
@@ -1083,7 +1083,8 @@ void synth_init(void)
     // initial input state
 
     scanner_update(1);
-    potmux_update(POTMUX_POT_COUNT);
+    //potmux_update(POTMUX_POT_COUNT); // init all
+    potmux_update(1); // init all
 
     // dead band pre calculation
     precalcDeadband(&panelDeadband);
@@ -1120,7 +1121,8 @@ void synth_update(void)
     // update pots, detecting change
 
     potmux_resetChanged();
-    potmux_update(4);
+    //potmux_update(4);
+    potmux_update(0);
 
     // act on pot change
 
@@ -1160,39 +1162,35 @@ void synth_update(void)
         }
     }
 
+    // lfo (for mod delay)
+    refreshLfoSettings();
+    sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
+    sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
     switch(frc&0x03) // 4 phases
     {
-    case 0:
-        // lfo (for mod delay)
-        refreshLfoSettings();
-        break;
-    case 1:
-        // 'fixed' CVs
-        sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
-        sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
-        sh_setCV(pcExtFil,currentPreset.continuousParameters[cpExternal],SH_FLAG_IMMEDIATE);
-        break;
-    case 2:
-        // 'fixed' CVs
-        sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
-        sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
-        sh_setCV(pcMVol,satAddU16S16(synth.masterVolume,synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
-        break;
-    case 3:
-        // gates
+        case 0:
+            sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
+            // arp and seq
+            clock_setSpeed(settings.seqArpClock);
+            break;
+        case 1:
+            // 'fixed' CVs
+            sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
+            sh_setCV(pcExtFil,currentPreset.continuousParameters[cpExternal],SH_FLAG_IMMEDIATE);
+            break;
+        case 2:
+            // 'fixed' CVs
+            sh_setCV(pcMVol,satAddU16S16(synth.masterVolume,synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
+            break;
+        case 3:
+            // gates
 
-        refreshGates();
+            refreshGates();
 
-        // glide
-
-        synth.glideAmount=exponentialCourse(currentPreset.continuousParameters[cpGlide],11000.0f,2100.0f);
-        synth.gliding=synth.glideAmount<2000;
-
-        // arp and seq
-
-        clock_setSpeed(settings.seqArpClock);
-
-        break;
+            // glide
+            synth.glideAmount=exponentialCourse(currentPreset.continuousParameters[cpGlide],11000.0f,2100.0f);
+            synth.gliding=synth.glideAmount<2000;
+            break;
     }
 
     // tuned CVs
@@ -1204,7 +1202,7 @@ void synth_tuneSynth(void)
 {
     tuner_tuneSynth();
     computeTunedBenderCVs();
-    synth_updateMasterVolume(); // V2.26 to fix tuner volume issue
+    synth_updateMasterVolume();
 }
 
 

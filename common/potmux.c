@@ -4,21 +4,27 @@
 
 #include "potmux.h"
 #include "dac.h"
+#include "midi.h"
 
-#define PRIORITY_POT_COUNT 5
+#define PRIORITY_POT_COUNT 6
 #define CHANGE_DETECT_THRESHOLD 4
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 {
-	/*Mixer*/8,/*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/8,
-	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/8,/*AmpDec*/8,/*AmpAtt*/8,
+	/*Mixer*/8, /*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/10,
+	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/10,/*AmpDec*/8,/*AmpAtt*/8,
 	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
-	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
+	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/8
 };
 
-static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
+static const p600Pot_t priorityPots[6]=
 {
-	ppCutoff,ppPitchWheel,ppFreqA,ppFreqB,ppModWheel
+	ppCutoff, ppFreqA, ppFreqB, ppModWheel, ppPitchWheel, ppNone
+};
+
+static const p600Pot_t regularPots[23]=
+{
+    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppMVol, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppNone
 };
 
 static struct
@@ -27,6 +33,8 @@ static struct
 	uint8_t changeDetect[POTMUX_POT_COUNT];
 
 	uint16_t pots[POTMUX_POT_COUNT];
+	uint8_t potExcited[POTMUX_POT_COUNT];
+	uint8_t potExcitedCount[POTMUX_POT_COUNT];
 	int8_t currentRegularPot;
 	p600Pot_t lastChanged;
 } potmux;
@@ -96,10 +104,13 @@ static void updatePot(p600Pot_t pot)
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
 			potmux.lastChanged=pot;
+            potmux.potExcitedCount[pot]=10;
 		}
+        potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
+        if (potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
 
         // the idea is to add the leading (16-bitDepth) bits to the lower end to make the range 0 ... UNIT16_MAX despite the limited accuracy
-        if (estimate>=0xFC00) estimate=badMask; // choose max value above the threshold
+        if (estimate>=0xFC00) estimate=badMask; // choose max value above the threshold UINT16_t - CHANGE_DETECT_THRESHOLD
 		potmux.pots[pot]=estimate|(estimate>>bitDepth);
     }
 }
@@ -130,22 +141,34 @@ int8_t potmux_isPotZeroCentered(p600Pot_t pot)
 	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel;
 }
 
-inline void potmux_update(uint8_t regularPotCount)
+inline void potmux_update(uint8_t updateAll)
 {
-	int16_t i;
-	
-	for(i=0;i<regularPotCount;++i)
+	int16_t i, updatable;
+    updatable=updateAll?22:4;
+	for(i=0;i<updatable;++i)
 	{
-		updatePot(potmux.currentRegularPot);
-
-		if(potmux.currentRegularPot==ppPitchWheel)
-			potmux.currentRegularPot=ppModWheel; // hole in the enum between those 2
-		else
-			potmux.currentRegularPot=(potmux.currentRegularPot+1)%POTMUX_POT_COUNT;
+		if (!potmux.potExcited[regularPots[potmux.currentRegularPot]]) updatePot(regularPots[potmux.currentRegularPot]); // done in the next loop
+		potmux.currentRegularPot++;
+        if (regularPots[potmux.currentRegularPot]==ppNone) potmux.currentRegularPot=0;
 	}
 
-	for(i=0;i<PRIORITY_POT_COUNT;++i)
-		updatePot(priorityPots[i]);
+    p600Pot_t pp=regularPots[0];
+    i=0;
+    while (pp!=ppNone) // this cycle once through the pots in prio 2
+    {
+        if (potmux.potExcited[pp]) updatePot(pp);
+        i++;
+        pp=regularPots[i];
+    }
+
+    i=0;
+    pp=priorityPots[0];
+    while (pp!=ppNone) // this cycle once through the pots in prio 2
+    {
+        updatePot(pp);
+        i++;
+        pp=priorityPots[i];
+    }
 }
 
 void potmux_init(void)
