@@ -553,16 +553,12 @@ static inline void refreshPulseWidth(int8_t pwm)
 
     //	the following is a fix of a bug in 2.0: "fixing wrong OscA pitch when polymod routes OscB to FreqA."
     //	datasheet specifies that pa should default to max and pb should default to min to avoid issues with sync and polymod
-    //	pa=UINT16_MAX;
-    //	pb=0;
-    // 	this ways reversed because it makes patches stored using 2.0 (and also imported from Z80?) sound wrong
-    //	pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
     if (currentPreset.steppedParameters[spPWMBug]==0) // this means bug is "switched off"
     {
         pa=UINT16_MAX;
         pb=0;
     }
-    else // bug is "switched on" --> compatible with versions <= 2.1 RC3
+    else // bug is "switched on" --> compatible with versions <= 2.1 RC3. patches loaded from that version will have the bug set to "ON".
     {
         pa=pb=UINT16_MAX; // in various cases, defaulting this CV to zero made PW still bleed into audio (eg osc A with sync)
     }
@@ -610,13 +606,13 @@ static void refreshEnvSettings(void)
     uint16_t aa,ad,ar,fa,fd,fr;
     float spread;
 
-    as=currentPreset.continuousParameters[cpAmpSus]; // there is no "whack" on the the sustain
-    fs=currentPreset.continuousParameters[cpFilSus]; // there is no "whack" on the the sustain
+    as=currentPreset.continuousParameters[cpAmpSus]; // there is no spread on the sustain
+    fs=currentPreset.continuousParameters[cpFilSus]; // there is no spread on the sustain
 
     for(i=0; i<SYNTH_VOICE_COUNT; ++i)
     {
-        adsr_setShape(&synth.ampEnvs[i],currentPreset.steppedParameters[spAmpEnvExpo]);
-        adsr_setShape(&synth.filEnvs[i],currentPreset.steppedParameters[spFilEnvExpo]);
+        adsr_setShape(&synth.ampEnvs[i],currentPreset.steppedParameters[spAmpEnvShape]);
+        adsr_setShape(&synth.filEnvs[i],currentPreset.steppedParameters[spFilEnvShape]);
 
         adsr_setSpeedShift(&synth.ampEnvs[i],(currentPreset.steppedParameters[spAmpEnvSlow])?3:1);
         adsr_setSpeedShift(&synth.filEnvs[i],(currentPreset.steppedParameters[spFilEnvSlow])?3:1);
@@ -681,41 +677,43 @@ static void refreshLfoSettings(void)
 
     switch (currentPreset.steppedParameters[spModwheelShift])
     {
-    case 0:
-        bendValue=((expf(((float)synth.modwheelAmount)/150000.0f )-1.0f)*3737.0f);
-        mwAmt=((uint16_t)bendValue);
-        break;
-    case 1:
-        bendValue=((expf(((float)synth.modwheelAmount)/40000.0f )-1.0f)*1975.0f);
-        mwAmt=((uint16_t)bendValue);
-        break;
-    case 2:
-        bendValue=((expf(((float)synth.modwheelAmount)/20000.0f )-1.0f)*1285.0f);
-        mwAmt=((uint16_t)bendValue);
-        break;
-    case 3:
-        bendValue=((expf(((float)synth.modwheelAmount)/17000.0f )-1.0f)*1417.0f);
-        mwAmt=((uint16_t)bendValue);
-        break;
-    case 4:
-        mwAmt=synth.modwheelAmount>>5;
-        break;
-    case 5:
-        mwAmt=synth.modwheelAmount>>3;
-        break;
-    case 6:
-        mwAmt=synth.modwheelAmount>>1;
-        break;
-    case 7:
-        mwAmt=synth.modwheelAmount;
-        break;
-    default:
-        mwAmt=synth.modwheelAmount;
+        case 0:
+            bendValue=((expf(((float)synth.modwheelAmount)/150000.0f )-1.0f)*3737.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 1:
+            bendValue=((expf(((float)synth.modwheelAmount)/40000.0f )-1.0f)*1975.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 2:
+            bendValue=((expf(((float)synth.modwheelAmount)/20000.0f )-1.0f)*1285.0f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 3:
+            bendValue=((expf(((float)synth.modwheelAmount)/17000.0f )-1.0f)*1417.5f);
+            mwAmt=((uint16_t)bendValue);
+            break;
+        case 4:
+            mwAmt=synth.modwheelAmount>>5;
+            break;
+        case 5:
+            mwAmt=synth.modwheelAmount>>3;
+            break;
+        case 6:
+            mwAmt=synth.modwheelAmount>>1;
+            break;
+        case 7:
+            mwAmt=synth.modwheelAmount;
+            break;
+        default:
+            mwAmt=synth.modwheelAmount;
     }
 
 
     lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
+    // now scale the LFO amount in analogy to mod wheel
+    lfoAmt=((expf(((float)lfoAmt)/9000.0f )-1.0f)*45.11f);
 
     vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
     vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
@@ -966,7 +964,7 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
         {
             va=0;
             if (adsr_getStage(&synth.ampEnvs[v])>=sAttack&&adsr_getStage(&synth.ampEnvs[v])<=sSustain)
-                va=scaleU16U16(INT16_MAX,ampLfoVal); // this behaves like a gate shape
+                va=scaleU16U16(HALF_RANGE,ampLfoVal); // this behaves like a gate shape
         }
         else // standard
             va=scaleU16U16(ampEnvVal,ampLfoVal);
