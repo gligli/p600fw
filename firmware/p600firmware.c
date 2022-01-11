@@ -588,8 +588,8 @@ int main(void)
 	}
 }
 
-ISR(TIMER0_COMPA_vect) 
-{ 
+ISR(TIMER0_COMPA_vect)
+{
 	// use nested interrupts, because we must still handle synth_uartInterrupt
 	// we need to ensure we won't try to recursively handle another synth_timerInterrupt!
 	
