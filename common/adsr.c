@@ -92,14 +92,6 @@ static LOWERCODESIZE void updateIncrements(struct adsr_s * adsr)
 }
 
 
-static inline uint16_t computeOutput(uint32_t phase, const uint16_t lookup[], int8_t isExp)
-{
-	if(isExp)
-		return computeShape(phase,lookup,1);
-	else
-		return phase>>8; // 20bit -> 16 bit
-}
-
 static NOINLINE void handlePhaseOverflow(struct adsr_s * a)
 {
 	a->phase=0;
@@ -192,9 +184,9 @@ void adsr_reset(struct adsr_s * adsr)
 	updateStageVars(adsr,sWait);
 }
 
-inline void adsr_setShape(struct adsr_s * adsr, int8_t isExp)
+inline void adsr_setShape(struct adsr_s * adsr, int8_t shape)
 {
-	adsr->expOutput=isExp;
+	adsr->shape=shape;
 }
 
 LOWERCODESIZE void adsr_setSpeedShift(struct adsr_s * adsr, uint8_t shift)
@@ -233,11 +225,19 @@ inline void adsr_update(struct adsr_s * a)
 	switch(a->stage)
 	{
 	case sAttack:
-		o=computeOutput(a->phase,attackCurveLookup,a->expOutput);
-		break;
+        if (a->shape==1) // exp
+        {
+            o=computeShape(a->phase,attackCurveLookup,1);
+            break;
+        }
+        o=a->phase>>8; // 24bit -> 16 bit;
+        break;
 	case sDecay:
 	case sRelease:
-		o=UINT16_MAX-computeOutput(a->phase,decayCurveLookup,a->expOutput);
+        if (a->shape == 1) // exp
+            o=UINT16_MAX-computeShape(a->phase,expDecayCurveLookup,1);
+        else // linear
+            o=UINT16_MAX-computeShape(a->phase,ssmDecayCurveLookup,1);
 		break;
 	case sSustain:
 		o=a->sustainCV;

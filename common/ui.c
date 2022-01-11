@@ -20,7 +20,7 @@ const struct uiParam_s uiParameters[] =
 	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
 	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
 	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
-	/*5*/ {.type=ptCust,.number=2,.name="env shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*5*/ {.type=ptCust,.number=2,.name="2nd shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
 	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","ab","Vcf","Vol","b"}},
 	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
 	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
@@ -31,7 +31,7 @@ const struct uiParam_s uiParameters[] =
 	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
 	/*3*/ {.type=ptStep,.number=spModwheelShift,.name="mod ran",.values={"min","low","high","full", "hard min","hard low","hard high","hard full"}},
 	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
-	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
+	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
 	/*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
 	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
@@ -42,11 +42,11 @@ const struct uiParam_s uiParameters[] =
 	/*2*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*3*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="env rtg",.values={"std","poly-amp","poly","gate"}},
+	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*7*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
 	/*8*/ {.type=ptCont,.number=cpSpread,.name="spread"},
-	/*9*/ {.type=ptStep,.number=spPWMBug,.name="sync like v2",.values={"on","off"}},
+	/*9*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
 };
 
 struct ui_s ui;
@@ -313,12 +313,12 @@ static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 			currentPreset.steppedParameters[spLFOTargets]|=mtVCA;
 		break;					
 	case 2: // amp shape
-		currentPreset.steppedParameters[spAmpEnvExpo]=1-(data&1);
-		currentPreset.steppedParameters[spAmpEnvSlow]=(data&2)>>1;
+        currentPreset.steppedParameters[spAmpEnvShape]=(data&1);
+		currentPreset.steppedParameters[spAmpEnvSlow]=1-((data&2)>>1);
 		break;
-	case 3: // fil shape 
-		currentPreset.steppedParameters[spFilEnvExpo]=1-(data&1);
-		currentPreset.steppedParameters[spFilEnvSlow]=(data&2)>>1;
+	case 3: // fil shape
+        currentPreset.steppedParameters[spFilEnvShape]=(data&1);
+		currentPreset.steppedParameters[spFilEnvSlow]=1-((data&2)>>1);
 		break;
 	case 4: // bend range 
 		currentPreset.steppedParameters[spBenderSemitones]=br[data];

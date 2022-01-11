@@ -43,8 +43,8 @@ typedef enum
 	spLFOShape=9,spLFOShift=10,spLFOTargets=11,
 
 	spTrackingShift=12,
-	spFilEnvExpo=13,spFilEnvSlow=14,
-	spAmpEnvExpo=15,holdPedal=16,
+	spFilEnvShape=13,spFilEnvSlow=14,
+	spAmpEnvShape=15,holdPedal=16, // attention: 16 is actually the AMP envelope slow flag
 			
 	spUnison=17,
 	spAssignerPriority=18,

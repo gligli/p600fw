@@ -6,6 +6,7 @@
 #include "uart_6850.h"
 #include "synth.h"
 #include "ui.h"
+#include "math.h"
 
 
 // increment this each time the binary format is changed
@@ -374,7 +375,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		// defaults
 		
 		preset_loadDefault(0);
-		
+        // compatibility with previous versions require the ""Pulse Width Sync Bug""
+        // --> for loading from old stroage versions also override the default patch value "off"""
+        currentPreset.steppedParameters[spPWMBug]=1; // == bug "on"" for compatibility
+
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=(i==0)?0:ASSIGNER_NO_NOTE;
 		
@@ -390,6 +394,36 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		steppedParameter_t sp;
 		for(sp=spASaw;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
+
+        // remap of the sp values prior to version 8
+        if (storage.version<8)
+        {
+            // remap the mod wheel range (which was changed in version 8)
+            int8_t mapmw[]={7,6,6,5,5,4}; // before the values were 5, 3, 1, 0 for min/low/high/full, now map to 4, 5, 6, 7
+            if (currentPreset.steppedParameters[spModwheelShift]>=0 && currentPreset.steppedParameters[spModwheelShift]<6)
+            {
+                currentPreset.steppedParameters[spModwheelShift]=mapmw[currentPreset.steppedParameters[spModwheelShift]];
+            } // otherwise keep default
+
+            // reamp the LFO amount (which was changed in version 8)
+            // this is the inverse of the scaling function applied to the LFO amount pot value to make it smoother (small difference to stay within uint16_t here)
+            currentPreset.continuousParameters[cpLFOAmt]=(uint16_t)(9000.0f*log((((float)currentPreset.continuousParameters[cpLFOAmt])/45.124f)+1));
+
+            // remap the exponential release and decay times after the phase lookup was updated (made longer mapping theorectial 285 to new 256)
+            if (currentPreset.steppedParameters[spAmpEnvShape]==1) // exponential
+            {
+                currentPreset.continuousParameters[cpAmpRel]=(uint16_t)(currentPreset.continuousParameters[cpAmpRel]*255/285);
+                currentPreset.continuousParameters[cpAmpDec]=(uint16_t)(currentPreset.continuousParameters[cpAmpDec]*255/285);
+            }
+            currentPreset.continuousParameters[cpAmpAtt]=(uint16_t)(currentPreset.continuousParameters[cpAmpAtt]*255/285);
+            if (currentPreset.steppedParameters[spFilEnvShape]==1) // exponential
+            {
+                currentPreset.continuousParameters[cpFilRel]=(uint16_t)(currentPreset.continuousParameters[cpFilRel]*255/285);
+                currentPreset.continuousParameters[cpFilDec]=(uint16_t)(currentPreset.continuousParameters[cpFilDec]*255/285);
+            }
+            currentPreset.continuousParameters[cpFilAtt]=(uint16_t)(currentPreset.continuousParameters[cpFilAtt]*255/285);
+
+        }
 		
 		currentPreset.steppedParameters[spAmpEnvSlow]=currentPreset.steppedParameters[holdPedal];
 
@@ -419,20 +453,11 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 			
 		if (storage.version<8)
         {
-            // remap the mod wheel range (which was changed in version 8)
-            int8_t mapmw[]={7,6,6,5,5,4}; // before the values were 5, 3, 1, 0 for min/low/high/full, now map to 4, 5, 6, 7
-            if (currentPreset.steppedParameters[spModwheelShift]>=0 && currentPreset.steppedParameters[spModwheelShift]<6)
-            {
-                currentPreset.steppedParameters[spModwheelShift]=mapmw[currentPreset.steppedParameters[spModwheelShift]];
-            } // otherwise keep default
-            // compatibility with previous versions require the ""Pulse Width Sync Bug""
-            // --> for loading from old stroage versions also override the default patch value "off"""
-            currentPreset.steppedParameters[spPWMBug]=1; // == bug "on""
 			return 1;
         }
 	
 		// V8
-		
+
 		readVar=storageRead8();
 		if (readVar<=3) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spEnvRouting]=readVar;
@@ -441,7 +466,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		if (readVar<=7) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spLFOSync]=readVar;
 
-		readVar=storageRead8 ();
+		readVar=storageRead8();
 		if (readVar<=1) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spPWMBug]=readVar;
 
@@ -474,8 +499,11 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		
 		// v2
 		
-		for(cp=cpModDelay;cp<=cpSeqArpClock;++cp)
+		for(cp=cpModDelay;cp<cpSeqArpClock;++cp) // skip arp/seq clock
 			storageWrite16(currentPreset.continuousParameters[cp]);
+
+        // to avoid confusion, write zero to the arp/seq clock slot
+        storageWrite16(0);
 
 		for(sp=spModwheelTarget;sp<=spVibTarget;++sp)
 			storageWrite8(currentPreset.steppedParameters[sp]);
@@ -598,8 +626,10 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modAB;
-		currentPreset.steppedParameters[spFilEnvExpo]=1;
-		currentPreset.steppedParameters[spAmpEnvExpo]=1;
+		currentPreset.steppedParameters[spFilEnvShape]=0; // linear shape is default
+		currentPreset.steppedParameters[spAmpEnvShape]=0; // linear shape is default
+		currentPreset.steppedParameters[spFilEnvSlow]=0; // slow shape is default
+		currentPreset.steppedParameters[spAmpEnvSlow]=0; // slow shape is default
 		currentPreset.steppedParameters[spModwheelShift]=2; // standard is normal shape / high
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		currentPreset.steppedParameters[spEnvRouting]=0; // standard
