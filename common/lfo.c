@@ -15,10 +15,9 @@ static void updateSpeed(struct lfo_s * lfo)
 {
 	int32_t spd;
 	
-	spd=exponentialCourse(UINT16_MAX-lfo->speedCV,13000.0,65535.0f);
-	spd<<=lfo->speedShift;
-	
-	lfo->speed=spd;
+	spd=exponentialCourse(UINT16_MAX-lfo->speedCV,9203.0,65535.0f);
+
+	lfo->speed=spd<<4;
 }
 
 static void handlePhaseOverflow(struct lfo_s * l)
@@ -68,17 +67,6 @@ void LOWERCODESIZE lfo_resetPhase(struct lfo_s * lfo)
 	lfo->phase = 0;
 }
 
-
-void LOWERCODESIZE lfo_setSpeedShift(struct lfo_s * lfo, uint8_t shift)
-{
-	if(shift!=lfo->speedShift)
-	{
-		lfo->speedShift=shift;
-		updateSpeed(lfo);
-		updateIncrement(lfo);
-	}
-
-}
 
 int16_t inline lfo_getOutput(struct lfo_s * lfo)
 {

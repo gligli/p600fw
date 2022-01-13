@@ -643,15 +643,12 @@ static void refreshEnvSettings(void)
 static void refreshLfoSettings(void)
 {
     lfoShape_t shape;
-    uint8_t shift;
     uint16_t mwAmt,lfoAmt,vibAmt,dlyAmt;
     uint32_t elapsed;
 
     shape=currentPreset.steppedParameters[spLFOShape];
-    shift=1+currentPreset.steppedParameters[spLFOShift]*3;
 
     lfo_setShape(&synth.lfo,shape);
-    lfo_setSpeedShift(&synth.lfo,shift);
 
     // wait modulationDelayTickCount then progressively increase over
     // modulationDelayTickCount time, following an exponential curve
@@ -673,45 +670,11 @@ static void refreshLfoSettings(void)
     }
 
     // mod wheel shifts:
-    float bendValue;
-
-    switch (currentPreset.steppedParameters[spModwheelShift])
-    {
-        case 0:
-            bendValue=((expf(((float)synth.modwheelAmount)/150000.0f )-1.0f)*3737.0f);
-            mwAmt=((uint16_t)bendValue);
-            break;
-        case 1:
-            bendValue=((expf(((float)synth.modwheelAmount)/40000.0f )-1.0f)*1975.0f);
-            mwAmt=((uint16_t)bendValue);
-            break;
-        case 2:
-            bendValue=((expf(((float)synth.modwheelAmount)/20000.0f )-1.0f)*1285.0f);
-            mwAmt=((uint16_t)bendValue);
-            break;
-        case 3:
-            bendValue=((expf(((float)synth.modwheelAmount)/17000.0f )-1.0f)*1417.5f);
-            mwAmt=((uint16_t)bendValue);
-            break;
-        case 4:
-            mwAmt=synth.modwheelAmount>>5;
-            break;
-        case 5:
-            mwAmt=synth.modwheelAmount>>3;
-            break;
-        case 6:
-            mwAmt=synth.modwheelAmount>>1;
-            break;
-        case 7:
-            mwAmt=synth.modwheelAmount;
-            break;
-        default:
-            mwAmt=synth.modwheelAmount;
-    }
-
+    mwAmt=((uint16_t)((expf(((float)synth.modwheelAmount)/14000.0f )-1.0f)*613.12f));
 
     lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
+
     // now scale the LFO amount in analogy to mod wheel
     lfoAmt=((expf(((float)lfoAmt)/9000.0f )-1.0f)*45.121f);
 
@@ -823,7 +786,7 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
     {
         led_set(plRecord,1,0);
     }
-    else if (storageMode) // either storage or MIDI dump awaiting patch number input
+    else if (storageMode && !ui.isInPatchManagement) // either storage or MIDI dump awaiting patch number input
     {
         led_set(plRecord,1,1);
     }
@@ -881,7 +844,7 @@ static void refreshPresetPots(int8_t force) // this only affects current preset 
             else // pot is still off
             {
                 //if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp]))
-                if ((currentPreset.continuousParameters[cp]>>8)==(value>>8)) // pick up pot when close enough
+                if ((currentPreset.continuousParameters[cp]>>9)==(value>>9)) // pick up pot when close enough
                 {
                     currentPreset.contParamPotStatus[cp]=1;
                     currentPreset.continuousParameters[cp]=value;
@@ -1048,7 +1011,6 @@ void synth_init(void)
     lfo_init(&synth.lfo);
     lfo_init(&synth.vibrato);
     lfo_setShape(&synth.vibrato,lsTri);
-    lfo_setSpeedShift(&synth.vibrato,4);
 
     //for NOISE stop Noise waveform
     sh_setCV(pcExtFil,0,SH_FLAG_IMMEDIATE);
@@ -1229,9 +1191,18 @@ void synth_timerInterrupt(void)
 
     lfo_update(&synth.lfo);
 
-    pitchALfoVal=pitchBLfoVal=synth.vibrato.output;
+    pitchALfoVal=pitchBLfoVal=0;
     filterLfoVal=0;
     ampLfoVal=UINT16_MAX;
+
+    if (currentPreset.steppedParameters[spVibTarget]==0)
+    {
+        pitchALfoVal=pitchBLfoVal=synth.vibrato.output;
+    }
+    else
+    {
+        ampLfoVal+=(synth.vibrato.output<<1)-(synth.vibrato.levelCV);
+    }
 
     if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
     {
@@ -1245,7 +1216,9 @@ void synth_timerInterrupt(void)
         filterLfoVal=synth.lfo.output;
 
     if(currentPreset.steppedParameters[spLFOTargets]&mtVCA)
-        ampLfoVal=synth.lfo.output+(UINT16_MAX-(synth.lfo.levelCV>>1));
+        ampLfoVal+=synth.lfo.output-(synth.lfo.levelCV>>1);
+
+
 
     // global env computations
 
