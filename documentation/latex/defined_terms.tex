@@ -1,0 +1,49 @@
+% globals
+\newcommand{\version}{2.X}
+\newcommand{\paramgeneral}[1]{\textbf{#1}}
+\newcommand{\button}[1]{\textbf{#1}}
+\newcommand{\patchparameter}[2]{\paramgeneral{#2 - #1}}
+
+% additional patch parameters
+\newcommand{\clockspeed}{\patchparameter{0}{Clock/Speed}}
+\newcommand{\lfoshape}{\patchparameter{1}{LFO Shape}}
+\newcommand{\lfotarget}{\patchparameter{11}{LFO Target}}
+\newcommand{\lfosync}{\patchparameter{111}{LFO Sync}}
+\newcommand{\vibspeed}{\patchparameter{2}{Vibrato Speed}}
+\newcommand{\lforange}{\patchparameter{22}{LFO Frequency Range}}
+\newcommand{\vibamt}{\patchparameter{3}{Vibrato Amount}}
+\newcommand{\modwheelaction}{\patchparameter{33}{Modulation Wheel Action}}
+\newcommand{\moddelay}{\patchparameter{4}{Modulation Delay}}
+\newcommand{\modwheeltarget}{\patchparameter{44}{Modulation Wheel Target}}
+\newcommand{\2ndenv}{\patchparameter{5}{2nd Envelope Shape}}
+\newcommand{\filenv}{\patchparameter{55}{Filter Envelope Shape}}
+\newcommand{\envrouting}{\patchparameter{555}{Envelope Routing}}
+\newcommand{\bentarget}{\patchparameter{6}{Bender Target}}
+\newcommand{\bendrange}{\patchparameter{66}{Bender Target}}
+\newcommand{\glide}{\patchparameter{7}{Glide Time}}
+\newcommand{\assignprio}{\patchparameter{77}{Assigner Priority}}
+\newcommand{\detune}{\patchparameter{8}{Unison Detune Amount}}
+\newcommand{\oscpitchmode}{\patchparameter{88}{Oscillator Pitch Mode}}
+\newcommand{\spread}{\patchparameter{888}{Spread Amount}}
+\newcommand{\ampvel}{\patchparameter{9}{Amplitude Velocity}}
+\newcommand{\filvel}{\patchparameter{99}{Filter Velocity}}
+\newcommand{\syncbug}{\patchparameter{999}{Sync Bug Switch}}
+
+
+% buttons
+\newcommand{\numberpad}[1]{\textbf{button #1}}
+\newcommand{\totape}{\button{To Tape}}
+\newcommand{\fromtape}{\button{From Tape}}
+\newcommand{\tune}{\button{Tune}}
+\newcommand{\preset}{\button{Preset}}
+\newcommand{\record}{\button{Record}}
+\newcommand{\seq1}{\button{Seq 1}}
+\newcommand{\seq2}{\button{Seq 2}}
+\newcommand{\arpud}{\button{Arp U/D}}
+\newcommand{\arpass}{\button{Arp Assign}}
+
+% panel controls
+\newcommand{\polymodenv}{\patchparameter{Poly-Mod}{Envelope}}
+\newcommand{\polymodosc}{\patchparameter{Poly-Mod}{Oscillator B}}
+\newcommand{\polymodfreq}{\patchparameter{Poly-Mod}{Frequency Target}}
+\newcommand{\polymodfilter}{\patchparameter{Poly-Mod}{Filter Target}}

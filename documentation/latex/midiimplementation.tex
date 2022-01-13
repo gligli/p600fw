@@ -1,12 +1,17 @@
-Two types of MIDI controllers are implemented:
+The follwing types of MIDI events are implemented, e.g. the upgraded prophet 600 can receive and apply them:
 
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item Continuous parameters: 0-16383 using 2 CCs, or 0-127 using only the coarse one
-  \item Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore 2 has choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
+  \item MIDI CC Continuous parameters: 0-16383 using 2 CCs, or 0-127 using only the coarse one
+  \item MIDI CC Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore 2 has choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
+  \item performance events (note events, pitch bend)
+  \item Realtime events
+  \item SysEx (for different purposes)
 \end{itemize}
 
 The Prophet 600 receives Continuous Controllers (CC) in Preset mode only. 
+
+\textbf{MIDI CC Patch Parameters} 
 
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
@@ -23,7 +28,7 @@ Osc B Fine & Continuous & 22 & 86 & Sync & Stepped & 54 \\ \hline
 Cutoff & Continuous & 23 & 87 & Poly Mod Oscillator A Destination & Stepped & 55 \\ \hline
 Resonance & Continuous & 24 & 88 & Poly Mod Filter Destination & Stepped & 56 \\ \hline
 Filter Envelope Amount & Continuous & 25 & 89 & LFO Shape & Stepped & 57 \\ \hline
-Filter Release & Continuous & 26 & 90 & LFO Speed Range & Stepped & 58 \\ \hline
+Filter Release & Continuous & 26 & 90 & Envelope Routing\footnote{Up to version 2.1 RC3 CC was used for the legacy LFO speed range} & Stepped & 58 \\ \hline
 Filter Sustain & Continuous & 27 & 91 & LFO Mode Destination & Stepped & 59 \\ \hline
 Filter Decay & Continuous & 28 & 92 & Keyboard Filter Tracking & Stepped & 60 \\ \hline
 Filter Attack & Continuous & 29 & 93 & Filter Envelope Shape & Stepped & 61 \\ \hline
@@ -33,18 +38,50 @@ Amp Decay & Continuous & 32 & 96 & Unison & Stepped & 65 \\ \hline
 Amp Attack & Continuous & 33 & 97 & Assigner Priority Mode & Stepped & 66 \\ \hline
 Poly Mod Filter Amount & Continuous & 34 & 98 & Pitch bender semitones & Stepped & 67 \\ \hline
 Poly Mod Osc B Amount & Continuous & 35 & 99 & Pitch bender target & Stepped & 68 \\ \hline
-LFO Frequency & Continuous & 36 & 100 & Modulation wheel range & Stepped & 69 \\ \hline
+LFO Frequency & Continuous & 36 & 100 & LFO Sync\footnote{Up to version 2.1 RC3 CC was used for the legacy mod wheel range} & Stepped & 69 \\ \hline
 LFO Amount & Continuous & 37 & 101 & Osc pitch mode & Stepped & 70 \\ \hline
 Glide & Continuous & 38 & 102 & Modulation wheel target & Stepped & 71 \\ \hline
-Amp Velocity & Continuous & 39 & 103 & Vibration target & Stepped & 72 \\ \hline
-Filter Velocity & Continuous & 40 & 104 & Vibration target & Stepped & 72 \\ \hline
-Modulation delay & Continuous & 41 & 105 & 2nd Envelope Fast/Slow & Stepped & 73 \\ \hline
-Vibrato frequency & Continuous & 42 & 106 & Envelope Routing & Stepped & 74 \\ \hline
-Vibrato amount & Continuous & 43 & 107 & LFO Sync & Stepped & 75 \\ \hline
-Unison detune & Continuous & 44 & 108 & PW Sync Bug & Stepped & 76 \\ \hline
+Amp Velocity & Continuous & 39 & 103 & Vibrato target & Stepped & 72 \\ \hline
+Filter Velocity & Continuous & 40 & 104 &  2nd Envelope Fast/Slow & Stepped & 73 \\ \hline
+Modulation delay & Continuous & 41 & 105 & Sync Bug & Stepped & 74 \\ \hline
+Vibrato frequency & Continuous & 42 & 106 & & & \\ \hline
+Vibrato amount & Continuous & 43 & 107 & &  & \\ \hline
+Unison detune & Continuous & 44 & 108 & & &  \\ \hline
 Sequencer / arpeggiator clock & Continuous & 45 & 109 &  &  &  \\ \hline
 External CV amount & Continuous & 46 & 110 &  &  &  \\ \hline
 Spread & Continuous & 47 & 111 &  &  &  \\ \hline 
 \end{longtable}
+
+\textbf{Other MIDI CC Settings}
+
+\begin{longtable}[l]{ p{5cm}|p{2cm}|p{2cm}|p{1cm}} 
+\textbf{Parameter} & \textbf{Type} & \textbf{ CC} \\ \hline
+Toggle Live/Preset Mode & Stepped & 0 & \\ \hline
+Mod Wheel & Continuous & 1 & \\ \hline
+Master Volume & Continuous & 7 & \\ \hline
+Hold Pedal & Stepped & 64 & \\ \hline
+Local On/Off & Stepped & 120 & \\ \hline
+All Notes Off & Stepped & 123 & \\ \hline
+\end{longtable}
+
+\textbf{Other MIDI messages}
+
+(this needs to be done)
+
+\textbf{MIDI Realtime}
+
+The realtime events are relevant for sequencer and arpeggiator. The Prophet 600 receives the following commands.
+
+\begin{itemize}
+  \item Clock
+  \item Start
+  \item Stop
+\end{itemize}
+
+(this needs to be done)
+
+\textbf{SysEx}
+
+The upgraded Prophet 600 receives bespoke SysEx for patch management (see section \ref{patchmanagement}) and for firmware upgrade (see section \ref{firmware}). For a technical documentation please refer to the technical manual \cite{techmanual}.
 
 \normalsize
