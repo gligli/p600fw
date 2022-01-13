@@ -40,7 +40,9 @@ typedef enum
 			
 	spSync=6,spPModFA=7,spPModFil=8,
 			
-	spLFOShape=9,spLFOShift=10,spLFOTargets=11,
+	spLFOShape=9,
+    spEnvRouting=10,
+    spLFOTargets=11,
 
 	spTrackingShift=12,
 	spFilEnvShape=13,spFilEnvSlow=14,
@@ -50,16 +52,14 @@ typedef enum
 	spAssignerPriority=18,
 			
 	spBenderSemitones=19,spBenderTarget=20,
-	spModwheelShift=21,
+	spLFOSync=21, // this is obsolete
 
 	spChromaticPitch=22,
 			
 	spModwheelTarget=23,
 	spVibTarget=24,
 	spAmpEnvSlow=25,
-	spEnvRouting=26,			
-	spLFOSync=27,
-	spPWMBug=28,
+	spPWMBug=26,
 
 	// /!\ this must stay last
 	spCount
@@ -102,7 +102,7 @@ struct preset_s
 
 extern struct settings_s settings;
 extern struct preset_s currentPreset;
-extern const uint8_t steppedParametersBits[spCount];
+extern const uint8_t steppedParameterRange[spCount];
 
 int8_t settings_load(void);
 void settings_save(void);

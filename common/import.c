@@ -106,7 +106,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
 	p.continuousParameters[cpPModFilEnv]=HALF_RANGE+(zp->pmodFilEnv<<11);
 	p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
-	p.continuousParameters[cpLFOFreq]=zp->lfoFreq<<10;
+	p.continuousParameters[cpLFOFreq]=(uint16_t)(0.708f*(float)(zp->lfoFreq<<10)); // from version 8 on rescaled according to legacy setting "slow"
 	p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;
 	p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0;
 	p.continuousParameters[cpAmpVelocity]=0;
@@ -122,7 +122,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spPModFA]=zp->pmodFreqA;
 	p.steppedParameters[spPModFil]=zp->pmodFil;
 	p.steppedParameters[spLFOShape]=zp->lfoShape;
-	p.steppedParameters[spLFOShift]=0;
+	p.steppedParameters[spEnvRouting]=0;
 	p.steppedParameters[spLFOTargets]=zp->lfoPitch | (zp->lfoPW<<1) | (zp->lfoFil<<2);
 	p.steppedParameters[spTrackingShift]=(zp->trackHalf?1:0) + (zp->trackFull?2:0);
 	p.steppedParameters[spFilEnvShape]=0;
@@ -133,7 +133,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spAssignerPriority]=apLast;
 	p.steppedParameters[spBenderSemitones]=3;
 	p.steppedParameters[spBenderTarget]=modAB;
-	p.steppedParameters[spModwheelShift]=2;
+	p.steppedParameters[spLFOSync]=0;
 	p.steppedParameters[spChromaticPitch]=1;
 
 	// save it

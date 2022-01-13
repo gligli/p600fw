@@ -19,37 +19,36 @@
 
 #define STORAGE_MAX_SIZE (SETTINGS_PAGE_COUNT*STORAGE_PAGE_SIZE) // this is the buffer size, which must at least hold the settings data (see above)
 
-const uint8_t steppedParametersBits[spCount] = 
+const uint8_t steppedParameterRange[spCount] =
 {
-	/*ASaw*/1,
-	/*ATri*/1,
-	/*ASqr*/1,
-	/*BSaw*/1,
-	/*BTri*/1,
-	/*BSqr*/1,
-	/*Sync*/1,
-	/*PModFA*/1,
-	/*PModFil*/1,
-	/*LFOShape*/3,
-	/*LFOShift*/2,
-	/*LFOTargets*/6,
-	/*TrackingShift*/2,
-	/*FilEnvExpo*/1,
-	/*FilEnvSlow*/1,
-	/*AmpEnvExpo*/1,
-	/*HoldPedal*/0,
-	/*Unison*/1,
-	/*AssignerPriority*/2,
-	/*BenderSemitones*/4,
-	/*BenderTarget*/2,
-	/*ModwheelShift*/3,
-	/*ChromaticPitch*/2,
-	/*ModwheelTarget*/1,
-	/*VibTarget*/2,
-	/*AmpEnvSlow*/1,
-	/*EnvRouting*/2,
-	/*LFOSync*/4,
-	/*PWMBug*/2,
+    /* Osc A Saw */ 2,
+    /* Osc A Triangle */ 2,
+    /* Osc A Square */ 2,
+    /* Osc B Saw */ 2,
+    /* Osc B Triangle */ 2,
+    /* Osc B Sqr */ 2,
+    /* Sync */ 2,
+    /* Poly Mod Oscillator A Destination */ 2,
+    /* Poly Mod Filter Destination */ 2,
+    /* LFO Shape */ 3,
+    /* Envelope Routing */ 4,
+    /* LFO Mode Destination */ 4,
+    /* Keyboard Filter Tracking */ 3,
+    /* Filter Envelope Shape */ 2,
+    /* Filter Envelope Fast/Slow */ 2,
+    /* 2nd Envelope Shape */ 2,
+    /* Unison */ 2,
+    /* Assigner Priority Mode */ 3,
+    /* Pitch bender semitones */ 4,
+    /* Pitch bender target */ 5,
+    /* LFO Sync */ 8,
+    /* Osc pitch mode */ 3,
+    /* Modulation wheel target */ 2,
+    /* Vibrato target */ 2,
+    /* 2nd Envelope Fast/Slow */ 2,
+    /* PW Sync Bug */ 2,
+    /* spCount */ 0,
+
 };
 
 struct settings_s settings;
@@ -351,6 +350,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 	
 	BLOCK_INT
 	{
+
+		// defaults
+		preset_loadDefault(0);
+
         if (!loadFromBuffer)
         {
             if(!storageLoad(number,1))
@@ -372,9 +375,6 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             storage.version=storageRead8();
         }
 
-		// defaults
-		
-		preset_loadDefault(0);
         // compatibility with previous versions require the ""Pulse Width Sync Bug""
         // --> for loading from old stroage versions also override the default patch value "off"""
         currentPreset.steppedParameters[spPWMBug]=1; // == bug "on"" for compatibility
@@ -392,19 +392,31 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 			currentPreset.continuousParameters[cp]=storageRead16();
 
 		steppedParameter_t sp;
-		for(sp=spASaw;sp<=spChromaticPitch;++sp)
+		for(sp=spASaw;sp<=spLFOShape;++sp)
+			currentPreset.steppedParameters[sp]=storageRead8();
+
+        readVar=storageRead8(); // this is legacy spLFOShift (see rescaling below, re-designated spEnvRouting
+        if (storage.version<8)
+        {
+            // in this case readVar contains the legacy LFO speed range, where value 1 was "fast"
+            // rescale the LFO speed (the speed switch paramter was omitted from version 8 after)
+            currentPreset.steppedParameters[cpLFOFreq]=(uint16_t)(0.708f*(float)currentPreset.steppedParameters[cpLFOFreq]);
+            if (readVar==1) currentPreset.steppedParameters[cpLFOFreq]+=19135;
+        }
+        else if (readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
+
+		for(sp=spLFOTargets;sp<=spBenderTarget;++sp)
+			currentPreset.steppedParameters[sp]=storageRead8();
+
+        readVar=storageRead8(); // this is legacy mod wheel strength re-designated LFO Sync
+        if (storage.version==8 || readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar;
+
+        for(sp=spChromaticPitch;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
         // remap of the sp values prior to version 8
         if (storage.version<8)
         {
-            // remap the mod wheel range (which was changed in version 8)
-            int8_t mapmw[]={7,6,6,5,5,4}; // before the values were 5, 3, 1, 0 for min/low/high/full, now map to 4, 5, 6, 7
-            if (currentPreset.steppedParameters[spModwheelShift]>=0 && currentPreset.steppedParameters[spModwheelShift]<6)
-            {
-                currentPreset.steppedParameters[spModwheelShift]=mapmw[currentPreset.steppedParameters[spModwheelShift]];
-            } // otherwise keep default
-
             // reamp the LFO amount (which was changed in version 8)
             // this is the inverse of the scaling function applied to the LFO amount pot value to make it smoother (small difference to stay within uint16_t here)
             currentPreset.continuousParameters[cpLFOAmt]=(uint16_t)(9000.0f*log((((float)currentPreset.continuousParameters[cpLFOAmt])/45.124f)+1));
@@ -459,14 +471,6 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		// V8
 
 		readVar=storageRead8();
-		if (readVar<=3) // only accept valid values, otherwise default stays
-			currentPreset.steppedParameters[spEnvRouting]=readVar;
-		
-		readVar=storageRead8();
-		if (readVar<=7) // only accept valid values, otherwise default stays
-			currentPreset.steppedParameters[spLFOSync]=readVar;
-
-		readVar=storageRead8();
 		if (readVar<=1) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spPWMBug]=readVar;
 
@@ -516,8 +520,6 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 			
 		// v8
 		
-		storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
-		storageWrite8(currentPreset.steppedParameters[spLFOSync]);	
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
 		storageWrite16(currentPreset.steppedParameters[cpSpread]);
 
@@ -630,7 +632,6 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.steppedParameters[spAmpEnvShape]=0; // linear shape is default
 		currentPreset.steppedParameters[spFilEnvSlow]=0; // slow shape is default
 		currentPreset.steppedParameters[spAmpEnvSlow]=0; // slow shape is default
-		currentPreset.steppedParameters[spModwheelShift]=2; // standard is normal shape / high
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
 		currentPreset.steppedParameters[spEnvRouting]=0; // standard
 		currentPreset.steppedParameters[spLFOSync]=0; // off
@@ -645,6 +646,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 
 		if(makeSound)
 			currentPreset.steppedParameters[spASaw]=1;
+
+        storage.version=STORAGE_VERSION;
 
         resetPickUps();
 

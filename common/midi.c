@@ -331,7 +331,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		uint8_t v, prev;
 		
         prev=currentPreset.steppedParameters[param];
-		v=value>>(7-steppedParametersBits[param]);
+        v=(((uint16_t)value)*steppedParameterRange[param])>>7;
 		
 		if(currentPreset.steppedParameters[param]!=v)
 		{
@@ -401,7 +401,7 @@ static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t p
 		{
 			settings.presetNumber=program;
 			ui_setPresetModified(0);	
-			settings_save();		
+			//settings_save();
 			refreshFullState();
 		}
 	}
@@ -569,7 +569,7 @@ void midi_sendSustainEvent(int8_t on)
 	midi_send_cc(&midi,settings.midiSendChannel,64,on?0x7f:0x00);
 }
 
-/*void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
+void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
 {
     uint8_t lsb, msb;
 
@@ -577,4 +577,4 @@ void midi_sendSustainEvent(int8_t on)
     msb=(val>>8);
 
     midi.send_func(&midi, 3, MIDI_PITCHBEND | (mdchn & MIDI_CHANMASK), lsb, msb);
-}*/
+}
