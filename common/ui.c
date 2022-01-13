@@ -18,35 +18,31 @@ const struct uiParam_s uiParameters[] =
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
 	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"puls-tri","rnd-sin","nois-saw"}},
 	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
-	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
-	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
+	/*3*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
+	/*4*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
 	/*5*/ {.type=ptCust,.number=2,.name="2nd shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
-	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","ab","Vcf","Vol","b"}},
-	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
-	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
+    /*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","ab","Vcf","Vol","b"}},
+    /*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},
+	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
 	/*second press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
 	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b","ab-Vca"}},
-	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
-	/*3*/ {.type=ptStep,.number=spModwheelShift,.name="mod ran",.values={"min","low","high","full", "hard min","hard low","hard high","hard full"}},
-	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
+	/*2*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
+    /*3*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
+	/*4*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
 	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
-	/*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
-	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
-	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
+    /*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
+    /*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
+    /*8*/ {.type=ptCont,.number=cpSpread,.name="spread"},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 	/*third press*/
 	/*0*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo sync",.values={"off","1","2","3","4","5","6","8"}},
-	/*2*/ {.type=ptCont,.number=0,.name="dummy"},
+    /*2*/ {.type=ptStep,.number=spVibTarget,.name="Vib tgt",.values={"VCO","VCA"}},
 	/*3*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*4*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*4*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
-	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*7*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
-	/*8*/ {.type=ptCont,.number=cpSpread,.name="spread"},
-	/*9*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
 };
 
 struct ui_s ui;
@@ -381,7 +377,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb5||new==pb1||new==pb7||new==pb8||new==pb9) // parameters on third press
+			{if (new==pb1||new==pb2||new==pb4||new==pb5) // parameters on third press
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -447,17 +443,43 @@ void ui_checkIfDataPotChanged(void)
 {
 	ui.lastActivePot = potmux_lastChanged() != ppNone ? potmux_lastChanged() : ui.lastActivePot;
 	
-	if(ui.lastActivePot!=ppSpeed)
+	if(ui.lastActivePot!=ppSpeed || ui.isInPatchManagement)
 		return;
 	
+    int32_t data,valCount;
+    data=potmux_getValue(ppSpeed);
+
+    if (settings.presetMode && (ui.digitInput==diLoadUnitDigit || ui.digitInput==diLoadDecadeDigit)) // this is preset load patch - we want the data dial to work as selector
+    {
+        // to be done:
+        // avoid jumps in selection (pick-up?=
+        //
+        // map dial onto 0...99
+        // if in local off mode we can still change the program because the incoming MIDI would have no effect
+        uint16_t selectedPatch;
+        //char s[50];
+        selectedPatch=(data*100)>>16; // this divides the total range (16 bits) into 0...99 range using effectively a floor() function
+
+        if (selectedPatch==settings.presetNumber) return;
+
+        if(preset_loadCurrent(selectedPatch,0))
+        {
+            midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
+            //sevenSeg_scrollText(s,1);
+            //settings_save(); // this seems to create an undue number of save operations
+			refreshFullState();
+        }
+        settings.presetNumber=selectedPatch;
+        // override the already selected unit input
+        ui.digitInput=diLoadDecadeDigit;
+        ui.presetAwaitingNumber=-1;
+        return;
+    }
+
 	// handle our "data" pot
-	
 	if(ui.activeParamIdx>=0)
 	{
-		int32_t data,valCount;
 		struct uiParam_s prm;
-		
-		data=potmux_getValue(ppSpeed);
 		
 		if(data==ui.lastActivePotValue) // prevent slowdown caused by unwanted updates
 			return;
@@ -548,17 +570,26 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	// arp
 	
-	if (pressed && !ui.isInPatchManagement)
+	if (pressed && !ui.isInPatchManagement && seq_getMode(0)!=smRecording && seq_getMode(1)!=smRecording)
     {
         if(button==pbArpUD)
         {
-            arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
+            if (arp_getMode()==amUpDown)
+            {
+                arp_setMode(amOff,arp_getHold());
+            }
+            else
+            {
+                ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth; // cancel special mode (if any)
+                arp_setMode(amUpDown,arp_getHold());
+            }
         }
         else if(button==pbArpAssign)
         {
             switch(arp_getMode())
             {
                 case amOff:
+                    ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth; // cancel special mode (if any)
                 case amUpDown:
                     arp_setMode(amAssign,arp_getHold());
                     break;
@@ -799,12 +830,12 @@ void ui_init(void)
 {
 	memset(&ui,0,sizeof(ui));
 		
-	ui.digitInput=diSynth;
 	ui.presetAwaitingNumber=-1;
-	ui.lastActivePot=ppNone;
 	ui.lastActivePotValue=-1;
 	ui.presetModified=1;
-	ui.activeParamIdx=-1;
+    settings.presetMode=1; // start in preset mode
+	ui.digitInput=diSynth; // panel mode
+	ui.activeParamIdx=0; // select clock/speed
 	ui.prevMiscButton=-1;
     ui.lastActivePot=ppMVol;
 }
