@@ -130,7 +130,7 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 		killHeldNotes();
 
 	arp.mode=mode;
-	arp.hold=hold;
+	arp.hold=mode==amOff?0:hold;
 }
 
 FORCEINLINE void arp_setTranspose(int8_t transpose)
