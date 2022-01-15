@@ -1128,16 +1128,16 @@ void synth_update(void)
     refreshLfoSettings();
     sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
     sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
+    sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
     switch(frc&0x03) // 4 phases
     {
         case 0:
-            sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
+            sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
             // arp and seq
             clock_setSpeed(settings.seqArpClock);
             break;
         case 1:
             // 'fixed' CVs
-            sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
             sh_setCV(pcExtFil,currentPreset.continuousParameters[cpExternal],SH_FLAG_IMMEDIATE);
             break;
         case 2:
