@@ -179,6 +179,8 @@ static int8_t changeMiscSetting(p600Button_t button)
             preset_loadDefault(1);
             ui.presetModified=1;
             sevenSeg_scrollText("basic patch",1);
+            settings.presetMode=1;
+            ui.digitInput=diSynth;
             refreshFullState();
             return 1;
         default:
@@ -645,6 +647,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			else
 			{
 				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
+				ui.lastActivePot=ppNone;
 			}
 		}
 	}
@@ -783,6 +786,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         // store?
                         if(ui.digitInput==diStoreUnitDigit)
                         {
+                            if (!settings.presetMode) preset_saveCurrent(MANUAL_PRESET_PAGE); // make sure that the latest parameters are stored for live mode
                             preset_saveCurrent(ui.presetAwaitingNumber);
                             sprintf(s, "saved %u", ui.presetAwaitingNumber);
                             sevenSeg_scrollText(s,1);
@@ -792,11 +796,9 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         if(preset_loadCurrent(ui.presetAwaitingNumber,0))
                         {
                             settings.presetNumber=ui.presetAwaitingNumber;
-                            if(ui.digitInput!=diStoreUnitDigit)
+                            if(ui.digitInput!=diStoreUnitDigit) // only send MIDI and store selection when new prog is selected, not when it is reloaded after storage
                             {
-                                midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
-                                //sprintf(s, "%u", ui.presetAwaitingNumber);
-                                //sevenSeg_scrollText(s,1);
+                                midi_sendProgChange(settings.presetNumber);
                                 settings_save();
                             }
                         }

@@ -7,7 +7,7 @@
 #include "synth.h"
 #include "ui.h"
 #include "math.h"
-
+#include "midi.h"
 
 // increment this each time the binary format is changed
 #define STORAGE_VERSION 8
@@ -460,7 +460,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 
 		// v7
 		
-		for (i=0; i<TUNER_NOTE_COUNT; i++)
+        for (i=0; i<TUNER_NOTE_COUNT; i++)
 			currentPreset.perNoteTuning[i]=storageRead16();
 			
 		if (storage.version<8)
@@ -474,8 +474,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		if (readVar<=1) // only accept valid values, otherwise default stays
 			currentPreset.steppedParameters[spPWMBug]=readVar;
 
-        currentPreset.steppedParameters[cpSpread]=storageRead16();
-        currentPreset.steppedParameters[cpExternal]=storageRead16();
+        currentPreset.continuousParameters[cpSpread]=storageRead16();
+        currentPreset.continuousParameters[cpExternal]=storageRead16();
 
 	}
 	
@@ -491,7 +491,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storagePrepareStore();
 
 		// v1
-		
+
 		continuousParameter_t cp;
 		for(cp=cpFreqA;cp<=cpFilVelocity;++cp)
 			storageWrite16(currentPreset.continuousParameters[cp]);
@@ -516,14 +516,15 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			storageWrite8(currentPreset.voicePattern[i]);
 
-		for (i=0; i<TUNER_NOTE_COUNT; i++)
+
+        for (i=0; i<TUNER_NOTE_COUNT; i++)
 			storageWrite16(currentPreset.perNoteTuning[i]);
 			
 		// v8
 		
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
-		storageWrite16(currentPreset.steppedParameters[cpSpread]);
-		storageWrite16(currentPreset.steppedParameters[cpExternal]);
+		storageWrite16(currentPreset.continuousParameters[cpSpread]);
+		storageWrite16(currentPreset.continuousParameters[cpExternal]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough
