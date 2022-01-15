@@ -409,7 +409,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
         readVar=storageRead8(); // this is legacy mod wheel strength re-designated LFO Sync
-        if (storage.version==8 || readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar;
+        if (storage.version==8 && readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar;
 
         for(sp=spChromaticPitch;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
@@ -424,16 +424,16 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             // remap the exponential release and decay times after the phase lookup was updated (made longer mapping theorectial 285 to new 256)
             if (currentPreset.steppedParameters[spAmpEnvShape]==1) // exponential
             {
-                currentPreset.continuousParameters[cpAmpRel]=(uint16_t)(currentPreset.continuousParameters[cpAmpRel]*255/285);
-                currentPreset.continuousParameters[cpAmpDec]=(uint16_t)(currentPreset.continuousParameters[cpAmpDec]*255/285);
+                currentPreset.continuousParameters[cpAmpRel]=(uint16_t)(currentPreset.continuousParameters[cpAmpRel]*0.895f);
+                currentPreset.continuousParameters[cpAmpDec]=(uint16_t)(currentPreset.continuousParameters[cpAmpDec]*0.895f);
             }
-            currentPreset.continuousParameters[cpAmpAtt]=(uint16_t)(currentPreset.continuousParameters[cpAmpAtt]*255/285);
+            currentPreset.continuousParameters[cpAmpAtt]=(uint16_t)(currentPreset.continuousParameters[cpAmpAtt]*0.895f);
             if (currentPreset.steppedParameters[spFilEnvShape]==1) // exponential
             {
-                currentPreset.continuousParameters[cpFilRel]=(uint16_t)(currentPreset.continuousParameters[cpFilRel]*255/285);
-                currentPreset.continuousParameters[cpFilDec]=(uint16_t)(currentPreset.continuousParameters[cpFilDec]*255/285);
+                currentPreset.continuousParameters[cpFilRel]=(uint16_t)(currentPreset.continuousParameters[cpFilRel]*0.895f);
+                currentPreset.continuousParameters[cpFilDec]=(uint16_t)(currentPreset.continuousParameters[cpFilDec]*0.895f);
             }
-            currentPreset.continuousParameters[cpFilAtt]=(uint16_t)(currentPreset.continuousParameters[cpFilAtt]*255/285);
+            currentPreset.continuousParameters[cpFilAtt]=(uint16_t)(currentPreset.continuousParameters[cpFilAtt]*0.895f);
 
         }
 		
