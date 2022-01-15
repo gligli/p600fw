@@ -465,9 +465,8 @@ void ui_checkIfDataPotChanged(void)
         if(preset_loadCurrent(selectedPatch,0))
         {
             midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
-            //sevenSeg_scrollText(s,1);
-            //settings_save(); // this seems to create an undue number of save operations
-			refreshFullState();
+            refreshFullState();
+            ui.presetModified=0;
         }
         settings.presetNumber=selectedPatch;
         // override the already selected unit input
@@ -796,8 +795,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                             if(ui.digitInput!=diStoreUnitDigit)
                             {
                                 midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
-                                sprintf(s, "%u", ui.presetAwaitingNumber);
-                                sevenSeg_scrollText(s,1);
+                                //sprintf(s, "%u", ui.presetAwaitingNumber);
+                                //sevenSeg_scrollText(s,1);
                                 settings_save();
                             }
                         }

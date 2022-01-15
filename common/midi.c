@@ -401,8 +401,9 @@ static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t p
 		{
 			settings.presetNumber=program;
 			ui_setPresetModified(0);	
-			//settings_save();
 			refreshFullState();
+            ui_setNoActivePot();
+            ui.presetModified=0;
 		}
 	}
 }
