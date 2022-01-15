@@ -204,7 +204,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 
     uint16_t cva,cvb,cvf;
     uint8_t note=SCANNER_BASE_NOTE,baseCutoffNote;
-    int8_t v;
+    int8_t v, v_aux;
 
     uint16_t baseAPitch,baseBPitch,baseCutoff;
     int16_t mTune,fineBFreq,fineBFreqAdd,detune;
@@ -304,10 +304,12 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
             BNote=0;
 
         detune=0;
-        if (spreadRaw>1000) detune=(1+(v>>1))*(v&1?-1:1)*(spreadRaw>>11); // this is spread detune, e.g. analog out of tune whack
+        if (spreadRaw>1000) detune=(spreadRaw>>11); // this is spread detune, e.g. analog out of tune whack
 
-        synth.oscABaseCV[v]=satAddU16S16(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),detune);
-        synth.oscBBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v),detune);
+        v_aux=v;
+        synth.oscABaseCV[v]=satAddU16S16(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),(1+(v_aux>>1))*(v_aux&1?-1:1)*detune);
+        v_aux=(v+3)&6;
+        synth.oscBBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v),(1+(v_aux>>1))*(v_aux&1?-1:1)*detune);
 
         // filter
 
@@ -325,7 +327,8 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
                 trackingNote=0;
         }
 
-        synth.filterBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),detune);
+        v_aux=(v+5)&6;
+        synth.filterBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),(1+(v_aux>>1))*detune);
 
         // detune
 
@@ -601,7 +604,7 @@ static void refreshAssignerSettings(void)
 
 static void refreshEnvSettings(void)
 {
-    int8_t i;
+    int8_t i, v_aux;
     uint16_t as, fs;
     uint16_t aa,ad,ar,fa,fd,fr;
     float spread;
@@ -619,20 +622,26 @@ static void refreshEnvSettings(void)
 
         if (currentPreset.continuousParameters[cpSpread]>1000)
         {
-            spread=(int16_t)((1+(i>>1))*(i&1?-1:1)*(currentPreset.continuousParameters[cpSpread]>>4)); // the bit shift determines the overall effect strength of the spread
+            spread=(int16_t)((currentPreset.continuousParameters[cpSpread]>>4)); // the bit shift determines the overall effect strength of the spread
         }
         else
         {
             spread=0;
         }
 
-        aa=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpAtt],spread/1.5f);
-        ad=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpDec],spread);
-        ar=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpRel],spread/2.0f);
+        v_aux=(i+1)%6;
+        aa=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpAtt],(1+(v_aux>>1))*(v_aux&1?-1:1)*spread/1.5f);
+        v_aux=(i+2)%6;
+        ad=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpDec],(1+(v_aux>>1))*(v_aux&1?-1:1)*spread);
+        v_aux=(i+3)%6;
+        ar=scaleProportionalU16S16(currentPreset.continuousParameters[cpAmpRel],(1+(v_aux>>1))*(v_aux&1?-1:1)*spread/2.0f);
 
-        fa=scaleProportionalU16S16(currentPreset.continuousParameters[cpFilAtt],spread/1.5f);
-        fd=scaleProportionalU16S16(currentPreset.continuousParameters[cpFilDec],spread);
-        fr=scaleProportionalU16S16(currentPreset.continuousParameters[cpFilRel],spread/2.0f);
+        v_aux=(i+4)%6;
+        fa=scaleProportionalU16S16(currentPreset.continuousParameters[cpFilAtt],(1+(v_aux>>1))*(v_aux&1?-1:1)*spread/1.5f);
+        v_aux=(i+5)%6;
+        fd=scaleProportionalU16S16(currentPreset.continuousParameters[cpFilDec],(1+(v_aux>>1))*(v_aux&1?-1:1)*spread);
+        v_aux=i;
+        fr=scaleProportionalU16S16(currentPreset.continuousParameters[cpFilRel],(1+(v_aux>>1))*(v_aux&1?-1:1)*spread/2.0f);
 
         adsr_setCVs(&synth.ampEnvs[i],aa,ad,as,ar,0,0x0f);
         adsr_setCVs(&synth.filEnvs[i],fa,fd,fs,fr,0,0x0f);
@@ -1201,7 +1210,7 @@ void synth_timerInterrupt(void)
     }
     else
     {
-        ampLfoVal+=(synth.vibrato.output<<1)-(synth.vibrato.levelCV);
+        ampLfoVal+=(synth.vibrato.output<<2)-(synth.vibrato.levelCV<<1);
     }
 
     if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
