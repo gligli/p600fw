@@ -475,6 +475,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 			currentPreset.steppedParameters[spPWMBug]=readVar;
 
         currentPreset.steppedParameters[cpSpread]=storageRead16();
+        currentPreset.steppedParameters[cpExternal]=storageRead16();
 
 	}
 	
@@ -522,6 +523,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
 		storageWrite16(currentPreset.steppedParameters[cpSpread]);
+		storageWrite16(currentPreset.steppedParameters[cpExternal]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough
