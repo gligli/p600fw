@@ -434,6 +434,8 @@ The sequencer and the arpeggiator share the same clock and on this clock the two
 
 It is possible to sync the LFO to the sequencer / arpeggiator clock (ir external clock) using the additional patch parameter \textbf{(111) LFO Sync}, see section \ref{lfo}.
 
+Note that you can operate the sequencer and/or arpeggiator also in unison mode with all features of that mode (see section \ref{poly-unison-voice}). However, the voices are not shared between the tracks and the arpeggiator. The priority is as follows: arpeggiator, sequencer track 2, sequencer track 1. E.g. if activated, the arpeggiator will use all voices in unison mode and when the sequencer track 1 and 2 have a note on the same beat, only track 2 will play.
+
 \section{Arpeggiator}\label{arp}
 
 \input{arp.tex}
