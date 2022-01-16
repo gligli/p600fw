@@ -37,7 +37,7 @@
 #define PANEL_DEADBAND 2048
 
 // The P600 VCA completely closes before the CV reaches 0, this accounts for it
-#define VCA_DEADBAND 768
+#define VCA_DEADBAND 771 // GliGli = 768
 
 #define BIT_INTPUT_FOOTSWITCH 0x20
 #define BIT_INTPUT_TAPE_IN 0x01
@@ -746,12 +746,12 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
 
             if (lastPotcP<0) // it's a value not part of the currentPreset.cp, e.g. not stored in a patch; always show as is
             {
-                led_set(plDot,v<0,0); // dot indicates negative
+                if(potmux_isPotZeroCentered(ui.lastActivePot)) led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
                 sevenSeg_setNumber(v);
             }
             else if (currentPreset.contParamPotStatus[lastPotcP]==1) // it is stored in a patch but already picked up
             {
-                led_set(plDot,v<0,0); // dot indicates negative
+                if(potmux_isPotZeroCentered(ui.lastActivePot)) led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
                 sevenSeg_setNumber(v);
             }
             else if (currentPreset.contParamPotStatus[lastPotcP]>=2) // it is stored in a patch but not yet picked up
