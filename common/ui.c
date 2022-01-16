@@ -451,7 +451,7 @@ void ui_checkIfDataPotChanged(void)
     int32_t data,valCount;
     data=potmux_getValue(ppSpeed);
 
-    if (settings.presetMode && (ui.digitInput==diLoadUnitDigit || ui.digitInput==diLoadDecadeDigit)) // this is preset load patch - we want the data dial to work as selector
+    if (ui.isShifted && settings.presetMode && (ui.digitInput==diLoadUnitDigit || ui.digitInput==diLoadDecadeDigit)) // this is preset load patch - we want the data dial to work as selector
     {
         // to be done:
         // avoid jumps in selection (pick-up?=
@@ -647,9 +647,9 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			else
 			{
 				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
-				ui.lastActivePot=ppNone;
 			}
 		}
+        if (ui.lastActivePot==ppSpeed) ui.lastActivePot=ppNone; // the data pot changes it's function - make sure it isn't applied directly
 	}
 
 	// shifted state (keyboard transposition, ...)
