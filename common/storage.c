@@ -419,7 +419,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         {
             // reamp the LFO amount (which was changed in version 8)
             // this is the inverse of the scaling function applied to the LFO amount pot value to make it smoother (small difference to stay within uint16_t here)
-            currentPreset.continuousParameters[cpLFOAmt]=(uint16_t)(9000.0f*log((((float)currentPreset.continuousParameters[cpLFOAmt])/45.124f)+1));
+            currentPreset.continuousParameters[cpLFOAmt]=(uint16_t)(15000.0f*log((((float)currentPreset.continuousParameters[cpLFOAmt])/840.6f)+1));
 
             // remap the exponential release and decay times after the phase lookup was updated (made longer mapping theorectial 285 to new 256)
             if (currentPreset.steppedParameters[spAmpEnvShape]==1) // exponential

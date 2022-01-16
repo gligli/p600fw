@@ -308,7 +308,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 
         v_aux=v;
         synth.oscABaseCV[v]=satAddU16S16(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),(1+(v_aux>>1))*(v_aux&1?-1:1)*detune);
-        v_aux=(v+3)&6;
+        v_aux=(v+3)%6;
         synth.oscBBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(BNote,baseBPitch,pcOsc1B+v),(1+(v_aux>>1))*(v_aux&1?-1:1)*detune);
 
         // filter
@@ -327,7 +327,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
                 trackingNote=0;
         }
 
-        v_aux=(v+5)&6;
+        v_aux=(v+5)%6;
         synth.filterBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),(1+(v_aux>>1))*detune);
 
         // detune
@@ -685,7 +685,7 @@ static void refreshLfoSettings(void)
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
 
     // now scale the LFO amount in analogy to mod wheel
-    lfoAmt=((expf(((float)lfoAmt)/9000.0f )-1.0f)*45.121f);
+    lfoAmt=((expf(((float)lfoAmt)/15000.0f )-1.0f)*840.57f);
 
     vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
     vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
