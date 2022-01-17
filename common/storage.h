@@ -94,6 +94,8 @@ struct preset_s
 	uint8_t steppedParameters[spCount];
 	uint16_t continuousParameters[cpCount];
     uint8_t contParamPotStatus[cpCount]; // this indicates whether the current pot position is smaller or larger then the current cp
+
+    uint8_t patchName[16];
 	
 	uint8_t voicePattern[SYNTH_VOICE_COUNT];
   
