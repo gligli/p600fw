@@ -26,7 +26,6 @@ static struct
 	int8_t transpose;
 	int8_t previousTranspose;
 	int8_t numberOfNotes; // only used for the random mode to reduce sampling effort
-	int8_t upDownDirection; // +1 for up and -1 for down
 
 	int8_t hold;
 	arpMode_t mode;
@@ -67,7 +66,6 @@ static void killAllNotes(void)
 	arp.previousNote=ASSIGNER_NO_NOTE;
 	arp.previousIndex=-1;
 	arp.numberOfNotes=0;
-	arp.upDownDirection=1;
 	memset(arp.notes,ASSIGNER_NO_NOTE,ARP_NOTE_MEMORY);
 	assigner_allKeysOff();
 }
@@ -92,7 +90,6 @@ static void killHeldNotes(void)
 
 	// reset
 	arp.noteIndex=-1;
-	arp.upDownDirection=1;
 	arp.numberOfNotes=j;
 	
 	// now overwrite the remaining slots...
@@ -141,7 +138,6 @@ FORCEINLINE void arp_setTranspose(int8_t transpose)
 FORCEINLINE void arp_resetCounter(int8_t beatReset)
 {
 	arp.noteIndex=-1; // reinit
-	arp.upDownDirection=1;
 	if (beatReset&&seq_getMode(0)!=smPlaying&&seq_getMode(1)!=smPlaying)
 	{
 		clock_reset(); // start immediately
@@ -176,7 +172,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 		if(isEmpty())
 			arp_resetCounter(settings.syncMode==smInternal);
 
-		if(arp.mode!=amUpDown) // assign or random mode			
+		if(arp.mode!=amUpDown) // assign or random mode
 		{
 			if(arp.numberOfNotes < ARP_NOTE_MEMORY) // only if note can be added
 			{
@@ -187,37 +183,9 @@ void arp_assignNote(uint8_t note, int8_t on)
 		}
 		else // up/down mode
 		{
-			if (arp.numberOfNotes==0)
-			{
-				arp.notes[0]=note;
-				arp.numberOfNotes++;
-			}
-			else
-			{
-				// find the latest note that is grater or equal, start from top
-				findIndex = arp.numberOfNotes-1;
-				while (findIndex>=0)
-				{
-					if ((arp.notes[findIndex]&~ARP_NOTE_HELD_FLAG)<note)
-					{
-						break; // we found the right spot
-					}
-					else if ((arp.notes[findIndex]&~ARP_NOTE_HELD_FLAG)==note)
-					{
-						return; // we already have that note in the pattern
-					}
-					findIndex--;
-				}
-				// now findIndex is the index one below where the new note fits in
-				// now shift higher others notes up, start from top ...
-				for (i=arp.numberOfNotes-1;i>findIndex;--i)
-				{
-					arp.notes[i+1]=arp.notes[i];
-				}
-				// ... and put the new note in the "gap"
-				arp.notes[findIndex+1]=note;
-				arp.numberOfNotes++;
-			}
+            arp.notes[note]=note;
+            arp.notes[ARP_NOTE_HELD_FLAG-note]=note;
+            arp.numberOfNotes+=2;
 		}
 	}
 	else
@@ -235,51 +203,69 @@ void arp_assignNote(uint8_t note, int8_t on)
 			// for assign/random this will be the latest matching note
 			// for up/down there can only be one anyway
 			// to use just one routine for all cases, start from top...
-			for(i=arp.numberOfNotes-1;i>=0;--i)
-			{
-				if(arp.notes[i]==note)
-				{
-					arp.notes[i]|=ARP_NOTE_HELD_FLAG;
-					break;
-				}
-			}
+			if (arp.mode!=amUpDown)
+            {
+                for(i=arp.numberOfNotes-1;i>=0;--i)
+                {
+                    if(arp.notes[i]==note)
+                    {
+                        arp.notes[i]|=ARP_NOTE_HELD_FLAG;
+                        break;
+                    }
+                }
+            }
+            else // up/down
+            {
+                arp.notes[note]|=ARP_NOTE_HELD_FLAG;
+                arp.notes[ARP_NOTE_HELD_FLAG-note]|=ARP_NOTE_HELD_FLAG;
+            }
 		}
 		else
 		{
-			// we don't want to leave "holes", therefore rearrange, start from top
-			// note: the first note we find and if we find it CANNOT be held because
-			// either the key was pressed before entering the arp mode in which case notes[] is empty
-			// or the note has been played in arp mode and not yet release in which case the note is not yet held 
-			// so we remove it on key off...
-			findIndex = arp.numberOfNotes-1;
-			while (findIndex>=0)
-			{
-				if (arp.notes[findIndex]==note) // this can only match notes wich are not held
-				{
-					break;
-				} 
-				findIndex--;
-			}
-			
-			if (findIndex<0) // note not found, abort without action
-				return;
 
-			// findIndex is the index of the matching note
-			// now shift the higher notes down
-			for (i=findIndex;i<arp.numberOfNotes-1;++i)
-			{
-				arp.notes[i]=arp.notes[i+1];
-			}
-			arp.notes[arp.numberOfNotes-1]=ASSIGNER_NO_NOTE;
-			// adjust the index for the running arp if it happens to point to the previously last note
-			// otherwise the up/down arp runs away...
-			if (arp.noteIndex==arp.numberOfNotes-1)
-			{
-				arp.noteIndex=arp.numberOfNotes-2; 
-				arp.previousIndex=arp.numberOfNotes-2;
-			}
+			if (arp.mode!=amUpDown)
+            {
+                // we don't want to leave "holes", therefore rearrange, start from top
+                // note: the first note we find and if we find it CANNOT be held because
+                // either the key was pressed before entering the arp mode in which case notes[] is empty
+                // or the note has been played in arp mode and not yet release in which case the note is not yet held
+                // so we remove it on key off...
+                findIndex = arp.numberOfNotes-1;
+                while (findIndex>=0)
+                {
+                    if (arp.notes[findIndex]==note) // this can only match notes wich are not held
+                    {
+                        break;
+                    }
+                    findIndex--;
+                }
 
-			arp.numberOfNotes--;
+                if (findIndex<0) // note not found, abort without action
+                    return;
+
+                // findIndex is the index of the matching note
+                // now shift the higher notes down
+                for (i=findIndex;i<arp.numberOfNotes-1;++i)
+                {
+                    arp.notes[i]=arp.notes[i+1];
+                }
+                arp.notes[arp.numberOfNotes-1]=ASSIGNER_NO_NOTE;
+                // adjust the index for the running arp if it happens to point to the previously last note
+                // otherwise the up/down arp runs away...
+                if (arp.noteIndex==arp.numberOfNotes-1)
+                {
+                    arp.noteIndex=arp.numberOfNotes-2;
+                    arp.previousIndex=arp.numberOfNotes-2;
+                }
+                arp.numberOfNotes--;
+            }
+            else
+            {
+                arp.notes[note]=ASSIGNER_NO_NOTE;
+                arp.notes[ARP_NOTE_HELD_FLAG-note]=ASSIGNER_NO_NOTE;
+                arp.numberOfNotes-=2;
+            }
+
 
 			// gate off for last note
 
@@ -315,10 +301,10 @@ void arp_update(void)
 	case amUpDown:
 		if (arp.numberOfNotes>1)
 		{
-			// could modify the pattern easily by changing the following rules...
-			if (arp.noteIndex==arp.numberOfNotes-1) arp.upDownDirection=-1; // reached the top, start moving down
-			if (arp.noteIndex==0) arp.upDownDirection=1; // reached the bottom, start moving up
-			arp.noteIndex=(arp.noteIndex+arp.upDownDirection)%arp.numberOfNotes; // the mod function is just for safety
+            // add here the avoidance of top/bottom note double playing
+            do
+                arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY; // cycle through the array
+            while (arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE || arp.noteIndex==ARP_NOTE_HELD_FLAG-arp.previousIndex);
 		}
 		else
 		{
@@ -370,6 +356,5 @@ void arp_init(void)
 	arp.noteIndex=-1;
 	arp.previousNote=ASSIGNER_NO_NOTE;
 	arp.numberOfNotes =0;
-	arp.upDownDirection=1;
 	
 }
