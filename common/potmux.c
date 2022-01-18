@@ -14,7 +14,7 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Mixer*/8, /*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/10,
 	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/10,/*AmpDec*/8,/*AmpAtt*/8,
 	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
-	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/8
+	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/10
 };
 
 static const p600Pot_t priorityPots[6]=
@@ -99,13 +99,14 @@ static void updatePot(p600Pot_t pot)
 		cdv=estimate>>8;
         diff = abs(potmux.changeDetect[pot]-cdv);
         // we have to make sure that we can at least reach all values up to UNIT16_MAX
-		if(diff>CHANGE_DETECT_THRESHOLD)
+		if(diff>CHANGE_DETECT_THRESHOLD || potmux.potExcitedCount[pot]>0)
 		{
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
 			potmux.lastChanged=pot;
-            potmux.potExcitedCount[pot]=10;
 		}
+		if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=10;
+
         potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
         if (potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
 
