@@ -700,12 +700,11 @@ static void refreshLfoSettings(void)
 
     lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
-
-    // now scale the LFO amount in analogy to mod wheel
     lfoAmt=((expf(((float)lfoAmt)/15000.0f )-1.0f)*840.57f);
 
     vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
     vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
+    vibAmt=((expf(((float)vibAmt)/15000.0f )-1.0f)*840.57f);
 
     if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
     {
