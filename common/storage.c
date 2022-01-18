@@ -137,8 +137,9 @@ static void storageWriteS8(int8_t v)
 
 static void resetPickUps(void)
 {
-    uint8_t cp;
-    for (cp=0;cp<cpCount;++cp) currentPreset.contParamPotStatus[cp]=0;
+    uint8_t cnt;
+    for (cnt=0;cnt<cpCount;++cnt) currentPreset.contParamPotStatus[cnt]=0;
+    currentPreset.switchStatus=0;
 }
 
 static LOWERCODESIZE int8_t storageLoad(uint16_t pageIdx, uint8_t pageCount)
@@ -478,7 +479,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         currentPreset.continuousParameters[cpExternal]=storageRead16();
 
         for (i=0;i < 16; i++)
-            patchName(i)=storageRead8();
+            currentPreset.patchName[i]=storageRead8();
 
 	}
 	
@@ -530,7 +531,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storageWrite16(currentPreset.continuousParameters[cpExternal]);
 
         for (i=0;i < 16; i++)
-            storageWrite8(patchName(i));
+            storageWrite8(currentPreset.patchName[i]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough

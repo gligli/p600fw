@@ -115,6 +115,8 @@ struct synth_s
 
     int8_t clockBar;
 
+    uint8_t freqDial;
+
 } synth;
 
 extern void refreshAllPresetButtons(void);
@@ -207,7 +209,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
     int8_t v, v_aux;
 
     uint16_t baseAPitch,baseBPitch,baseCutoff;
-    int16_t mTune,fineBFreq,fineBFreqAdd,detune;
+    int16_t mTune,fineBFreq,detune;
 
     // We use int16_t here because we want to be able to use negative
     // values for intermediate calculations, while still retaining a
@@ -257,21 +259,36 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 
     baseCutoff&=0xff;
 
-    if(chrom>0)
+    synth.freqDial=0;
+    if (chrom==0 || chrom==6)
     {
-        baseAPitch=0;
-        baseBPitch=0;
-
-        if(chrom>1)
-        {
-            baseANote-=baseANote%12;
-            baseBNote-=baseBNote%12;
-        }
+        synth.freqDial=1;
+        baseAPitch&=0xff;
     }
     else
     {
-        baseAPitch&=0xff;
+        baseAPitch&=0;
+    }
+
+    if (chrom==0 || chrom==5)
+    {
+        synth.freqDial+=4;
         baseBPitch&=0xff;
+    }
+    else
+    {
+        baseBPitch&=0;
+    }
+
+    if (chrom==2 || chrom==3 || chrom==5)
+    {
+        baseANote-=baseANote%12;
+        synth.freqDial+=2;
+    }
+    if (chrom==2 || chrom==4 || chrom==6)
+    {
+        baseBNote-=baseBNote%12;
+        synth.freqDial+=8;
     }
 
     for(v=0; v<SYNTH_VOICE_COUNT; ++v)
@@ -713,6 +730,7 @@ static void refreshLfoSettings(void)
 static void refreshSevenSeg(void) // imogen: this function would be more suited for ui.c than synth.c
 {
     int8_t seqRec = seq_getMode(0)==smRecording || seq_getMode(1)==smRecording;
+    uint8_t isPickedUp=0;
 
     if(seqRec) // sequence record mode and no parameter selection override, e.g. the input and display is sequencer
     {
@@ -724,7 +742,7 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
     }
     else if(ui.digitInput==diSynth) // live mode show values of last touched control
     {
-        if(ui.lastActivePotValue>=0)
+        if(ui.lastActivePot!=ppNone && ui.lastActivePotValue>=0)
         {
             int32_t v;
             int8_t lastPotcP;
@@ -740,19 +758,35 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
 				v=ui.adjustedLastActivePotValue;
             }
 
-            v=(v*100L)>>16; // 0..100 range
+            if (lastPotcP>=0)
+                if (currentPreset.contParamPotStatus[lastPotcP]==1) isPickedUp=1;
 
-            if(potmux_isPotZeroCentered(ui.lastActivePot)) v=abs(v-50);
-
-            if (lastPotcP<0) // it's a value not part of the currentPreset.cp, e.g. not stored in a patch; always show as is
+            if (lastPotcP<0 || isPickedUp) // it's a value not part of the currentPreset.cp, e.g. not stored in a patch; always show as is
             {
-                if(potmux_isPotZeroCentered(ui.lastActivePot)) led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
-                sevenSeg_setNumber(v);
-            }
-            else if (currentPreset.contParamPotStatus[lastPotcP]==1) // it is stored in a patch but already picked up
-            {
-                if(potmux_isPotZeroCentered(ui.lastActivePot)) led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
-                sevenSeg_setNumber(v);
+                if ((ui.lastActivePot==ppFreqA && (synth.freqDial&1)==0) || (ui.lastActivePot==ppFreqB && ((synth.freqDial>>2)&1)==0))
+                {
+                    if ((ui.lastActivePot==ppFreqA && ((synth.freqDial>>1)&1)==0) || (ui.lastActivePot==ppFreqB && ((synth.freqDial>>3)&1)==0)) // semi
+                    {
+                        sevenSeg_setNumber(v>>10);
+                    }
+                    else
+                    {
+                        v=v>>10;
+                        v-=v%12;
+                        v/=12;
+                        sevenSeg_setAscii('c','0'+v);
+                    }
+                }
+                else
+                {
+                    v=(v*100L)>>16; // 0..100 range
+                    if(potmux_isPotZeroCentered(ui.lastActivePot))
+                    {
+                        v=abs(v-50);
+                        led_set(plDot,ui.adjustedLastActivePotValue<=INT16_MAX,0); // dot indicates negative
+                    }
+                    sevenSeg_setNumber(v);
+                }
             }
             else if (currentPreset.contParamPotStatus[lastPotcP]>=2) // it is stored in a patch but not yet picked up
             {
@@ -762,7 +796,14 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
         else
         {
             led_set(plDot,0,0); // switch off dot in display in case it is on from before
-            sevenSeg_setAscii(' ',' ');
+            if (settings.presetMode && (currentPreset.switchStatus>>(ui.activeSwitch-pbASqr)&1))
+            {
+                sevenSeg_setAscii('[',']');
+            }
+            else
+            {
+                sevenSeg_setAscii(' ',' ');
+            }
         }
     }
     else // this is showing preset number or waiting for first (decade) or second (unit) digit either for preset selection or preset saving
@@ -852,11 +893,11 @@ static void refreshPresetPots(int8_t force) // this only affects current preset 
             }
             else // pot is still off
             {
-                //if ((currentPreset.continuousParameters[cp]>>8)==(value>>8) || comparePotVal(pp, value, currentPreset.continuousParameters[cp]))
                 if ((currentPreset.continuousParameters[cp]>>9)==(value>>9)) // pick up pot when close enough
                 {
                     currentPreset.contParamPotStatus[cp]=1;
                     currentPreset.continuousParameters[cp]=value;
+                    ui.presetModified=1;
                 }
                 else
                 {
@@ -864,6 +905,7 @@ static void refreshPresetPots(int8_t force) // this only affects current preset 
                 }
             }
         }
+
 }
 
 void refreshPresetMode(void)
@@ -1112,7 +1154,7 @@ void synth_update(void)
             if(potmux_isPotZeroCentered(ui.lastActivePot))
                 ui.adjustedLastActivePotValue=addDeadband(potVal,&panelDeadband);
 
-            refreshSevenSeg();
+            if (frc&0x01) refreshSevenSeg();
 
             // update CVs
 

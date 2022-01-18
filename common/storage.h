@@ -93,7 +93,10 @@ struct preset_s
 {
 	uint8_t steppedParameters[spCount];
 	uint16_t continuousParameters[cpCount];
-    uint8_t contParamPotStatus[cpCount]; // this indicates whether the current pot position is smaller or larger then the current cp
+
+    // two status variables (pots and switches) used for pick-me-up mode
+    uint8_t contParamPotStatus[cpCount]; // this indicates whether the pot position is smaller or larger then the current cp
+    uint16_t switchStatus; // each bit takes the value picked-up (=1) and not pick-up (=0)
 
     uint8_t patchName[16];
 	
