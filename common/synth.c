@@ -702,9 +702,9 @@ static void refreshLfoSettings(void)
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
     lfoAmt=((expf(((float)lfoAmt)/15000.0f )-1.0f)*840.57f);
 
-    vibAmt=currentPreset.continuousParameters[cpVibAmt]>>2;
+    vibAmt=((expf(((float)currentPreset.continuousParameters[cpVibAmt])/15000.0f )-1.0f)*840.57f);
+    //vibAmt=vibAmt>>2;
     vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
-    vibAmt=((expf(((float)vibAmt)/15000.0f )-1.0f)*840.57f);
 
     if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
     {
@@ -1168,8 +1168,8 @@ void synth_update(void)
 
     // lfo (for mod delay)
     refreshLfoSettings();
-    sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
-    sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
+    //sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
+    //sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
     sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
     switch(frc&0x03) // 4 phases
     {
@@ -1237,13 +1237,13 @@ void synth_timerInterrupt(void)
     filterLfoVal=0;
     ampLfoVal=UINT16_MAX;
 
-    if (currentPreset.steppedParameters[spVibTarget]==0)
+    if (currentPreset.steppedParameters[spVibTarget]==0) // VCO
     {
-        pitchALfoVal=pitchBLfoVal=synth.vibrato.output;
+        pitchALfoVal=pitchBLfoVal=synth.vibrato.output>>2;
     }
-    else
+    else // VCA
     {
-        ampLfoVal+=(synth.vibrato.output<<2)-(synth.vibrato.levelCV<<1);
+        ampLfoVal=synth.vibrato.output+(UINT16_MAX-(synth.vibrato.levelCV>>1));
     }
 
     if(currentPreset.steppedParameters[spLFOTargets]&mtVCO)
@@ -1258,8 +1258,16 @@ void synth_timerInterrupt(void)
         filterLfoVal=synth.lfo.output;
 
     if(currentPreset.steppedParameters[spLFOTargets]&mtVCA)
-        ampLfoVal+=synth.lfo.output-(synth.lfo.levelCV>>1);
-
+    {
+        // ampLfoVal=synth.lfo.output+(UINT16_MAX-(synth.lfo.levelCV>>1)); // original application. This is later scaled into pre-amp (pcAmp1)
+        sh_setCV(pcVolA,scaleU16U16(currentPreset.continuousParameters[cpVolA], synth.lfo.output+(UINT16_MAX-(synth.lfo.levelCV>>1))),SH_FLAG_IMMEDIATE);
+        sh_setCV(pcVolB,scaleU16U16(currentPreset.continuousParameters[cpVolB], synth.lfo.output+(UINT16_MAX-(synth.lfo.levelCV>>1))),SH_FLAG_IMMEDIATE);
+    }
+    else
+    {
+        sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
+        sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
+    }
 
 
     // global env computations
