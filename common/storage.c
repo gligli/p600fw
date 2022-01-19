@@ -403,6 +403,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             // rescale the LFO speed (the speed switch paramter was omitted from version 8 after)
             currentPreset.continuousParameters[cpLFOFreq]=(uint16_t)(0.708f*(float)currentPreset.continuousParameters[cpLFOFreq]);
             if (readVar==1) currentPreset.continuousParameters[cpLFOFreq]+=19135;
+            for(i=2;i<6;i+=3) // this picks up cpAPW (=2) and cpBPW (=5)
+            currentPreset.continuousParameters[i]=(currentPreset.continuousParameters[i]>63000)?FULL_RANGE:((uint16_t)(currentPreset.continuousParameters[i]*1.0323f)+500);
         }
         else if (readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
 

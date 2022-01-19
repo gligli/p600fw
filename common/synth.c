@@ -133,6 +133,15 @@ struct deadband {
 struct deadband bendDeadband = { HALF_RANGE, BEND_GUARDBAND,  BEND_DEADBAND };
 struct deadband panelDeadband = { HALF_RANGE, 0, PANEL_DEADBAND };
 
+static uint16_t rescaledPW(uint16_t pwPotValue)
+{
+    uint16_t outVal;
+    outVal=(pwPotValue>500)?(pwPotValue-500):0;
+    outVal-=(outVal>>5); // extend the range by 2^11
+
+    return outVal;
+}
+
 static void addWheelToTunedCVs(void) // this function is specific for the case in which there are only wheel changes. Could also be moved to inside wheel event...
 {
     uint16_t cva,cvb,cvf;
@@ -587,10 +596,10 @@ static inline void refreshPulseWidth(int8_t pwm)
     uint8_t sqrB=currentPreset.steppedParameters[spBSqr];
 
     if(sqrA)
-        pa=currentPreset.continuousParameters[cpAPW];
+        pa=rescaledPW(currentPreset.continuousParameters[cpAPW]);
 
     if(sqrB)
-        pb=currentPreset.continuousParameters[cpBPW];
+        pb=rescaledPW(currentPreset.continuousParameters[cpBPW]);
 
     if(pwm)
     {
