@@ -794,15 +794,7 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
         }
         else
         {
-            led_set(plDot,0,0); // switch off dot in display in case it is on from before
-            if (settings.presetMode && (currentPreset.switchStatus>>(ui.activeSwitch-pbASqr)&1))
-            {
-                sevenSeg_setAscii('[',']');
-            }
-            else
-            {
-                sevenSeg_setAscii(' ',' ');
-            }
+            sevenSeg_setAscii(' ',' ');
         }
     }
     else // this is showing preset number or waiting for first (decade) or second (unit) digit either for preset selection or preset saving

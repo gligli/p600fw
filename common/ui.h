@@ -27,7 +27,6 @@ struct ui_s
 	int8_t presetModified;
 
 	p600Pot_t lastActivePot;
-    uint8_t activeSwitch;
 
 	int32_t lastActivePotValue;
 	uint16_t adjustedLastActivePotValue;
@@ -54,8 +53,6 @@ void ui_setPresetModified(int8_t modified);
 void ui_setNoActivePot(void);
 void ui_setLocalMode(uint8_t on);
 void ui_update(void);
-void setButtonState(p600Button_t button, uint8_t oldVal, uint8_t switchStat, uint8_t newVal);
-void setButtonStateAndValue(p600Button_t button, uint8_t sp, uint8_t switchStat, uint8_t newVal);
 
 #endif	/* UI_H */
 

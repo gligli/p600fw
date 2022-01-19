@@ -51,93 +51,65 @@ extern void refreshFullState(void);
 extern void refreshPresetMode(void);
 extern void computeBenderCVs(void);
 
-static void refreshPresetButton(p600Button_t button, uint8_t force)
+static void refreshPresetButton(p600Button_t button)
 {
-	uint8_t bitState, switchStat;
+	uint8_t bitState;
 	int8_t change=1;
 
     if (button<pbASqr) return; // the number and function buttons are handled elsewhere
-	
-	bitState=scanner_buttonState(button)?1:0;
 
-    if (settings.presetMode && ui.digitInput!=diSynth) currentPreset.switchStatus|=(1<<(button-pbASqr)); // in preset patch mode pick up directly
-    switchStat=((currentPreset.switchStatus>>(button-pbASqr))&1); // zero is not picked up, one is picked up
-    if (force || !settings.presetMode) switchStat=1; // the pick-up is not used used in live mode and for a refresh
+	bitState=scanner_buttonState(button)?1:0;
 	
 	switch(button)
-	{
+    {
         case pbASaw:
-            setButtonStateAndValue(pbASaw, spASaw, switchStat, bitState);
+            currentPreset.steppedParameters[spASaw]=bitState;
             break;
         case pbATri:
-            setButtonStateAndValue(pbATri, spATri, switchStat, bitState);
+            currentPreset.steppedParameters[spATri]=bitState;
             break;
         case pbASqr:
-            setButtonStateAndValue(pbASqr, spASqr, switchStat, bitState);
+            currentPreset.steppedParameters[spASqr]=bitState;
             break;
         case pbBSaw:
-            setButtonStateAndValue(pbBSaw, spBSaw, switchStat, bitState);
+            currentPreset.steppedParameters[spBSaw]=bitState;
             break;
         case pbBTri:
-            setButtonStateAndValue(pbBTri, spBTri, switchStat, bitState);
+            currentPreset.steppedParameters[spBTri]=bitState;
             break;
         case pbBSqr:
-            setButtonStateAndValue(pbBSqr, spBSqr, switchStat, bitState);
+            currentPreset.steppedParameters[spBSqr]=bitState;
             break;
         case pbSync:
-            setButtonStateAndValue(pbSync, spSync, switchStat, bitState);
+            currentPreset.steppedParameters[spSync]=bitState;
             break;
         case pbPModFA:
-            setButtonStateAndValue(pbPModFA, spPModFA, switchStat, bitState);
+            currentPreset.steppedParameters[spPModFA]=bitState;
             break;
         case pbPModFil:
-            setButtonStateAndValue(pbPModFil, spPModFil, switchStat, bitState);
+            currentPreset.steppedParameters[spPModFil]=bitState;
             break;
         case pbUnison:
-            setButtonStateAndValue(pbUnison, spUnison, switchStat, bitState);
+            currentPreset.steppedParameters[spUnison]=bitState;
             break;
         case pbLFOShape:
-            if (switchStat==1)
-            {
-                currentPreset.steppedParameters[spLFOShape]&=~1; // delete lowest bit
-                currentPreset.steppedParameters[spLFOShape]|=bitState;
-            }
-            else
-            {
-                setButtonState(pbLFOShape, (currentPreset.steppedParameters[spLFOShape]&1), switchStat, bitState);
-            }
+            currentPreset.steppedParameters[spLFOShape]&=~1;
+            currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
             break;
         case pbLFOFreq:
         case pbLFOPW:
         case pbLFOFil:
-            if (switchStat==1)
-            {
-                currentPreset.steppedParameters[spLFOTargets]=
-                    (currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
-                    (scanner_buttonState(pbLFOFreq)?mtVCO:0) |
-                    (scanner_buttonState(pbLFOPW)?mtPW:0) |
-                    (scanner_buttonState(pbLFOFil)?mtVCF:0);
-            }
-            else
-            {
-                if (button==pbLFOFreq) setButtonState(pbLFOFreq, currentPreset.steppedParameters[spLFOTargets]&1, switchStat, bitState);
-                if (button==pbLFOPW) setButtonState(pbLFOPW, (currentPreset.steppedParameters[spLFOTargets]>>3)&1, switchStat, bitState);
-                if (button==pbLFOFil) setButtonState(pbLFOFil, (currentPreset.steppedParameters[spLFOTargets]>>1)&1, switchStat, bitState);
-            }
+            currentPreset.steppedParameters[spLFOTargets]=
+                (currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
+                (scanner_buttonState(pbLFOFreq)?mtVCO:0) |
+                (scanner_buttonState(pbLFOPW)?mtPW:0) |
+                (scanner_buttonState(pbLFOFil)?mtVCF:0);
             break;
         case pbFilFull:
         case pbFilHalf:
-            if (switchStat==1)
-            {
-                currentPreset.steppedParameters[spTrackingShift]=
-                    (scanner_buttonState(pbFilHalf)?1:0) |
-                    (scanner_buttonState(pbFilFull)?2:0);
-            }
-            else
-            {
-                if (button==pbFilHalf) setButtonState(pbFilHalf, currentPreset.steppedParameters[spTrackingShift]&1, switchStat, bitState);
-                if (button==pbFilFull) setButtonState(pbFilFull, (currentPreset.steppedParameters[spTrackingShift]>>1)&1, switchStat, bitState);
-            }
+            currentPreset.steppedParameters[spTrackingShift]=
+                (scanner_buttonState(pbFilHalf)?1:0) |
+                (scanner_buttonState(pbFilFull)?2:0);
             break;
         default:
             change=0;
@@ -147,28 +119,17 @@ static void refreshPresetButton(p600Button_t button, uint8_t force)
 	if(change)
 	{
         ui.lastActivePot=ppNone;
-        ui.activeSwitch=button;
 		ui.presetModified=1;
 		refreshFullState();
 	}
 }
 
-void setButtonStateAndValue(p600Button_t button, uint8_t sp, uint8_t sStatus, uint8_t newVal)
-{
-    if (sStatus==0 && newVal==currentPreset.steppedParameters[sp]) setButtonState(button,currentPreset.steppedParameters[sp],sStatus,newVal);
-    if (sStatus==1) currentPreset.steppedParameters[sp]=newVal;
-}
-
-void setButtonState(p600Button_t button, uint8_t oldVal, uint8_t sStatus, uint8_t newVal)
-{
-    if (sStatus==0 && newVal==oldVal) currentPreset.switchStatus|=(1<<(button-pbASqr)); // set the corresponding bit to one for "picked-up"
-}
 
 LOWERCODESIZE void refreshAllPresetButtons(void)
 {
 	p600Button_t b;
 	for(b=pbASqr;b<=pbUnison;++b)
-		refreshPresetButton(b, 1);
+		refreshPresetButton(b);
 }
 
 // Return 1 if an action has been completed which does not require any
@@ -225,6 +186,7 @@ static int8_t changeMiscSetting(p600Button_t button)
             sevenSeg_scrollText("basic patch",1);
             settings.presetMode=1;
             ui.digitInput=diSynth;
+            ui.lastActivePot=ppNone;
             refreshFullState();
             return 1;
         default:
@@ -584,7 +546,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	// button press might change current preset
 	if (button>=pbASqr)
     {
-        refreshPresetButton(button,0);
+        refreshPresetButton(button);
         return;
     }
 
