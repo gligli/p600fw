@@ -33,7 +33,7 @@ Sync;1;1
 Poly Mod Frequency A;1;1
 Poly Mod Filter;1;1
 LFO Shape;1;1
-LFO Shift;1;1
+LFO Sync;1;1
 LPF Targets;1;1
 Tracking Shift;1;1
 Filter Envelope Shape;1;1
@@ -44,7 +44,7 @@ Unison;1;1
 Assigner Priority;1;1
 Bender Semitones;1;1
 Bender Target;1;1
-Mod Wheel Shift;1;1
+Envelope Routing;1;1
 Chromatic Pitch;1;1
 Modulation Delay;1;2
 Vibrato Frequency;1;2
@@ -55,3 +55,7 @@ Modulation Wheel Target;1;1
 Vibrato Target;1;1
 Voice Pattern (6 voices);6;1
 Tuning per Note (12 notes);12;2
+PW Bug;1;1
+Vintage;1;2
+Ext Voltage;1;2
+Patch Name;16;1
