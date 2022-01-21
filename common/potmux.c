@@ -98,7 +98,6 @@ static void updatePot(p600Pot_t pot)
         // change detector
 		cdv=estimate>>8;
         diff = abs(potmux.changeDetect[pot]-cdv);
-        // we have to make sure that we can at least reach all values up to UNIT16_MAX
 		if(diff>CHANGE_DETECT_THRESHOLD || potmux.potExcitedCount[pot]>0)
 		{
 			potmux.changeDetect[pot]=cdv;

@@ -401,8 +401,11 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         {
             // in this case readVar contains the legacy LFO speed range, where value 1 was "fast"
             // rescale the LFO speed (the speed switch paramter was omitted from version 8 after)
-            currentPreset.continuousParameters[cpLFOFreq]=(uint16_t)(0.708f*(float)currentPreset.continuousParameters[cpLFOFreq]);
-            if (readVar==1) currentPreset.continuousParameters[cpLFOFreq]+=19135;
+            // the exponential factor (ratio) was changed from 13000 to 8000
+            currentPreset.continuousParameters[cpLFOFreq]=(uint16_t)(0.615385f*(float)currentPreset.continuousParameters[cpLFOFreq])+25205;
+            // . The slow LFO variant was made a factor of 8 slower
+            if (readVar==0) currentPreset.continuousParameters[cpLFOFreq]-=16635; // this used to be the fast setting
+
             for(i=2;i<6;i+=3) // this picks up cpAPW (=2) and cpBPW (=5)
             currentPreset.continuousParameters[i]=(currentPreset.continuousParameters[i]>63000)?FULL_RANGE:((uint16_t)(currentPreset.continuousParameters[i]*1.0323f)+500);
         }
@@ -420,10 +423,9 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         // remap of the sp values prior to version 8
         if (storage.version<8)
         {
-            // rescale the LFO and vib amounts as of version 8
+            // rescale the LFO amount as of version 8
             // this is the inverse of the scaling functions applied to the LFO and vib amounts to make it smoother (small difference to stay within uint16_t here)
             currentPreset.continuousParameters[cpLFOAmt]=(uint16_t)(15000.0f*log((((float)currentPreset.continuousParameters[cpLFOAmt])/840.6f)+1));
-            currentPreset.continuousParameters[cpVibAmt]=(uint16_t)(15000.0f*log((((float)currentPreset.continuousParameters[cpVibAmt])/840.6f)+1));
 
             // remap the exponential release and decay times after the phase lookup was updated (made longer mapping theorectial 285 to new 256)
             if (currentPreset.steppedParameters[spAmpEnvShape]==1) // exponential
@@ -438,7 +440,6 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
                 currentPreset.continuousParameters[cpFilDec]=(uint16_t)(currentPreset.continuousParameters[cpFilDec]*0.895f);
             }
             currentPreset.continuousParameters[cpFilAtt]=(uint16_t)(currentPreset.continuousParameters[cpFilAtt]*0.895f);
-
         }
 		
 		currentPreset.steppedParameters[spAmpEnvSlow]=currentPreset.steppedParameters[holdPedal];
@@ -458,6 +459,16 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
 			currentPreset.voicePattern[i]=storageRead8();
+
+        // remap of the sp values prior to version 8
+        if (storage.version<8)
+        {
+            // rescale the vib amount as of version 8
+            // this is the inverse of the scaling functions applied to the LFO and vib amounts to make it smoother (small difference to stay within uint16_t here)
+            currentPreset.continuousParameters[cpVibAmt]=(uint16_t)(15000.0f*log((((float)currentPreset.continuousParameters[cpVibAmt])/840.6f)+1));
+            // rescale the vib frequency; the exponential factor (ratio) was changed from 13000 to 8000
+            currentPreset.continuousParameters[cpVibFreq]=(uint16_t)(0.615385f*(float)currentPreset.continuousParameters[cpVibFreq])+25205;
+        }
 
 		if (storage.version<7)
 			return 1;

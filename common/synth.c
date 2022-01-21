@@ -711,9 +711,10 @@ static void refreshLfoSettings(void)
     lfoAmt=(lfoAmt<POT_DEAD_ZONE)?0:(lfoAmt-POT_DEAD_ZONE);
     lfoAmt=((expf(((float)lfoAmt)/15000.0f )-1.0f)*840.57f);
 
-    vibAmt=((expf(((float)currentPreset.continuousParameters[cpVibAmt])/15000.0f )-1.0f)*840.57f);
     //vibAmt=vibAmt>>2;
+    vibAmt=currentPreset.continuousParameters[cpVibAmt];
     vibAmt=(vibAmt<POT_DEAD_ZONE)?0:(vibAmt-POT_DEAD_ZONE);
+    vibAmt=((expf(((float)vibAmt)/15000.0f )-1.0f)*840.57f);
 
     if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
     {
@@ -750,11 +751,12 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
     }
     else if(ui.digitInput==diSynth) // live mode show values of last touched control
     {
-        if(ui.lastActivePot!=ppNone && ui.lastActivePotValue>=0)
+        led_set(plDot,0,0);
+        if(ui.lastActivePotValue>=0)
         {
             int32_t v;
             int8_t lastPotcP;
-            lastPotcP=potToCP[ui.lastActivePot]; // this is -1 for anything not stored in a patch
+            lastPotcP=(ui.lastActivePot!=ppNone)?potToCP[ui.lastActivePot]:-1; // this is -1 for anything not stored in a patch
 
             if(ui.lastActivePot==ppPitchWheel)
             {
@@ -775,13 +777,13 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
                 {
                     if ((ui.lastActivePot==ppFreqA && ((synth.freqDial>>1)&1)==0) || (ui.lastActivePot==ppFreqB && ((synth.freqDial>>3)&1)==0)) // semi
                     {
-                        sevenSeg_setNumber(v>>10);
+                        sevenSeg_setNumber(v>>10); // frequency A or B in semitones
                     }
-                    else
+                    else // frequency A or B in octaves (c + octave number)
                     {
-                        v=v>>10;
-                        v-=v%12;
-                        v/=12;
+                        v=v>>10; // semitones (0...63)
+                        v-=v%12; // first note in octave (0, 12, 24, 36, 48, 60)
+                        v/=12; // octave number
                         sevenSeg_setAscii('c','0'+v);
                     }
                 }
@@ -1154,7 +1156,8 @@ void synth_update(void)
             if(potmux_isPotZeroCentered(ui.lastActivePot))
                 ui.adjustedLastActivePotValue=addDeadband(potVal,&panelDeadband);
 
-            if (frc&0x01) refreshSevenSeg();
+            //if (frc&0x01) refreshSevenSeg();
+            refreshSevenSeg();
 
             // update CVs
 
@@ -1176,10 +1179,20 @@ void synth_update(void)
     }
 
     // lfo (for mod delay)
+    // could also restrict this to update cycle in which the input has changed, that is
+    // 1) LFO speed, 2) LFO amount, 3) vib frequency, 4) vib amount, 5) mod wheel target, 6) delay amount
+    // this could make the normal update faster
+    // problem could be that 3), 4), 5) and 6) are menu parameters for which a change detect is more complicated than for single function pots
     refreshLfoSettings();
+
+    // the following have been move to interrupt timer, because they become part of the modulation (LFO to VCA)
+    // (before the LFO to VCA modulated to output VCA of the voice instead of the individual pre-ams per oscillator
     //sh_setCV(pcVolA,currentPreset.continuousParameters[cpVolA],SH_FLAG_IMMEDIATE);
     //sh_setCV(pcVolB,currentPreset.continuousParameters[cpVolB],SH_FLAG_IMMEDIATE);
+
+    // this is fast, so it can be done in every cycle
     sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
+
     switch(frc&0x03) // 4 phases
     {
         case 0:

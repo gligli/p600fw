@@ -56,8 +56,6 @@ static void refreshPresetButton(p600Button_t button)
 	uint8_t bitState;
 	int8_t change=1;
 
-    if (button<pbASqr) return; // the number and function buttons are handled elsewhere
-
 	bitState=scanner_buttonState(button)?1:0;
 	
 	switch(button)
@@ -399,12 +397,11 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	if(ui.activeParamIdx!=prev)
 	{
 		// display param name + value
-		
 		displayUIParameter(ui.activeParamIdx);
 		
-		// save manual preset
-		
+		// set flag for enabling storage of manual preset if that new parameter is changed
         ui.menuParamSelectChange=1;
+
 	}
 }
 
@@ -482,8 +479,14 @@ void ui_checkIfDataPotChanged(void)
         return;
     }
 
-	// handle our "data" pot
-	if(ui.activeParamIdx>=0)
+    // handle our "data" pot
+    if (settings.presetMode && ui.digitInput!=diSynth)
+    {
+        // hard wire the data pot to the seq/arp speed but "remember" the last parameter selection
+        settings.seqArpClock=data;
+        currentPreset.continuousParameters[cpSeqArpClock]=data;
+    }
+	else if(ui.activeParamIdx>=0) 	// normal parameter selection
 	{
 		struct uiParam_s prm;
 		
@@ -526,12 +529,12 @@ void ui_checkIfDataPotChanged(void)
                 ui.previousData=data;
                 break;
 		}
-        if (ui.menuParamSelectChange==1)
+        if (ui.menuParamSelectChange==1) // this make sure the the MANUAL_PRESET_PAGE is only stored the frist time a NEW menu parameter is CHANGED
         {
             if(!settings.presetMode)
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
         }
-        ui.menuParamSelectChange=0;
+        ui.menuParamSelectChange=0; // ensures that no storage is possible until a new menu parameter is selected
         ui.presetModified=1;
 		
 		refreshFullState();
@@ -544,11 +547,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
     char s[50];
 
 	// button press might change current preset
-	if (button>=pbASqr)
-    {
-        refreshPresetButton(button);
-        return;
-    }
+
+	refreshPresetButton(button);
 
 	// sequencer
 	
@@ -657,14 +657,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		{
 			if (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
 			{
-				ui.digitInput=diSequencer;			
+				ui.digitInput=diSequencer;
 			}
 			else
 			{
 				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
 			}
 		}
-        if (ui.lastActivePot==ppSpeed) ui.lastActivePot=ppNone; // the data pot changes it's function - make sure it isn't applied directly
+        if (ui.lastActivePot==ppSpeed) ui_setNoActivePot(); // the data pot changes it's function - make sure it isn't applied directly
 	}
 
 	// shifted state (keyboard transposition, ...)
@@ -750,7 +750,9 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		{
             // save manual preset to recall it later
             if(!settings.presetMode)
+            {
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
+            }
 
             settings.presetMode=settings.presetMode?0:1;
             settings_save();

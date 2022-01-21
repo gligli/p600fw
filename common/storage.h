@@ -41,7 +41,7 @@ typedef enum
 	spSync=6,spPModFA=7,spPModFil=8,
 			
 	spLFOShape=9,
-    spEnvRouting=10,
+    spLFOSync=10,
     spLFOTargets=11,
 
 	spTrackingShift=12,
@@ -52,7 +52,7 @@ typedef enum
 	spAssignerPriority=18,
 			
 	spBenderSemitones=19,spBenderTarget=20,
-	spLFOSync=21, // this is obsolete
+	spEnvRouting=21,
 
 	spChromaticPitch=22,
 			

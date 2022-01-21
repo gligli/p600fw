@@ -501,7 +501,8 @@ LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters uniso
 	uint8_t pattern[SYNTH_VOICE_COUNT];	
 	count=0;
 
-	assigner.hold=0; // in unison mode hold no longer applies
+    //assigner_holdEvent(0); // in unison mode hold no longer applies
+    assigner.hold=0;
 	memset(pattern,ASSIGNER_NO_NOTE,SYNTH_VOICE_COUNT);
 	
 	for(i=0;i<128;++i)
@@ -521,8 +522,8 @@ LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters uniso
 	assigner_setPattern(pattern,1);
 
     // now trigger the lowest note
-    // imogen: maybe this should mae dependent on assigner priority instead
-    if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
+    // imogen: maybe this should be made dependent on assigner priority
+    // if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
 }
 
 LOWERCODESIZE void assigner_setPoly(void)
