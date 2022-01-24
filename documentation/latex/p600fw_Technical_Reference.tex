@@ -69,7 +69,45 @@ The Teensy++ 2.0 hardware uses a memory which is structured in 512 pages with 25
 
 \section{UART interrupt}\label{uartinterrupt}
 
-\section{Multiplixer / DAC}\label{potmux}
+\section{Multiplexer / DAC}\label{potmux}
+
+\section{Mix and Drive vs. Volume A and Volum B}
+
+\textbf{Mapping from mix and drive to volumes} 
+
+When $drive\leq 1/2$:
+\begin{eqnarray}
+VolA=2\times drive \times (1-mix) \\
+VolB=2\times drive \times mix 
+\end{eqnarray}
+
+When $drive> 1/2$ and $mix \leq 1/2$:
+\begin{eqnarray}
+VolA=1-2\times mix \times (1-drive) \\
+VolB=2\times mix \times drive 
+\end{eqnarray}
+
+When $drive> 1/2$ and $mix > 1/2$:
+\begin{eqnarray}
+VolA=2\times drive \times (1-mix) \\
+VolB=1-2\times (1-mix) \times (1-drive) 
+\end{eqnarray}
+
+\textbf{Mapping from volumes to mix and drive} 
+
+When $VolA+VolB\leq 1$:
+\begin{eqnarray}
+  mix=\frac{VolB}{VolA+VolB} \\
+  drive=\frac{VolA+VolB}{2} 
+\end{eqnarray}
+
+When $VolA+VolB>1$ then $mix = (1+VolB-VolA)/2$ and
+\begin{eqnarray}
+  VolA \geq VolB \to drive=\frac{VolB}{1+VolB-VolA} \\
+  VolA < VolB \to drive=\frac{VolA}{1+VolA-VolB}
+\end{eqnarray}
+
+It is important to manage the singularities at $VolA=0$ and $VolB=0$. The following solution is chosen. In the regime $VolA+VolB>1$ the smaller of the two volumes is cut-off at a small value so that the denominator is well behaved.
 
 
 \begin{thebibliography}{50} 
