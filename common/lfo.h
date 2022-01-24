@@ -25,7 +25,9 @@ struct lfo_s
 	lfoShape_t shape;
 };
 
-void lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl);
+//void lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl);
+void lfo_setAmt(struct lfo_s * lfo, uint16_t lvl);
+void lfo_setFreq(struct lfo_s * lfo, uint16_t spd);
 void lfo_setShape(struct lfo_s * lfo, lfoShape_t shape);
 void lfo_resetPhase(struct lfo_s * lfo);
 

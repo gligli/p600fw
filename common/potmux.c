@@ -6,7 +6,6 @@
 #include "dac.h"
 #include "midi.h"
 
-#define PRIORITY_POT_COUNT 6
 #define CHANGE_DETECT_THRESHOLD 4
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
@@ -17,14 +16,16 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/10
 };
 
-static const p600Pot_t priorityPots[6]=
+static const p600Pot_t priorityPots[1]=
 {
-	ppCutoff, ppFreqA, ppFreqB, ppModWheel, ppPitchWheel, ppNone
+//	ppFreqA, ppFreqB, ppModWheel, ppPitchWheel, ppNone
+//	ppFreqB, ppPitchWheel, ppNone
+    ppNone
 };
 
-static const p600Pot_t regularPots[23]=
+static const p600Pot_t regularPots[28]=
 {
-    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppMVol, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppNone
+    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppMVol, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppCutoff, ppFreqA, ppModWheel, ppFreqB, ppPitchWheel, ppNone
 };
 
 static struct
@@ -45,6 +46,7 @@ static void updatePot(p600Pot_t pot)
 	uint8_t mux,bitDepth,cdv,diff;
 	uint16_t estimate,badMask;
 	uint16_t bit;
+    p600Pot_t lastActivePot;
 	
 	BLOCK_INT
 	{
@@ -98,16 +100,17 @@ static void updatePot(p600Pot_t pot)
         // change detector
 		cdv=estimate>>8;
         diff = abs(potmux.changeDetect[pot]-cdv);
-		if(diff>CHANGE_DETECT_THRESHOLD || potmux.potExcitedCount[pot]>0)
+        lastActivePot=potmux.lastChanged;
+		if(diff>CHANGE_DETECT_THRESHOLD || (potmux.potExcitedCount[pot]>0 && pot!=ppPitchWheel))
 		{
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
+            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=100; // keep up excited state for at least 50 cycles (about a quarter of a second)
 			potmux.lastChanged=pot;
 		}
-		if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=10;
-
-        potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
-        if (potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
+		potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
+		if (lastActivePot!=pot)
+            if (potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
 
         // the idea is to add the leading (16-bitDepth) bits to the lower end to make the range 0 ... UNIT16_MAX despite the limited accuracy
         if (estimate>=0xFC00) estimate=badMask; // choose max value above the threshold UINT16_t - CHANGE_DETECT_THRESHOLD
@@ -136,15 +139,15 @@ FORCEINLINE void potmux_resetChanged(void)
 	potmux.lastChanged=ppNone;
 }
 
-int8_t potmux_isPotZeroCentered(p600Pot_t pot)
+int8_t potmux_isPotZeroCentered(p600Pot_t pot, uint8_t layout)
 {
-	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel;
+	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel || (pot==ppMixer && layout==1);
 }
 
 inline void potmux_update(uint8_t updateAll)
 {
 	int16_t i, updatable;
-    updatable=updateAll?22:4;
+    updatable=updateAll?27:1;
 	for(i=0;i<updatable;++i)
 	{
 		if (!potmux.potExcited[regularPots[potmux.currentRegularPot]]) updatePot(regularPots[potmux.currentRegularPot]); // done in the next loop
@@ -163,7 +166,7 @@ inline void potmux_update(uint8_t updateAll)
 
     i=0;
     pp=priorityPots[0];
-    while (pp!=ppNone) // this cycle once through the pots in prio 2
+    while (pp!=ppNone) // this cycle once through the pots in prio 1
     {
         updatePot(pp);
         i++;

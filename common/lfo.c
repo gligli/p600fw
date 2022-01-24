@@ -40,10 +40,25 @@ static void handlePhaseOverflow(struct lfo_s * l)
 	}
 }
 
-void LOWERCODESIZE lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
+/*void LOWERCODESIZE lfo_setCVs(struct lfo_s * lfo, uint16_t spd, uint16_t lvl)
 {
 	lfo->levelCV=lvl;
 
+	if(spd!=lfo->speedCV)
+	{
+		lfo->speedCV=spd;
+		updateSpeed(lfo);
+		updateIncrement(lfo);
+	}
+}*/
+
+void LOWERCODESIZE lfo_setAmt(struct lfo_s * lfo, uint16_t lvl)
+{
+	lfo->levelCV=lvl;
+}
+
+void LOWERCODESIZE lfo_setFreq(struct lfo_s * lfo, uint16_t spd)
+{
 	if(spd!=lfo->speedCV)
 	{
 		lfo->speedCV=spd;

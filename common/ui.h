@@ -23,6 +23,8 @@ struct uiParam_s
 struct ui_s
 {
 	enum uiDigitInput_e digitInput;
+    uint8_t vibAmountChangePending;
+    uint8_t vibFreqChangePending;
 	int8_t presetAwaitingNumber;
 	int8_t presetModified;
 
