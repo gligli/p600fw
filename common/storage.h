@@ -26,6 +26,9 @@ typedef enum
 	cpSeqArpClock=29,
     cpExternal=30,
     cpSpread=31,
+    cpMixVolA=32,
+    cpGlideVolB=33,
+    cpDrive=34,
 
 	// /!\ this must stay last
 	cpCount
@@ -84,6 +87,7 @@ struct settings_s
 	
 	uint16_t seqArpClock;
 	uint8_t midiMode;
+    uint8_t panelLayout; // 0 = GliGli and 1 =  SCI
 
 };
 

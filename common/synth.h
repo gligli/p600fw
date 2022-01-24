@@ -128,6 +128,11 @@ void synth_update(void);
 void synth_timerInterrupt(void);
 void synth_uartInterrupt(void);
 
+uint16_t mixer_volumeFromMixAndDrive(uint16_t mix, uint16_t drive);
+uint16_t mixer_mixFromVols(uint16_t volA, uint16_t volB);
+uint16_t mixer_driveFromVols(uint16_t volA, uint16_t volB);
+void mixer_updatePanelLayout(uint8_t layout);
+
 extern volatile uint32_t currentTick; // 500hz
 extern uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM
 extern const uint16_t extClockDividers[16];

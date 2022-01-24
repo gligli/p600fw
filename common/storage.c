@@ -407,7 +407,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             if (readVar==0) currentPreset.continuousParameters[cpLFOFreq]-=16635; // this used to be the fast setting
 
             for(i=2;i<6;i+=3) // this picks up cpAPW (=2) and cpBPW (=5)
-            currentPreset.continuousParameters[i]=(currentPreset.continuousParameters[i]>63000)?FULL_RANGE:((uint16_t)(currentPreset.continuousParameters[i]*1.0323f)+500);
+            currentPreset.continuousParameters[i]=(currentPreset.continuousParameters[i]>62128)?FULL_RANGE:((uint16_t)(currentPreset.continuousParameters[i]*1.0323f)+1400);
         }
         else if (readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
 
@@ -444,6 +444,9 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		
 		currentPreset.steppedParameters[spAmpEnvSlow]=currentPreset.steppedParameters[holdPedal];
 
+        // update mixer variables depending on panel layout
+        mixer_updatePanelLayout(settings.panelLayout);
+
 		if (storage.version<2)
 			return 1;
 
@@ -466,7 +469,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             // rescale the vib amount as of version 8
             // this is the inverse of the scaling functions applied to the LFO and vib amounts to make it smoother (small difference to stay within uint16_t here)
             currentPreset.continuousParameters[cpVibAmt]=(uint16_t)(15000.0f*log((((float)currentPreset.continuousParameters[cpVibAmt])/840.6f)+1));
-            // rescale the vib frequency; the exponential factor (ratio) was changed from 13000 to 8000
+            // rescale the vib frequency; the exponential factor (ratio) was changed from 13000 to 8000.
             currentPreset.continuousParameters[cpVibFreq]=(uint16_t)(0.615385f*(float)currentPreset.continuousParameters[cpVibFreq])+25205;
         }
 
@@ -620,6 +623,7 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
             }
             storage.bufPtr=storage.buffer+size;
             storageFinishStore(number,1);
+            // update the current selected preset
             if (settings.presetMode && settings.presetNumber == number) refreshPresetMode();
         }
         else if (settings.presetMode)
@@ -650,6 +654,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
 		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
 		currentPreset.continuousParameters[cpSpread]=0; // default is: spread off
+		currentPreset.continuousParameters[cpDrive]=HALF_RANGE; // this is internal parameter for SCI panel layout
+		currentPreset.continuousParameters[cpMixVolA]=FULL_RANGE;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modAB;

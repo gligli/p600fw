@@ -43,6 +43,9 @@ const struct uiParam_s uiParameters[] =
 	/*3*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*4*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
+	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*7*/ {.type=ptCont,.number=0,.name="dummy"},
+    /*8*/ {.type=ptCont,.number=cpDrive,.name="drive"},
 };
 
 struct ui_s ui;
@@ -158,8 +161,13 @@ static int8_t changeMiscSetting(p600Button_t button)
             settings_save();
             refreshFullState();
             return 0;
-        case pb6: // usused;
-            return 1;
+        case pb6: //
+            settings.panelLayout=((settings.panelLayout+1)%2);
+            mixer_updatePanelLayout(settings.panelLayout);
+            // reset the pick-up status of the two pots
+            currentPreset.contParamPotStatus[cpMixVolA]=0;
+            currentPreset.contParamPotStatus[cpGlideVolB]=0;
+            return 0;
         case pb7:
             return 1;
         case pb8: // sync mode
@@ -182,6 +190,7 @@ static int8_t changeMiscSetting(p600Button_t button)
             preset_loadDefault(1);
             ui.presetModified=1;
             sevenSeg_scrollText("basic patch",1);
+            // go directly into preset panel mode
             settings.presetMode=1;
             ui.digitInput=diSynth;
             ui.lastActivePot=ppNone;
@@ -235,6 +244,12 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		sevenSeg_scrollText(s,1);
 		break;
 	case pb6:
+        if (settings.panelLayout==0)
+            strcpy(s,"GliGli Layout");
+        else
+            strcpy(s,"SCI Layout");
+
+		sevenSeg_scrollText(s,1);
 		break;
 	case pb7: // that button doesn't work, simultaneous press with FromTape not possible
 		break;
@@ -380,10 +395,10 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	{
 		new=button-pb0;
 		
-		if (prev==new)
+		if (prev==new && (new!=pb7 || settings.panelLayout==0)) // include Glide on 77 in GliGli panel layout only
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb1||new==pb2||new==pb4||new==pb5) // parameters on third press
+			{if (new==pb1||new==pb2||new==pb4||new==pb5||(new==pb8 && settings.panelLayout==1)) // parameters on third press, include Drive only in SCI panel layout
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -480,13 +495,7 @@ void ui_checkIfDataPotChanged(void)
     }
 
     // handle our "data" pot
-    if (settings.presetMode && ui.digitInput!=diSynth)
-    {
-        // hard wire the data pot to the seq/arp speed but "remember" the last parameter selection
-        settings.seqArpClock=data;
-        currentPreset.continuousParameters[cpSeqArpClock]=data;
-    }
-	else if(ui.activeParamIdx>=0) 	// normal parameter selection
+    if(ui.activeParamIdx>=0) 	// normal parameter selection
 	{
 		struct uiParam_s prm;
 		
@@ -499,9 +508,9 @@ void ui_checkIfDataPotChanged(void)
 		{
             case ptCont:
                 if (prm.number==cpSeqArpClock) // special treatment of the seq/arp speed --> part of settings, but display uses preset params, so update both
-                {
                     settings.seqArpClock=data;
-                }
+                if (prm.number==cpVibAmt) ui.vibAmountChangePending=1;
+                if (prm.number==cpVibFreq) ui.vibFreqChangePending=1;
                 currentPreset.continuousParameters[prm.number]=data;
                 break;
             case ptStep:
@@ -529,6 +538,7 @@ void ui_checkIfDataPotChanged(void)
                 ui.previousData=data;
                 break;
 		}
+
         if (ui.menuParamSelectChange==1) // this make sure the the MANUAL_PRESET_PAGE is only stored the frist time a NEW menu parameter is CHANGED
         {
             if(!settings.presetMode)
