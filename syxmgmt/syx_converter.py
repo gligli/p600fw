@@ -19,6 +19,7 @@ parser.add_option(
     help='Patch number to be extracted and converted',
     metavar='NUM')
 
+
 options, args = parser.parse_args()
 
 data = []
@@ -38,10 +39,13 @@ for c in fileVar.readlines():
 fileVar.close()
 
 fileVar = open(args[0],"rb")
-f = fileVar.read()
+f = fileVar.read(1)
 
-for c in f:
-	data += [c]
+while f:
+	inVal = int.from_bytes(f,"big")
+	data += [inVal]
+	f=fileVar.read(1)
+
 fileVar.close()
 
 countPatches=0
