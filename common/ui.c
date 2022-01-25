@@ -539,7 +539,7 @@ void ui_checkIfDataPotChanged(void)
                 break;
 		}
 
-        if (ui.menuParamSelectChange==1) // this make sure the the MANUAL_PRESET_PAGE is only stored the frist time a NEW menu parameter is CHANGED
+        if (ui.menuParamSelectChange==1) // this make sure the the MANUAL_PRESET_PAGE is only stored the first time a NEW menu parameter is CHANGED
         {
             if(!settings.presetMode)
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
@@ -860,7 +860,7 @@ void ui_init(void)
 		
 	ui.presetAwaitingNumber=-1;
 	ui.lastActivePotValue=-1;
-	ui.presetModified=1;
+	ui.presetModified=0;
     settings.presetMode=1; // start in preset mode
 	ui.digitInput=diSynth; // panel mode
 	ui.activeParamIdx=0; // select clock/speed

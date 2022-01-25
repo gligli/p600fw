@@ -15,7 +15,7 @@ static void updateSpeed(struct lfo_s * lfo)
 {
 	int32_t spd;
 	
-	spd=exponentialCourse(UINT16_MAX-lfo->speedCV,8000.0,65535.0f);
+	spd=exponentialCourse(UINT16_MAX-lfo->speedCV,8000.0f,65535.0f);
 
 	lfo->speed=spd<<4;
 }

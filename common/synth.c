@@ -141,11 +141,11 @@ struct deadband freqFineDeadband = { HALF_RANGE, 0, 4096, 512};
 
 static uint16_t rescaledPW(uint16_t pwPotValue)
 {
-    uint16_t outVal;
-    outVal=(pwPotValue>1400)?(pwPotValue-1400):0;
-    outVal-=(outVal>>5); // extend the range by 2^11
-
-    return outVal;
+    //uint16_t outVal;
+    //outVal=(pwPotValue>1400)?(pwPotValue-1400):0;
+    //outVal-=(outVal>>5); // extend the range by 2^11
+    //return outVal;
+    return pwPotValue;
 }
 
 static void addWheelToTunedCVs(void) // this function is specific for the case in which there are only wheel changes. Could also be moved to inside wheel event...
@@ -723,6 +723,12 @@ static void refreshLfoSettings(void)
         }
     }
 
+    synth.lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
+    synth.lfoAmt=(synth.lfoAmt<POT_DEAD_ZONE)?0:(synth.lfoAmt-POT_DEAD_ZONE);
+    synth.lfoAmt=((expf(((float)synth.lfoAmt)/15000.0f )-1.0f)*840.57f);
+
+    lfo_setFreq(&synth.lfo,currentPreset.continuousParameters[cpLFOFreq]);
+
     if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
     {
         lfo_setAmt(&synth.lfo, satAddU16U16(synth.lfoAmt, synth.modwheelAmount));
@@ -1015,6 +1021,9 @@ void refreshPresetMode(void)
 
     ui_setNoActivePot();
     ui.presetModified=0;
+    // trigger application of vib changes
+    ui.vibAmountChangePending=1;
+    ui.vibFreqChangePending=1;
     ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
 
 }
@@ -1268,16 +1277,6 @@ void synth_update(void)
                 refreshEnvSettings();
             else if (ui.lastActivePot==ppMVol)
                 synth.masterVolume = potmux_getValue(ppMVol);
-            else if (ui.lastActivePot==ppLFOAmt)
-            {
-                synth.lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
-                synth.lfoAmt=(synth.lfoAmt<POT_DEAD_ZONE)?0:(synth.lfoAmt-POT_DEAD_ZONE);
-                synth.lfoAmt=((expf(((float)synth.lfoAmt)/15000.0f )-1.0f)*840.57f);
-            }
-            else if (ui.lastActivePot==ppLFOFreq)
-            {
-                lfo_setFreq(&synth.lfo,currentPreset.continuousParameters[cpLFOFreq]);
-            }
         }
     }
 
