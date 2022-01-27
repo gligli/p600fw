@@ -33,7 +33,7 @@ const struct uiParam_s uiParameters[] =
 	/*4*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
 	/*5*/ {.type=ptCust,.number=2,.name="2nd shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
     /*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
-    /*7*/ {.type=ptStep,.number=spAssign,.name="assign",.values={"first","cycle","multi"}},
+    /*7*/ {.type=ptStep,.number=spAssign,.name="assign",.values={"first","cycle"}},
     /*8*/ {.type=ptCont,.number=cpSpread,.name="vintage"},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 	/*third press*/
@@ -416,7 +416,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		
 		// set flag for enabling storage of manual preset if that new parameter is changed
         ui.menuParamSelectChange=1;
-
+        ui.lastActivePot=ppNone;
 	}
 }
 
@@ -554,7 +554,7 @@ void ui_checkIfDataPotChanged(void)
 void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
-    char s[50];
+    char s[15];
 
 	// button press might change current preset
 
@@ -815,8 +815,8 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         {
                             if (!settings.presetMode) preset_saveCurrent(MANUAL_PRESET_PAGE); // make sure that the latest parameters are stored for live mode
                             preset_saveCurrent(ui.presetAwaitingNumber);
-                            sprintf(s, "%u", ui.presetAwaitingNumber);
-                            sevenSeg_scrollText(s,1);
+                            //sprintf(s, "%u", ui.presetAwaitingNumber);
+                            //sevenSeg_scrollText(s,1);
                         }
                         // if in local off mode we can still change the program because the incoming MIDI would have no effect
                         // also: always try to load/reload preset

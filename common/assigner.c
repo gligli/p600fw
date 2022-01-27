@@ -87,7 +87,7 @@ static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		if(isVoiceDisabled(v))
 			continue;
 		
-		if(assigner.allocation[v].assigned && (currentPreset.steppedParameters[spAssign]!=2)) // this is switched off in "multi" mode, e.g. play the same note on more than one voice
+		if(assigner.allocation[v].assigned)
 		{
 			// triggering a note that is still allocated to a voice should use this voice
 		
@@ -514,8 +514,8 @@ LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters uniso
 	uint8_t pattern[SYNTH_VOICE_COUNT];	
 	count=0;
 
-    //assigner_holdEvent(0); // in unison mode hold no longer applies
-    assigner.hold=0;
+    assigner_holdEvent(0); // in unison mode hold no longer applies
+    //assigner.hold=0;
 	memset(pattern,ASSIGNER_NO_NOTE,SYNTH_VOICE_COUNT);
 	
 	for(i=0;i<128;++i)
@@ -536,7 +536,7 @@ LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters uniso
 
     // now trigger the lowest note
     // imogen: maybe this should be made dependent on assigner priority
-    // if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
+    if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
 }
 
 LOWERCODESIZE void assigner_setPoly(void)
