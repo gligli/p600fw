@@ -16,6 +16,8 @@
 // this flag is used to indicate which of the current arp notes are latched so that these can be
 // removed when latch mode is deactivated while the currently held keys continue to be played:
 #define ARP_NOTE_HELD_FLAG 0x80 
+#define ARP_LAST_NOTE (ARP_NOTE_MEMORY-1)
+
 
 static struct
 {
@@ -75,28 +77,38 @@ static void killHeldNotes(void)
 
 	// to remove all the held notes we need to reorder...
 	int16_t i, j;
-	j=0;
-	for(i=0;i<ARP_NOTE_MEMORY;++i)
-	{
-		if(!(arp.notes[i]&ARP_NOTE_HELD_FLAG))
-		{
-			if (j!=i) // carry this note over
-			{
-				arp.notes[j]=arp.notes[i]; 
-			}
-			j++;
-		}
-	}
 
-	// reset
-	arp.noteIndex=-1;
-	arp.numberOfNotes=j;
-	
-	// now overwrite the remaining slots...
-	for(i=j;i<ARP_NOTE_MEMORY;++i)
-	{
-		arp.notes[i]=ASSIGNER_NO_NOTE;
-	}
+    if (arp.mode!=amUpDown)
+    {
+        j=0;
+        for(i=0;i<ARP_NOTE_MEMORY;++i)
+        {
+            if(!(arp.notes[i]&ARP_NOTE_HELD_FLAG))
+            {
+                if (j!=i) // carry this note over
+                {
+                    arp.notes[j]=arp.notes[i];
+                }
+                j++;
+            }
+        }
+
+        // reset
+        //arp.noteIndex=-1;
+        //arp.numberOfNotes=j;
+
+        // now overwrite the remaining slots...
+        for(i=j;i<ARP_NOTE_MEMORY;++i)
+        {
+            arp.notes[i]=ASSIGNER_NO_NOTE;
+        }
+    }
+    else
+    {
+        for(i=0;i<ARP_NOTE_MEMORY;++i)
+            if(arp.notes[i]&ARP_NOTE_HELD_FLAG)
+                arp.notes[i]=ASSIGNER_NO_NOTE;
+    }
 	
 	// gate off for last note
 	if(isEmpty())
@@ -127,7 +139,7 @@ inline void arp_setMode(arpMode_t mode, int8_t hold)
 		killHeldNotes();
 
 	arp.mode=mode;
-	arp.hold=mode==amOff?0:hold;
+	arp.hold=(mode==amOff)?0:hold;
 }
 
 FORCEINLINE void arp_setTranspose(int8_t transpose)
@@ -184,7 +196,7 @@ void arp_assignNote(uint8_t note, int8_t on)
 		else // up/down mode
 		{
             arp.notes[note]=note;
-            arp.notes[ARP_NOTE_HELD_FLAG-note]=note;
+            arp.notes[ARP_LAST_NOTE-note]=note;
             arp.numberOfNotes+=2;
 		}
 	}
@@ -217,7 +229,7 @@ void arp_assignNote(uint8_t note, int8_t on)
             else // up/down
             {
                 arp.notes[note]|=ARP_NOTE_HELD_FLAG;
-                arp.notes[ARP_NOTE_HELD_FLAG-note]|=ARP_NOTE_HELD_FLAG;
+                arp.notes[ARP_LAST_NOTE-note]|=ARP_NOTE_HELD_FLAG;
             }
 		}
 		else
@@ -262,7 +274,7 @@ void arp_assignNote(uint8_t note, int8_t on)
             else
             {
                 arp.notes[note]=ASSIGNER_NO_NOTE;
-                arp.notes[ARP_NOTE_HELD_FLAG-note]=ASSIGNER_NO_NOTE;
+                arp.notes[ARP_LAST_NOTE-note]=ASSIGNER_NO_NOTE;
                 arp.numberOfNotes-=2;
             }
 
@@ -299,17 +311,13 @@ void arp_update(void)
 	switch(arp.mode)
 	{
 	case amUpDown:
-		if (arp.numberOfNotes>1)
-		{
-            // add here the avoidance of top/bottom note double playing
-            do
-                arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY; // cycle through the array
-            while (arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE || arp.noteIndex==ARP_NOTE_HELD_FLAG-arp.previousIndex);
-		}
-		else
-		{
-			arp.noteIndex=0;
-		}
+        // add here the avoidance of top/bottom note double playing
+        do
+            arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY; // cycle through the array
+        //while (arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE);
+        while (arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE || (arp.previousIndex==(ARP_LAST_NOTE-arp.noteIndex)));
+        //while (arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE ||
+        //    (arp.noteIndex!=arp.previousIndex && (arp.previousNote|ARP_NOTE_HELD_FLAG)==(arp.notes[arp.noteIndex]|ARP_NOTE_HELD_FLAG)));
 		break;
 	case amAssign:
 		arp.noteIndex=(arp.noteIndex+1)%arp.numberOfNotes; 
