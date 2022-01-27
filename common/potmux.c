@@ -105,7 +105,7 @@ static void updatePot(p600Pot_t pot)
 		{
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
-            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=250; // keep up excited state for some cycles
+            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=100; // keep up excited state for some cycles
             potmux.lastChanged=pot;
 		}
 		potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;

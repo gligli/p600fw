@@ -137,7 +137,7 @@ struct deadband {
 
 struct deadband bendDeadband = { HALF_RANGE, BEND_GUARDBAND,  BEND_DEADBAND };
 struct deadband panelDeadband = { HALF_RANGE, 0, PANEL_DEADBAND };
-struct deadband freqFineDeadband = { HALF_RANGE, 0, 8192, 256}; // ultra "slow band" in the middle of fine tune
+struct deadband freqFineDeadband = { HALF_RANGE-1000, 0, 8192, 1024}; // ultra "slow band" in the middle of fine tune
 
 static uint16_t rescaledPW(uint16_t pwPotValue)
 {
@@ -725,7 +725,7 @@ static void refreshLfoSettings(void)
 
     synth.lfoAmt=currentPreset.continuousParameters[cpLFOAmt];
     synth.lfoAmt=(synth.lfoAmt<POT_DEAD_ZONE)?0:(synth.lfoAmt-POT_DEAD_ZONE);
-    synth.lfoAmt=((expf(((float)synth.lfoAmt)/15000.0f )-1.0f)*840.57f);
+    synth.lfoAmt=((expf(((float)synth.lfoAmt)/15000.0f )-1.0f)*870.0f);
 
     lfo_setFreq(&synth.lfo,currentPreset.continuousParameters[cpLFOFreq]);
 
@@ -1295,7 +1295,7 @@ void synth_update(void)
     {
         synth.vibAmt=currentPreset.continuousParameters[cpVibAmt];
         synth.vibAmt=(synth.vibAmt<POT_DEAD_ZONE)?0:(synth.vibAmt-POT_DEAD_ZONE);
-        synth.vibAmt=((expf(((float)synth.vibAmt)/15000.0f )-1.0f)*840.57f);
+        synth.vibAmt=((expf(((float)synth.vibAmt)/15000.0f )-1.0f)*870.0f);
         ui.vibAmountChangePending=0;
     }
 
