@@ -63,6 +63,7 @@ typedef enum
 	spVibTarget=24,
 	spAmpEnvSlow=25,
 	spPWMBug=26,
+    spAssign=27,
 
 	// /!\ this must stay last
 	spCount

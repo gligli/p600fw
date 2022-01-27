@@ -77,7 +77,7 @@ static inline int8_t isVoiceDisabled(int8_t voice)
 
 static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 {
-	int8_t v,oldestVoice=-1,sameNote=-1;
+	int8_t v,findVoice=-1,sameNote=-1;
 	uint32_t oldestTimestamp=UINT32_MAX;
 
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
@@ -87,7 +87,7 @@ static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		if(isVoiceDisabled(v))
 			continue;
 		
-		if(assigner.allocation[v].assigned)
+		if(assigner.allocation[v].assigned && (currentPreset.steppedParameters[spAssign]!=2)) // this is switched off in "multi" mode, e.g. play the same note on more than one voice
 		{
 			// triggering a note that is still allocated to a voice should use this voice
 		
@@ -99,20 +99,31 @@ static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		}
 		else
 		{
-			// else use oldest voice, if there is one
+            // else use first free voice, if there's one
 
-			if (assigner.allocation[v].timestamp<oldestTimestamp)
-			{
-				oldestTimestamp=assigner.allocation[v].timestamp;
-				oldestVoice=v;
-			}
+            if (currentPreset.steppedParameters[spAssign]==0) // classic first logic
+            {
+                if(findVoice<0)
+                    findVoice=v;
+            }
+            else
+            {
+
+                // else use oldest voice, if there is one
+
+                if (assigner.allocation[v].timestamp<oldestTimestamp)
+                {
+                    oldestTimestamp=assigner.allocation[v].timestamp;
+                    findVoice=v;
+                }
+            }
 		}
 	}
 	
 	if(sameNote>=0)
 		return sameNote;
 	else
-		return oldestVoice;
+		return findVoice;
 }
 
 static inline int8_t getDispensableVoice(uint8_t note)
@@ -186,6 +197,8 @@ void assigner_voiceDone(int8_t voice)
 	assigner.allocation[voice].keyPressed=0;
 	assigner.allocation[voice].note=ASSIGNER_NO_NOTE;
 	assigner.allocation[voice].rootNote=ASSIGNER_NO_NOTE;
+    //assigner.allocation[voice].timestamp=0;
+
 }
 
 

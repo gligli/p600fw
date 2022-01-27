@@ -33,7 +33,7 @@ const struct uiParam_s uiParameters[] =
 	/*4*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
 	/*5*/ {.type=ptCust,.number=2,.name="2nd shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
     /*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
-    /*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
+    /*7*/ {.type=ptStep,.number=spAssign,.name="assign",.values={"first","cycle","multi"}},
     /*8*/ {.type=ptCont,.number=cpSpread,.name="vintage"},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 	/*third press*/
@@ -44,7 +44,7 @@ const struct uiParam_s uiParameters[] =
 	/*4*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*7*/ {.type=ptCont,.number=0,.name="dummy"},
+    /*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
     /*8*/ {.type=ptCont,.number=cpDrive,.name="drive"},
 };
 
@@ -395,10 +395,10 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 	{
 		new=button-pb0;
 		
-		if (prev==new && (new!=pb7 || settings.panelLayout==0)) // include Glide on 77 in GliGli panel layout only
+		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb1||new==pb2||new==pb4||new==pb5||(new==pb8 && settings.panelLayout==1)) // parameters on third press, include Drive only in SCI panel layout
+			{if (new==pb1||new==pb2||new==pb4||new==pb5||(new==pb8 && settings.panelLayout==1) || (new==pb7 && settings.panelLayout==0)) // parameters on third press, include Drive (8) only in SCI panel layout, include Glide (7) only in Gligli layout
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -815,7 +815,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         {
                             if (!settings.presetMode) preset_saveCurrent(MANUAL_PRESET_PAGE); // make sure that the latest parameters are stored for live mode
                             preset_saveCurrent(ui.presetAwaitingNumber);
-                            sprintf(s, "saved %u", ui.presetAwaitingNumber);
+                            sprintf(s, "%u", ui.presetAwaitingNumber);
                             sevenSeg_scrollText(s,1);
                         }
                         // if in local off mode we can still change the program because the incoming MIDI would have no effect

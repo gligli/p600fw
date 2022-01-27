@@ -217,7 +217,8 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.syncMode=smInternal; // default ist internal clock
 		settings.vcfLimit=0; // default is: no limit on the VCF
 		settings.midiMode=0; // normal mode
-        
+		settings.panelLayout=0; // normal mode
+
 		if (storage.version<1)
 			return 1;
 
@@ -284,8 +285,10 @@ LOWERCODESIZE int8_t settings_load(void)
 		// v8
 
 		settings.midiMode=storageRead8();
-		if (settings.midiMode>1) settings.midiMode=0; // unvalid, revert to standard 
-		settings.midiMode=0; // for time being this setting should be reset upon startup
+        settings.midiMode=(settings.midiMode>1)?0:settings.midiMode;
+
+		settings.panelLayout=storageRead8();
+        settings.panelLayout=(settings.panelLayout>1)?0:settings.panelLayout;
 
 	}
 	
@@ -336,7 +339,8 @@ LOWERCODESIZE void settings_save(void)
 		// v8
 
 		storageWrite8(settings.midiMode);
-		
+		storageWrite8(settings.panelLayout);
+
 		// this must stay last
 		storageFinishStore(SETTINGS_PAGE,SETTINGS_PAGE_COUNT);
 	}
@@ -498,6 +502,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         for (i=0;i < 16; i++)
             currentPreset.patchName[i]=storageRead8();
 
+        readVar=storageRead8();
+        currentPreset.steppedParameters[spAssign]=(readVar>2)?0:readVar;
 	}
 	
 	return 1;
@@ -549,6 +555,8 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 
         for (i=0;i < 16; i++)
             storageWrite8(currentPreset.patchName[i]);
+
+        storageWrite8(currentPreset.steppedParameters[spAssign]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough
@@ -647,26 +655,29 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpAPW]=HALF_RANGE;
 		currentPreset.continuousParameters[cpBPW]=HALF_RANGE;
 		currentPreset.continuousParameters[cpCutoff]=UINT16_MAX;
+		currentPreset.continuousParameters[cpPModFilEnv]=HALF_RANGE;
+		currentPreset.continuousParameters[cpFreqBFine]=HALF_RANGE;
 		currentPreset.continuousParameters[cpFilEnvAmt]=HALF_RANGE;
 		currentPreset.continuousParameters[cpFreqBFine]=HALF_RANGE;
+		currentPreset.continuousParameters[cpLFOFreq]=HALF_RANGE;
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
 		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
 		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
-		currentPreset.continuousParameters[cpSpread]=0; // default is: spread off
+		//currentPreset.continuousParameters[cpSpread]=0; // default is: spread off
 		currentPreset.continuousParameters[cpDrive]=HALF_RANGE; // this is internal parameter for SCI panel layout
-		currentPreset.continuousParameters[cpMixVolA]=FULL_RANGE;
+		//currentPreset.continuousParameters[cpMixVolA]=0;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modAB;
-		currentPreset.steppedParameters[spFilEnvShape]=0; // linear shape is default
-		currentPreset.steppedParameters[spAmpEnvShape]=0; // linear shape is default
-		currentPreset.steppedParameters[spFilEnvSlow]=0; // slow shape is default
-		currentPreset.steppedParameters[spAmpEnvSlow]=0; // slow shape is default
+		//currentPreset.steppedParameters[spFilEnvShape]=0; // linear shape is default
+		//currentPreset.steppedParameters[spAmpEnvShape]=0; // linear shape is default
+		//currentPreset.steppedParameters[spFilEnvSlow]=0; // slow shape is default
+		//currentPreset.steppedParameters[spAmpEnvSlow]=0; // slow shape is default
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
-		currentPreset.steppedParameters[spEnvRouting]=0; // standard
-		currentPreset.steppedParameters[spLFOSync]=0; // off
-		currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
+		//currentPreset.steppedParameters[spEnvRouting]=0; // standard
+		//currentPreset.steppedParameters[spLFOSync]=0; // off
+		//currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
         currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));

@@ -137,7 +137,7 @@ struct deadband {
 
 struct deadband bendDeadband = { HALF_RANGE, BEND_GUARDBAND,  BEND_DEADBAND };
 struct deadband panelDeadband = { HALF_RANGE, 0, PANEL_DEADBAND };
-struct deadband freqFineDeadband = { HALF_RANGE, 0, 4096, 512};
+struct deadband freqFineDeadband = { HALF_RANGE, 0, 8192, 256}; // ultra "slow band" in the middle of fine tune
 
 static uint16_t rescaledPW(uint16_t pwPotValue)
 {
@@ -871,6 +871,8 @@ void refreshFullState(void)
     refreshGates();
     refreshAssignerSettings();
     refreshLfoSettings();
+    ui.vibAmountChangePending=1;
+    ui.vibFreqChangePending=1;
     refreshEnvSettings();
     computeTunedBenderCVs();
     computeBenderCVs();
@@ -967,42 +969,51 @@ uint16_t mixer_volumeFromMixAndDrive(uint16_t mix, uint16_t drive)
 
 uint16_t mixer_mixFromVols(uint16_t volA, uint16_t volB) // this is the inverse of "volumeFromMixAndDrive()"
 {
-    uint16_t mix, denom;
-    if (volA+volB<=FULL_RANGE)
+    uint16_t mixVal, denom;
+    uint32_t nomin;
+    if (volA<=(FULL_RANGE-volB))
     {
         denom=(volA+volB);
         if (denom>0xff) // there is a singularity at drive --> 0
         {
-            mix=(uint16_t)(((float)volB)/((float)denom));
+            nomin=((uint32_t)volB<<16);
+            mixVal=nomin/denom;
         }
         else
         {
-            mix=HALF_RANGE; // there is not choice but picking a deliberate mix value as drive tends to zero
+            mixVal=HALF_RANGE; // there is not choice but picking a deliberate mix value as drive tends to zero
         }
     }
     else
     {
-        mix=(FULL_RANGE>>1)+(volB>>1)-(volA>>1);
+        mixVal=(FULL_RANGE>>1)+(volB>>1)-(volA>>1);
     }
-    return mix;
+    return mixVal;
 }
 
 uint16_t mixer_driveFromVols(uint16_t volA, uint16_t volB) // this is the inverse of "volumeFromMixAndDrive()"
 {
     uint16_t drive;
-    if (volA+volB<=FULL_RANGE)
+    uint32_t nomin;
+    if (volA<=(FULL_RANGE-volB))
     {
         drive=(volA>>1)+(volB>>1);
     }
     else
     {
-        if (volA >= volB)
+        if (volA==FULL_RANGE || volB==FULL_RANGE)
         {
-            drive=(uint16_t)((float)MAX(volB,0x3ff)/((float)(FULL_RANGE+MAX(volB,0x3ff)-volA)));
+            drive=FULL_RANGE;
+        }
+        else if (volA >= volB)
+        {
+            nomin=((uint32_t)(volB))<<16;
+            drive=nomin/(FULL_RANGE+volB-volA);
         }
         else
         {
-            drive=(uint16_t)((float)MAX(volA,0x3ff)/((float)(FULL_RANGE+MAX(volA,0x3ff)-volB)));
+            nomin=((uint32_t)(volA))<<16;
+            drive=nomin/(FULL_RANGE+volA-volB);
         }
     }
     return drive;
@@ -1534,6 +1545,7 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 
 void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, uint16_t velocity)
 {
+
     if (ui.isShifted || ui.isDoubleClicked)
     {
         // keyboard transposition
@@ -1567,7 +1579,7 @@ void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, ui
                     refreshSevenSeg();
                 }
 
-        if(arp_getMode()==amOff)
+        if(arp_getMode()==amOff || (!fromKeyboard && settings.midiMode==0)) // in local on mode the arp cannot be played by external MIDI
         {
             // sequencer note input
             if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)

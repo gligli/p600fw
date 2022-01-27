@@ -2,6 +2,8 @@
 #define	ASSIGNER_H
 
 #include "synth.h"
+#include "storage.h"
+
 
 #define ASSIGNER_NO_NOTE UINT8_MAX
 
