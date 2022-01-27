@@ -13,7 +13,7 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Mixer*/8, /*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/10,
 	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/10,/*AmpDec*/8,/*AmpAtt*/8,
 	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
-	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/10
+	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/12
 };
 
 static const p600Pot_t priorityPots[1]=
@@ -101,20 +101,21 @@ static void updatePot(p600Pot_t pot)
 		cdv=estimate>>8;
         diff = abs(potmux.changeDetect[pot]-cdv);
         lastActivePot=potmux.lastChanged;
-		if(diff>CHANGE_DETECT_THRESHOLD || (potmux.potExcitedCount[pot]>0 && pot!=ppPitchWheel))
+		if(diff>CHANGE_DETECT_THRESHOLD || (potmux.potExcitedCount[pot]>0 && pot!=ppPitchWheel)) // for the pitch bend the drop of threshold becomes too jittery
 		{
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
-            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=100; // keep up excited state for at least 50 cycles (about a quarter of a second)
-			potmux.lastChanged=pot;
+            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=250; // keep up excited state for some cycles
+            potmux.lastChanged=pot;
 		}
 		potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
-		if (lastActivePot!=pot)
+ 		if (lastActivePot!=pot)
             if (potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
 
-        // the idea is to add the leading (16-bitDepth) bits to the lower end to make the range 0 ... UNIT16_MAX despite the limited accuracy
+
         if (estimate>=0xFC00) estimate=badMask; // choose max value above the threshold UINT16_t - CHANGE_DETECT_THRESHOLD
-		potmux.pots[pot]=estimate|(estimate>>bitDepth);
+        potmux.pots[pot]=estimate;
+		//potmux.pots[pot]=estimate|(estimate>>bitDepth);
     }
 }
 
