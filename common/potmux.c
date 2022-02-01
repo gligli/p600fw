@@ -13,19 +13,20 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Mixer*/8, /*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/10,
 	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/10,/*AmpDec*/8,/*AmpAtt*/8,
 	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
-	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/14,/*FreqA*/14,/*FreqBFine*/12
+	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/12
 };
 
-static const p600Pot_t priorityPots[1]=
+static const p600Pot_t priorityPots[5]=
 {
 //	ppFreqA, ppFreqB, ppModWheel, ppPitchWheel, ppNone
 //	ppFreqB, ppPitchWheel, ppNone
+    ppPitchWheel, ppMVol, ppFreqA, ppFreqB,
     ppNone
 };
 
-static const p600Pot_t regularPots[28]=
+static const p600Pot_t regularPots[24]=
 {
-    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppMVol, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppCutoff, ppFreqA, ppModWheel, ppFreqB, ppPitchWheel, ppNone
+    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppCutoff, ppPitchWheel, ppNone
 };
 
 static struct
@@ -37,16 +38,19 @@ static struct
 	uint8_t potExcited[POTMUX_POT_COUNT];
 	uint8_t potExcitedCount[POTMUX_POT_COUNT];
 	int8_t currentRegularPot;
-	p600Pot_t lastChanged;
+	int8_t lastChanged;
+	int8_t lastInAction;
+
 } potmux;
 
-static void updatePot(p600Pot_t pot)
+static void updatePot(int8_t pot)
 {
 	int8_t i,lower;
 	uint8_t mux,bitDepth,cdv,diff;
 	uint16_t estimate,badMask;
 	uint16_t bit;
-    p600Pot_t lastActivePot;
+
+    if (pot<0) return;
 	
 	BLOCK_INT
 	{
@@ -100,22 +104,19 @@ static void updatePot(p600Pot_t pot)
         // change detector
 		cdv=estimate>>8;
         diff = abs(potmux.changeDetect[pot]-cdv);
-        lastActivePot=potmux.lastChanged;
-		if(diff>CHANGE_DETECT_THRESHOLD || (potmux.potExcitedCount[pot]>0 && pot!=ppPitchWheel)) // for the pitch bend the drop of threshold becomes too jittery
+		if (potmux.lastInAction!=pot && potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
+		potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
+		if(diff>CHANGE_DETECT_THRESHOLD || potmux.potExcitedCount[pot]>0)
 		{
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
-            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=100; // keep up excited state for some cycles
-            potmux.lastChanged=pot;
+            if(diff>CHANGE_DETECT_THRESHOLD) potmux.potExcitedCount[pot]=10; // keep up excited state for some cycles only if change not too small
+            potmux.lastChanged=pot; // this is reset in every cycle
+            potmux.lastInAction=pot; // this stays and is only reset for a change of mode
 		}
-		potmux.potExcited[pot]=potmux.potExcitedCount[pot]>0?1:0;
- 		if (lastActivePot!=pot)
-            if (potmux.potExcitedCount[pot]>0) potmux.potExcitedCount[pot]--;
-
 
         if (estimate>=0xFC00) estimate=badMask; // choose max value above the threshold UINT16_t - CHANGE_DETECT_THRESHOLD
         potmux.pots[pot]=estimate;
-		//potmux.pots[pot]=estimate|(estimate>>bitDepth);
     }
 }
 
@@ -140,6 +141,33 @@ FORCEINLINE void potmux_resetChanged(void)
 	potmux.lastChanged=ppNone;
 }
 
+void potmux_resetChangedFull(void)
+{
+    potmux_resetChanged();
+    potmux.lastInAction=ppNone;
+    p600Pot_t pp=regularPots[0];
+    uint8_t i=0;
+    while (pp!=ppNone)
+    {
+        potmux.potExcited[pp]=0;
+        potmux.potExcitedCount[pp]=0;
+        i++;
+        pp=regularPots[i];
+    }
+}
+
+
+
+FORCEINLINE void potmux_resetSpeedPot(void)
+{
+    uint32_t mask=1;
+	potmux.potChanged&=(~(mask<<ppSpeed)); // remove the bit of the speed pot
+	if (potmux.lastChanged==ppSpeed) potmux.lastChanged=ppNone;
+    potmux.potExcited[ppSpeed]=0;
+    potmux.potExcitedCount[ppSpeed]=0;
+
+}
+
 int8_t potmux_isPotZeroCentered(p600Pot_t pot, uint8_t layout)
 {
 	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel || (pot==ppMixer && layout==1);
@@ -148,10 +176,11 @@ int8_t potmux_isPotZeroCentered(p600Pot_t pot, uint8_t layout)
 inline void potmux_update(uint8_t updateAll)
 {
 	int16_t i, updatable;
-    updatable=updateAll?27:1;
+    updatable=updateAll?23:4;
 	for(i=0;i<updatable;++i)
 	{
-		if (!potmux.potExcited[regularPots[potmux.currentRegularPot]]) updatePot(regularPots[potmux.currentRegularPot]); // done in the next loop
+		if (!potmux.potExcited[regularPots[potmux.currentRegularPot]] || updateAll)
+            updatePot(regularPots[potmux.currentRegularPot]); // done in the next loop
 		potmux.currentRegularPot++;
         if (regularPots[potmux.currentRegularPot]==ppNone) potmux.currentRegularPot=0;
 	}

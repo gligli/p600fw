@@ -229,8 +229,8 @@ LOWERCODESIZE int8_t settings_load(void)
 				settings.tunes[j][i]=storageRead16();
 
 		settings.presetNumber=storageRead16();
-		// ensure that preset channel is valid, default to 1:
-		if (settings.presetNumber>99 || settings.presetNumber<0) settings.presetNumber=1;
+		// ensure that preset channel is valid, default to 0:
+		if (settings.presetNumber>99) settings.presetNumber=0;
 	    settings.benderMiddle=storageRead16();
 		settings.presetMode=storageRead8();
 		// ensure that MIDI channel ist valid to void array out of bounds problems:
@@ -413,13 +413,13 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             //for(i=2;i<6;i+=3) // this picks up cpAPW (=2) and cpBPW (=5)
             //currentPreset.continuousParameters[i]=(currentPreset.continuousParameters[i]>62128)?FULL_RANGE:((uint16_t)//(currentPreset.continuousParameters[i]*1.0323f)+1400);
         }
-        else if (readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
+        else if (readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar;
 
 		for(sp=spLFOTargets;sp<=spBenderTarget;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
         readVar=storageRead8(); // this is legacy mod wheel strength re-designated LFO Sync
-        if (storage.version==8 && readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar;
+        if (storage.version==8 && readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
 
         for(sp=spChromaticPitch;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
@@ -661,23 +661,15 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpFreqBFine]=HALF_RANGE;
 		currentPreset.continuousParameters[cpLFOFreq]=HALF_RANGE;
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
-		currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
 		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
-		//currentPreset.continuousParameters[cpSpread]=0; // default is: spread off
-		currentPreset.continuousParameters[cpDrive]=HALF_RANGE; // this is internal parameter for SCI panel layout
-		//currentPreset.continuousParameters[cpMixVolA]=0;
+        if (settings.panelLayout==0) currentPreset.continuousParameters[cpMixVolA]=UINT16_MAX;
+		//currentPreset.continuousParameters[cpDrive]=HALF_RANGE; // this is internal parameter for SCI panel layout
+		//currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modAB;
-		//currentPreset.steppedParameters[spFilEnvShape]=0; // linear shape is default
-		//currentPreset.steppedParameters[spAmpEnvShape]=0; // linear shape is default
-		//currentPreset.steppedParameters[spFilEnvSlow]=0; // slow shape is default
-		//currentPreset.steppedParameters[spAmpEnvSlow]=0; // slow shape is default
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
-		//currentPreset.steppedParameters[spEnvRouting]=0; // standard
-		//currentPreset.steppedParameters[spLFOSync]=0; // off
-		//currentPreset.steppedParameters[spPWMBug]=0; // the default for a new patch is Pulse Sync bug "off"
         currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
 
 		memset(currentPreset.voicePattern,ASSIGNER_NO_NOTE,sizeof(currentPreset.voicePattern));

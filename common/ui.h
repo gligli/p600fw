@@ -52,7 +52,7 @@ void ui_init(void);
 void ui_checkIfDataPotChanged(void);
 void ui_handleButton(p600Button_t button, int pressed);
 void ui_setPresetModified(int8_t modified);
-void ui_setNoActivePot(void);
+void ui_setNoActivePot(uint8_t fullPotmuxReset);
 void ui_setLocalMode(uint8_t on);
 void ui_update(void);
 

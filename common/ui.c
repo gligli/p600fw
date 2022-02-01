@@ -341,9 +341,6 @@ static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 		currentPreset.steppedParameters[spBenderSemitones]=br[data];
 		synth_updateBender(); // immediate update
 		break;
-	//case 5: // mod range
-	//	currentPreset.steppedParameters[spModwheelShift]=mr[data];
-	//	break;
 	}
 }
 
@@ -353,8 +350,6 @@ static LOWERCODESIZE void displayUIParameter(int8_t num)
 	char s[20];
 	const struct uiParam_s * prm = &uiParameters[ui.activeParamIdx];
 
-	ui_setNoActivePot();
-	
 	strcpy(s,prm->name);
 	strcat(s,"= ");
 	
@@ -416,7 +411,9 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		
 		// set flag for enabling storage of manual preset if that new parameter is changed
         ui.menuParamSelectChange=1;
+        potmux_resetSpeedPot();
         ui.lastActivePot=ppNone;
+
 	}
 }
 
@@ -446,11 +443,19 @@ static LOWERCODESIZE void handleSequencerPage(p600Button_t button)
 	}
 }
 
-void ui_setNoActivePot(void)
+void ui_setNoActivePot(uint8_t fullPotmuxReset)
 {
-	potmux_resetChanged();
+	if (fullPotmuxReset)
+    {
+        potmux_resetChangedFull();
+    }
+    else
+    {
+        potmux_resetChanged();
+    }
 	ui.lastActivePot=ppNone;
 	ui.lastActivePotValue=-1;
+
 }
 
 FORCEINLINE void ui_setPresetModified(int8_t modified)
@@ -515,7 +520,7 @@ void ui_checkIfDataPotChanged(void)
                 break;
             case ptStep:
             case ptCust:
-                ui_setNoActivePot();
+                ui_setNoActivePot(0);
 
                 valCount=0;
                 while(valCount<8 && prm.values[valCount]!=NULL) // 8 is the current max of choices
@@ -523,7 +528,7 @@ void ui_checkIfDataPotChanged(void)
 
                 data=(data*valCount)>>16; // this divides the total range (16 bits) into valCount pieces using effectively a floor() function
 
-                if(data!=ui.previousData)
+                if(data!=ui.previousData && ui.digitInput==diSynth)
                     sevenSeg_scrollText(prm.values[data],1);
 
                 if(prm.type==ptStep)
@@ -545,7 +550,7 @@ void ui_checkIfDataPotChanged(void)
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
         }
         ui.menuParamSelectChange=0; // ensures that no storage is possible until a new menu parameter is selected
-        ui.presetModified=1;
+        if (prm.number!=cpSeqArpClock) ui.presetModified=1;
 		
 		refreshFullState();
 	}
@@ -674,7 +679,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
 			}
 		}
-        if (ui.lastActivePot==ppSpeed) ui_setNoActivePot(); // the data pot changes it's function - make sure it isn't applied directly
+        if (ui.lastActivePot==ppSpeed) ui_setNoActivePot(0); // the data pot changes it's function - make sure it isn't applied directly
 	}
 
 	// shifted state (keyboard transposition, ...)
@@ -697,9 +702,14 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				assigner_allKeysOff(); // make sure that voice are finished, as key events will be used for transposition
 			}
 			else
+            {
 				ui.doubleClickTimer = 63; // 1 second
+            }
 		}
 		ui.isShifted=pressed;
+        // when shifted or unshifted the speed pot changes its function, so make sure the pot value is not applied
+        if (ui.lastActivePot==ppSpeed) ui.lastActivePot=ppNone;
+        potmux_resetSpeedPot();
 		// reset Misc Settings to 'display only' whenever
 		// pbFromTape is pressed (or released).
 		ui.prevMiscButton=-1;
@@ -719,6 +729,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
             // dump the patch bank
             midi_dumpPresets();
             sevenSeg_scrollText("presets dumped",1);
+            refreshPresetMode();
             ui.digitInput=diStoreDecadeDigit;
         }
         else if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset || button==pbRecord))
@@ -815,8 +826,6 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         {
                             if (!settings.presetMode) preset_saveCurrent(MANUAL_PRESET_PAGE); // make sure that the latest parameters are stored for live mode
                             preset_saveCurrent(ui.presetAwaitingNumber);
-                            //sprintf(s, "%u", ui.presetAwaitingNumber);
-                            //sevenSeg_scrollText(s,1);
                         }
                         // if in local off mode we can still change the program because the incoming MIDI would have no effect
                         // also: always try to load/reload preset
@@ -831,6 +840,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                         }
 
                         refreshPresetMode();
+                        refreshFullState();
                     }
                     else
                     {
@@ -865,7 +875,6 @@ void ui_init(void)
 	ui.digitInput=diSynth; // panel mode
 	ui.activeParamIdx=0; // select clock/speed
 	ui.prevMiscButton=-1;
-    ui.lastActivePot=ppMVol;
     ui.menuParamSelectChange=0;
 }
 

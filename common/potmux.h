@@ -10,6 +10,8 @@ uint16_t potmux_getValue(p600Pot_t pot);
 int8_t potmux_hasChanged(p600Pot_t pot);
 p600Pot_t potmux_lastChanged(void);
 void potmux_resetChanged(void);
+void potmux_resetChangedFull(void);
+void potmux_resetSpeedPot(void);
 
 void potmux_init(void);
 

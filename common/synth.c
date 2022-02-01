@@ -79,7 +79,7 @@ struct synth_s
 
     struct lfo_s lfo,vibrato;
 
-    // store slowly changing partial results so that specific updates can be made faster
+    // store slowly and on event changing partial results so that specific updates can be made faster
     int32_t tunedBenderCVs[pcOsc6B-pcOsc1A+1];
     uint16_t oscABaseCV[SYNTH_VOICE_COUNT];
     uint16_t oscBBaseCV[SYNTH_VOICE_COUNT];
@@ -1021,6 +1021,7 @@ uint16_t mixer_driveFromVols(uint16_t volA, uint16_t volB) // this is the invers
 
 void refreshPresetMode(void)
 {
+
     if(!preset_loadCurrent(settings.presetMode?settings.presetNumber:MANUAL_PRESET_PAGE,0))
         preset_loadDefault(1);
 
@@ -1030,9 +1031,9 @@ void refreshPresetMode(void)
         refreshPresetPots(1);
     }
 
-    ui_setNoActivePot();
+    ui_setNoActivePot(1);
     ui.presetModified=0;
-    // trigger application of vib changes
+    // trigger application of vib changes which are only conditional to save time in the main update
     ui.vibAmountChangePending=1;
     ui.vibFreqChangePending=1;
     ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
@@ -1187,11 +1188,11 @@ void synth_init(void)
 
     // manual preset
 
-    if(!preset_loadCurrent(MANUAL_PRESET_PAGE,0))
+    /*if(!preset_loadCurrent(MANUAL_PRESET_PAGE,0))
     {
         preset_loadDefault(0);
         preset_saveCurrent(MANUAL_PRESET_PAGE);
-    }
+    }*/
 
     // load settings from storage; tune when they are bad
 
@@ -1205,13 +1206,6 @@ void synth_init(void)
     }
 
     sh_setCV(pcMVol,HALF_RANGE,SH_FLAG_IMMEDIATE);
-    settings_save();
-
-    // initial input state
-
-    scanner_update(1);
-    //potmux_update(POTMUX_POT_COUNT); // init all
-    potmux_update(1); // init all
 
     // dead band pre calculation
     precalcDeadband(&panelDeadband);
@@ -1219,11 +1213,19 @@ void synth_init(void)
     precalcDeadband(&bendDeadband);
     precalcDeadband(&freqFineDeadband);
 
-    // load last preset & do a full refresh
+    // initial input state
 
+    scanner_update(1);
+    potmux_update(1); // init all
+
+    // load last preset & do a full refresh
     refreshPresetMode();
     refreshFullState();
     computeTunedCVs(-1,-1); // force init CV's for all voices
+    ui_setNoActivePot(1);
+    settings_save();
+
+    midi_sendThreeBytes(0,0);
 
     // set the volume to the current pot value
     synth.masterVolume=potmux_getValue(ppMVol);
