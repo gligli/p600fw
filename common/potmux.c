@@ -16,17 +16,16 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/12,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/12
 };
 
-static const p600Pot_t priorityPots[5]=
+static const p600Pot_t priorityPots[6]=
 {
-//	ppFreqA, ppFreqB, ppModWheel, ppPitchWheel, ppNone
-//	ppFreqB, ppPitchWheel, ppNone
     ppPitchWheel, ppMVol, ppFreqA, ppFreqB,
+    ppModWheel,
     ppNone
 };
 
-static const p600Pot_t regularPots[24]=
+static const p600Pot_t regularPots[23]=
 {
-    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppCutoff, ppPitchWheel, ppNone
+    ppMixer, ppResonance, ppFilEnvAmt, ppGlide, ppBPW, ppAPW, ppPModFilEnv, ppLFOFreq, ppPModOscB, ppLFOAmt, ppSpeed,  ppAmpRel, ppAmpSus, ppAmpDec, ppAmpAtt, ppFilAtt, ppFilDec, ppFilSus, ppFilRel, ppMTune, ppFreqBFine, ppCutoff, ppNone
 };
 
 static struct
@@ -145,17 +144,13 @@ void potmux_resetChangedFull(void)
 {
     potmux_resetChanged();
     potmux.lastInAction=ppNone;
-    p600Pot_t pp=regularPots[0];
     uint8_t i=0;
-    while (pp!=ppNone)
+    for (i=0;i<POTMUX_POT_COUNT;i++)
     {
-        potmux.potExcited[pp]=0;
-        potmux.potExcitedCount[pp]=0;
-        i++;
-        pp=regularPots[i];
+        potmux.potExcited[i]=0;
+        potmux.potExcitedCount[i]=0;
     }
 }
-
 
 
 FORCEINLINE void potmux_resetSpeedPot(void)
@@ -173,10 +168,10 @@ int8_t potmux_isPotZeroCentered(p600Pot_t pot, uint8_t layout)
 	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel || (pot==ppMixer && layout==1);
 }
 
-inline void potmux_update(uint8_t updateAll)
+inline void potmux_update(uint8_t updateAll, uint8_t potsPerCycle)
 {
 	int16_t i, updatable;
-    updatable=updateAll?23:4;
+    updatable=updateAll?22:potsPerCycle;
 	for(i=0;i<updatable;++i)
 	{
 		if (!potmux.potExcited[regularPots[potmux.currentRegularPot]] || updateAll)

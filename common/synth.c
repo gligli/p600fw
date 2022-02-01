@@ -1216,7 +1216,7 @@ void synth_init(void)
     // initial input state
 
     scanner_update(1);
-    potmux_update(1); // init all
+    potmux_update(1,0); // init all
 
     // load last preset & do a full refresh
     refreshPresetMode();
@@ -1252,7 +1252,7 @@ void synth_update(void)
     // update pots, detecting change
 
     potmux_resetChanged();
-    potmux_update(0);
+    potmux_update(0,3);
 
     // act on pot change
 
