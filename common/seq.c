@@ -64,8 +64,8 @@ static void finishPreviousNotes(struct track *tp)
 		// is it ok to always send that, even in local off mode  what's the side effect?
 		assigner_assignNote(n,0,0,0);
 
-		// pass to MIDI out
-		midi_sendNoteEvent(n,0,0);
+		// pass to MIDI out but not in local off mode
+		if (settings.midiMode==0) midi_sendNoteEvent(n,0,0);
 
 		tp->prevEventIndex=(tp->prevEventIndex+1)%tp->eventCount;
 		s=tp->events[tp->prevEventIndex];
@@ -104,11 +104,10 @@ static FORCEINLINE void playStep(int8_t track)
 			n=s+SCANNER_BASE_NOTE+seq.transpose;
 
 			// send note to assigner, velocity at half (MIDI value 64)
-			if (settings.midiMode==0) // only play in local on mode
-				assigner_assignNote(n,1,HALF_RANGE,0);
+            assigner_assignNote(n,1,HALF_RANGE,0);
 
-			// pass to MIDI out
-			midi_sendNoteEvent(n,1,HALF_RANGE);
+			// pass to MIDI out but not in local off mode
+			if (settings.midiMode==0) midi_sendNoteEvent(n,1,HALF_RANGE);
 
 		}
 		tp->eventIndex=(tp->eventIndex+1)%tp->eventCount; // this cycles through the number of events by mod(counter)

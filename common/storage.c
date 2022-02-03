@@ -8,6 +8,7 @@
 #include "ui.h"
 #include "math.h"
 #include "midi.h"
+#include "display.h"
 
 // increment this each time the binary format is changed
 #define STORAGE_VERSION 8
@@ -642,6 +643,10 @@ LOWERCODESIZE void storage_import(uint16_t number, uint8_t * buf, int16_t size)
             resetPickUps();
         }
 	}
+
+    ui.presetAwaitingNumber=-1;
+    if (ui.isInPatchManagement) ui.digitInput=diStoreDecadeDigit;
+    sevenSeg_setNumber(number);
 }
 
 LOWERCODESIZE void preset_loadDefault(int8_t makeSound)

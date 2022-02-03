@@ -230,7 +230,7 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	print("\n");
 #endif
 
-    synth_keyEvent(note, velocity!=0, 0, 0, (((uint32_t)velocity+1)<<9)-1);
+    synth_keyEvent(note, velocity!=0, 0, (((uint32_t)velocity+1)<<9)-1);
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -244,7 +244,7 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	print("\n");
 #endif
 
-    synth_keyEvent(note,0,0,0,0);
+    synth_keyEvent(note,0,0,0);
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)

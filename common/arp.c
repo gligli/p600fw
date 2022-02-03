@@ -51,7 +51,7 @@ static void finishPreviousNote(void)
 		assigner_assignNote(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0,0);
 		
 		// pass to MIDI out
-		midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0);
+		if (settings.midiMode==0) midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.previousTranspose,0,0);
 	}
 }
 
@@ -270,9 +270,12 @@ void arp_update(void)
 	
 	assigner_assignNote(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE,0);
 	
-	// pass to MIDI out
-
-	midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
+	// pass to MIDI out only in local on mode:
+    // in local off mode external MIDI plays into arp so if MIDI out is connected (via MIDI recording tools) to MIDI in we would get an infinite loop...
+    if (settings.midiMode==0)
+    {
+        midi_sendNoteEvent(n+SCANNER_BASE_NOTE+arp.transpose,1,HALF_RANGE);
+    }
 
 	arp.previousNote=arp.notes[arp.noteIndex];
 	arp.previousTranspose=arp.transpose;

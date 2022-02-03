@@ -679,7 +679,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
 			}
 		}
-        if (ui.lastActivePot==ppSpeed) ui_setNoActivePot(0); // the data pot changes it's function - make sure it isn't applied directly
+		ui_setNoActivePot(1);
 	}
 
 	// shifted state (keyboard transposition, ...)
@@ -749,7 +749,9 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			{
 				ui.isInPatchManagement=1;
                 ui.digitInput=diStoreDecadeDigit; // the mode should start with expecting a number for single patch export
+                ui.presetAwaitingNumber=-1;
                 ui.isDoubleClicked=0; // switch this off to avoid confusion with the function of the number pad
+                sevenSeg_setAscii(' ',' ');
 			}
 			else if (!ui.isInPatchManagement) // otherwise this would potentially go into the shifted function of those keys
             {

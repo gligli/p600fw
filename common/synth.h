@@ -8,6 +8,7 @@
 //#define DEBUG
 //#define RELEASE "Ver 2.00" // will keep this as is until new release plan. Version 2.1 has never been officially released.
 
+
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
 #ifndef DEBUG
@@ -19,6 +20,7 @@
 #else
 	#define VERSION "debug "__DATE__ " " __TIME__
 #endif
+
 
 #define SYNTH_VOICE_COUNT 6
 
@@ -109,7 +111,7 @@ typedef enum
 } syncMode_t;
 
 void synth_buttonEvent(p600Button_t button, int pressed);
-void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, uint16_t velocity);
+void synth_keyEvent(uint8_t key, int pressed, int fromKeyboard, uint16_t velocity);
 void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
 void synth_uartEvent(uint8_t data);
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi);

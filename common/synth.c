@@ -820,7 +820,7 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
             if(ui.presetAwaitingNumber>=0)
                 sevenSeg_setAscii('0'+ui.presetAwaitingNumber,' ');
             else
-                sevenSeg_setAscii(' ',' ');
+                if (!ui.isInPatchManagement) sevenSeg_setAscii(' ',' '); // kep the previous display (might be a MIDI load message)
         }
         else
         {
@@ -1545,7 +1545,7 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
     ui_handleButton(button,pressed);
 }
 
-void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, uint16_t velocity)
+void synth_keyEvent(uint8_t key, int pressed, int fromKeyboard, uint16_t velocity)
 {
 
     if (ui.isShifted || ui.isDoubleClicked)
@@ -1581,13 +1581,16 @@ void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, ui
                     refreshSevenSeg();
                 }
 
-        if(arp_getMode()==amOff || (!fromKeyboard && settings.midiMode==0)) // in local on mode the arp cannot be played by external MIDI
+        if(arp_getMode()==amOff || (!fromKeyboard && settings.midiMode==0)) // in local on mode external MIDI always plays synth, not arp
         {
             // sequencer note input
             if(seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
             {
-                seq_inputNote(key, pressed);
-                refreshSevenSeg();
+                if (!fromKeyboard || settings.midiMode==0) // don't input to sequencer directly from keyboard in local off mode
+                {
+                    seq_inputNote(key, pressed);
+                    refreshSevenSeg();
+                }
             }
 
             // set velocity to half (corresponding to MIDI value 64)
@@ -1600,11 +1603,15 @@ void synth_keyEvent(uint8_t key, int pressed, int sendMidi, int fromKeyboard, ui
                 assigner_assignNote(key,pressed,velocity,0);
             }
             // pass to MIDI out
-            if (sendMidi) midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
+            if (fromKeyboard) midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
         }
-        else
+        else if ((settings.midiMode==0 && fromKeyboard) || (settings.midiMode==1 && !fromKeyboard))
         {
             arp_assignNote(key,pressed);
+        }
+        else if (fromKeyboard && settings.midiMode==1) // this is the substitute for keyboard into arp in local off mode (can be received as MIDI in)
+        {
+            midi_sendNoteEvent(key+synth.transpose,pressed,HALF_RANGE);
         }
     }
 }
