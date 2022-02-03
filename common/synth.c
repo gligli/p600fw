@@ -1424,6 +1424,10 @@ void synth_timerInterrupt(void)
     refreshVoice(4,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
     refreshVoice(5,oscEnvAmt,filEnvAmt,pitchALfoVal,pitchBLfoVal,filterLfoVal,ampLfoVal);
 
+    // bit inputs (footswitch / tape in)
+
+    handleBitInputs();
+
     // slower updates
 
     hz63=(frc&0x1c)==0;
@@ -1443,9 +1447,6 @@ void synth_timerInterrupt(void)
         ++currentTick;
         break;
     case 1:
-        // bit inputs (footswitch / tape in)
-
-        handleBitInputs();
 
         // sequencer & arpeggiator
 
@@ -1548,7 +1549,7 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 void synth_keyEvent(uint8_t key, int pressed, int fromKeyboard, uint16_t velocity)
 {
 
-    if (ui.isShifted || ui.isDoubleClicked)
+    if ((ui.isShifted || ui.isDoubleClicked) && fromKeyboard)
     {
         // keyboard transposition
         if(pressed && fromKeyboard) // don't support transpose by MIDI key event
@@ -1730,7 +1731,16 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
         if (settings.midiMode==0 || !isInternal)
         {
             //synth.modwheelAmount=modulation;
-            synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f));
+            if (currentPreset.steppedParameters[spModwheelTarget]==1 && currentPreset.steppedParameters[spVibTarget]==1)
+            {
+                // full strength for vib VCA modulation
+                synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f));
+            }
+            else
+            {
+                // half strength for VCO modulation
+                synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*306.5f));
+            }
             refreshLfoSettings();
         }
     }
