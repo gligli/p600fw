@@ -1225,8 +1225,6 @@ void synth_init(void)
     ui_setNoActivePot(1);
     settings_save();
 
-    midi_sendThreeBytes(0,0);
-
     // set the volume to the current pot value
     synth.masterVolume=potmux_getValue(ppMVol);
 
@@ -1313,20 +1311,24 @@ void synth_update(void)
     switch(frc&0x03) // 4 phases
     {
         case 0:
+            //sh_setCV_FastPath(pcResonance,currentPreset.continuousParameters[cpResonance]);
             sh_setCV(pcResonance,currentPreset.continuousParameters[cpResonance],SH_FLAG_IMMEDIATE);
             // arp and seq
             clock_setSpeed(settings.seqArpClock);
             break;
         case 1:
             // 'fixed' CVs
+            //sh_setCV_FastPath(pcPModOscB,currentPreset.continuousParameters[cpPModOscB]);
             sh_setCV(pcPModOscB,currentPreset.continuousParameters[cpPModOscB],SH_FLAG_IMMEDIATE);
             break;
         case 2:
             // 'fixed' CVs
+            //sh_setCV_FastPath(pcMVol,satAddU16S16(synth.masterVolume,synth.benderVolumeCV));
             sh_setCV(pcMVol,satAddU16S16(synth.masterVolume,synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
             break;
         case 3:
             // gates
+            //sh_setCV_FastPath(pcExtFil,currentPreset.continuousParameters[cpExternal]);
             sh_setCV(pcExtFil,currentPreset.continuousParameters[cpExternal],SH_FLAG_IMMEDIATE);
 
             refreshGates();
@@ -1705,6 +1707,9 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 
 void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi)
 {
+    static int8_t mr[]={5,3,1,0}; // bits shifts right on full range
+    uint8_t modBitShift;
+
     if (ui.retuneLastNotePressedMode) // all MIDI to bend and mod wheel are disabled in this mode
     {
         if (isInternal)
@@ -1734,12 +1739,16 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
             if (currentPreset.steppedParameters[spModwheelTarget]==1 && currentPreset.steppedParameters[spVibTarget]==1)
             {
                 // full strength for vib VCA modulation
-                synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f));
+                // synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f));
+                synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/30000.0f )-1.0f)*8310.08f));
+
             }
             else
             {
                 // half strength for VCO modulation
-                synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*306.5f));
+                modBitShift=mr[currentPreset.steppedParameters[spModWheelRange]];
+                //synth.modwheelAmount=(((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f))>>modBitShift);
+                synth.modwheelAmount=(((uint16_t)((expf(((float)modulation)/30000.0f )-1.0f)*8310.08f))>>modBitShift);
             }
             refreshLfoSettings();
         }

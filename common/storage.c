@@ -401,7 +401,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		for(sp=spASaw;sp<=spLFOShape;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
-        readVar=storageRead8(); // this is legacy spLFOShift (see rescaling below, re-designated spEnvRouting
+        readVar=storageRead8(); // this is legacy spLFOShift (see rescaling below, re-designated LFO Sync
         if (storage.version<8)
         {
             // in this case readVar contains the legacy LFO speed range, where value 1 was "fast"
@@ -411,16 +411,14 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             // The slow LFO variant in version 7 / 2.1RC3 was made a factor of 8 slower comapred to the fast setting, so:
             if (readVar==0) currentPreset.continuousParameters[cpLFOFreq]-=16635; // =0 used to be the slow setting
 
-            //for(i=2;i<6;i+=3) // this picks up cpAPW (=2) and cpBPW (=5)
-            //currentPreset.continuousParameters[i]=(currentPreset.continuousParameters[i]>62128)?FULL_RANGE:((uint16_t)//(currentPreset.continuousParameters[i]*1.0323f)+1400);
         }
-        else if (readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar;
+        else if (readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar; // from version 8 on
 
 		for(sp=spLFOTargets;sp<=spBenderTarget;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
         readVar=storageRead8(); // this is legacy mod wheel strength re-designated LFO Sync
-        if (storage.version==8 && readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
+        if (storage.version==8 && readVar<=3) currentPreset.steppedParameters[spModWheelRange]=readVar;
 
         for(sp=spChromaticPitch;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
@@ -500,11 +498,15 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         currentPreset.continuousParameters[cpSpread]=storageRead16();
         currentPreset.continuousParameters[cpExternal]=storageRead16();
 
-        for (i=0;i < 16; i++)
-            currentPreset.patchName[i]=storageRead8();
+        readVar=storageRead8(); // this is legacy mod wheel strength re-designated LFO Sync
+        if (readVar<=3) currentPreset.steppedParameters[spEnvRouting]=readVar;
 
         readVar=storageRead8();
         currentPreset.steppedParameters[spAssign]=(readVar>1)?0:readVar;
+
+        for (i=0;i < 16; i++)
+            currentPreset.patchName[i]=storageRead8();
+
 	}
 	
 	return 1;
@@ -553,11 +555,12 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storageWrite8(currentPreset.steppedParameters[spPWMBug]);
 		storageWrite16(currentPreset.continuousParameters[cpSpread]);
 		storageWrite16(currentPreset.continuousParameters[cpExternal]);
+        storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
+        storageWrite8(currentPreset.steppedParameters[spAssign]);
 
         for (i=0;i < 16; i++)
             storageWrite8(currentPreset.patchName[i]);
 
-        storageWrite8(currentPreset.steppedParameters[spAssign]);
 
 		// this must stay last
 		storageFinishStore(number,1); // yes, one page is enough

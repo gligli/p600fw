@@ -55,7 +55,7 @@ typedef enum
 	spAssignerPriority=18,
 			
 	spBenderSemitones=19,spBenderTarget=20,
-	spEnvRouting=21,
+	spModWheelRange=21,
 
 	spChromaticPitch=22,
 			
@@ -64,6 +64,7 @@ typedef enum
 	spAmpEnvSlow=25,
 	spPWMBug=26,
     spAssign=27,
+	spEnvRouting=28,
 
 	// /!\ this must stay last
 	spCount

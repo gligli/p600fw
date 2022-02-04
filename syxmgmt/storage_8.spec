@@ -44,7 +44,7 @@ Unison;1;1
 Assigner Priority;1;1
 Bender Semitones;1;1
 Bender Target;1;1
-Envelope Routing;1;1
+Modulation Wheel Range;1;1
 Chromatic Pitch;1;1
 Modulation Delay;1;2
 Vibrato Frequency;1;2
@@ -58,4 +58,6 @@ Tuning per Note (12 notes);12;2
 PW Bug;1;1
 Vintage;1;2
 Ext Voltage;1;2
+Envelope Routing;1;1
+Voice Assigner;1;1
 Patch Name;16;1

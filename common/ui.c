@@ -40,7 +40,7 @@ const struct uiParam_s uiParameters[] =
 	/*0*/ {.type=ptCont,.number=0,.name="dummy"},
 	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo sync",.values={"off","1","2","3","4","5","6","8"}},
     /*2*/ {.type=ptStep,.number=spVibTarget,.name="Vib tgt",.values={"VCO","VCA"}},
-	/*3*/ {.type=ptCont,.number=0,.name="dummy"},
+	/*3*/ {.type=ptStep,.number=spModWheelRange,.name="mod rng",.values={"touch","soft", "high", "full"}},
 	/*4*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
@@ -393,7 +393,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-			{if (new==pb1||new==pb2||new==pb4||new==pb5||(new==pb8 && settings.panelLayout==1) || (new==pb7 && settings.panelLayout==0)) // parameters on third press, include Drive (8) only in SCI panel layout, include Glide (7) only in Gligli layout
+			{if (new==pb1||new==pb2||new==pb3||new==pb4||new==pb5||(new==pb8 && settings.panelLayout==1) || (new==pb7 && settings.panelLayout==0)) // parameters on third press, include Drive (8) only in SCI panel layout, include Glide (7) only in Gligli layout
 				{ui.activeParamIdx+=10;}
 			else
 				ui.activeParamIdx-=10;}
@@ -550,6 +550,7 @@ void ui_checkIfDataPotChanged(void)
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
         }
         ui.menuParamSelectChange=0; // ensures that no storage is possible until a new menu parameter is selected
+        if (prm.number==spModWheelRange) synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1,0); // take effect immediately
         if (prm.number!=cpSeqArpClock) ui.presetModified=1;
 		
 		refreshFullState();

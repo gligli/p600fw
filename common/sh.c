@@ -37,21 +37,21 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 		io_write(0x0d,dmux1);
 		
 		// for DAC rise time
-		//CYCLE_WAIT(4);
-		CYCLE_WAIT(1);
+		CYCLE_WAIT(4);
+		//CYCLE_WAIT(1);
 
 		// select current CV
 		io_write(0x0d,dmux2);
 
 		// 2 us to let S&H get very precise voltage, some P600s need it apparently
-		//CYCLE_WAIT(8);
-		CYCLE_WAIT(1);
+		CYCLE_WAIT(8);
+		//CYCLE_WAIT(1);
 
 		// deselect it
 		io_write(0x0d,dmux1);
 
 		// 2 more us to let analog hardware stabilize
-		//CYCLE_WAIT(8);
+		CYCLE_WAIT(8);
 	}
 }
 
