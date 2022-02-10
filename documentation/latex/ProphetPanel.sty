@@ -1013,10 +1013,533 @@
     % linear shape
    \coordinate(orig)at($(#1)+#2*(0cm,1cm)+(0cm,4cm)$);
       \draw[-to, line width = 2pt] ($(orig)+(-1cm,0cm)$) -- ($(orig)+#3*(1cm,0cm)+#4*(1cm,0cm)+#5*(1cm,0cm)+#6*(1cm,0cm)+(1cm,0cm)$); 
-      \draw[envstyle] (orig) -- ($(orig)+(#3*1cm,\yscale*1cm)$); 
-      \draw[envstyle] ($(orig)+(#3*1cm,\yscale*1cm)$) -- ($(orig)+(#3*1cm+#4*1cm,\yscale*1cm*0.4)$); 
-      \draw[envstyle] ($(orig)+(#3*1cm+#4*1cm,\yscale*1cm*0.4)$) -- ($(orig)+(#3*1cm+#4*1cm+#5*1cm,\yscale*1cm*0.4)$); 
-      \draw[envstyle] ($(orig)+(#3*1cm+#4*1cm+#5*1cm,\yscale*1cm*0.4)$) -- ($(orig)+(#3*1cm+#4*1cm+#5*1cm+#6*1cm,0cm)$) ; 
+      \draw[envstyle] (orig) -- ($(orig)+(#3*1cm,\yscale*1cm)$); % attack phase
+
+    \def\xscale{#4}; % attack length in cm
+   \coordinate(orig)at($(#1)+#2*(0cm,1cm)+(0cm,4cm)+(#3*1cm,0cm)$);
+
+  \draw[envstyle] ($(orig)+(\xscale*0cm,\yscale*1cm)$) -- ($(orig)+(\xscale*0.003906cm,\yscale*0.988751cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.003906cm,\yscale*0.9887511cm)$) -- ($(orig)+(\xscale*0.007812cm,\yscale*0.977512cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.007812cm,\yscale*0.9775121cm)$) -- ($(orig)+(\xscale*0.011718cm,\yscale*0.966313cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.011718cm,\yscale*0.9663131cm)$) -- ($(orig)+(\xscale*0.015624cm,\yscale*0.95514cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.015624cm,\yscale*0.955141cm)$) -- ($(orig)+(\xscale*0.01953cm,\yscale*0.944036cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.01953cm,\yscale*0.9440361cm)$) -- ($(orig)+(\xscale*0.023436cm,\yscale*0.932971cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.023436cm,\yscale*0.9329711cm)$) -- ($(orig)+(\xscale*0.027342cm,\yscale*0.921995cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.027342cm,\yscale*0.9219951cm)$) -- ($(orig)+(\xscale*0.031248cm,\yscale*0.911066cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.031248cm,\yscale*0.9110661cm)$) -- ($(orig)+(\xscale*0.035154cm,\yscale*0.90024cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.035154cm,\yscale*0.900241cm)$) -- ($(orig)+(\xscale*0.03906cm,\yscale*0.889467cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.03906cm,\yscale*0.8894671cm)$) -- ($(orig)+(\xscale*0.042966cm,\yscale*0.878808cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.042966cm,\yscale*0.8788081cm)$) -- ($(orig)+(\xscale*0.046872cm,\yscale*0.868206cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.046872cm,\yscale*0.8682061cm)$) -- ($(orig)+(\xscale*0.050778cm,\yscale*0.857723cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.050778cm,\yscale*0.8577231cm)$) -- ($(orig)+(\xscale*0.054684cm,\yscale*0.847301cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.054684cm,\yscale*0.8473011cm)$) -- ($(orig)+(\xscale*0.05859cm,\yscale*0.837004cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.05859cm,\yscale*0.8370041cm)$) -- ($(orig)+(\xscale*0.062496cm,\yscale*0.826769cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.062496cm,\yscale*0.8267691cm)$) -- ($(orig)+(\xscale*0.066402cm,\yscale*0.81666cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.066402cm,\yscale*0.816661cm)$) -- ($(orig)+(\xscale*0.070308cm,\yscale*0.806616cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.070308cm,\yscale*0.8066161cm)$) -- ($(orig)+(\xscale*0.074214cm,\yscale*0.7967cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.074214cm,\yscale*0.79671cm)$) -- ($(orig)+(\xscale*0.07812cm,\yscale*0.786849cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.07812cm,\yscale*0.7868491cm)$) -- ($(orig)+(\xscale*0.082026cm,\yscale*0.777117cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.082026cm,\yscale*0.7771171cm)$) -- ($(orig)+(\xscale*0.085932cm,\yscale*0.767493cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.085932cm,\yscale*0.7674931cm)$) -- ($(orig)+(\xscale*0.089838cm,\yscale*0.757945cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.089838cm,\yscale*0.7579451cm)$) -- ($(orig)+(\xscale*0.093744cm,\yscale*0.748484cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.093744cm,\yscale*0.7484841cm)$) -- ($(orig)+(\xscale*0.09765cm,\yscale*0.739154cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.09765cm,\yscale*0.7391541cm)$) -- ($(orig)+(\xscale*0.101556cm,\yscale*0.729888cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.101556cm,\yscale*0.7298881cm)$) -- ($(orig)+(\xscale*0.105462cm,\yscale*0.720754cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.105462cm,\yscale*0.7207541cm)$) -- ($(orig)+(\xscale*0.109368cm,\yscale*0.711684cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.109368cm,\yscale*0.7116841cm)$) -- ($(orig)+(\xscale*0.113274cm,\yscale*0.702734cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.113274cm,\yscale*0.7027341cm)$) -- ($(orig)+(\xscale*0.11718cm,\yscale*0.693892cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.11718cm,\yscale*0.6938921cm)$) -- ($(orig)+(\xscale*0.121086cm,\yscale*0.685127cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.121086cm,\yscale*0.6851271cm)$) -- ($(orig)+(\xscale*0.124992cm,\yscale*0.676448cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.124992cm,\yscale*0.6764481cm)$) -- ($(orig)+(\xscale*0.128898cm,\yscale*0.667898cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.128898cm,\yscale*0.6678981cm)$) -- ($(orig)+(\xscale*0.132804cm,\yscale*0.659414cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.132804cm,\yscale*0.6594141cm)$) -- ($(orig)+(\xscale*0.13671cm,\yscale*0.651059cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.13671cm,\yscale*0.6510591cm)$) -- ($(orig)+(\xscale*0.140616cm,\yscale*0.642769cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.140616cm,\yscale*0.6427691cm)$) -- ($(orig)+(\xscale*0.144522cm,\yscale*0.634597cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.144522cm,\yscale*0.6345971cm)$) -- ($(orig)+(\xscale*0.148428cm,\yscale*0.626532cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.148428cm,\yscale*0.6265321cm)$) -- ($(orig)+(\xscale*0.152334cm,\yscale*0.618543cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.152334cm,\yscale*0.6185431cm)$) -- ($(orig)+(\xscale*0.15624cm,\yscale*0.61064cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.15624cm,\yscale*0.610641cm)$) -- ($(orig)+(\xscale*0.160146cm,\yscale*0.602866cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.160146cm,\yscale*0.6028661cm)$) -- ($(orig)+(\xscale*0.164052cm,\yscale*0.595156cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.164052cm,\yscale*0.5951561cm)$) -- ($(orig)+(\xscale*0.167958cm,\yscale*0.587564cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.167958cm,\yscale*0.5875641cm)$) -- ($(orig)+(\xscale*0.171864cm,\yscale*0.580079cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.171864cm,\yscale*0.5800791cm)$) -- ($(orig)+(\xscale*0.17577cm,\yscale*0.572668cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.17577cm,\yscale*0.5726681cm)$) -- ($(orig)+(\xscale*0.179676cm,\yscale*0.565343cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.179676cm,\yscale*0.5653431cm)$) -- ($(orig)+(\xscale*0.183582cm,\yscale*0.558147cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.183582cm,\yscale*0.5581471cm)$) -- ($(orig)+(\xscale*0.187488cm,\yscale*0.551014cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.187488cm,\yscale*0.5510141cm)$) -- ($(orig)+(\xscale*0.191394cm,\yscale*0.54401cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.191394cm,\yscale*0.544011cm)$) -- ($(orig)+(\xscale*0.1953cm,\yscale*0.537069cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.1953cm,\yscale*0.5370691cm)$) -- ($(orig)+(\xscale*0.199206cm,\yscale*0.530632cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.199206cm,\yscale*0.5306321cm)$) -- ($(orig)+(\xscale*0.203112cm,\yscale*0.525009cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.203112cm,\yscale*0.5250091cm)$) -- ($(orig)+(\xscale*0.207018cm,\yscale*0.520699cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.207018cm,\yscale*0.5206991cm)$) -- ($(orig)+(\xscale*0.210924cm,\yscale*0.51649cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.210924cm,\yscale*0.516491cm)$) -- ($(orig)+(\xscale*0.21483cm,\yscale*0.512473cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.21483cm,\yscale*0.5124731cm)$) -- ($(orig)+(\xscale*0.218736cm,\yscale*0.50855cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.218736cm,\yscale*0.508551cm)$) -- ($(orig)+(\xscale*0.222642cm,\yscale*0.504807cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.222642cm,\yscale*0.5048071cm)$) -- ($(orig)+(\xscale*0.226548cm,\yscale*0.501152cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.226548cm,\yscale*0.5011521cm)$) -- ($(orig)+(\xscale*0.230454cm,\yscale*0.497651cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.230454cm,\yscale*0.4976511cm)$) -- ($(orig)+(\xscale*0.23436cm,\yscale*0.494284cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.23436cm,\yscale*0.4942841cm)$) -- ($(orig)+(\xscale*0.238266cm,\yscale*0.491008cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.238266cm,\yscale*0.4910081cm)$) -- ($(orig)+(\xscale*0.242172cm,\yscale*0.487834cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.242172cm,\yscale*0.4878341cm)$) -- ($(orig)+(\xscale*0.246078cm,\yscale*0.484805cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.246078cm,\yscale*0.4848051cm)$) -- ($(orig)+(\xscale*0.249984cm,\yscale*0.481848cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.249984cm,\yscale*0.4818481cm)$) -- ($(orig)+(\xscale*0.25389cm,\yscale*0.479026cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.25389cm,\yscale*0.4790261cm)$) -- ($(orig)+(\xscale*0.257796cm,\yscale*0.476269cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.257796cm,\yscale*0.4762691cm)$) -- ($(orig)+(\xscale*0.261702cm,\yscale*0.47364cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.261702cm,\yscale*0.473641cm)$) -- ($(orig)+(\xscale*0.265608cm,\yscale*0.471071cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.265608cm,\yscale*0.4710711cm)$) -- ($(orig)+(\xscale*0.269514cm,\yscale*0.468621cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.269514cm,\yscale*0.4686211cm)$) -- ($(orig)+(\xscale*0.27342cm,\yscale*0.466227cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.27342cm,\yscale*0.4662271cm)$) -- ($(orig)+(\xscale*0.277326cm,\yscale*0.463944cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.277326cm,\yscale*0.4639441cm)$) -- ($(orig)+(\xscale*0.281232cm,\yscale*0.461714cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.281232cm,\yscale*0.4617141cm)$) -- ($(orig)+(\xscale*0.285138cm,\yscale*0.459586cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.285138cm,\yscale*0.4595861cm)$) -- ($(orig)+(\xscale*0.289044cm,\yscale*0.457508cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.289044cm,\yscale*0.4575081cm)$) -- ($(orig)+(\xscale*0.29295cm,\yscale*0.455517cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.29295cm,\yscale*0.4555171cm)$) -- ($(orig)+(\xscale*0.296856cm,\yscale*0.453603cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.296856cm,\yscale*0.4536031cm)$) -- ($(orig)+(\xscale*0.300762cm,\yscale*0.451741cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.300762cm,\yscale*0.4517411cm)$) -- ($(orig)+(\xscale*0.304668cm,\yscale*0.449936cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.304668cm,\yscale*0.4499361cm)$) -- ($(orig)+(\xscale*0.308574cm,\yscale*0.448214cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.308574cm,\yscale*0.4482141cm)$) -- ($(orig)+(\xscale*0.31248cm,\yscale*0.446533cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.31248cm,\yscale*0.4465331cm)$) -- ($(orig)+(\xscale*0.316386cm,\yscale*0.444928cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.316386cm,\yscale*0.4449281cm)$) -- ($(orig)+(\xscale*0.320292cm,\yscale*0.443361cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.320292cm,\yscale*0.4433611cm)$) -- ($(orig)+(\xscale*0.324198cm,\yscale*0.441866cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.324198cm,\yscale*0.4418661cm)$) -- ($(orig)+(\xscale*0.328104cm,\yscale*0.440406cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.328104cm,\yscale*0.4404061cm)$) -- ($(orig)+(\xscale*0.33201cm,\yscale*0.439013cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.33201cm,\yscale*0.4390131cm)$) -- ($(orig)+(\xscale*0.335916cm,\yscale*0.437652cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.335916cm,\yscale*0.4376521cm)$) -- ($(orig)+(\xscale*0.339822cm,\yscale*0.436349cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.339822cm,\yscale*0.4363491cm)$) -- ($(orig)+(\xscale*0.343728cm,\yscale*0.435096cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.343728cm,\yscale*0.4350961cm)$) -- ($(orig)+(\xscale*0.347634cm,\yscale*0.433876cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.347634cm,\yscale*0.4338761cm)$) -- ($(orig)+(\xscale*0.35154cm,\yscale*0.432695cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.35154cm,\yscale*0.4326951cm)$) -- ($(orig)+(\xscale*0.355446cm,\yscale*0.431567cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.355446cm,\yscale*0.4315671cm)$) -- ($(orig)+(\xscale*0.359352cm,\yscale*0.430466cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.359352cm,\yscale*0.4304661cm)$) -- ($(orig)+(\xscale*0.363258cm,\yscale*0.429416cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.363258cm,\yscale*0.4294161cm)$) -- ($(orig)+(\xscale*0.367164cm,\yscale*0.42839cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.367164cm,\yscale*0.428391cm)$) -- ($(orig)+(\xscale*0.37107cm,\yscale*0.427411cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.37107cm,\yscale*0.4274111cm)$) -- ($(orig)+(\xscale*0.374976cm,\yscale*0.426455cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.374976cm,\yscale*0.4264551cm)$) -- ($(orig)+(\xscale*0.378882cm,\yscale*0.425543cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.378882cm,\yscale*0.4255431cm)$) -- ($(orig)+(\xscale*0.382788cm,\yscale*0.424652cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.382788cm,\yscale*0.4246521cm)$) -- ($(orig)+(\xscale*0.386694cm,\yscale*0.423802cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.386694cm,\yscale*0.4238021cm)$) -- ($(orig)+(\xscale*0.3906cm,\yscale*0.422972cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.3906cm,\yscale*0.4229721cm)$) -- ($(orig)+(\xscale*0.394506cm,\yscale*0.42218cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.394506cm,\yscale*0.422181cm)$) -- ($(orig)+(\xscale*0.398412cm,\yscale*0.421406cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.398412cm,\yscale*0.4214061cm)$) -- ($(orig)+(\xscale*0.402318cm,\yscale*0.420668cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.402318cm,\yscale*0.4206681cm)$) -- ($(orig)+(\xscale*0.406224cm,\yscale*0.419947cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.406224cm,\yscale*0.4199471cm)$) -- ($(orig)+(\xscale*0.41013cm,\yscale*0.41926cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.41013cm,\yscale*0.419261cm)$) -- ($(orig)+(\xscale*0.414036cm,\yscale*0.418588cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.414036cm,\yscale*0.4185881cm)$) -- ($(orig)+(\xscale*0.417942cm,\yscale*0.417947cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.417942cm,\yscale*0.4179471cm)$) -- ($(orig)+(\xscale*0.421848cm,\yscale*0.417321cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.421848cm,\yscale*0.4173211cm)$) -- ($(orig)+(\xscale*0.425754cm,\yscale*0.416724cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.425754cm,\yscale*0.4167241cm)$) -- ($(orig)+(\xscale*0.42966cm,\yscale*0.41614cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.42966cm,\yscale*0.416141cm)$) -- ($(orig)+(\xscale*0.433566cm,\yscale*0.415584cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.433566cm,\yscale*0.4155841cm)$) -- ($(orig)+(\xscale*0.437472cm,\yscale*0.41504cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.437472cm,\yscale*0.415041cm)$) -- ($(orig)+(\xscale*0.441378cm,\yscale*0.414522cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.441378cm,\yscale*0.4145221cm)$) -- ($(orig)+(\xscale*0.445284cm,\yscale*0.414015cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.445284cm,\yscale*0.4140151cm)$) -- ($(orig)+(\xscale*0.44919cm,\yscale*0.413532cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.44919cm,\yscale*0.4135321cm)$) -- ($(orig)+(\xscale*0.453096cm,\yscale*0.41306cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.453096cm,\yscale*0.413061cm)$) -- ($(orig)+(\xscale*0.457002cm,\yscale*0.41261cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.457002cm,\yscale*0.412611cm)$) -- ($(orig)+(\xscale*0.460908cm,\yscale*0.41217cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.460908cm,\yscale*0.412171cm)$) -- ($(orig)+(\xscale*0.464814cm,\yscale*0.411749cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.464814cm,\yscale*0.4117491cm)$) -- ($(orig)+(\xscale*0.46872cm,\yscale*0.411344cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.46872cm,\yscale*0.4113441cm)$) -- ($(orig)+(\xscale*0.472626cm,\yscale*0.41095cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.472626cm,\yscale*0.410951cm)$) -- ($(orig)+(\xscale*0.476532cm,\yscale*0.410568cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.476532cm,\yscale*0.4105681cm)$) -- ($(orig)+(\xscale*0.480438cm,\yscale*0.410203cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.480438cm,\yscale*0.4102031cm)$) -- ($(orig)+(\xscale*0.484344cm,\yscale*0.409847cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.484344cm,\yscale*0.4098471cm)$) -- ($(orig)+(\xscale*0.48825cm,\yscale*0.409508cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.48825cm,\yscale*0.4095081cm)$) -- ($(orig)+(\xscale*0.492156cm,\yscale*0.409176cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.492156cm,\yscale*0.4091761cm)$) -- ($(orig)+(\xscale*0.496062cm,\yscale*0.40886cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.496062cm,\yscale*0.408861cm)$) -- ($(orig)+(\xscale*0.499968cm,\yscale*0.408551cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.499968cm,\yscale*0.4085511cm)$) -- ($(orig)+(\xscale*0.503874cm,\yscale*0.408256cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.503874cm,\yscale*0.4082561cm)$) -- ($(orig)+(\xscale*0.50778cm,\yscale*0.407968cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.50778cm,\yscale*0.4079681cm)$) -- ($(orig)+(\xscale*0.511686cm,\yscale*0.407693cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.511686cm,\yscale*0.4076931cm)$) -- ($(orig)+(\xscale*0.515592cm,\yscale*0.407425cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.515592cm,\yscale*0.4074251cm)$) -- ($(orig)+(\xscale*0.519498cm,\yscale*0.407169cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.519498cm,\yscale*0.4071691cm)$) -- ($(orig)+(\xscale*0.523404cm,\yscale*0.406919cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.523404cm,\yscale*0.4069191cm)$) -- ($(orig)+(\xscale*0.52731cm,\yscale*0.40668cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.52731cm,\yscale*0.406681cm)$) -- ($(orig)+(\xscale*0.531216cm,\yscale*0.406447cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.531216cm,\yscale*0.4064471cm)$) -- ($(orig)+(\xscale*0.535122cm,\yscale*0.406225cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.535122cm,\yscale*0.4062251cm)$) -- ($(orig)+(\xscale*0.539028cm,\yscale*0.406008cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.539028cm,\yscale*0.4060081cm)$) -- ($(orig)+(\xscale*0.542934cm,\yscale*0.405801cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.542934cm,\yscale*0.4058011cm)$) -- ($(orig)+(\xscale*0.54684cm,\yscale*0.405599cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.54684cm,\yscale*0.4055991cm)$) -- ($(orig)+(\xscale*0.550746cm,\yscale*0.405406cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.550746cm,\yscale*0.4054061cm)$) -- ($(orig)+(\xscale*0.554652cm,\yscale*0.405217cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.554652cm,\yscale*0.4052171cm)$) -- ($(orig)+(\xscale*0.558558cm,\yscale*0.405037cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.558558cm,\yscale*0.4050371cm)$) -- ($(orig)+(\xscale*0.562464cm,\yscale*0.404861cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.562464cm,\yscale*0.4048611cm)$) -- ($(orig)+(\xscale*0.56637cm,\yscale*0.404694cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.56637cm,\yscale*0.4046941cm)$) -- ($(orig)+(\xscale*0.570276cm,\yscale*0.40453cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.570276cm,\yscale*0.404531cm)$) -- ($(orig)+(\xscale*0.574182cm,\yscale*0.404374cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.574182cm,\yscale*0.4043741cm)$) -- ($(orig)+(\xscale*0.578088cm,\yscale*0.404221cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.578088cm,\yscale*0.4042211cm)$) -- ($(orig)+(\xscale*0.581994cm,\yscale*0.404076cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.581994cm,\yscale*0.4040761cm)$) -- ($(orig)+(\xscale*0.5859cm,\yscale*0.403934cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.5859cm,\yscale*0.4039341cm)$) -- ($(orig)+(\xscale*0.589806cm,\yscale*0.403797cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.589806cm,\yscale*0.4037971cm)$) -- ($(orig)+(\xscale*0.593712cm,\yscale*0.403667cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.593712cm,\yscale*0.4036671cm)$) -- ($(orig)+(\xscale*0.597618cm,\yscale*0.403539cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.597618cm,\yscale*0.4035391cm)$) -- ($(orig)+(\xscale*0.601524cm,\yscale*0.403417cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.601524cm,\yscale*0.4034171cm)$) -- ($(orig)+(\xscale*0.60543cm,\yscale*0.403298cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.60543cm,\yscale*0.4032981cm)$) -- ($(orig)+(\xscale*0.609336cm,\yscale*0.403183cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.609336cm,\yscale*0.4031831cm)$) -- ($(orig)+(\xscale*0.613242cm,\yscale*0.403073cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.613242cm,\yscale*0.4030731cm)$) -- ($(orig)+(\xscale*0.617148cm,\yscale*0.402966cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.617148cm,\yscale*0.4029661cm)$) -- ($(orig)+(\xscale*0.621054cm,\yscale*0.402864cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.621054cm,\yscale*0.4028641cm)$) -- ($(orig)+(\xscale*0.62496cm,\yscale*0.402764cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.62496cm,\yscale*0.4027641cm)$) -- ($(orig)+(\xscale*0.628866cm,\yscale*0.402669cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.628866cm,\yscale*0.4026691cm)$) -- ($(orig)+(\xscale*0.632772cm,\yscale*0.402575cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.632772cm,\yscale*0.4025751cm)$) -- ($(orig)+(\xscale*0.636678cm,\yscale*0.402487cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.636678cm,\yscale*0.4024871cm)$) -- ($(orig)+(\xscale*0.640584cm,\yscale*0.4024cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.640584cm,\yscale*0.40241cm)$) -- ($(orig)+(\xscale*0.64449cm,\yscale*0.402317cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.64449cm,\yscale*0.4023171cm)$) -- ($(orig)+(\xscale*0.648396cm,\yscale*0.402236cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.648396cm,\yscale*0.4022361cm)$) -- ($(orig)+(\xscale*0.652302cm,\yscale*0.402159cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.652302cm,\yscale*0.4021591cm)$) -- ($(orig)+(\xscale*0.656208cm,\yscale*0.402084cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.656208cm,\yscale*0.4020841cm)$) -- ($(orig)+(\xscale*0.660114cm,\yscale*0.402012cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.660114cm,\yscale*0.4020121cm)$) -- ($(orig)+(\xscale*0.66402cm,\yscale*0.401942cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.66402cm,\yscale*0.4019421cm)$) -- ($(orig)+(\xscale*0.667926cm,\yscale*0.401875cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.667926cm,\yscale*0.4018751cm)$) -- ($(orig)+(\xscale*0.671832cm,\yscale*0.40181cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.671832cm,\yscale*0.401811cm)$) -- ($(orig)+(\xscale*0.675738cm,\yscale*0.401747cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.675738cm,\yscale*0.4017471cm)$) -- ($(orig)+(\xscale*0.679644cm,\yscale*0.401686cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.679644cm,\yscale*0.4016861cm)$) -- ($(orig)+(\xscale*0.68355cm,\yscale*0.401628cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.68355cm,\yscale*0.4016281cm)$) -- ($(orig)+(\xscale*0.687456cm,\yscale*0.401572cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.687456cm,\yscale*0.4015721cm)$) -- ($(orig)+(\xscale*0.691362cm,\yscale*0.401517cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.691362cm,\yscale*0.4015171cm)$) -- ($(orig)+(\xscale*0.695268cm,\yscale*0.401465cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.695268cm,\yscale*0.4014651cm)$) -- ($(orig)+(\xscale*0.699174cm,\yscale*0.401414cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.699174cm,\yscale*0.4014141cm)$) -- ($(orig)+(\xscale*0.70308cm,\yscale*0.401364cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.70308cm,\yscale*0.4013641cm)$) -- ($(orig)+(\xscale*0.706986cm,\yscale*0.401317cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.706986cm,\yscale*0.4013171cm)$) -- ($(orig)+(\xscale*0.710892cm,\yscale*0.401271cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.710892cm,\yscale*0.4012711cm)$) -- ($(orig)+(\xscale*0.714798cm,\yscale*0.401228cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.714798cm,\yscale*0.4012281cm)$) -- ($(orig)+(\xscale*0.718704cm,\yscale*0.401185cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.718704cm,\yscale*0.4011851cm)$) -- ($(orig)+(\xscale*0.72261cm,\yscale*0.401144cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.72261cm,\yscale*0.4011441cm)$) -- ($(orig)+(\xscale*0.726516cm,\yscale*0.401104cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.726516cm,\yscale*0.4011041cm)$) -- ($(orig)+(\xscale*0.730422cm,\yscale*0.401066cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.730422cm,\yscale*0.4010661cm)$) -- ($(orig)+(\xscale*0.734328cm,\yscale*0.401029cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.734328cm,\yscale*0.4010291cm)$) -- ($(orig)+(\xscale*0.738234cm,\yscale*0.400993cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.738234cm,\yscale*0.4009931cm)$) -- ($(orig)+(\xscale*0.74214cm,\yscale*0.400959cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.74214cm,\yscale*0.4009591cm)$) -- ($(orig)+(\xscale*0.746046cm,\yscale*0.400926cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.746046cm,\yscale*0.4009261cm)$) -- ($(orig)+(\xscale*0.749952cm,\yscale*0.400893cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.749952cm,\yscale*0.4008931cm)$) -- ($(orig)+(\xscale*0.753858cm,\yscale*0.400863cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.753858cm,\yscale*0.4008631cm)$) -- ($(orig)+(\xscale*0.757764cm,\yscale*0.400832cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.757764cm,\yscale*0.4008321cm)$) -- ($(orig)+(\xscale*0.76167cm,\yscale*0.400804cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.76167cm,\yscale*0.4008041cm)$) -- ($(orig)+(\xscale*0.765576cm,\yscale*0.400776cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.765576cm,\yscale*0.4007761cm)$) -- ($(orig)+(\xscale*0.769482cm,\yscale*0.400749cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.769482cm,\yscale*0.4007491cm)$) -- ($(orig)+(\xscale*0.773388cm,\yscale*0.400723cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.773388cm,\yscale*0.4007231cm)$) -- ($(orig)+(\xscale*0.777294cm,\yscale*0.400698cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.777294cm,\yscale*0.4006981cm)$) -- ($(orig)+(\xscale*0.7812cm,\yscale*0.400674cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.7812cm,\yscale*0.4006741cm)$) -- ($(orig)+(\xscale*0.785106cm,\yscale*0.40065cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.785106cm,\yscale*0.400651cm)$) -- ($(orig)+(\xscale*0.789012cm,\yscale*0.400628cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.789012cm,\yscale*0.4006281cm)$) -- ($(orig)+(\xscale*0.792918cm,\yscale*0.400606cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.792918cm,\yscale*0.4006061cm)$) -- ($(orig)+(\xscale*0.796824cm,\yscale*0.400585cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.796824cm,\yscale*0.4005851cm)$) -- ($(orig)+(\xscale*0.80073cm,\yscale*0.400565cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.80073cm,\yscale*0.4005651cm)$) -- ($(orig)+(\xscale*0.804636cm,\yscale*0.400545cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.804636cm,\yscale*0.4005451cm)$) -- ($(orig)+(\xscale*0.808542cm,\yscale*0.400526cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.808542cm,\yscale*0.4005261cm)$) -- ($(orig)+(\xscale*0.812448cm,\yscale*0.400508cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.812448cm,\yscale*0.4005081cm)$) -- ($(orig)+(\xscale*0.816354cm,\yscale*0.40049cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.816354cm,\yscale*0.400491cm)$) -- ($(orig)+(\xscale*0.82026cm,\yscale*0.400473cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.82026cm,\yscale*0.4004731cm)$) -- ($(orig)+(\xscale*0.824166cm,\yscale*0.400457cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.824166cm,\yscale*0.4004571cm)$) -- ($(orig)+(\xscale*0.828072cm,\yscale*0.400441cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.828072cm,\yscale*0.4004411cm)$) -- ($(orig)+(\xscale*0.831978cm,\yscale*0.400426cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.831978cm,\yscale*0.4004261cm)$) -- ($(orig)+(\xscale*0.835884cm,\yscale*0.400411cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.835884cm,\yscale*0.4004111cm)$) -- ($(orig)+(\xscale*0.83979cm,\yscale*0.400397cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.83979cm,\yscale*0.4003971cm)$) -- ($(orig)+(\xscale*0.843696cm,\yscale*0.400383cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.843696cm,\yscale*0.4003831cm)$) -- ($(orig)+(\xscale*0.847602cm,\yscale*0.40037cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.847602cm,\yscale*0.400371cm)$) -- ($(orig)+(\xscale*0.851508cm,\yscale*0.400357cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.851508cm,\yscale*0.4003571cm)$) -- ($(orig)+(\xscale*0.855414cm,\yscale*0.400345cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.855414cm,\yscale*0.4003451cm)$) -- ($(orig)+(\xscale*0.85932cm,\yscale*0.400333cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.85932cm,\yscale*0.4003331cm)$) -- ($(orig)+(\xscale*0.863226cm,\yscale*0.400321cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.863226cm,\yscale*0.4003211cm)$) -- ($(orig)+(\xscale*0.867132cm,\yscale*0.40031cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.867132cm,\yscale*0.400311cm)$) -- ($(orig)+(\xscale*0.871038cm,\yscale*0.400299cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.871038cm,\yscale*0.4002991cm)$) -- ($(orig)+(\xscale*0.874944cm,\yscale*0.400289cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.874944cm,\yscale*0.4002891cm)$) -- ($(orig)+(\xscale*0.87885cm,\yscale*0.400279cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.87885cm,\yscale*0.4002791cm)$) -- ($(orig)+(\xscale*0.882756cm,\yscale*0.400269cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.882756cm,\yscale*0.4002691cm)$) -- ($(orig)+(\xscale*0.886662cm,\yscale*0.40026cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.886662cm,\yscale*0.400261cm)$) -- ($(orig)+(\xscale*0.890568cm,\yscale*0.400251cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.890568cm,\yscale*0.4002511cm)$) -- ($(orig)+(\xscale*0.894474cm,\yscale*0.400242cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.894474cm,\yscale*0.4002421cm)$) -- ($(orig)+(\xscale*0.89838cm,\yscale*0.400234cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.89838cm,\yscale*0.4002341cm)$) -- ($(orig)+(\xscale*0.902286cm,\yscale*0.400226cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.902286cm,\yscale*0.4002261cm)$) -- ($(orig)+(\xscale*0.906192cm,\yscale*0.400218cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.906192cm,\yscale*0.4002181cm)$) -- ($(orig)+(\xscale*0.910098cm,\yscale*0.40021cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.910098cm,\yscale*0.400211cm)$) -- ($(orig)+(\xscale*0.914004cm,\yscale*0.400203cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.914004cm,\yscale*0.4002031cm)$) -- ($(orig)+(\xscale*0.91791cm,\yscale*0.400196cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.91791cm,\yscale*0.4001961cm)$) -- ($(orig)+(\xscale*0.921816cm,\yscale*0.400189cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.921816cm,\yscale*0.4001891cm)$) -- ($(orig)+(\xscale*0.925722cm,\yscale*0.400183cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.925722cm,\yscale*0.4001831cm)$) -- ($(orig)+(\xscale*0.929628cm,\yscale*0.400176cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.929628cm,\yscale*0.4001761cm)$) -- ($(orig)+(\xscale*0.933534cm,\yscale*0.40017cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.933534cm,\yscale*0.400171cm)$) -- ($(orig)+(\xscale*0.93744cm,\yscale*0.400164cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.93744cm,\yscale*0.4001641cm)$) -- ($(orig)+(\xscale*0.941346cm,\yscale*0.400158cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.941346cm,\yscale*0.4001581cm)$) -- ($(orig)+(\xscale*0.945252cm,\yscale*0.400153cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.945252cm,\yscale*0.4001531cm)$) -- ($(orig)+(\xscale*0.949158cm,\yscale*0.400148cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.949158cm,\yscale*0.4001481cm)$) -- ($(orig)+(\xscale*0.953064cm,\yscale*0.400143cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.953064cm,\yscale*0.4001431cm)$) -- ($(orig)+(\xscale*0.95697cm,\yscale*0.400138cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.95697cm,\yscale*0.4001381cm)$) -- ($(orig)+(\xscale*0.960876cm,\yscale*0.400133cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.960876cm,\yscale*0.4001331cm)$) -- ($(orig)+(\xscale*0.964782cm,\yscale*0.400128cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.964782cm,\yscale*0.4001281cm)$) -- ($(orig)+(\xscale*0.968688cm,\yscale*0.400124cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.968688cm,\yscale*0.4001241cm)$) -- ($(orig)+(\xscale*0.972594cm,\yscale*0.400119cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.972594cm,\yscale*0.4001191cm)$) -- ($(orig)+(\xscale*0.9765cm,\yscale*0.400115cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.9765cm,\yscale*0.4001151cm)$) -- ($(orig)+(\xscale*0.980406cm,\yscale*0.400111cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.980406cm,\yscale*0.4001111cm)$) -- ($(orig)+(\xscale*0.984312cm,\yscale*0.400107cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.984312cm,\yscale*0.4001071cm)$) -- ($(orig)+(\xscale*0.988218cm,\yscale*0.400104cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.988218cm,\yscale*0.4001041cm)$) -- ($(orig)+(\xscale*0.992124cm,\yscale*0.4001cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.992124cm,\yscale*0.40011cm)$) -- ($(orig)+(\xscale*0.99603cm,\yscale*0.400097cm)$);
+  \draw[envstyle] ($(orig)+(\xscale*0.99603cm,\yscale*0.4000971cm)$) -- ($(orig)+(\xscale*1cm,\yscale*0.4cm)$);
+
+      \draw[envstyle] ($(orig)+(#4*1cm,\yscale*1cm*0.4)$) -- ($(orig)+(#4*1cm+#5*1cm,\yscale*1cm*0.4)$); % sustain
+
+    \def\xscale{#6}; % release length in cm
+  \coordinate(orig)at($(#1)+#2*(0cm,1cm)+(0cm,4cm)+(#3*1cm+#4*1cm+#5*1cm,0cm)$);
+      
+    \draw[envstyle] ($(orig)+(\xscale*0cm,\yscale*0.4cm)$) -- ($(orig)+(\xscale*0.003906cm,\yscale*0.392501cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.003906cm,\yscale*0.3925011cm)$) -- ($(orig)+(\xscale*0.007812cm,\yscale*0.385008cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.007812cm,\yscale*0.3850081cm)$) -- ($(orig)+(\xscale*0.011718cm,\yscale*0.377542cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.011718cm,\yscale*0.3775421cm)$) -- ($(orig)+(\xscale*0.015624cm,\yscale*0.370094cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.015624cm,\yscale*0.3700941cm)$) -- ($(orig)+(\xscale*0.01953cm,\yscale*0.362691cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.01953cm,\yscale*0.3626911cm)$) -- ($(orig)+(\xscale*0.023436cm,\yscale*0.355314cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.023436cm,\yscale*0.3553141cm)$) -- ($(orig)+(\xscale*0.027342cm,\yscale*0.347997cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.027342cm,\yscale*0.3479971cm)$) -- ($(orig)+(\xscale*0.031248cm,\yscale*0.340711cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.031248cm,\yscale*0.3407111cm)$) -- ($(orig)+(\xscale*0.035154cm,\yscale*0.333493cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.035154cm,\yscale*0.3334931cm)$) -- ($(orig)+(\xscale*0.03906cm,\yscale*0.326312cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.03906cm,\yscale*0.3263121cm)$) -- ($(orig)+(\xscale*0.042966cm,\yscale*0.319205cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.042966cm,\yscale*0.3192051cm)$) -- ($(orig)+(\xscale*0.046872cm,\yscale*0.312137cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.046872cm,\yscale*0.3121371cm)$) -- ($(orig)+(\xscale*0.050778cm,\yscale*0.305149cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.050778cm,\yscale*0.3051491cm)$) -- ($(orig)+(\xscale*0.054684cm,\yscale*0.298201cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.054684cm,\yscale*0.2982011cm)$) -- ($(orig)+(\xscale*0.05859cm,\yscale*0.291336cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.05859cm,\yscale*0.2913361cm)$) -- ($(orig)+(\xscale*0.062496cm,\yscale*0.284512cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.062496cm,\yscale*0.2845121cm)$) -- ($(orig)+(\xscale*0.066402cm,\yscale*0.277773cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.066402cm,\yscale*0.2777731cm)$) -- ($(orig)+(\xscale*0.070308cm,\yscale*0.271077cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.070308cm,\yscale*0.2710771cm)$) -- ($(orig)+(\xscale*0.074214cm,\yscale*0.264467cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.074214cm,\yscale*0.2644671cm)$) -- ($(orig)+(\xscale*0.07812cm,\yscale*0.257899cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.07812cm,\yscale*0.2578991cm)$) -- ($(orig)+(\xscale*0.082026cm,\yscale*0.251411cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.082026cm,\yscale*0.2514111cm)$) -- ($(orig)+(\xscale*0.085932cm,\yscale*0.244995cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.085932cm,\yscale*0.2449951cm)$) -- ($(orig)+(\xscale*0.089838cm,\yscale*0.23863cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.089838cm,\yscale*0.238631cm)$) -- ($(orig)+(\xscale*0.093744cm,\yscale*0.232323cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.093744cm,\yscale*0.2323231cm)$) -- ($(orig)+(\xscale*0.09765cm,\yscale*0.226102cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.09765cm,\yscale*0.2261021cm)$) -- ($(orig)+(\xscale*0.101556cm,\yscale*0.219926cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.101556cm,\yscale*0.2199261cm)$) -- ($(orig)+(\xscale*0.105462cm,\yscale*0.213836cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.105462cm,\yscale*0.2138361cm)$) -- ($(orig)+(\xscale*0.109368cm,\yscale*0.207789cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.109368cm,\yscale*0.2077891cm)$) -- ($(orig)+(\xscale*0.113274cm,\yscale*0.201823cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.113274cm,\yscale*0.2018231cm)$) -- ($(orig)+(\xscale*0.11718cm,\yscale*0.195928cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.11718cm,\yscale*0.1959281cm)$) -- ($(orig)+(\xscale*0.121086cm,\yscale*0.190084cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.121086cm,\yscale*0.1900841cm)$) -- ($(orig)+(\xscale*0.124992cm,\yscale*0.184298cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.124992cm,\yscale*0.1842981cm)$) -- ($(orig)+(\xscale*0.128898cm,\yscale*0.178599cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.128898cm,\yscale*0.1785991cm)$) -- ($(orig)+(\xscale*0.132804cm,\yscale*0.172943cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.132804cm,\yscale*0.1729431cm)$) -- ($(orig)+(\xscale*0.13671cm,\yscale*0.167373cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.13671cm,\yscale*0.1673731cm)$) -- ($(orig)+(\xscale*0.140616cm,\yscale*0.161846cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.140616cm,\yscale*0.1618461cm)$) -- ($(orig)+(\xscale*0.144522cm,\yscale*0.156398cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.144522cm,\yscale*0.1563981cm)$) -- ($(orig)+(\xscale*0.148428cm,\yscale*0.151022cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.148428cm,\yscale*0.1510221cm)$) -- ($(orig)+(\xscale*0.152334cm,\yscale*0.145696cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.152334cm,\yscale*0.1456961cm)$) -- ($(orig)+(\xscale*0.15624cm,\yscale*0.140427cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.15624cm,\yscale*0.1404271cm)$) -- ($(orig)+(\xscale*0.160146cm,\yscale*0.135244cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.160146cm,\yscale*0.1352441cm)$) -- ($(orig)+(\xscale*0.164052cm,\yscale*0.130104cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.164052cm,\yscale*0.1301041cm)$) -- ($(orig)+(\xscale*0.167958cm,\yscale*0.125042cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.167958cm,\yscale*0.1250421cm)$) -- ($(orig)+(\xscale*0.171864cm,\yscale*0.120052cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.171864cm,\yscale*0.1200521cm)$) -- ($(orig)+(\xscale*0.17577cm,\yscale*0.115112cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.17577cm,\yscale*0.1151121cm)$) -- ($(orig)+(\xscale*0.179676cm,\yscale*0.110229cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.179676cm,\yscale*0.1102291cm)$) -- ($(orig)+(\xscale*0.183582cm,\yscale*0.105431cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.183582cm,\yscale*0.1054311cm)$) -- ($(orig)+(\xscale*0.187488cm,\yscale*0.100676cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.187488cm,\yscale*0.1006761cm)$) -- ($(orig)+(\xscale*0.191394cm,\yscale*0.096006cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.191394cm,\yscale*0.0960061cm)$) -- ($(orig)+(\xscale*0.1953cm,\yscale*0.091379cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.1953cm,\yscale*0.0913791cm)$) -- ($(orig)+(\xscale*0.199206cm,\yscale*0.087088cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.199206cm,\yscale*0.0870881cm)$) -- ($(orig)+(\xscale*0.203112cm,\yscale*0.08334cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.203112cm,\yscale*0.083341cm)$) -- ($(orig)+(\xscale*0.207018cm,\yscale*0.080466cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.207018cm,\yscale*0.0804661cm)$) -- ($(orig)+(\xscale*0.210924cm,\yscale*0.07766cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.210924cm,\yscale*0.077661cm)$) -- ($(orig)+(\xscale*0.21483cm,\yscale*0.074982cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.21483cm,\yscale*0.0749821cm)$) -- ($(orig)+(\xscale*0.218736cm,\yscale*0.072367cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.218736cm,\yscale*0.0723671cm)$) -- ($(orig)+(\xscale*0.222642cm,\yscale*0.069872cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.222642cm,\yscale*0.0698721cm)$) -- ($(orig)+(\xscale*0.226548cm,\yscale*0.067435cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.226548cm,\yscale*0.0674351cm)$) -- ($(orig)+(\xscale*0.230454cm,\yscale*0.065101cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.230454cm,\yscale*0.0651011cm)$) -- ($(orig)+(\xscale*0.23436cm,\yscale*0.062856cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.23436cm,\yscale*0.0628561cm)$) -- ($(orig)+(\xscale*0.238266cm,\yscale*0.060672cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.238266cm,\yscale*0.0606721cm)$) -- ($(orig)+(\xscale*0.242172cm,\yscale*0.058556cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.242172cm,\yscale*0.0585561cm)$) -- ($(orig)+(\xscale*0.246078cm,\yscale*0.056537cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.246078cm,\yscale*0.0565371cm)$) -- ($(orig)+(\xscale*0.249984cm,\yscale*0.054565cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.249984cm,\yscale*0.0545651cm)$) -- ($(orig)+(\xscale*0.25389cm,\yscale*0.052684cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.25389cm,\yscale*0.0526841cm)$) -- ($(orig)+(\xscale*0.257796cm,\yscale*0.050846cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.257796cm,\yscale*0.0508461cm)$) -- ($(orig)+(\xscale*0.261702cm,\yscale*0.049093cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.261702cm,\yscale*0.0490931cm)$) -- ($(orig)+(\xscale*0.265608cm,\yscale*0.047381cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.265608cm,\yscale*0.0473811cm)$) -- ($(orig)+(\xscale*0.269514cm,\yscale*0.045747cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.269514cm,\yscale*0.0457471cm)$) -- ($(orig)+(\xscale*0.27342cm,\yscale*0.044152cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.27342cm,\yscale*0.0441521cm)$) -- ($(orig)+(\xscale*0.277326cm,\yscale*0.042629cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.277326cm,\yscale*0.0426291cm)$) -- ($(orig)+(\xscale*0.281232cm,\yscale*0.041143cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.281232cm,\yscale*0.0411431cm)$) -- ($(orig)+(\xscale*0.285138cm,\yscale*0.039724cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.285138cm,\yscale*0.0397241cm)$) -- ($(orig)+(\xscale*0.289044cm,\yscale*0.038338cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.289044cm,\yscale*0.0383381cm)$) -- ($(orig)+(\xscale*0.29295cm,\yscale*0.037012cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.29295cm,\yscale*0.0370121cm)$) -- ($(orig)+(\xscale*0.296856cm,\yscale*0.035735cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.296856cm,\yscale*0.0357351cm)$) -- ($(orig)+(\xscale*0.300762cm,\yscale*0.034494cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.300762cm,\yscale*0.0344941cm)$) -- ($(orig)+(\xscale*0.304668cm,\yscale*0.033291cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.304668cm,\yscale*0.0332911cm)$) -- ($(orig)+(\xscale*0.308574cm,\yscale*0.032143cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.308574cm,\yscale*0.0321431cm)$) -- ($(orig)+(\xscale*0.31248cm,\yscale*0.031022cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.31248cm,\yscale*0.0310221cm)$) -- ($(orig)+(\xscale*0.316386cm,\yscale*0.029952cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.316386cm,\yscale*0.0299521cm)$) -- ($(orig)+(\xscale*0.320292cm,\yscale*0.028907cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.320292cm,\yscale*0.0289071cm)$) -- ($(orig)+(\xscale*0.324198cm,\yscale*0.027911cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.324198cm,\yscale*0.0279111cm)$) -- ($(orig)+(\xscale*0.328104cm,\yscale*0.026937cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.328104cm,\yscale*0.0269371cm)$) -- ($(orig)+(\xscale*0.33201cm,\yscale*0.026009cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.33201cm,\yscale*0.0260091cm)$) -- ($(orig)+(\xscale*0.335916cm,\yscale*0.025101cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.335916cm,\yscale*0.0251011cm)$) -- ($(orig)+(\xscale*0.339822cm,\yscale*0.024233cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.339822cm,\yscale*0.0242331cm)$) -- ($(orig)+(\xscale*0.343728cm,\yscale*0.023397cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.343728cm,\yscale*0.0233971cm)$) -- ($(orig)+(\xscale*0.347634cm,\yscale*0.022584cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.347634cm,\yscale*0.0225841cm)$) -- ($(orig)+(\xscale*0.35154cm,\yscale*0.021796cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.35154cm,\yscale*0.0217961cm)$) -- ($(orig)+(\xscale*0.355446cm,\yscale*0.021045cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.355446cm,\yscale*0.0210451cm)$) -- ($(orig)+(\xscale*0.359352cm,\yscale*0.020311cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.359352cm,\yscale*0.0203111cm)$) -- ($(orig)+(\xscale*0.363258cm,\yscale*0.019611cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.363258cm,\yscale*0.0196111cm)$) -- ($(orig)+(\xscale*0.367164cm,\yscale*0.018927cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.367164cm,\yscale*0.0189271cm)$) -- ($(orig)+(\xscale*0.37107cm,\yscale*0.018274cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.37107cm,\yscale*0.0182741cm)$) -- ($(orig)+(\xscale*0.374976cm,\yscale*0.017637cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.374976cm,\yscale*0.0176371cm)$) -- ($(orig)+(\xscale*0.378882cm,\yscale*0.017029cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.378882cm,\yscale*0.0170291cm)$) -- ($(orig)+(\xscale*0.382788cm,\yscale*0.016435cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.382788cm,\yscale*0.0164351cm)$) -- ($(orig)+(\xscale*0.386694cm,\yscale*0.015868cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.386694cm,\yscale*0.0158681cm)$) -- ($(orig)+(\xscale*0.3906cm,\yscale*0.015315cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.3906cm,\yscale*0.0153151cm)$) -- ($(orig)+(\xscale*0.394506cm,\yscale*0.014787cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.394506cm,\yscale*0.0147871cm)$) -- ($(orig)+(\xscale*0.398412cm,\yscale*0.014271cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.398412cm,\yscale*0.0142711cm)$) -- ($(orig)+(\xscale*0.402318cm,\yscale*0.013779cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.402318cm,\yscale*0.0137791cm)$) -- ($(orig)+(\xscale*0.406224cm,\yscale*0.013298cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.406224cm,\yscale*0.0132981cm)$) -- ($(orig)+(\xscale*0.41013cm,\yscale*0.01284cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.41013cm,\yscale*0.012841cm)$) -- ($(orig)+(\xscale*0.414036cm,\yscale*0.012392cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.414036cm,\yscale*0.0123921cm)$) -- ($(orig)+(\xscale*0.417942cm,\yscale*0.011965cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.417942cm,\yscale*0.0119651cm)$) -- ($(orig)+(\xscale*0.421848cm,\yscale*0.011547cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.421848cm,\yscale*0.0115471cm)$) -- ($(orig)+(\xscale*0.425754cm,\yscale*0.011149cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.425754cm,\yscale*0.0111491cm)$) -- ($(orig)+(\xscale*0.42966cm,\yscale*0.01076cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.42966cm,\yscale*0.010761cm)$) -- ($(orig)+(\xscale*0.433566cm,\yscale*0.010389cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.433566cm,\yscale*0.0103891cm)$) -- ($(orig)+(\xscale*0.437472cm,\yscale*0.010027cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.437472cm,\yscale*0.0100271cm)$) -- ($(orig)+(\xscale*0.441378cm,\yscale*0.009681cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.441378cm,\yscale*0.0096811cm)$) -- ($(orig)+(\xscale*0.445284cm,\yscale*0.009344cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.445284cm,\yscale*0.0093441cm)$) -- ($(orig)+(\xscale*0.44919cm,\yscale*0.009021cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.44919cm,\yscale*0.0090211cm)$) -- ($(orig)+(\xscale*0.453096cm,\yscale*0.008707cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.453096cm,\yscale*0.0087071cm)$) -- ($(orig)+(\xscale*0.457002cm,\yscale*0.008407cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.457002cm,\yscale*0.0084071cm)$) -- ($(orig)+(\xscale*0.460908cm,\yscale*0.008113cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.460908cm,\yscale*0.0081131cm)$) -- ($(orig)+(\xscale*0.464814cm,\yscale*0.007833cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.464814cm,\yscale*0.0078331cm)$) -- ($(orig)+(\xscale*0.46872cm,\yscale*0.007562cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.46872cm,\yscale*0.0075621cm)$) -- ($(orig)+(\xscale*0.472626cm,\yscale*0.0073cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.472626cm,\yscale*0.00731cm)$) -- ($(orig)+(\xscale*0.476532cm,\yscale*0.007045cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.476532cm,\yscale*0.0070451cm)$) -- ($(orig)+(\xscale*0.480438cm,\yscale*0.006802cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.480438cm,\yscale*0.0068021cm)$) -- ($(orig)+(\xscale*0.484344cm,\yscale*0.006565cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.484344cm,\yscale*0.0065651cm)$) -- ($(orig)+(\xscale*0.48825cm,\yscale*0.006339cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.48825cm,\yscale*0.0063391cm)$) -- ($(orig)+(\xscale*0.492156cm,\yscale*0.006118cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.492156cm,\yscale*0.0061181cm)$) -- ($(orig)+(\xscale*0.496062cm,\yscale*0.005907cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.496062cm,\yscale*0.0059071cm)$) -- ($(orig)+(\xscale*0.499968cm,\yscale*0.005701cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.499968cm,\yscale*0.0057011cm)$) -- ($(orig)+(\xscale*0.503874cm,\yscale*0.005504cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.503874cm,\yscale*0.0055041cm)$) -- ($(orig)+(\xscale*0.50778cm,\yscale*0.005312cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.50778cm,\yscale*0.0053121cm)$) -- ($(orig)+(\xscale*0.511686cm,\yscale*0.005129cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.511686cm,\yscale*0.0051291cm)$) -- ($(orig)+(\xscale*0.515592cm,\yscale*0.00495cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.515592cm,\yscale*0.004951cm)$) -- ($(orig)+(\xscale*0.519498cm,\yscale*0.004779cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.519498cm,\yscale*0.0047791cm)$) -- ($(orig)+(\xscale*0.523404cm,\yscale*0.004613cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.523404cm,\yscale*0.0046131cm)$) -- ($(orig)+(\xscale*0.52731cm,\yscale*0.004454cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.52731cm,\yscale*0.0044541cm)$) -- ($(orig)+(\xscale*0.531216cm,\yscale*0.004298cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.531216cm,\yscale*0.0042981cm)$) -- ($(orig)+(\xscale*0.535122cm,\yscale*0.00415cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.535122cm,\yscale*0.004151cm)$) -- ($(orig)+(\xscale*0.539028cm,\yscale*0.004005cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.539028cm,\yscale*0.0040051cm)$) -- ($(orig)+(\xscale*0.542934cm,\yscale*0.003867cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.542934cm,\yscale*0.0038671cm)$) -- ($(orig)+(\xscale*0.54684cm,\yscale*0.003732cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.54684cm,\yscale*0.0037321cm)$) -- ($(orig)+(\xscale*0.550746cm,\yscale*0.003604cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.550746cm,\yscale*0.0036041cm)$) -- ($(orig)+(\xscale*0.554652cm,\yscale*0.003478cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.554652cm,\yscale*0.0034781cm)$) -- ($(orig)+(\xscale*0.558558cm,\yscale*0.003358cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.558558cm,\yscale*0.0033581cm)$) -- ($(orig)+(\xscale*0.562464cm,\yscale*0.003241cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.562464cm,\yscale*0.0032411cm)$) -- ($(orig)+(\xscale*0.56637cm,\yscale*0.003129cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.56637cm,\yscale*0.0031291cm)$) -- ($(orig)+(\xscale*0.570276cm,\yscale*0.00302cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.570276cm,\yscale*0.003021cm)$) -- ($(orig)+(\xscale*0.574182cm,\yscale*0.002916cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.574182cm,\yscale*0.0029161cm)$) -- ($(orig)+(\xscale*0.578088cm,\yscale*0.002814cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.578088cm,\yscale*0.0028141cm)$) -- ($(orig)+(\xscale*0.581994cm,\yscale*0.002717cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.581994cm,\yscale*0.0027171cm)$) -- ($(orig)+(\xscale*0.5859cm,\yscale*0.002622cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.5859cm,\yscale*0.0026221cm)$) -- ($(orig)+(\xscale*0.589806cm,\yscale*0.002532cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.589806cm,\yscale*0.0025321cm)$) -- ($(orig)+(\xscale*0.593712cm,\yscale*0.002444cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.593712cm,\yscale*0.0024441cm)$) -- ($(orig)+(\xscale*0.597618cm,\yscale*0.002359cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.597618cm,\yscale*0.0023591cm)$) -- ($(orig)+(\xscale*0.601524cm,\yscale*0.002278cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.601524cm,\yscale*0.0022781cm)$) -- ($(orig)+(\xscale*0.60543cm,\yscale*0.002199cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.60543cm,\yscale*0.0021991cm)$) -- ($(orig)+(\xscale*0.609336cm,\yscale*0.002122cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.609336cm,\yscale*0.0021221cm)$) -- ($(orig)+(\xscale*0.613242cm,\yscale*0.002049cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.613242cm,\yscale*0.0020491cm)$) -- ($(orig)+(\xscale*0.617148cm,\yscale*0.001977cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.617148cm,\yscale*0.0019771cm)$) -- ($(orig)+(\xscale*0.621054cm,\yscale*0.001909cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.621054cm,\yscale*0.0019091cm)$) -- ($(orig)+(\xscale*0.62496cm,\yscale*0.001843cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.62496cm,\yscale*0.0018431cm)$) -- ($(orig)+(\xscale*0.628866cm,\yscale*0.001779cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.628866cm,\yscale*0.0017791cm)$) -- ($(orig)+(\xscale*0.632772cm,\yscale*0.001717cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.632772cm,\yscale*0.0017171cm)$) -- ($(orig)+(\xscale*0.636678cm,\yscale*0.001658cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.636678cm,\yscale*0.0016581cm)$) -- ($(orig)+(\xscale*0.640584cm,\yscale*0.0016cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.640584cm,\yscale*0.00161cm)$) -- ($(orig)+(\xscale*0.64449cm,\yscale*0.001545cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.64449cm,\yscale*0.0015451cm)$) -- ($(orig)+(\xscale*0.648396cm,\yscale*0.001491cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.648396cm,\yscale*0.0014911cm)$) -- ($(orig)+(\xscale*0.652302cm,\yscale*0.00144cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.652302cm,\yscale*0.001441cm)$) -- ($(orig)+(\xscale*0.656208cm,\yscale*0.001389cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.656208cm,\yscale*0.0013891cm)$) -- ($(orig)+(\xscale*0.660114cm,\yscale*0.001341cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.660114cm,\yscale*0.0013411cm)$) -- ($(orig)+(\xscale*0.66402cm,\yscale*0.001295cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.66402cm,\yscale*0.0012951cm)$) -- ($(orig)+(\xscale*0.667926cm,\yscale*0.00125cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.667926cm,\yscale*0.001251cm)$) -- ($(orig)+(\xscale*0.671832cm,\yscale*0.001206cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.671832cm,\yscale*0.0012061cm)$) -- ($(orig)+(\xscale*0.675738cm,\yscale*0.001165cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.675738cm,\yscale*0.0011651cm)$) -- ($(orig)+(\xscale*0.679644cm,\yscale*0.001124cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.679644cm,\yscale*0.0011241cm)$) -- ($(orig)+(\xscale*0.68355cm,\yscale*0.001085cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.68355cm,\yscale*0.0010851cm)$) -- ($(orig)+(\xscale*0.687456cm,\yscale*0.001048cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.687456cm,\yscale*0.0010481cm)$) -- ($(orig)+(\xscale*0.691362cm,\yscale*0.001011cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.691362cm,\yscale*0.0010111cm)$) -- ($(orig)+(\xscale*0.695268cm,\yscale*0.000976cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.695268cm,\yscale*0.0009761cm)$) -- ($(orig)+(\xscale*0.699174cm,\yscale*0.000942cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.699174cm,\yscale*0.0009421cm)$) -- ($(orig)+(\xscale*0.70308cm,\yscale*0.00091cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.70308cm,\yscale*0.000911cm)$) -- ($(orig)+(\xscale*0.706986cm,\yscale*0.000878cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.706986cm,\yscale*0.0008781cm)$) -- ($(orig)+(\xscale*0.710892cm,\yscale*0.000848cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.710892cm,\yscale*0.0008481cm)$) -- ($(orig)+(\xscale*0.714798cm,\yscale*0.000818cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.714798cm,\yscale*0.0008181cm)$) -- ($(orig)+(\xscale*0.718704cm,\yscale*0.00079cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.718704cm,\yscale*0.000791cm)$) -- ($(orig)+(\xscale*0.72261cm,\yscale*0.000763cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.72261cm,\yscale*0.0007631cm)$) -- ($(orig)+(\xscale*0.726516cm,\yscale*0.000736cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.726516cm,\yscale*0.0007361cm)$) -- ($(orig)+(\xscale*0.730422cm,\yscale*0.000711cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.730422cm,\yscale*0.0007111cm)$) -- ($(orig)+(\xscale*0.734328cm,\yscale*0.000686cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.734328cm,\yscale*0.0006861cm)$) -- ($(orig)+(\xscale*0.738234cm,\yscale*0.000662cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.738234cm,\yscale*0.0006621cm)$) -- ($(orig)+(\xscale*0.74214cm,\yscale*0.000639cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.74214cm,\yscale*0.0006391cm)$) -- ($(orig)+(\xscale*0.746046cm,\yscale*0.000617cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.746046cm,\yscale*0.0006171cm)$) -- ($(orig)+(\xscale*0.749952cm,\yscale*0.000596cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.749952cm,\yscale*0.0005961cm)$) -- ($(orig)+(\xscale*0.753858cm,\yscale*0.000575cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.753858cm,\yscale*0.0005751cm)$) -- ($(orig)+(\xscale*0.757764cm,\yscale*0.000555cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.757764cm,\yscale*0.0005551cm)$) -- ($(orig)+(\xscale*0.76167cm,\yscale*0.000536cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.76167cm,\yscale*0.0005361cm)$) -- ($(orig)+(\xscale*0.765576cm,\yscale*0.000517cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.765576cm,\yscale*0.0005171cm)$) -- ($(orig)+(\xscale*0.769482cm,\yscale*0.000499cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.769482cm,\yscale*0.0004991cm)$) -- ($(orig)+(\xscale*0.773388cm,\yscale*0.000482cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.773388cm,\yscale*0.0004821cm)$) -- ($(orig)+(\xscale*0.777294cm,\yscale*0.000465cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.777294cm,\yscale*0.0004651cm)$) -- ($(orig)+(\xscale*0.7812cm,\yscale*0.000449cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.7812cm,\yscale*0.0004491cm)$) -- ($(orig)+(\xscale*0.785106cm,\yscale*0.000434cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.785106cm,\yscale*0.0004341cm)$) -- ($(orig)+(\xscale*0.789012cm,\yscale*0.000418cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.789012cm,\yscale*0.0004181cm)$) -- ($(orig)+(\xscale*0.792918cm,\yscale*0.000404cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.792918cm,\yscale*0.0004041cm)$) -- ($(orig)+(\xscale*0.796824cm,\yscale*0.00039cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.796824cm,\yscale*0.000391cm)$) -- ($(orig)+(\xscale*0.80073cm,\yscale*0.000376cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.80073cm,\yscale*0.0003761cm)$) -- ($(orig)+(\xscale*0.804636cm,\yscale*0.000363cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.804636cm,\yscale*0.0003631cm)$) -- ($(orig)+(\xscale*0.808542cm,\yscale*0.000351cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.808542cm,\yscale*0.0003511cm)$) -- ($(orig)+(\xscale*0.812448cm,\yscale*0.000339cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.812448cm,\yscale*0.0003391cm)$) -- ($(orig)+(\xscale*0.816354cm,\yscale*0.000327cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.816354cm,\yscale*0.0003271cm)$) -- ($(orig)+(\xscale*0.82026cm,\yscale*0.000316cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.82026cm,\yscale*0.0003161cm)$) -- ($(orig)+(\xscale*0.824166cm,\yscale*0.000305cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.824166cm,\yscale*0.0003051cm)$) -- ($(orig)+(\xscale*0.828072cm,\yscale*0.000294cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.828072cm,\yscale*0.0002941cm)$) -- ($(orig)+(\xscale*0.831978cm,\yscale*0.000284cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.831978cm,\yscale*0.0002841cm)$) -- ($(orig)+(\xscale*0.835884cm,\yscale*0.000274cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.835884cm,\yscale*0.0002741cm)$) -- ($(orig)+(\xscale*0.83979cm,\yscale*0.000265cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.83979cm,\yscale*0.0002651cm)$) -- ($(orig)+(\xscale*0.843696cm,\yscale*0.000255cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.843696cm,\yscale*0.0002551cm)$) -- ($(orig)+(\xscale*0.847602cm,\yscale*0.000246cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.847602cm,\yscale*0.0002461cm)$) -- ($(orig)+(\xscale*0.851508cm,\yscale*0.000238cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.851508cm,\yscale*0.0002381cm)$) -- ($(orig)+(\xscale*0.855414cm,\yscale*0.00023cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.855414cm,\yscale*0.000231cm)$) -- ($(orig)+(\xscale*0.85932cm,\yscale*0.000222cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.85932cm,\yscale*0.0002221cm)$) -- ($(orig)+(\xscale*0.863226cm,\yscale*0.000214cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.863226cm,\yscale*0.0002141cm)$) -- ($(orig)+(\xscale*0.867132cm,\yscale*0.000207cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.867132cm,\yscale*0.0002071cm)$) -- ($(orig)+(\xscale*0.871038cm,\yscale*0.000199cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.871038cm,\yscale*0.0001991cm)$) -- ($(orig)+(\xscale*0.874944cm,\yscale*0.000192cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.874944cm,\yscale*0.0001921cm)$) -- ($(orig)+(\xscale*0.87885cm,\yscale*0.000186cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.87885cm,\yscale*0.0001861cm)$) -- ($(orig)+(\xscale*0.882756cm,\yscale*0.000179cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.882756cm,\yscale*0.0001791cm)$) -- ($(orig)+(\xscale*0.886662cm,\yscale*0.000173cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.886662cm,\yscale*0.0001731cm)$) -- ($(orig)+(\xscale*0.890568cm,\yscale*0.000167cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.890568cm,\yscale*0.0001671cm)$) -- ($(orig)+(\xscale*0.894474cm,\yscale*0.000161cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.894474cm,\yscale*0.0001611cm)$) -- ($(orig)+(\xscale*0.89838cm,\yscale*0.000156cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.89838cm,\yscale*0.0001561cm)$) -- ($(orig)+(\xscale*0.902286cm,\yscale*0.00015cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.902286cm,\yscale*0.000151cm)$) -- ($(orig)+(\xscale*0.906192cm,\yscale*0.000145cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.906192cm,\yscale*0.0001451cm)$) -- ($(orig)+(\xscale*0.910098cm,\yscale*0.00014cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.910098cm,\yscale*0.000141cm)$) -- ($(orig)+(\xscale*0.914004cm,\yscale*0.000135cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.914004cm,\yscale*0.0001351cm)$) -- ($(orig)+(\xscale*0.91791cm,\yscale*0.000131cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.91791cm,\yscale*0.0001311cm)$) -- ($(orig)+(\xscale*0.921816cm,\yscale*0.000126cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.921816cm,\yscale*0.0001261cm)$) -- ($(orig)+(\xscale*0.925722cm,\yscale*0.000122cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.925722cm,\yscale*0.0001221cm)$) -- ($(orig)+(\xscale*0.929628cm,\yscale*0.000117cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.929628cm,\yscale*0.0001171cm)$) -- ($(orig)+(\xscale*0.933534cm,\yscale*0.000113cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.933534cm,\yscale*0.0001131cm)$) -- ($(orig)+(\xscale*0.93744cm,\yscale*0.000109cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.93744cm,\yscale*0.0001091cm)$) -- ($(orig)+(\xscale*0.941346cm,\yscale*0.000106cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.941346cm,\yscale*0.0001061cm)$) -- ($(orig)+(\xscale*0.945252cm,\yscale*0.000102cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.945252cm,\yscale*0.0001021cm)$) -- ($(orig)+(\xscale*0.949158cm,\yscale*0.000098cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.949158cm,\yscale*0.0000981cm)$) -- ($(orig)+(\xscale*0.953064cm,\yscale*0.000095cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.953064cm,\yscale*0.0000951cm)$) -- ($(orig)+(\xscale*0.95697cm,\yscale*0.000092cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.95697cm,\yscale*0.0000921cm)$) -- ($(orig)+(\xscale*0.960876cm,\yscale*0.000089cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.960876cm,\yscale*0.0000891cm)$) -- ($(orig)+(\xscale*0.964782cm,\yscale*0.000086cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.964782cm,\yscale*0.0000861cm)$) -- ($(orig)+(\xscale*0.968688cm,\yscale*0.000083cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.968688cm,\yscale*0.0000831cm)$) -- ($(orig)+(\xscale*0.972594cm,\yscale*0.00008cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.972594cm,\yscale*0.000081cm)$) -- ($(orig)+(\xscale*0.9765cm,\yscale*0.000077cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.9765cm,\yscale*0.0000771cm)$) -- ($(orig)+(\xscale*0.980406cm,\yscale*0.000074cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.980406cm,\yscale*0.0000741cm)$) -- ($(orig)+(\xscale*0.984312cm,\yscale*0.000072cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.984312cm,\yscale*0.0000721cm)$) -- ($(orig)+(\xscale*0.988218cm,\yscale*0.000069cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.988218cm,\yscale*0.0000691cm)$) -- ($(orig)+(\xscale*0.992124cm,\yscale*0.000067cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.992124cm,\yscale*0.0000671cm)$) -- ($(orig)+(\xscale*0.99603cm,\yscale*0.000064cm)$);
+    \draw[envstyle] ($(orig)+(\xscale*0.99603cm,\yscale*0.0000641cm)$) -- ($(orig)+(\xscale*1cm,\yscale*0cm)$);
+      
+
+
+% various annotations
 
    \coordinate(orig)at($(#1)+#2*(0cm,1cm)+(0cm,2.5cm)$);
       \draw[to-to, line width = 2pt] (orig) -- ($(orig)+#3*(1cm,0cm)$); 
@@ -1068,6 +1591,9 @@
     \node[rectangle, font=\fontsize{20}{12}\selectfont, fill=white, anchor = center] at ($(orig) + (13.75cm,8.75cm)$) {\panelfont{LFO-MOD}};
     \prophetpot{$(orig) +(4cm,5cm)$}{FREQUENCY}{75};
     \pswitch{$(orig)+(9cm,5cm)$}{} % need to add the symbols
+    \node[rectangle, anchor = center, draw, line width=2pt, minimum width = 0.5cm, minimum height = 0.5cm] at ($(orig) + (9cm,2.8cm)$) {};
+    \node[circle, anchor = center, draw, line width=2pt, minimum width = 0.5cm] at ($(orig) + (9cm,7cm)$) {};
+    \node[rectangle, font=\fontsize{18}{12}\selectfont, fill=white, anchor = center] at ($(orig)+(9cm,1.7cm)$) {\panelfont{SHAPE}};
     \prophetpot{$(orig) + (14cm,5cm)$}{AMOUNT}{75};
     \pswitch{$(orig)+(19cm,5cm)$}{VCO} % 
     \pswitch{$(orig)+(22cm,5cm)$}{PWM} % 
@@ -1094,6 +1620,23 @@
     \prophetpot{$(orig) + (33cm,5cm)$}{VOLUME}{75};
 }
 
+\newcommand\oscpanelbasicsci[2]
+{
+    \coordinate(orig)at(#1);
+    \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 25cm, minimum height = 7cm, anchor = south west](r) at (#1) {};
+    \node[rectangle, font=\fontsize{20}{12}\selectfont, fill=white, anchor = center] at ($(orig) + (15.63cm,8.75cm)$) {\panelfont{#2}};
+    \prophetpot{$(orig) +(4cm,5cm)$}{FREQUENCY}{75};
+    \pswitch{$(orig)+(16cm,5cm)$}{} % 
+    \draw[line width = 2pt] ($(orig)+(15.65cm,6.8cm)$) -- ($(orig)+(16.35cm,7.5cm)$) -- ($(orig)+(16.35cm,6.8cm)$);
+    \pswitch{$(orig)+(19cm,5cm)$}{} % 
+    \draw[line width = 2pt] ($(orig)+(18.55cm,6.8cm)$) -- ($(orig)+(19.0cm,7.5cm)$) -- ($(orig)+(19.45cm,6.8cm)$);
+    \pswitch{$(orig)+(22cm,5cm)$}{} % 
+    \draw[line width = 2pt] ($(orig)+(21.75cm,6.8cm)$) -- ($(orig)+(21.75cm,7.5cm)$) -- ($(orig)+(22.25cm,7.5cm)$) --($(orig)+(22.25cm,6.8cm)$) -- ($(orig)+(22.55cm,6.8cm)$);
+    \draw[line width = 2pt] ($(orig)+(15.5,3cm)$) -- ($(orig)+(22.5cm,3cm)$);
+    \node[rectangle, font=\fontsize{18}{12}\selectfont, fill=white, anchor = center] at ($(orig)+(19cm,3cm)$) {\panelfont{SHAPE}};
+    \prophetpot{$(orig) + (27cm,5cm)$}{PULSE WIDTH}{75};
+}
+
 \newcommand\oscapanel[1]
 {
     \coordinate(orig)at(#1);
@@ -1105,6 +1648,20 @@
 {
     \coordinate(orig)at(#1);
     \oscpanelbasic{#1}{OSCILLATOR B}
+    \prophetpotbiplar{$(orig) +(10cm,5cm)$}{FINE}{75};
+}
+
+\newcommand\oscapanelsci[1]
+{
+    \coordinate(orig)at(#1);
+    \oscpanelbasicsci{#1}{OSCILLATOR A}
+    \pswitch{$(orig)+(10cm,5cm)$}{SYNC} % 
+}
+
+\newcommand\oscbpanelsci[1]
+{
+    \coordinate(orig)at(#1);
+    \oscpanelbasicsci{#1}{OSCILLATOR B}
     \prophetpotbiplar{$(orig) +(10cm,5cm)$}{FINE}{75};
 }
 
@@ -1134,12 +1691,24 @@
     \prophetpot{$(orig) +(10cm,3.5cm)$}{DECAY}{75};
     \prophetpot{$(orig) +(16cm,3.5cm)$}{SUSTAIN}{75};
     \prophetpot{$(orig) +(22cm,3.5cm)$}{RELEASE}{75};
+    
+    \coordinate(orig)at($(#1) +(22cm,8.7cm)$);
+    \node[rectangle, draw, anchor = center, fill=gray!20!white, minimum height = 2.5cm, minimum width = 1cm] at (orig) {};
+    \node[rectangle, draw, anchor = south, fill = white, minimum height = 24pt, minimum width = 1cm, line width = 2pt] at (orig) {};
+    \foreach \i in {0,1,...,7}
+        \draw[line width=1pt] ($(orig)+(-0.625,0cm+4*\i pt)$)-- ($(orig)+(0.625cm,0cm+4*\i pt)$);
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center, align=left, text width = 3cm] at ($(orig)+(2.8cm,-1.1cm)$) {\panelfont{OFF}};    
+        \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center, align=left, text width = 3cm] at ($(orig)+(2.8cm,0.0cm)$) {\panelfont{1/2}};    
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center, align=left, text width = 3cm] at ($(orig)+(2.8cm,1.1cm)$) {\panelfont{FULL}};    
+
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center, align=center, text width = 7cm] at ($(orig)+(0cm,2.1cm)$) {\panelfont{KEYBOARD}};    
+
 }
 
 \newcommand\envroute[1]
 {
  
-    \node[font=\fontsize{24}{12}\selectfont, fill=white, align=left, text width = 12cm, inner sep=0.5mm, anchor = north west] at ($(#1) +(-16cm,22cm)$) {Envelope routing options using the additiona patch parameter \textbf{(555) Envelope Routing}};
+    \node[font=\fontsize{24}{12}\selectfont, fill=white, align=left, text width = 12cm, inner sep=0.5mm, anchor = north west] at ($(#1) +(-16cm,22cm)$) {Envelope routing options using the additional patch parameter \textbf{(555) Envelope Routing}};
 
     \coordinate(orig)at($(#1) +(4cm,12cm)$);
     \node[font=\fontsize{24}{12}\selectfont, fill=white, align=left, text width = 10cm, inner sep=0.5mm, anchor = north west] at ($(orig) + (0cm,10cm)$) {\textit{standard} routing:};
@@ -1187,6 +1756,11 @@
 
     \draw[-to, line width = 2pt] (fe.east) -- (fcu.west);
     \draw[-to, line width = 2pt] (2e.east) -- (ply.west);
+}
+
+\newcommand\addpar[2]{
+    \coordinate(orig)at(#1);
+    \node[rectangle, font=\fontsize{20}{12}\selectfont, inner sep = 0.2cm, , anchor = north west, text width = 10cm, text height = 2cm] at ($(orig) + (0cm,5cm)$) {\baselineskip=25pt #2 \par};
 }
 
 

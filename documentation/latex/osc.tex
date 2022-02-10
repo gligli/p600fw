@@ -1,19 +1,76 @@
-For each of the six voices the Prophet 600 has two voltage controlled oscillators (VCOs) \footnote{The oscillators are Curtis CEM3340 chips}, VCO A and VCO B. Each has a dedicated control field on the panel. The oscillators are identical, offering three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The pulse width of the pulse shape can be adjusted using the corresponding \textbf{Pulse Width} dial. All three shapes can be activated simultaneously. 
+For each of the six voices the Prophet 600 has two voltage controlled oscillators (VCOs) VCO A and VCO B. Each one has a dedicated sub-panel on the panel. The oscillators are identical, offering three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The pulse width of the pulse shape can be adjusted using the corresponding \pulsewidth dial. All three shapes can be activated simultaneously. 
 
 \begin{center}
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
+    \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter oscillator sets the units of the two oscillator frequency dials, e.g. \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
     \oscapanel{0,10cm}
     \oscbpanel{0,0cm}
+    \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,15cm);
+    \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,6cm);
   \end{tikzpicture}
 }
 \end{center}
 
 
-Both oscillators have a \textbf{Frequency} dial which determines the range of the oscillators when played from the keyboard or via MIDI.  The granularity of the Frequency dials can be set to \textit{free}, \textit{semitone} or \textit{octave} (the default) to support the users in the processes. The corresponding parameter is the additional patch parameter \textbf{(88) OSC Pitch Mode} (accessible by pressing 8 twice). An additional \textbf{Fine} dial, available for For VCO B only,  allows for fine tuning of the relative frequency. The man purpose of separate Frequency dials per oscillator as pat of a patch is to be able to detune them against one another. This can be used to create thick and lively patches (when pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of the poly-mod, see section \ref{polymod}. 
+Both oscillators have a \oscfreq dial which determines the frequency range of the oscillators when played from the keyboard or via MIDI.  The user can choose the granularity of the Frequency dials: 
+\begin{itemize}
+  \item \textit{free}: the base frequency can be chosen freely. The dial value selection is continuous and the \display shows approximate values between 0 and 99 in the normal way
+  \item \textit{semitone}: the base frequency can be selected in semitones. The dial value selection is discrete and the \display shows values from 0 to 63 (semitones).   
+  \item \textit{octave}: the base frequency can be selected in octaves. The dial value selection is discrete and the \display shows values c0, c1, c2, c3, c4 or c5. 
+\end{itemize}  
+In addition there are mixed settings, e.g. \textit{octave-semitone}, \textit{semitone-octave}, \textit{octave-free} and \textit{free-octave} providing different granularity for oscillators A and B. The parameter to select the granularity is the additional patch parameter \oscpitchmode. 
 
-VCO A has an additional \textbf{Sync} switch. The hardware of the Prophet 600 offers are hard sync of oscillator A to oscillator B, e.g. VCO A is reset to the cycle start when VCO B completes a cycle. 
+An additional \freqfine dial (available for oscillator B only) is bipolar and it is used for frequency fine tuning with a range of about $\pm 1$ semitone. The main purpose of separate frequency settings per oscillator as part of a patch is to be able to detune them against one another. This can be used to create thick and lively patches (when pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of the poly-mod, see section \ref{polymod}. To be able to tune the relative frequency very accurately, the \freqfine control has a very sensitive (e.g. slow changing) mid region between -1 and 1.
 
-Finally, the outputs of both oscillators are mixed into one signal before entering the filter and output stages. The mix panel provides an \textbf{OSC A Volume} dial and an \textbf{OSC B Volume} dial for this purpose. The normalised output of both oscillators is about half way of the respective dial. Beyond this, the amplifiers into the filter can be over-driven. This is a new feature of the upgraded firmware.
+The oscillator A has an additional \oscsync switch. The hardware of the Prophet 600 offers hard sync of oscillator A to oscillator B, e.g. when \oscsync is activated, oscillator A is reset to the cycle start when oscillator B completes a cycle. 
 
-Note that in the original Prophet 600 setup these two dials had a different function, oscillator mix and glide, respectively. In the firmware upgrade the glide function has been moved to the \textbf{Additional Patch Parameters}, see section \ref{glide}. 
+Finally, the outputs of both oscillators are mixed into one signal before entering the filter and output stages. The volume of oscillators A and B are either set by the \vola and \volb dials in the GliGli panel layout or the \mixer and \drive parameters in SCI panel layout as described in the following. For details on switching the panel layout, see section \ref{panelswitch}.
+
+\textbf{Oscillator mix in GliGli panel layout}
+
+The panel schematic is shown above. Each oscillator has a volume control. The normalised output of either oscillator is about half way of the respective dial. Beyond this, the amplifiers into the filter can be over-driven. This is a new feature of the upgraded firmware from version 2.0 on.
+
+\textbf{Oscillator mix in SCI panel layout}
+
+In the SCI panel layout the two dials are designated \mixer (becoming a bipolar dial) and \glidepot and these control the oscillator mix and the glide time, respectively. For glide amount see section \ref{glide}. In order to cover the entire range of oscillator volumes which the GliGli controls provide, there is an additional menu parameter \drive which becomes available available when the SCI panel layout is selected. The original Sequential Circuits mix function corresponds to a half-way value for \drive at which oscillators A and B are mixed linearly. At \mixer =-50 oscillator A is at full volume and oscillator B is silent. At \mixer =+50 oscillator B is at full volume and oscillator A is silent.  For smaller and larger values of \drive the oscillator mix function is modified as shown below.
+
+
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \addpar{-2cm,14cm}{\textbf{Oscillator mix function} \\ In SCI panel layout the volumes of oscillator A and B are set by using the \mixer control and the menu parameter \drive.};
+
+    \coordinate(orig)at(20cm,0cm);
+      
+      % A-axis
+    \draw[-to, line width = 2pt] (orig) -- ($(orig)+(12cm,0cm)$); 
+    \node[rectangle, font=\fontsize{17}{12}\selectfont, anchor = west] at ($(orig)+(12.2cm,0cm)$) {Osc B}; 
+    \node[rectangle, font=\fontsize{15}{12}\selectfont, anchor = north] at ($(orig)+(10cm,-0.2cm)$) {Full}; 
+    \node[rectangle, font=\fontsize{15}{12}\selectfont, anchor = north] at ($(orig)+(5cm,-0.2cm)$) {Half}; 
+    \draw[-to, line width = 2pt] (orig) -- ($(orig)+(0cm,12cm)$); 
+    \node[rectangle, font=\fontsize{17}{12}\selectfont, anchor = south] at ($(orig)+(0cm,12.2cm)$) {Osc A}; 
+    \node[rectangle, font=\fontsize{15}{12}\selectfont, anchor = east] at ($(orig)+(-0.2cm,10cm)$) {Full}; 
+    \node[rectangle, font=\fontsize{15}{12}\selectfont, anchor = east] at ($(orig)+(-0.2cm,5cm)$) {Half}; 
+
+    \prophetpotbiplar{37cm,0cm}{MIXER}{310};
+    \prophetpotbiplar{20cm,17cm}{MIXER}{240};
+    \prophetpotbiplar{32.5cm,12.5cm}{MIXER}{90};
+
+    \draw[to-to, line width = 2pt] ($(orig)+(10cm,0.2cm)$) -- ($(orig)+(0.2cm,10cm)$); 
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, rotate=-45, anchor = south] at ($(orig)+(4.2cm,6.2cm)$) {drive=50}; 
+
+    \draw[to-to, line width = 2pt] ($(orig)+(5cm,0.2cm)$) -- ($(orig)+(0.2cm,5cm)$); 
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, rotate=-45, anchor = south] at ($(orig)+(2.4cm,3cm)$) {drive=25}; 
+
+    \draw[to-to, line width = 2pt] ($(orig)+(2cm,0.2cm)$) -- ($(orig)+(0.2cm,2cm)$); 
+
+    \draw[-to, line width = 2pt] ($(orig)+(7.6cm,7.6cm)$) -- ($(orig)+(0.6cm,9.9cm)$); 
+    \draw[-to, line width = 2pt] ($(orig)+(7.6cm,7.6cm)$) -- ($(orig)+(9.9cm,0.6cm)$); 
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, rotate=-18.4, anchor = east] at ($(orig)+(7.7cm,8.04cm)$) {drive=75}; 
+
+    \draw[-to, line width = 2pt] ($(orig)+(9cm,9cm)$) -- ($(orig)+(0.2cm,10.2cm)$); 
+    \draw[-to, line width = 2pt] ($(orig)+(9cm,9cm)$) -- ($(orig)+(10.2cm,0.2cm)$); 
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, rotate=-6.39, anchor = east] at ($(orig)+(8.9cm,9.56cm)$) {drive=90}; 
+
+  \end{tikzpicture}
+}

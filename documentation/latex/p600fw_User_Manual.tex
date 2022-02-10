@@ -10,6 +10,8 @@
 \usepackage{fontspec}
 \usepackage[T1]{fontenc}
 \usepackage{longtable}
+\usepackage{ProphetTerms}
+\usepackage{float}
 %\usepackage[inline]{showlabels}
 \setmainfont[
  BoldFont={FiraSans-Bold}, 
@@ -64,6 +66,7 @@
         \SSGBit[1.5cm]{25cm,0}{123456}
       \end{scope}
   \end{tikzpicture}
+
   
   \Huge
   User Manual
@@ -82,7 +85,7 @@
 
 \section{What you can expect from the Firmware Upgrade}
 
-The credit of the original idea and implementation of the Prophet 600 firmware upgrade belongs to GliGli\cite{gligli}. He describes his motivation as follows:
+The credit of the original idea and implementation of the Prophet 600 firmware upgrade dulybelongs to GliGli\cite{gligli}. He describes his motivation as follows:
 
 \begin{addmargin}[2cm]{1cm}
 
@@ -90,73 +93,89 @@ The credit of the original idea and implementation of the Prophet 600 firmware u
 
 \end{addmargin}
 
-The original Sequential Circuits Prophet 600 is run by a Z80 processor. This processor and firmware written for it reach their limits when computing the voltages, scanning user inputs and managing MIDI events making the instrment glitchy and non-responsive. GliGli reversed engineered the original firmware for the Z80 and found that the Z80 can be replaced by a (more) modern Teensy 2.0++ USB programmable microprocessor \cite{teensy}. The Teensy not only fits in to the 2x20 pin standard header but could also be programmed to take the role of Z80 with only slight modifications. In this way the limitations of the original Prophet 600 could be overcome - but more than that, it opened the possibility for new features (which may or may not have been on the feature list of Sequential Circuits). There are various modifications and modern CPU "implants" for some vintage analog synthesizers. One decisive advantage of the Teensy approach to the Prophet 600 is that it is an easy-to-install and non-destructive firmware drop-in replacement\footnote{There are two versions of the Prophet 600. One has the Z80 on a socket. In this case replacement is truly "drop-in". The other version has the Z80 soldered to the circuit board. In this case the Z80 needs to be removed a socket has to be soldered in its place first.}. So it is safe to try it out because one can always remove the Teensy board and restore the Z80 without technical expertise or training.
+The original Sequential Circuits Prophet 600 is run by a Z80 processor. This processor and firmware written for it, reach their limits when computing the voltages, scanning user inputs and managing MIDI events making the instrment glitchy and non-responsive. GliGli reversed engineered the original firmware for the Z80 and found that the Z80 can be replaced by a (more) modern Teensy 2.0++ USB programmable microprocessor \cite{teensy}. The Teensy not only fits in to the same 2x20 pin standard socket but could also be programmed to take the role of Z80 with only slight modifications. While the Z80 version ran at 4 MHz, the AVR process on the Teensy board runs at 16 MHz. With the replacement the  limitations of the original Prophet 600 could be overcome - but more than that, it opened the possibility for new or improved features.   There are various modifications and modern CPU "implants" for some vintage analog synthesizers. One decisive advantage of the Teensy approach to the Prophet 600 is that it is an easy-to-install and non-destructive firmware drop-in replacement\footnote{There are two versions of the Prophet 600. One has the Z80 on a socket. In this case replacement is truly "drop-in". The other version has the Z80 soldered to the circuit board. In this case the Z80 needs to be removed a socket has to be soldered in its place first.}. So it is safe to try it out because one can always remove the Teensy board and restore the Z80 without technical expertise or training. Looking at the evolution of the Teensy based firmware upgrade, one can safely say, that with the Z80 replaced final limitations arise from other hardware components, or the technical architecture in general, especially the user control readout which is done using a DAC and multiplexer. 
 
-Developing the software was a major effort with low level functions at the core which deal with setting voltages to the electronic components, processing clock alignment, MIDI implementation, decoding the user inputs from dials, buttons and the keyboard and last but not least the "musical" coding of envelopes, modulations and sequencing functions. Many people have contributed, many out of curiosity and passion for synthesizers, most out of excitement that such a project could not only be conjured up but also be implemented and brought to life. The hardware of the Prophet 600 certainly justifies the effort: other than many DCO synths of the time the Prophet 600 is a 6 voice analog synthesizer driven by 12 voltage controlled oscillators (VCOs) and 24db low pass filters, all implemented using the famous Curtis chips\cite{curtis}. Furthermore, the hardware provides hard sync, ring modulation and modulation of cut-off by VCO. It is very versatile.
+Developing the software was a major effort with low level functions at the core which deal with setting voltages to the electronic components, MIDI implementation, decoding the user inputs from dials, buttons and the keyboard and last but not least the "musical" coding of envelopes, modulations and sequencing functions. Many people have contributed, many out of curiosity and passion for synthesizers, most out of excitement that such a project could not only be conjured up but also be implemented and brought to life. The hardware of the Prophet 600 justifies the effort: unlike than many DCO synths which became popular and affordable at the time, the Prophet 600 is a 6 voice analog synthesizer driven by 2 voltage controlled oscillators (VCOs) and a 24db low pass filter per voice, all implemented using the renowned Curtis chips\cite{curtis}. Furthermore, the hardware provides hard sync, ring modulation and modulation of cut-off by VCO. It is very versatile.
 
-The following is a compact summary of the improved and the  new features which the upgraded Prophet 600 provides on this hardware. The manual refers to version 2.2 and differences between versions are marked or commented in the text. 
+The following is a compact summary of the improved and the  new features which the upgraded Prophet 600 provides on this hardware. The manual refers to version \version and differences between versions are marked or commented in the text. 
 
 \textbf{General features}
   
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item Greater resolution of many of the sound parameters with an improved refresh rate that is making the instrument much more responsive
+  \item Greater resolution of many of the sound parameters with an improved refresh rate that is making the instrument much more responsive, again improved in \version using a dynamic scheme for reading user controls.
   \item Faster and smoother ADSR envelopes with support two speed regimes (slow, fast) and two shapes (linear, exponential)
-  \item positive and negative envelope amount settings for filter and poly-mod
+  \item Positive and negative envelope amount settings for filter and poly-mod 
   \item A new LFO function generator with a wider frequency range from one cycle every 20 seconds to about 60Hz
   \item Assignable, Random And Up/Down Arpeggiator sync-able to MIDI clock
   \item Multiple note assignment modes including last/low/high note priority
   \item Full MIDI In control including amplitude and filter velocity sensitivity with an external keyboard controller, continuous Controllers (CC) of all sound parameters, program change (PC) to choose current preset
-  \item A dedicated vibrato which can be controlled by the modulation wheel, or can start progressively after a fixed amount of time
-  \item Keyboard mode chord in addition to polyphonic and unison  
-  \item Four new waveforms in addition to the original triangle and square including sine, random stepped, noise (like on the original Prophet 5, but non-periodic) and sawtooth (ramp up)
-  \item Mix Overdrive which now allows the output from both oscillators to drive the mix VCAs A and B harder as well as the Curtis 4 pole filter resulting in new sonic possibilities
+  \item A dedicated vibrato which can be controlled by the modulation wheel
+  \item Unison chord mode chord
+  \item Four new LFO waveforms in addition to the original triangle and square including sine, random stepped, noise (like on the original Prophet 5, but non-periodic) and sawtooth (ramp up)
+  \item Mix overdrive which now allows the output from both oscillators to drive the mix VCAs A and B harder as well as the Curtis 4 pole filter resulting in new sonic possibilities
   \item Pitch Wheel interval selection of plus/minus one octave, a whole tone, a minor third and a fifth
   \item Pitch Wheel reassignment to the VCF and Volume or off   
-  \item Modulation wheel intensity setting from Maximum to Medium to Minimum
+  \item Modulation wheel intensity setting in four steps
   \item A new and improved tuning procedure
   \item Octave, chromatic and free Oscillator course pitch control
   \item Debounce feature that prevents unintended re-triggering caused by the old keyboard
 \end{itemize}
 
-\textbf{Features with version 2.1 RC3}
+\textbf{Specific features from version 2.1 RC3 on}
   
 \begin{itemize}
+  \setlength\itemsep{0cm}
   \item Polyphonic step sequencer
   \item Per note tuning
-  \item Support for external CV
   \item Improved UI, introducing display of -50...48 range for bipolar dials and center deadband for better handling  
   \item VCF limit option
-  \item Maintenance mode
+  \item Maintenance mode / adjustment scaling
   \item Support for pedal to sustain notes and to hold chords (in unison)
   \item On-the-lfly transpose function for arpeggiator and sequencer
 \end{itemize}
 
-\textbf{Features with version (t.b.d.)}
+\textbf{Features with version \version}
   
 \begin{itemize}
+  \setlength\itemsep{0cm}
+  \item Smoother and more responsive actions of all controls due to dynamic scanning scheme 
+  \item Softer (exponential) onset of LFO settings (frequency and amount) to provide more travel for common "musical" value ranges
+  \item Super accurate oscillator B fine tuning using a slow mid region
+  \item Improved enevelope shapes inspired by the Prophet 5 rev 1/2 shapes, replacing the linear shape in versions 2.0 and 2.1 RC3.  
+  \item Revised and more intuitive organisation of menu parameters in groups 
   \item A new UI concept in preset mode in which the dials have a pick-me-up behaviour, in order to avoid discontinuous value changes and to make the differences between panel and internal values transparent 
+  \item Switchable panel layout with choices: Mix / Glide and Volume A / Volume B 
   \item Flexible envelope routing allowing the poly-mod to by modulated by either envelope generator
   \item Possibility to sync the LFO to the thythm of the arpeggiator or sequencer
   \item Continuous spread parameter introducing voice variations in tune and envelopes
-  \item Better MIDI integration possibilities through new local off mode
+  \item Better MIDI integration possibilities through new local off mode and MIDI input into sequencer and arpeggiator
   \item Improved patch management via MIDI, supporting loading MIDI patch to active controls 
   \item Various improvements such as arppegiator / sequencer speed stability and reconciliation of internal and external bend  
+  \item Changed arpeggiator patterns: omitting the top and bottom note repeat in the U/D arpeggiator pattern and removing note repeats in the random pattern
+  \item Support for controlling the external CV input amount
+  \item Vibrato target VCA
 \end{itemize}
+
+In addition to this several more technical / advanced changes were made such as the possibility to switch between "round robin" and "first" voice assign logic, possibility to toggle a pulse width sync bug which has been introduced in the version 2.0 (and kept for compatibility in version 2.1 RC3), changes to remove the interference  of internal and external (MIDI) pitch bend by adding the two (as in the original SCI firmware), stabilization of the external analog clock input.
 
 \section{Versions of the firmware upgrade and compatibility}
 
-The first stable version of the Firmware Upgrade was version 2.0 \cite{versiontwo}. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 has been available from September 5th 2015 on \cite{gligli}. The current release is version (t.b.d.). 
+The first stable version of the Firmware Upgrade was version 2.0 \cite{versiontwo} in 2014. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 (2.1 RC3) has been available from September 5th 2015 on \cite{gligli}. The current release is version (t.b.d.). 
 
-Upgrading the firmware can be done by SysEx (or directly using the USB port of the Teensy board), see section \ref{fwupgrade}. When upgrading the Prophet 600 patch data and settings are preserved. Note that since this is an open source project different variants of the firmware upgrade have been developed by users. In the main development branch, however, backward compatibility is intended to be ensured. This applies in particular to patches and settings as stored in the Prophet 600 memory or dumped SysEx files. It also applies to the panel overlay which some users have acquired to reflect the (slightly) altered function of some dials. 
+Upgrading the firmware can be done by SysEx (or directly using the USB port of the Teensy board), see section \ref{fwupgrade}. When upgrading the Prophet 600, both patch data and settings are preserved. Note that since this is an open source project different variants of the firmware upgrade have been developed by users. In the main development branch, however, backward compatibility is meant to be ensured. This applies in particular to patches and settings as stored in the Prophet 600 memory or dumped SysEx files. It also applies to the panel overlay which some users have acquired to reflect the (slightly) altered function of some dials. Note that before any upgrade the storage of patches is not only best practice but also strongly recommended.  
 
 \textbf{For users upgrading from version 2.1 RC3}
 
+(this needs to be done)
+
 \textbf{For users upgrading from version 2.0}
+
+(this needs to be done)
 
 \section{Credits and license}
 
-The Firmware Upgrade project has been set up by GliGli as an open source project with a public code repository on GitHub\cite{repository}. 
+The Firmware Upgrade project has been set up as an open source project with a public code repository on GitHub\cite{repository}. 
 
 (this needs to be done)
 
@@ -169,70 +188,41 @@ Despite the fact that many have contributed and have spent considerable time to 
 
 \begin{flowtext}
 
-The different controls and interfaces of the Prophet 600 are shown schematically below. Through the document the corresponding nomenclature is used. 
+The different controls and interfaces of the Prophet 600 are shown schematically below. Throughout the document the corresponding nomenclature is used. In the original GliGli firmware upgrade the dials for oscillator A vs. B mix had been replaced by separate dials for oscillator A volume and oscillator B volume, at the expense of demoting the glide amount control to a menu parameter. In the new firmware the user has the choice to either use the GliGli layout or the original Sequential Circuits layout. For more details on how to change the panel and on the parameters in each case see section \ref{panelswitch}.
 
-\scalebox{0.2}{
-  \begin{tikzpicture}[scale=0.8]
-
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 102cm, minimum height = 3cm, anchor = south west] (r) at (0cm,23.25cm) {}; % rear
- 
-  \prophetdisplay{4cm,17.5cm}{123}{12754}{1}
-  \numberpad{1cm,4cm}
-  \node[font=\fontsize{18}{12}\selectfont, text width=8cm, text centered, inner sep=0.0mm, minimum width=8cm] at (5cm,3cm) {\panelfont{PROGRAM SELECT}};
-  \draw[line width=2pt]++(10,20)--++(0,-18cm); % -0.9cm,-4.65cm  
-  \buttonblock{11cm,7cm}{P}{}
-  \prophetpot{16.9cm,4.5cm}{SPEED}{75}
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 19cm, minimum height = 17cm, anchor = south west] (r) at (0cm,1cm) {}; % buttons
-
-  % panel
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 82cm, minimum height = 17cm, anchor = south west] (r) at (25cm,1cm) {}; % panel  
-  \polymodesubpanel{26.25cm,12cm};
-  \lfosubpanel{26.25cm,2.5cm};
-  \pswitch{52cm,17cm}{UNISON}
-  \oscapanel{54.5cm,12cm}
-  \oscbpanel{54.5cm,2.5cm}
-  \adsrpanel{93cm,2cm}
-  \filterpanel{93cm,9cm}
-
-  \prophetpot{123cm,16.5cm}{MASTER TUNE}{75}
-  \prophetpot{123cm,7.5cm}{VOLUME}{75}
+\begin{samepage}
+  \textbf{GliGl panel layout}
   
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 7cm, text centered, minimum height = 8cm, text width=5cm, anchor = north west] (r) at (0cm,-0.25cm) {\Large\textit{Performance Section (Pitch Bend and Modulation Wheel)}};
-  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 94cm, minimum height = 8cm, anchor = north west] (r) at (10cm,-0.25cm) {\Large\textit{Keyboard}};
-  
-  % legend left
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,-2.5cm) (ps) {Performance Section};
-  \draw[line width=1pt]++(ps.east)--++(2.5cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,19.5cm) (pd) {Data Pad};
-  \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,9.35cm) (np) {Number Pad};
-  \draw[line width=1pt]++(np.east)--++(5.8cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,17.5cm) (dis) {Display};
-  \draw[line width=1pt]++(dis.east)--++(5cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,15.5cm) (dis) {Function Buttons};
-  \draw[line width=1pt]++(dis.east)--++(16cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,24.75cm) (pd) {Rear};
-  \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
-  
-  % legend right
-  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (129.5cm,19cm) (pl) {Panel};
-  \draw[line width=1pt]++(pl.west)--++(-2.5cm,0cm);  
-  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (129.5cm,-3.5cm) (kb) {Keyboard};
-  \draw[line width=1pt]++(kb.west)--++(-2.5cm,0cm);  
+  \nopagebreak
+  \scalebox{0.2}{
+    \begin{tikzpicture}[scale=0.8]
+      \input{full_panel_gligli.tex}
+    \end{tikzpicture}
+  }
+\end{samepage}
 
+\begin{samepage}
+  \textbf{Sequential Circuits panel layout}
   
-  \end{tikzpicture}
-}
+  \nopagebreak
+  \scalebox{0.2}{
+    \begin{tikzpicture}[scale=0.8]
+      \input{full_panel_sci.tex}
+    \end{tikzpicture}
+  }
+\end{samepage}
+
+
 
 The remaining section contains a brief explanation of the controls and interfaces: the \textbf{Rear}, \textbf{Data Pad}, \textbf{Panel} (with subpanels), \textbf{Performance Section} and \textbf{Keyboard}.
 
 \section{Data Pad and basic operation}\label{datapad}
 
-The Data Pad consists of the \textbf{Display} (2 two digit 7 segment display with one dot), the \textbf{Number Pad}, the \textbf{Function Buttons} and the \textbf{Data Dial} (denoted as "Speed" dials). 
+The Data Pad consists of the \display (2 two digit 7 segment display with one dot), the \termnumberpad, the \funcbuttons and the \datadial. 
 
 \textbf{Function Buttons}
 
-The block of 9 Function Buttons is the central starting point from where the operation modes and functions of the Prophet 600 are activated. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below.
+The block of 9 \funcbuttons is the main control from where the operation modes and functions of the Prophet 600 are activated. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below. (The button \record as a function of both.)
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -243,7 +233,7 @@ The block of 9 Function Buttons is the central starting point from where the ope
   \end{tikzpicture}
 }
 
-The function buttons have LEDs wich can be off, be on solid and on blinking. In the entire document the following convention for representing the button LED status off / on / blinking is used.
+The \funcbuttons have LEDs wich can be off, be on solid and on blinking. In the entire document the following convention for representing the button LED status off / on / blinking is used.
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -257,11 +247,27 @@ The function buttons have LEDs wich can be off, be on solid and on blinking. In 
   \end{tikzpicture}
 }
 
-The different functions of the buttons are decribed in the general modes desription in section \ref{uimode} and general throughout the chapter on \textbf{Functionality} wherever the buttons are used for a specific function. 
+The different functions of the buttons are decribed in the general modes desription in section \ref{uimode} and throughout the chapter \ref{function} on functionality wherever the buttons are used for a specific function. 
+
+\textbf{Number Pad}
+
+This pad has three usages depending on mode and selected functions:
+
+\begin{itemize}
+  \item Selecting a patch number from one of the internal 100 patch storage slots to load in \presetpatch  
+  \item Selecting a patch number either for storing to one of the internal 100 patch storage slots in \storagemode (see section \ref{loadstorepatches})
+  \item Selecting a patch number either for export a patch as MIDI SysEx in \patchmgmt (see section \ref{patchmgmt})
+  \item Selecting a function / setting in \shiftmode and \shiftlock (see miscellaneous settings below)  
+  \item Selecting a parameter in the additional patch parameter menu (see section \ref{app}) in \presetpanel and in \livemode
+\end{itemize} 
+
+\textbf{Display}
+
+\input{display.tex}
 
 \textbf{Preset panel mode, live mode and additional patch parameters menu}\label{app}
 
-The Prophet 600 operates in two modes, \textbf{preset} mode and \textbf{live} mode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when pressing the number pad buttons, as shows in the table below.
+The Prophet 600 operates in two modes, \preset and \livemode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when pressing the number pad buttons, as shows in the table below.
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -278,9 +284,9 @@ The Prophet 600 operates in two modes, \textbf{preset} mode and \textbf{live} mo
     \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=12cm] at (-6cm,-4cm) {Number pad};
     \node[font=\fontsize{26}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=12cm] at (-6cm,-6.5cm) {Enter / leave};
 
-    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (4cm,10cm) {Live mode};
-    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (19.2cm,10cm) {Preset Patch mode};
-    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (34.2cm,10cm) {Preset Panel mode};
+    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (4cm,10cm) {\livemode};
+    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (19.2cm,10cm) {\presetpatch};
+    \node[font=\fontsize{26}{22}\selectfont, outer sep=0.0mm, anchor = south west, text centered, text width=12cm] at (34.2cm,10cm) {\presetpanel};
 
     \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (4cm,-2cm) {Parameter values};
     \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-2cm) {Patch number};
@@ -290,9 +296,9 @@ The Prophet 600 operates in two modes, \textbf{preset} mode and \textbf{live} mo
     \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-4cm) {Select patch};
     \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (34.4cm,-4cm) {Select add. parameter};
 
-    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (4cm,-6.25cm) {From preset modes using Preset button};
-    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-6.25cm) {From live mode using Preset, from preset panel mode using To Tape};
-    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (34.4cm,-6.25cm) {From preset patch mode using To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (4cm,-6.25cm) {From \preset using \preset button};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (19.2cm,-6.25cm) {From \livemode using Preset, from preset panel mode using To Tape};
+    \node[font=\fontsize{18}{22}\selectfont, outer sep=0.0mm, anchor = west, text centered, text width=12cm] at (34.4cm,-6.25cm) {From \presetpatch mode using To Tape};
 
     \upperbuttons{6cm, -0.5cm}{}{}   
     \upperbuttons{21cm, -0.5cm}{P}{}   
@@ -303,91 +309,84 @@ The Prophet 600 operates in two modes, \textbf{preset} mode and \textbf{live} mo
   \end{tikzpicture}
 }
 
-The following section describes how patch parameters are accessed and modified in live mode and in preset panel mode. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the Panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. To changing these parameters can only be done in preset panel mode or in live mode. The user must select the parameter first and then change the value using the \textbf{Data/Speed} dial. A parameter is selected by pressing the buttons 0...9 (or pressing them twice or in some cases three times). If a new parameter is selected respective parameter name is scrolled through the display. The display then shows the current value which is either numeric (permanently shown) or a choice setting (scrolled through the display). 
+The following section describes how patch parameters are accessed and modified in live mode and in \presetpanel. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the Panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. Changing these parameters can only be done in \presetpanel or in \livemode. The user must select the parameter first and then change the value using the \datadial. A parameter is selected by pressing the buttons 0...9 on the \termnumberpad (or pressing them twice or in some cases three times). If a new parameter is selected, the respective parameter name is scrolled through the display. The display then shows the current value which is either numeric (permanently shown) or a choice setting (scrolled through the display). 
 
 Each parameter is explained in the respective functional context in the next chapter. For a quick reference of additional patch parameters please see section \ref{patchref}. 
 
-Note: The parameter accessed using the number 0 is an exception. The parameter controls the internal sequencer and arpeggiator speed and this speed is stored as a instrument settings (see next section) and not as a patch parameter. 
+Note 1: The parameter accessed using the number 0 is an exception. The parameter \clock controls the internal sequencer and arpeggiator speed or external clock divide and this speed is stored as a instrument settings (see next section) and not as a patch parameter. For details on \clock see \ref{sync}.
 
-Note: In other modes the display and the number pad is reserved for other functions, e.g. in preset patch mode the display shows the patch (preset) number. By default the number pad is reserved for selecting the patch number is preset patch mode, in record mode and in patch management mode.
-
-\textbf{Number Pad}
-
-The Number Pad has three usages depending on mode and selected functions:
-
-\begin{itemize}
-  \item Selecting a patch number either for loading from one of the internal 100 patch storage slots in preset patch mode
-  \item Selecting a patch number either for storing to one of the internal 100 patch storage slots in storage mode (see section \ref{loadstorepatches})
-  \item Selecting a patch number either for export a patch as MIDI SysEx in patch management mode (see section \ref{mididump})
-  \item Selecting a function / setting in shift and shift-lock mode (see below)  
-  \item Selecting a parameter in the additional patch parameter menu (see section \ref{app}) in preset panel mode and in live panel mode
-\end{itemize} 
-
-\textbf{Display}
-
-\input{display.tex}
 
 \textbf{Shift mode and miscellaneous settings}
 
-The miscellaneous settings are patch independent instrument settings. These settings are stored and are loaded after a power cycle. The miscellaneous settings are accessed via the numer pad in \textbf{shift} mode. To activate this mode either hold down the button \textbf{From Tape} while selecting one of the additional functions or double click \textbf{From Tape} to enter \textbf{shift-lock} mode (permanent shift) indicated by a blinking From Tape LED. To exit the mode push the button again. 
+The \miscsett are patch independent instrument settings and functions. These settings are stored and are loaded after a power cycle. The miscellaneous settings are accessed via the \termnumberpad in \shiftmode. To activate this mode either hold down the button \fromtape while selecting one of the additional functions or double click \fromtape to enter \shiftlock (permanent shift) indicated by a blinking \fromtape LED. To exit the mode push the button again. 
 
-In shifted mode the numbers 0...9 on the number pad access the miscellaneous settings. Note that changing the miscellaneous settings is done using the number pad alone without the data/speed dial. The settings are edited by pressing number key repeatedly to cycle through values or to initiate actions. The first time a number is pressed the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. The list of miscellaneuous settings can be found in section \ref{settingsref}. Each setting is explained in the respective functional context in the next chapter or in the appropriate section in the setup chapter.
+In \shiftmode the numbers 0...9 on the \termnumberpad access some of the \miscsett, others use different functional buttons. The settings are edited by pressing number key repeatedly to cycle through values or to initiate actions. The first time a number is pressed the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. 
 
-In addition to miscellaneous settings, shift mode provides access to further functions. In shift mode ...
+Some important functions which are accessed through \shiftmode and \shiftlock are ...
 \begin{itemize}
+  \item ... the numbers 0...9 access MIDI setup, voice (de-)activation, panel layout, pitch bender calibration, etc. 
   \item ... the keys on the keyboard are used to set the keyboard transposition (see section \ref{transposition}) 
-  \item ... tuning button activates a per note tuning mode (see section \ref{tuning}).
-  \item ... pressing the record button axtivates the patch management mode (see section \ref{mididump})
-  \item ... pressing the preset button (and confirmation) loads the default patch
+  \item ... \tune button activates a per note tuning mode (see section \ref{tuning}).
+  \item ... pressing the \record activates the patch management mode (see section \ref{patchmgmt})
+  \item ... pressing the \preset (and confirmation) loads the default patch
 \end{itemize}
+
+The list of miscellaneous settings can be found in section \ref{settingsref}. Each setting is explained in the respective functional context in the chapter \ref{function} and in the chapter \ref{maintenance} on instrument setup tasks.
 
 \section{Panel}\label{panel}
 
-The panel is organized in 6 subpanels plus 3 additional controls (Unison switch, master tune and master volume)\footnote{In the original Prophet 600 the dials "Mix" and "Glide" were also separate from he subpanels but in the upgraded Prophet 600 these two dials take the role of oscillator A volume and oscillator B volume, respectively. So these two dials are now associated with the oscillator A and B subpanels.}. The patch parameters controls on the panel are the following subpanels (from left to right) and the unison switch: 
+The panel is organized in 6 sub-panels plus 3 additional controls (Unison switch, master tune and master volume)\footnote{In the original Prophet 600 the dials "Mix" and "Glide" were also separate from he subpanels but in the upgraded Prophet 600 these two dials take the role of oscillator A volume and oscillator B volume, respectively. So these two dials are now associated with the oscillator A and B subpanels.}. The patch parameters controls on the panel are the following sub-panels (from left to right) and the unison switch: 
 
 \begin{itemize}
   \item Poly-Mod (see section \ref{polymod})
-  \item LFO (see section \ref{LFO}
-  \item Oscillator A (see section \ref{osc}). This includes the oscillator A volume control (in the original panel layout denoted as "Mix").
-  \item Oscillator B (see section \ref{osc}). This includes the oscillator B volume control (in the original panel layout denoted as "Glide").
+  \item LFO (see section \ref{lfo})
+  \item Oscillator A (see section \ref{osc}) (depending on panel layout this includes the \vola control)
+  \item Oscillator B (see section \ref{osc}). (depending on panel layout this includes the \volb control)
   \item Filter (see section \ref{filter} and \ref{envelopes}) 
   \item (Amp) Envelope (see section \ref{envelopes})
   \item Unison switch (see section \ref{poly-unison-voice})
+  \item Mix (in Sequential Circuits panel layout, see section \ref{panelswitch})
+  \item Glide (in Sequential Circuits panel layout, see section \ref{panelswitch})
+  
 \end{itemize}
 
-The controls in the subpanels and the unison switch are all patch parameters, e.g. stored, loaded, imported and exported with a patch. 
+The controls in the sub-panels and the unison switch are all patch parameters, e.g. stored, loaded, imported and exported with a patch. 
 
-The panel control \textbf{Master Tune} and \textbf{Volume} to the very right of the panel are not part of the patch. These control are always applied as they are set because these are used to adjust the instrument to the environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume).
+The panel control \mastertune and \mastervol to the very right of the panel are not part of the patch. These control are always applied as they are set because these are used to adjust the instrument to the environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume).
 
 \section{Keyboard and performance section}
 
-Without modifications, the Prophet 600 comes with a non-weighted, 5 octave (61 key) keyboard. The keyboard does not support touch sensitivity (although the upgraded Prophet 600 supports velocity sensitivity for amplitude and filter vi MIDI, see section \ref{velocity}). Apart from playing, the keyboard is used for sequencer input (see section \ref{seq}) and transposition (see section \ref{transposition}). 
+Without modifications, the Prophet 600 comes with a non-weighted, 5 octave (61 key) keyboard. The keyboard does not support touch sensitivity (although the upgraded Prophet 600 supports velocity sensitivity for amplitude and filter via MIDI, see section \ref{velocity}). Apart from playing, the keyboard is used for sequencer input (see section \ref{seq}) and for transposition (see section \ref{transposition}). 
+
+The Prophet 600 offers a \pitchbender (without spring mechanism) and a \modwheel. The mid position of \pitchbender can be calibrated and there are several different targets to choose from, see section section \ref{pitchbend}. The modulation wheel can be adjusted in strength and the user can choose if it modulates the LFO or the vibrator, see section \ref{modwheel}.
 
 \section{Rear, inputs and output)}
 
 \input{rear.tex}
 
-\section{The work flow concept}
+\section{The concept}
 
-With the clearly laid out panel controls the the Prophet 600 is both, a hands-on performance instrument and sound sculpting synthesizer. The upgrade preserves that basic character. The controls on the panel have largely have the same function as in original except for some minor changes. However, the new functionalities of the upgrade required additional parameters and these had to be placed in the new menus. This has disadvantages. Diving into menus interrupts the work flow. It is abstract and unsatisfying. It is only acceptable for parameters which are rarely used and certainly not suited for live tweaking. Another improtant aspect is the perservation of the user interface concept. In particular, for each function there should be a unique and self-contained way to change it, instead of have a mix of say, dials and menues. This is one reason why he upgrade also contains "only" one LFO and two envelopes even though one might have added more with the new processor: this corresponds to the layout of the Prophet 600 and anything more would have meant at least a partial dive into menues. The upgraded Prophet 60 fulfills this ideal to a large degree but not fully. The LFO shape, for instance, is a mix of flipping a swithc on the control panel and choosing options in the additional patch parameter menu. However, this is one of a few notable exceptions.
+With the clearly laid out panel controls the Prophet 600 is both, a hands-on performance instrument and sound sculpting synthesizer. The upgrade preserves that basic character. The controls on the panel have largely the same function as in original. However, the new functionalities of the upgrade required additional parameters and these had to be placed in hidden new menus. This has obvious disadvantages. Diving into menus interrupts the work flow. It is abstract and unsatisfying. It is only acceptable for parameters which are rarely used and certainly not suited for live tweaking. 
+
+Another important aspect is the preservation of the general user interface concept. In particular, for each function there should be a unique way to do it, not a mix of say, dials and menus. This is one reason why the upgrade also contains "only" one LFO and two envelopes even though one might have added more with the new processor. This corresponds to the layout of the Prophet 600 and anything more would have meant at least a partial dive into menus. The upgraded Prophet 600 fulfils this ideal to a large degree but not fully. The LFO shape, for instance, is a mix of flipping a switch on the control panel and choosing options in the additional patch parameter menu. However, this is one of a few notable exceptions.
 
 A useful work flow of the upgraded Prophet 600 for creating or editing patches could be as follows:
 
 \begin{enumerate}
-  \item Pre-production: Set basic overall patch parameters, such as envelope shapes and routing, LFO targets and range 
-  \item Production: Use the panel controls to interactively design the sound 
+  \item Pre-production: set basic overall patch parameters, such as envelope shapes and routing, LFO targets and range 
+  \item Production: use the panel controls to interactively design the sound 
   \item Post-production: add additional features, such as vibrato and bend modulation for a final touch
 \end{enumerate} 
 
-Ideally, menu diving should be largely restricted to steps 1 and 3 so that uninterrupted hands-on and interactive work with the synthesizer is possible in step 2. It may not always be possible to finalize step 1 upfront and the user may occasionally have to go back to step 1.Nevertheless, the workflow should be more or less natural.
+Ideally, menu diving should be largely restricted to steps 1 and 3 so that uninterrupted hands-on and interactive work with the synthesizer is possible in step 2. It may not always be possible to finalize step 1 upfront and the user may occasionally have to go back to step 1. Nevertheless, the workflow should be more or less natural.
 
-\chapter{Functionality}
+\chapter{Functionality}\label{function}
 
 \section{Operating modes: preset and live mode}\label{uimode}
 
 \input{uimode.tex}
 
-\section{Loading and storing presets}\label{loadstorepatches}
+\section{Loading and storing patches}\label{loadstorepatches}
 
 \input{loadstorepatches}
 
@@ -397,9 +396,11 @@ Ideally, menu diving should be largely restricted to steps 1 and 3 so that unint
 
 \section{Volume and master tune}
 
-To the right of the panel there two global parameter dials, the \textbf{Master Tune} and \textbf{Volume} dials. The master tuning has a range or approximately $\pm$semitone. It's purpose is to be able to tune the synth to other instruments without touching the internal, relative frequencies of the oscillators and thereby potentially changing the patch.
+To the right of the panel there two global parameter dials, the \mastertune and \mastervol dials. The master tuning has a range orf approximately $\pm 1$ semitone. Its purpose is to be able to tune the synth to other instruments without touching the internal, relative frequencies of the oscillators and thereby potentially changing the patch.
 
-(Master) volume and master tune are neither patch parameters nor settings. The two values are applied as set on the panel. The only exception is external MIDI control of volume (see section \ref{midiimplenentation}). When the master volume is set via MIDI CC that volume level applies until either a new value is set by MIDI or if the volume panel control is touched.     
+(Master) volume and master tune are neither patch parameters nor settings. The two values are applied as set on the panel. The only exception is external MIDI control of volume (see section \ref{midiimplementation}). When the master volume is set via MIDI CC that volume level applies until either a new value is set by MIDI or if the volume panel control is touched. 
+
+After power-up the instrument volume is always set to the value position of the \mastervol control.
 
 \section{Filter}\label{filter}
 
@@ -417,24 +418,24 @@ To the right of the panel there two global parameter dials, the \textbf{Master T
 
 \input{lfo.tex}
 
-\section{Poly-Mod}\label{polymod}
+\section{Poly-mod and oscillator sync}\label{polymod}
 
 \input{polymod.tex}
 
-\section{Arpeggiator and sequencer clock}\label{sync}
+\section{Arpeggiator / sequencer clock and MIDI support}\label{sync}
 
-The Prophet 600 offers a polyphonics sequencer with two tracks and an arpeggiator with three distinct patterns. The details of operation are explained in sections \ref{seq} and \ref{arp}.
+The Prophet 600 offers a polyphonic sequencer with two tracks and an arpeggiator with three distinct patterns. The details of operation are explained in sections \ref{seq} and \ref{arp}.
 
-The sequencer and the arpeggiator share the same clock and on this clock the two sequencer tracks and one of the arpeggiator patterns can run in parallel. In order to be able to operate the sequencer and/or arpeggiator in sync with other instruments, the upgraded Prophet 600 provides three different clock source methods which are set in the miscellaneous setting 8 (e.g. press 8 in shifted or shift-locked mode once to see the current value and press repeatedly to cycle through the options):
+The sequencer and the arpeggiator share the same clock and on this clock the two sequencer tracks and one of the arpeggiator patterns can run simultaneously. In order to be able to operate the sequencer and/or arpeggiator in sync with other instruments, the upgraded Prophet 600 provides three different clock source methods which are set in the miscellaneous setting \clocksync.
 \begin{itemize}
-  \item \textit{internal}: an internal clock is used. The clock speed is edited like an additional patch parameter when press number 0 in preset panel mode or live mode.
+  \item \textit{internal}: the internal clock is used. The \clock is edited like an menu patch parameter associated with number 0
   \item \textit{MIDI}: the clock is synced to the MIDI clocked received on the MIDI receive channel as set in the  miscellaneous settings
-  \item \textit{Tape}: the clock is synced to a fraction of a pulse clock received via the Tape In input on the rear of the instrument
+  \item \textit{tape}: the clock is synced to a fraction of a pulse clock received via the Tape In input on the rear of the instrument. The \clock control is used to select the clock divide. The values are: 192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2.
 \end{itemize}  
 
-It is possible to sync the LFO to the sequencer / arpeggiator clock (ir external clock) using the additional patch parameter \textbf{(111) LFO Sync}, see section \ref{lfo}.
+It is possible to sync the LFO to the sequencer / arpeggiator clock (internal or external). The menu parameter  using the additional patch parameter \lfosync provides the options \textit{off} (no sync, free running LFO) or one of the following \textit{1,2,3,4,5,6,8}. The latter set the number of clock beats after which the LFO in reset.
 
-Note that you can operate the sequencer and/or arpeggiator also in unison mode with all features of that mode (see section \ref{poly-unison-voice}). However, the voices are not shared between the tracks and the arpeggiator. The priority is as follows: arpeggiator, sequencer track 2, sequencer track 1. E.g. if activated, the arpeggiator will use all voices in unison mode and when the sequencer track 1 and 2 have a note on the same beat, only track 2 will play.
+Note that you can operate the sequencer and/or arpeggiator also in unison mode with all features of that mode (see section \ref{poly-unison-voice}). However, the voices are not shared between the tracks and the arpeggiator. The priority is as follows: arpeggiator, sequencer track 2, sequencer track 1. E.g. if activated, the arpeggiator will use all voices in unison mode and when the sequencer track 1 and 2 have a note on the same beat, only track 2 will play. Unison mode should be activated before starting the sequencer or arpeggiator.
 
 \section{Arpeggiator}\label{arp}
 
@@ -458,31 +459,43 @@ Note that you can operate the sequencer and/or arpeggiator also in unison mode w
 
 \section{Glide}\label{glide}
 
-In the original Prophet 600 the glide setting (the glide time) had a dedicated dial. In the upgraded Prophet 600 the dial has been re-designated to control the amplitude of OSC B. As a consequence the glide time has been moved to the additional patch parameter \textbf{(7) Glide}. 
+In the original Prophet 600 the glide setting (the glide time) has a dedicated dial, \glidepot. In the upgraded Prophet 600 in firmware versions 2.0 and 2.1 RC3 the dial has been re-designated to control the amplitude of OSC B. As a consequence the glide time has been moved to the menu patch parameter \glide. 
+
+In the latest firmware the panel layout is switchable using the \miscsett \panelswitch. When the panel layout is set to \textit{GliGli} the menu parameter \glide appears and controls the glide time. When the panel layout is set to \textit{SCI} the menu parameter \glide is not present and the \glidepot on the panel controls the glide time. When you switch between the panel layouts the glide time is preserved.
+
+For details on the panel layout options see section \ref{panelswitch}.
 
 \section{Detune}\label{detune}
 
-The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect is used to make unison sounds broader and more lively. In fact, detune is only applied when unison is activated. The additional patch parameter is \textbf{(77) Detune}
+The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect is used to make unison sounds broader and more lively. In fact, detune is only applied when unison is activated. The menu parameter for setting detune is \detune.
 
-Note that the effect of the spread parameter (see section \ref{spreadsett} is applied with and without unison and is therefore added to detune in unison. 
+Note that the effect of the vintage spread (see section \ref{spreadsett} is applied in all modes and is therefore added to detune in unison mode. 
 
-\section{Spread}\label{spreadsett}
+\section{Vintage / spread}\label{spreadsett}
 
 \input{spread.tex}
 
 \section{External CV in}\label{extcv}
 
-(this needs to be done)
+The Prophet 600 offers the option to control the filter cut-off frequency using an external voltage source fed into the Prophet 600 via the \textbf{Filter CV In} plug on the rear panel. Applying a voltage here raises the filter cut-off frequency.
+
+In the upgraded Prophet 600 the strength of the external CV input effect can be controlled using the menu parameter \extvolt. The parameter has been newly introduced in version \version. In versions 2.0 and 2.1 RC3 the external CV control strength is fixed and it is set to maximum by default. In the new version on the other hand the patch parameter value is zero and it therefore needs to be changed before using the external voltage control. One application of the external voltage control is that it is used in the popular "noise mod" of the Prophet 600 and in this mod the parameter controls the level of an additional noise source. 
 
 \section{Velocity sensitivity}\label{velocity}
 
-(this needs to be done)
+The Prophet 600 is equipped with a non-weighted keyboard without support for velocity. However, when played via MIDI, the Prophet 600 supports velocity sensitivity of amplitude and filter cut-off frequency. The respective velocity amounts are controlled by the two menu parameters \ampvel and \filvel.
 
-\chapter{Synthesizer setup and maintenance}
+By default the \ampvel is set to half-way and the \filvel is set to zero.
+
+\chapter{Synthesizer setup and maintenance}\label{maintenance}
 
 \section{Tuning}\label{tuning}
 
 \input{tuning.tex}
+
+\section{Switchable panel layout}\label{panelswitch}
+
+\input{panelswitch.tex}
 
 \section{MIDI integration}\label{midiintegration}
 
@@ -490,57 +503,34 @@ Note that the effect of the spread parameter (see section \ref{spreadsett} is ap
 
 \section{Voice deactivation}
 
-The upgrade Prophet 600 provides a method for switching single voices of the Prophet 600 off. This can be useful to suppress a voice that is damaged or for troubleshooting, e.g. isolating voices for testing. The "voice masking" is done using the settings 4 and 5:
+The upgrade Prophet 600 provides a method for switching single voices off. This can be useful to suppress a voice that is damaged or for troubleshooting, e.g. isolating voices for testing. The "voice masking" is configured using the miscellaneous settings with \numberbut{4} and \numberbut{5} in \shiftmode or \shiftlock as follows
 \begin{enumerate}
   \setlength\itemsep{0cm}
-  \item Pressing key 4 while holding down From Tape repeatedly cycles through the 6 voice of the Prophet 600. This selection determines the functionality of the key 5 in the setting menu.
-  \item Key 5 toggles between on and off of the voice selected using key 4. In the upgrade Prophet 600 the user can deactivate selected voices in this way.
+  \item Pressing \numberbut{4} cycles through the 6 voice of the Prophet 600. This selection determines the functionality of the key \numberbut{5} in the setting menu.
+  \item \numberbut{5} toggles between on and off of the voice selected using \numberbut{4}. 
 \end{enumerate}
 
 \section{Transposition}\label{transposition}
 
-The upgraded Prophet 600 provides a method for transposing the keyboard. In shift mode the last pressed key will define the transposition, the middle C3 being zero transposition. The value is also scrolled through the display for conformation. 
+The upgraded Prophet 600 provides a method for transposing the keyboard on the fly. In \shiftmode or \shiftlock the last pressed key will define the transposition, the middle C3 being zero transposition. The transposition is also scrolled through the display for conformation. 
 
-Transposition also applies to arpeggiator and sequencer. The transposition procedure also works in the respective run, latch and record modes.
+Transposition also applies to arpeggiator and sequencer and the transposition procedure also works in the respective run and latch modes. Transposition by MIDI note input is not supported.
 
 \section{VCF limit}\label{limitsett}
 
-In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the filter to 22kHz in order to avoid strange filter behaviour in the ultrasonic range.
+In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the filter to 22kHz in order to avoid strange filter behaviour in the ultrasonic range. The limit is switch on using \numberbut{9} in \shiftmode or \shiftlock. 
 
-\section{Managing sound libraries via SysEx}\label{mididump}
+\section{Managing sound libraries via SysEx}\label{patchmgmt}
 
 \input{patchmgmt.tex}
 
-\section{Scaling adjustment}\label{maintenance}
+\section{Scaling adjustment}\label{scalingadj}
 
 \input{maintenancemode.tex}
 
-\section{SysEx firmware upgrade}\label{fwupgrade}
+\section{Firmware upgrade}\label{fwupgrade}
 
-For a firmware upgrade in a Prophet 600 with an original Z80 processor please refer to the modification instructions \cite{modinstructions}. The following section is for owners of a modified Prophet 600 with Teensy board and a prior version of the GliGli upgrade installed. If modifying a Prophet 600 for the time one may directly flash the Teensy board with software version 2.2. It is not necessary to first install a lesser version and then upgrade.
-
-Firmware upgrades are provided as MIDI SysEx files (*.syx) \footnote{They are also provided as *.hex files for USB transfer to the Teensy board.}. In order to perform the upgrade follow to step below.
-
-\begin{enumerate}
-  \setlength\itemsep{0cm}
-  \item Switch off the instrument
-  \item Switch on the instrument while holding the buttons \textbf{To Tape} and \textbf{From Tape} down. The display should show an "U" for upgrade on the left digit.
-  \item Send the firmware SysEx file to the instrument. This process takes a while. The display shows a spinning segment. Once the process is completed, the display shows an "S" for success. If the upgrade ends with “E” for error on the display, the upgrade has failed and the upgrade procedure must be repeated until it succeeds. It is not recommended to start the instrument in normal mode after a failed upgrade.
-  \item Switch the instrument off and on again. The scrolled welcome message should state the version "GliGli's P600 Upgrade Version \textit{<version>}"
-\end{enumerate}
-
-Users are recommended to follow the MIDI SysEx part of the modification instructions \cite{modinstructions}. In particular, the "Delay between buffers" and the "delay after F7" should be set to at least 250ms.
-
-The settings and preset parameters are left unchanged by the upgrade, provided the previously installed version is one for which backward compatibility is supported. This applies to the following versions:
-
-\begin{itemize}
-  \setlength\itemsep{0cm}
-  \item Version 2.0
-  \item Version 2.1 Release Candidate 3 (not officially released)
-  \item Version XXX
-\end{itemize} 
-
-Downgrading versions is possible but preservation of settings and preset parameters is not guaranteed in that case.
+\input{firmware.tex}  
 
 \end{flowtext}
 
@@ -552,11 +542,15 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \input{patchref.tex}
 
+\section{Default patch}\label{default}
+
+\input{defaultpatch.tex}
+
 \section{Settings parameter overview}\label{settingsref}
 
 \input{settingsref}
 
-\section{MIDI control implementation}\label{midiimplenentation}
+\section{MIDI control implementation}\label{midiimplementation}
 
 \input{midiimplementation.tex}
 
@@ -568,7 +562,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Live mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Live mode:};
     \upperbuttons{13cm,7cm}{}{}
@@ -610,7 +604,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Preset panel mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Preset panel mode:};
     \upperbuttons{13cm,7cm}{PT}{}
@@ -652,7 +646,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Preset patch mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Preset patch mode:};
     \upperbuttons{13cm,7cm}{P}{}
@@ -694,7 +688,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Record mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Record mode:};
     \upperbuttons{13cm,7cm}{R}{R}
@@ -718,16 +712,16 @@ Downgrading versions is possible but preservation of settings and preset paramet
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Leave record mode};
     \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Leave record mode};
     \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {(normal function)};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {(normal function)};
     \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {};
     
     \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
 
@@ -736,7 +730,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Shift-lock mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Shift-lock mode:};
     \upperbuttons{13cm,7cm}{F}{F}
@@ -769,7 +763,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Leave shifted mode};
     \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {};
     
     \draw[line width=1pt]++(35cm,4.5cm)--++(0cm,15cm);  
 
@@ -778,7 +772,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Sequencer editing mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Sequencer editing mode:};
     \upperbuttons{13cm,7cm}{R}{}
@@ -802,13 +796,13 @@ Downgrading versions is possible but preservation of settings and preset paramet
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,12.75cm) {Leave editing mode};
     \draw[line width=1pt]++(29cm,13.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,14.25cm) {Preset};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {};
     \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {(normal function)};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {(normal function)};
     \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {Hold to access patch parameters via number pad};
@@ -820,7 +814,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
 
 \textbf{Patch management mode}
 
-\scalebox{0.25}{
+\scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{22}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=8cm] at (0cm,12cm) {Patch management mode:};
     \upperbuttons{13cm,7cm}{P}{P}
@@ -847,7 +841,7 @@ Downgrading versions is possible but preservation of settings and preset paramet
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Dump entire patch bank};
     \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {(normal function)};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {(normal function)};
@@ -860,9 +854,8 @@ Downgrading versions is possible but preservation of settings and preset paramet
   \end{tikzpicture}
 }
 
-\chapter{Troubleshooting}\label{faq}
-
-\input{faq.tex}
+%\chapter{Troubleshooting}\label{faq}
+%\input{faq.tex}
 
 \begin{thebibliography}{50} 
 
@@ -876,6 +869,8 @@ Downgrading versions is possible but preservation of settings and preset paramet
 \bibitem{teensy}Teensy Site: http://www.pjrc.com/teensy/index.html
 \bibitem{p600siownersmanual}Prophet 600 Owner's Manual, Sequential Circuits
 \bibitem{p600siservicemanual} Prophet 600 Service Manual, Sequential Circuits
+\bibitem{synthgraphics} Synthgraphics (http://www.synthgraphics.com/). The provider of panel overlays for modded synthesizers provided an overlay for the GliGli firmare panel layout of the Prophet 600.
+\bibitem{teensyloader} Teensy code loader application from pjrc, https://www.pjrc.com/teensy/loader.html
 
 \end{thebibliography}
 

@@ -1,8 +1,14 @@
-The upgraded Prohpet 600 has two methods for controlling the modulation effect of the LFO and the vibrato and these properties are  stored with the patch. The first one is the \textbf{Modulation Wheel} which can be found in the performance section. The target of the modulation wheel can be set using the additional patch parameter \textbf{(44) Modulation Wheel Target} which provides the choices \textit{LFO} or \textit{vibrato} (or \textit{off}). The second method is a modulation delay which delays the onset of the modulation effect. The delay is always applied to the modulation source which is \underline{not controlled} by the modulation wheel, e.g. when the modulation wheel target is set to \textit{LFO} the delay applies to the vibrato and when it is set to \textit{vibrato} the delay is applied to the LFO.
+The upgraded Prophet 600 has two methods for controlling the modulation effect of the LFO and the vibrato and these properties are  stored with the patch. The first one is the \modwheel which can be found in the performance section. The target of the modulation wheel can be set using the menu patch parameter \modwheeltarget which provides the options \textit{LFO} and \textit{vibrato}. 
+
+The second method is a modulation delay which delays the onset of the modulation effect. The delay is always applied to the modulation source which is \underline{not controlled} by the \modwheel, e.g. when the modulation wheel target is set to \textit{LFO} the delay applies to the vibrato and when it is set to \textit{vibrato} the delay is applied to the LFO.
 
 The target setting as well as the modulation wheel strength and the delay time are set as follows. 
 \begin{itemize}
-  \item \textbf{(4) Modulation Delay} is parameter 4, numeric setting 0...98
-  \item \textbf{(44) Modulation Wheel Target} is parameter 44, choices are: \textit{vibrato} or \textit{LFO}
-  \item \textbf{(33) Modulation Range} is parameter 33. The, choices are: \textit{min}, \textit{low}, \textit{high} and \textit{full}
+  \item \modwheeltarget provides choices \textit{LFO} and \textit{vibrato}
+  \item \moddelay is continuous menu parameter (range 0...99)
+  \item \modwheelrange offers the options: \textit{touch}, \textit{soft}, \textit{high} and \textit{full}
 \end{itemize} 
+
+The parameter \modwheelrange affects the \modwheel action when the target is \textit{LFO} or when the target is \textit{vibrato} \underline{and} the vibrato target is \textit{VCO}. It is always effectively \textit{full} when  targeting the \textit{vibrato} \underline{and} the vibrato target is \textit{VCA}. The reason is that amplitude modulation is a much weaker effect and there is no practical value in making the \modwheel softer in this case.
+
+Note: the \modwheel action has been modified in all settings compared to version 2.0 and 2.1 RC3. It is now exponential to provide a smooth onset for better playability.

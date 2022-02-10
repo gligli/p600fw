@@ -1,11 +1,13 @@
 
-The following instruction assume that you have your Prophet 600 connected via MIDI to a device where you can manage MIDI SysEx files, e.g. receive, store and send. Make sure that the MIDI receive channel on the Prophet 600 and the MIDI send channel of the sending device are the same see section \ref{midiintegration}.
+For the following instructions to work you need to have your Prophet 600 connected via MIDI to a device where you can manage MIDI SysEx files, e.g. receive, store and send. Make sure that the MIDI receive channel on the Prophet 600 and the MIDI send channel of the sending device are the same see section \ref{midiintegration}.
 
-In preset mode the Prophet 600 loads patch data sent via MIDI into the active controls. This is like loading a patch from memory: the panel control may not (and typially don't) show the values of the patch being played. You can edit and store the patch. This is useful if you would like to try a patch before deciding if it should be kept or not without having to allocate a storage number in memory. 
+In preset mode the Prophet 600 loads patch data sent via MIDI into the active controls. This is like loading a patch from memory where the panel controls may not (and typially don't) show the values of the patch being played. You can edit and store the patch in the normal way. This is useful if you would like to try a patch from MIDI SysEx before deciding if it should be kept or not without having to allocate a storage number in memory. 
 
 \textbf{Patch management mode}
 
-In order to manage patches in memory via SysEx you need to enter the \textit{patch management mode}. In patch management mode any patch data received via MIDI SysEx is loaded directly into the storage number as indicated in the SysEx data. This extendes to the load of the entire patch bank. In patch management mode you can also dump single patches as well as the entire patch bank.
+In order to manage patches in memory via SysEx you need to enter the \patchmgmt. In this mode mode any patch data received via MIDI SysEx is loaded directly into the storage number as indicated in the SysEx data. This extendes to the load of the entire patch bank. In patch management mode you can also dump single patches as well as the entire patch bank. 
+
+To enter the patch management mode use \shiftmode or \shiftlock and \record. The \patchmgmt is indicated by a flashing \preset button. To leave the mode, press \record. 
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -34,7 +36,7 @@ In order to manage patches in memory via SysEx you need to enter the \textit{pat
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,14.25cm) {Dump entire patch bank};
     \draw[line width=1pt]++(29cm,15cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,15.75cm) {Tune};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {???};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {(normal function)};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {(normal function)};
@@ -47,18 +49,19 @@ In order to manage patches in memory via SysEx you need to enter the \textit{pat
   \end{tikzpicture}
 }
 
-To enter the patch management mode use shift or shift-lock and Record. The patch management mode is indicated by a flashing Preset button. To leave the mode, press Record (with or without shift). 
 
 \textbf{Dumping the patch library as SysEx} 
 
-To dump the entire patch bank press the \textbf{Preset} button. The screen will scroll a confirmation message. Note, however, that only valid presets are exported. Any unused patch slots are skipped.
+To dump the entire patch bank press the \preset button. The screen will scroll a confirmation message. Note, however, that only valid presets are exported. Any unused patch slots are skipped.
 
 \textbf{Dumping single patches as SysEx} 
 
 To dump a single patch in patch management mode enter the patch number on the number pad. A confirmation will be scrolled on the display. Note, that if there is no valid patch data stored in the selected patch slot, there will be no dump, despite the confrmation message.
 
-Note: the Prophet 600 also supports MIDI Dump Requests. When sending such a request to Prophet 600 you will receive the corresponding single SysEx back (on the specified MIDI send channel). 
+Note: the Prophet 600 also supports MIDI dump requests. When sending a SysEx patch request for a certain patch number to the Prophet 600 you will receive the corresponding single SysEx back (on the specified MIDI send channel) provided there the specified patch is between 0 and 99 and a patch stored at that number. This can be done in all modes at any time, not just in \patchmgmt.
 
 \textbf{Loading patches} 
 
-Load patches is done by sending the standard patch load SysEx containing the data to the Prophet 600. Each patch contains a patch number. If the patch number is  between 0 and 99 the data will stored in tha patch overwriting the existing stored patch, therefore loading a SysEx patch library will overwrite the entire library stored on the Prophe 600 when patch management mode is activated. In normal preset mode patch MIDI is only loaded into the active control values. In live/panel mode incoming patch MIDI SysEx is ignored.
+Loading MIDI SysEx patches to storage is done by sending the patch SysEx containing the data to the Prophet 600 in \patchmgmt. Each patch contains a patch number. If the patch number is  between 0 and 99 the data will stored in that patch slot overwriting the existing stored patch, therefore loading a SysEx patch library will overwrite the entire library stored on the Prophe 600 when patch management mode is activated. When a patch has been loaded to storage the number of the patch number is shown on the display.
+
+In normal preset mode patch MIDI is only loaded into the active control values as described above. In live/panel mode incoming patch MIDI SysEx is ignored. Requiring \patchmgmt to be activated for file to storage operations protects your patches from accidental overwrite. Still, it is always advisable to regularly archive patches in SysEx files outside the instrument.

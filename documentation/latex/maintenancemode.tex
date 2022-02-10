@@ -1,7 +1,7 @@
-The Prophet 600 can be started in maintenance mode by shortening "TP301 SCALE" and powering up. 
+Due to ageing and changing component characteristics it may become necessary to calibrate the oscillator and filter components. Off calibration the worst case could be that the tuning procedure fails to tune one of the frequencies. Calibration or "scaling adjustements" are done using the dedicated variable resistors next to the chips. The user should refer to the Sequential Circuits maintenance manual \cite{p600siservicemanual} and available documentation of the circuit board to locate the components. 
 
-In this mode the display shows the current oscillator/filter (A1..A6,B1..B6,F1..F6) and a value that needs to be made close or equal to zero by tweaking the corresponding adjustable.
+For performing the procedure the Prophet 600 must be started in \maintenance by shortening "TP301 SCALE" and then powering up. In this mode the display shows the current oscillator/filter (A1..A6,B1..B6,F1..F6) and a value that needs to be made close or equal to zero by tweaking the corresponding adjustable resistor. Press \numberbut{1} to go to next oscillator/filter, press \numberbut{2} to go the previous one.
 
-Press 1 to go to next oscillator/filter, press 2 to go the previous one.
+When done, turn off the instrument and unshort TP301. After the next start the Prophet 600 will be in normal mode.
 
-When done, turn off the synth and unshort TP301, next start will be in normal mode.
+Note: the scaling adjustment can also be done by refitting the Z80 processor and following the instructions in the Sequential Circuits maintenance manual \cite{p600siservicemanual}. The procedure is different but essentially achieves the same.

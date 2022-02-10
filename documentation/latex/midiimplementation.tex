@@ -1,4 +1,4 @@
-The follwing types of MIDI events are implemented, e.g. the upgraded prophet 600 can receive and apply them:
+Two types of MIDI events are implemented, e.g. the upgraded prophet 600 can receive and apply them:
 
 \begin{itemize}
   \setlength\itemsep{0cm}
@@ -9,7 +9,7 @@ The follwing types of MIDI events are implemented, e.g. the upgraded prophet 600
   \item SysEx (for different purposes)
 \end{itemize}
 
-The Prophet 600 receives Continuous Controllers (CC) in Preset mode only. 
+The Prophet 600 receives Continuous Controllers (CC) in \presetmode only. 
 
 \textbf{MIDI CC Patch Parameters} 
 
@@ -29,23 +29,23 @@ Cutoff & Continuous & 23 & 87 & Poly Mod Oscillator A Destination & Stepped & 55
 Resonance & Continuous & 24 & 88 & Poly Mod Filter Destination & Stepped & 56 \\ \hline
 Filter Envelope Amount & Continuous & 25 & 89 & LFO Shape & Stepped & 57 \\ \hline
 Filter Release & Continuous & 26 & 90 & LFO Sync\footnote{Up to version 2.1 RC3 CC was used for the legacy LFO speed range} & Stepped & 58 \\ \hline
-Filter Sustain & Continuous & 27 & 91 & LFO Mode Destination & Stepped & 59 \\ \hline
+Filter Sustain & Continuous & 27 & 91 & LFO Targets & Stepped & 59 \\ \hline
 Filter Decay & Continuous & 28 & 92 & Keyboard Filter Tracking & Stepped & 60 \\ \hline
 Filter Attack & Continuous & 29 & 93 & Filter Envelope Shape & Stepped & 61 \\ \hline
 Amp Release & Continuous & 30 & 94 & Filter Envelope Fast/Slow & Stepped & 62 \\ \hline
 Amp Sustain & Continuous & 31 & 95 & 2nd Envelope Shape & Stepped & 63 \\ \hline
 Amp Decay & Continuous & 32 & 96 & Unison & Stepped & 65 \\ \hline
 Amp Attack & Continuous & 33 & 97 & Assigner Priority Mode & Stepped & 66 \\ \hline
-Poly Mod Filter Amount & Continuous & 34 & 98 & Pitch bender semitones & Stepped & 67 \\ \hline
-Poly Mod Osc B Amount & Continuous & 35 & 99 & Pitch bender target & Stepped & 68 \\ \hline
-LFO Frequency & Continuous & 36 & 100 & Envelope Routing\footnote{Up to version 2.1 RC3 CC was used for the legacy mod wheel range} & Stepped & 69 \\ \hline
+Poly Mod Filter Amount & Continuous & 34 & 98 & Bender Range (semitones) & Stepped & 67 \\ \hline
+Poly Mod Osc B Amount & Continuous & 35 & 99 & Bender Target & Stepped & 68 \\ \hline
+LFO Frequency & Continuous & 36 & 100 & Mod Wheel Range \footnote{The configuration of this parameter was changed in \version} & Stepped & 69 \\ \hline
 LFO Amount & Continuous & 37 & 101 & Osc pitch mode & Stepped & 70 \\ \hline
-Glide & Continuous & 38 & 102 & Modulation wheel target & Stepped & 71 \\ \hline
-Amp Velocity & Continuous & 39 & 103 & Vibrato target & Stepped & 72 \\ \hline
+Glide & Continuous & 38 & 102 & Mod Wheel Target & Stepped & 71 \\ \hline
+Amp Velocity & Continuous & 39 & 103 & Vibrato Target & Stepped & 72 \\ \hline
 Filter Velocity & Continuous & 40 & 104 &  2nd Envelope Fast/Slow & Stepped & 73 \\ \hline
 Modulation delay & Continuous & 41 & 105 & Sync Bug & Stepped & 74 \\ \hline
-Vibrato frequency & Continuous & 42 & 106 & & & \\ \hline
-Vibrato amount & Continuous & 43 & 107 & &  & \\ \hline
+Vibrato frequency & Continuous & 42 & 106 & Voice Assign & 75 & \\ \hline
+Vibrato amount & Continuous & 43 & 107 & Envelope Routing & 76  & \\ \hline
 Unison detune & Continuous & 44 & 108 & & &  \\ \hline
 Sequencer / arpeggiator clock & Continuous & 45 & 109 &  &  &  \\ \hline
 External CV amount & Continuous & 46 & 110 &  &  &  \\ \hline
@@ -64,24 +64,6 @@ Local On/Off & Stepped & 120 & \\ \hline
 All Notes Off & Stepped & 123 & \\ \hline
 \end{longtable}
 
-\textbf{Other MIDI messages}
 
-(this needs to be done)
-
-\textbf{MIDI Realtime}
-
-The realtime events are relevant for sequencer and arpeggiator. The Prophet 600 receives the following commands.
-
-\begin{itemize}
-  \item Clock
-  \item Start
-  \item Stop
-\end{itemize}
-
-(this needs to be done)
-
-\textbf{SysEx}
-
-The upgraded Prophet 600 receives bespoke SysEx for patch management (see section \ref{patchmanagement}) and for firmware upgrade (see section \ref{firmware}). For a technical documentation please refer to the technical manual \cite{techmanual}.
 
 \normalsize

@@ -1,16 +1,15 @@
-The Prophet 600 comes with a (pitch) \textbf{Bender} (without automatic return to the middle position). With the upgrade it is now possible to customize the range and the target of the bender as part of a patch (see below). Note that the external MIDI pitch bend is added to the internal pitch bend. Full internal and external (MIDI) bend covers twice the range set by the bender range. The external MIDI bend value cannot be reset using the built in bender, but the external value is reverted to zero during the bender calibration process (see below).
-
+The Prophet 600 comes with a (pitch) \textbf{Bender} (without automatic return to the middle position). With the upgrade it is now possible to customize the range/action and the target of the bender as part of a patch (see below). Note that the external MIDI pitch bend is added to the internal pitch bend\footnote{This is the behaviour of the original firmware. Since the bender does not return to zero a bend override by external MIDI leads to unwanted discontinuous pitch changes when the bender of the Prophet 600 is touched. The addition of both bends is therefore more consistent.}. Full internal and external (MIDI) bend covers twice the range set by the bender range. As a consequence, the external MIDI bend value cannot be reset/overridden using the built in bender, but the external value is reverted to zero during the bender calibration process (see below).
 
 \begin{itemize}
-  \item The bender can target the VCO frequency or the filter cut-off frequency. This is set using the addtional patch parameter \textbf{(6) Bend Target} which provides the options \textit{off}, \textit{VCO} (modulation of the frequency of both oscillators), \textit{VCF} (modulating the cut-off frequency) and \textit{amplitude} (modulating the amplitude).
-  \item The range of the bender can be set using the additional patch parameter \textbf{(66) Bender Range}. It offers the choices \textit{2nd} (bend a full tone), \textit{3rd} (bend 3 semi-tones), \textit{5th} (bend 5 semi-tones) and \textit{octave} (bending an entire octave).
+  \item The bender can target the oscillator pitch, the filter cut-off frequency or the amplitude. This is set using the additional patch parameter \ which provides the options \textit{off}, \textit{ab} (bend of the pitch of both oscillators), \textit{VCF} (modulating the cut-off frequency), \textit{volume} (modulating the amplitude) and \textit{b} (bending the pitch of oscillator B only).
+  \item The range of the bender can be set using the additional patch parameter \bendrange. It offers the choices \textit{2nd} (bend a full tone), \textit{3rd} (bend 3 semi-tones), \textit{5th} (bend 5 semi-tones) and \textit{octave} (bending an entire octave).
 \end{itemize}
 
-The upgraded Prophet 600 also offers he possibility to calibrate the bender middle position using one f the miscellaneous settings (see section \ref{settingsref}). This function can be used to remove jittery behaviour of the bender around the middle position. In order to calibrate the bender follow the steps below.
+The upgraded Prophet 600 also offers the option to calibrate the bender middle position using one of the miscellaneous settings/function (see section \ref{settingsref}). This function can be used to remove jittery behaviour of the bender around the middle position. In order to calibrate the bender follow the steps below.
 
 \begin{enumerate}
   \item Move the bender to the middle position.  
-  \item Select setting 3 in shifted or shift-locked mode (the display will show that the bender calibration mode is active). Pressing 3 once activates the calibration mode and pressing 3 twice applies and confirms the calibration. 
+  \item Activate bender calibration by pressing \numberbut{3} in \shiftmode or \shiftlock (the display will show that the bender calibration mode is active). Pressing \numberbut{3} again applies and confirms the calibration and exists the calibration mode.
 \end{enumerate}
 
-As mentioned above, the current active external (e.g. MIDI) bend value is set to zero during the calibration process. To be precise, it is set to zero with the first press of 3 in shifter or shift-locked mode.
+As mentioned above, the current active external (e.g. MIDI) bend value is set to zero during the calibration process. To be precise, it is set to zero with the first press of \numberbut{3} in \shiftmode or \shiftlock.

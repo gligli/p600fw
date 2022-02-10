@@ -1,0 +1,50 @@
+
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 102cm, minimum height = 3cm, anchor = south west] (r) at (0cm,23.25cm) {}; % rear
+ 
+  \prophetdisplay{4cm,17.5cm}{123}{12754}{1}
+  \numberpad{1cm,4cm}
+  \node[font=\fontsize{18}{12}\selectfont, text width=8cm, text centered, inner sep=0.0mm, minimum width=8cm] at (5cm,3cm) {\panelfont{PROGRAM SELECT}};
+  \draw[line width=2pt]++(10,20)--++(0,-18cm); % -0.9cm,-4.65cm  
+  \buttonblock{11cm,7cm}{P}{}
+  \prophetpot{16.9cm,4.5cm}{SPEED}{75}
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 19cm, minimum height = 17cm, anchor = south west] (r) at (0cm,1cm) {}; % buttons
+
+  % panel
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 82cm, minimum height = 17cm, anchor = south west] (r) at (25cm,1cm) {}; % panel  
+  \polymodesubpanel{26.25cm,12cm};
+  \lfosubpanel{26.25cm,2.5cm};
+  \pswitch{52cm,17cm}{UNISON}
+  \oscapanelsci{54.5cm,12cm}
+  \oscbpanelsci{54.5cm,2.5cm}
+  \prophetpotbiplar{89.5cm, 17cm}{MIX}{75}
+  \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center] at (87.5cm,15cm) {\panelfont{OSC A}};
+  \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center] at (91.5cm,15cm) {\panelfont{OSC B}};
+  \prophetpot{89.5cm,7.5cm}{GLIDE}{75}
+  \adsrpanel{93cm,2cm}
+  \filterpanel{93cm,9cm}
+
+  \prophetpot{123cm,16.5cm}{MASTER TUNE}{75}
+  \prophetpot{123cm,7.5cm}{VOLUME}{75}
+  
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 7cm, text centered, minimum height = 8cm, text width=5cm, anchor = north west] (r) at (0cm,-0.25cm) {\Large\textit{Performance Section (Pitch Bend and Modulation Wheel)}};
+  \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 94cm, minimum height = 8cm, anchor = north west] (r) at (10cm,-0.25cm) {\Large\textit{Keyboard}};
+  
+  % legend left
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,-2.5cm) (ps) {Performance Section};
+  \draw[line width=1pt]++(ps.east)--++(2.5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,19.5cm) (pd) {Data Pad};
+  \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,9.35cm) (np) {Number Pad};
+  \draw[line width=1pt]++(np.east)--++(5.8cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,17.5cm) (dis) {Display};
+  \draw[line width=1pt]++(dis.east)--++(5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,15.5cm) (dis) {Function Buttons};
+  \draw[line width=1pt]++(dis.east)--++(16cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = east] at (-2cm,24.75cm) (pd) {Rear};
+  \draw[line width=1pt]++(pd.east)--++(2.5cm,0cm);  
+  
+  % legend right
+  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (129.5cm,19cm) (pl) {Panel};
+  \draw[line width=1pt]++(pl.west)--++(-2.5cm,0cm);  
+  \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west] at (129.5cm,-3.5cm) (kb) {Keyboard};
+  \draw[line width=1pt]++(kb.west)--++(-2.5cm,0cm);  

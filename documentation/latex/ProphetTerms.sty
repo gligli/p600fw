@@ -1,0 +1,137 @@
+\ProvidesPackage{ProphetTerms}[2022/02/07]
+\usepackage{xspace}
+
+
+% globals
+\newcommand{\version}{2.X\xspace}
+\newcommand{\paramgeneral}[1]{\textbf{#1}}
+\newcommand{\button}[1]{\textbf{#1}\xspace}
+\newcommand{\patchparameter}[2]{\paramgeneral{(#1) #2}\xspace}
+\newcommand{\modestyle}[1]{\textbf{#1}\xspace}
+\newcommand{\panelelement}[1]{\textbf{#1}\xspace}
+
+% additional patch parameters
+
+\newcommand{\lfotarget}{\patchparameter{1}{LFO Target}}
+\newcommand{\lfoshape}{\patchparameter{11}{LFO Shape}}
+\newcommand{\lfosync}{\patchparameter{111}{LFO Sync}}
+
+\newcommand{\vibspeed}{\patchparameter{2}{Vibrato Speed}}
+\newcommand{\vibamt}{\patchparameter{22}{Vibrato Amount}}
+\newcommand{\vibtgt}{\patchparameter{222}{Vibrato Target}}
+
+\newcommand{\modwheeltarget}{\patchparameter{3}{Modulation Wheel Target}}
+\newcommand{\moddelay}{\patchparameter{33}{Modulation Delay}}
+\newcommand{\modwheelrange}{\patchparameter{333}{Modulation Wheel Range}}
+
+\newcommand{\oscpitchmode}{\patchparameter{4}{Oscillator Pitch Mode}}
+\newcommand{\extvolt}{\patchparameter{44}{External Voltage}}
+\newcommand{\syncbug}{\patchparameter{444}{Sync Bug Switch}}
+
+\newcommand{\secndenv}{\patchparameter{5}{2nd Envelope Shape}}
+\newcommand{\filenv}{\patchparameter{55}{Filter Envelope Shape}}
+\newcommand{\envrouting}{\patchparameter{555}{Envelope Routing}}
+
+\newcommand{\bentarget}{\patchparameter{6}{Bender Target}}
+\newcommand{\bendrange}{\patchparameter{66}{Bender Range}}
+
+\newcommand{\prio}{\patchparameter{7}{Priority}}
+\newcommand{\assign}{\patchparameter{77}{Assigner}}
+\newcommand{\glide}{\patchparameter{777}{Glide Time}}
+
+\newcommand{\detune}{\patchparameter{8}{Unison Detune Amount}}
+\newcommand{\vintage}{\patchparameter{88}{Vintage/Spread Amount}}
+\newcommand{\drive}{\patchparameter{888}{Drive}}
+
+\newcommand{\ampvel}{\patchparameter{9}{Amplitude Velocity}}
+\newcommand{\filvel}{\patchparameter{99}{Filter Velocity}}
+
+
+% buttons
+\newcommand{\numberbut}[1]{\textbf{button #1}}
+\newcommand{\totape}{\button{To Tape}}
+\newcommand{\fromtape}{\button{From Tape}}
+\newcommand{\tune}{\button{Tune}}
+\newcommand{\preset}{\button{Preset}}
+\newcommand{\record}{\button{Record}}
+\newcommand{\seqone}{\button{Seq 1}}
+\newcommand{\seqtwo}{\button{Seq 2}}
+\newcommand{\arpud}{\button{Arp U/D}}
+\newcommand{\arpass}{\button{Arp Assign}}
+
+% panel controls
+\newcommand{\polymodenv}{\patchparameter{Poly-Mod}{Envelope}}
+\newcommand{\polymodosc}{\patchparameter{Poly-Mod}{Oscillator B}}
+\newcommand{\polymodfreq}{\patchparameter{Poly-Mod}{Frequency Target}}
+\newcommand{\polymodfilter}{\patchparameter{Poly-Mod}{Filter Target}}
+\newcommand{\vola}{\patchparameter{OSC A}{Volume}}
+\newcommand{\oscsync}{\patchparameter{OSC A}{Sync}}
+\newcommand{\volb}{\patchparameter{OSC B}{Volume}}
+\newcommand{\freqfine}{\patchparameter{OSC B}{Fine}}
+\newcommand{\pulsewidth}{\patchparameter{OSC A/B}{Pulse Width}}
+\newcommand{\oscfreq}{\patchparameter{OSC A/B}{Frequency}}
+
+\newcommand{\filtercutoff}{\patchparameter{Filter}{Cut-Off Frequency}}
+\newcommand{\filterres}{\patchparameter{Filter}{Resonance}}
+\newcommand{\filterenv}{\patchparameter{Filter}{Envelope Amount}}
+\newcommand{\keyboardtrack}{\patchparameter{Filter}{Keyboard Tracking}}
+
+\newcommand{\polyenv}{\patchparameter{Poly-Mod}{Envelope}}
+\newcommand{\oscamt}{\patchparameter{Poly-Mod}{Envelope}}
+\newcommand{\plyfreqa}{\patchparameter{Poly-Mod}{Frequency A}}
+\newcommand{\plyfilter}{\patchparameter{Poly-Mod}{Filter}}
+
+\newcommand{\attack}{\patchparameter{Envelope}{Attack}}
+\newcommand{\decay}{\patchparameter{Envelope}{Decay}}
+\newcommand{\sustain}{\patchparameter{Envelope}{Sustain}}
+\newcommand{\release}{\patchparameter{Envelope}{Release}}
+
+\newcommand{\shapeswitch}{\patchparameter{LFO}{Shape}}
+\newcommand{\lfofreq}{\patchparameter{LFO}{Frequency}}
+\newcommand{\lfovco}{\patchparameter{LFO}{VCO }}
+\newcommand{\lfopwm}{\patchparameter{LFO}{PWM}}
+\newcommand{\lfofil}{\patchparameter{LFO}{Filter}}
+\newcommand{\lfoamt}{\patchparameter{LFO}{Initial Amount}}
+
+
+
+\newcommand{\mastertune}{\patchparameter{Master}{Tune}}
+\newcommand{\mastervol}{\patchparameter{Master}{Volume}}
+\newcommand{\mixer}{\textbf{Mixer} }
+\newcommand{\glidepot}{\textbf{Glide Time} }
+
+\newcommand{\unison}{\textbf{Unison} }
+
+
+% performance
+\newcommand{\modwheel}{Modulation Wheel}
+\newcommand{\pitchbender}{Pitch Bender}
+
+
+\newcommand{\cassettein}{Cassette In}
+
+% MISC
+\newcommand{\miscsett}{Miscellaneous Settings}
+\newcommand{\clocksync}{\textbf{Clock Sync}}
+\newcommand{\panelswitch}{\textbf{Panel Layout Switch}}
+
+
+% panel sections / terms
+\newcommand{\funcbuttons}{\panelelement{Function Buttons}}
+\newcommand{\termnumberpad}{\panelelement{Number Pad}}
+\newcommand{\datadial}{\panelelement{Data/Speed Dial}}
+\newcommand{\display}{\panelelement{Display}}
+\newcommand{\clock}{\panelelement{Arpeggiator/Sequencer Speed}}
+
+
+% modes
+\newcommand{\presetmode}{\modestyle{Preset Mode}}
+\newcommand{\presetpatch}{\modestyle{Preset Patch Mode}}
+\newcommand{\presetpanel}{\modestyle{Preset Panel Mode}}
+\newcommand{\livemode}{\modestyle{Live Mode}}
+\newcommand{\storagemode}{\modestyle{Storage Mode}}
+\newcommand{\patchmgmt}{\modestyle{Patch Management Mode}}
+\newcommand{\shiftmode}{\modestyle{Shift Mode}}
+\newcommand{\shiftlock}{\modestyle{Shift Lock Mode}}
+\newcommand{\seqedit}{\modestyle{Sequencer Edit Mode}}
+\newcommand{\maintenance}{\modestyle{Maintenance Mode}}

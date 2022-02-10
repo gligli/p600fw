@@ -1,10 +1,10 @@
-The live sequencer of the original Prophet 600 has been replaced by a step sequencer which supports polyphony. Two tracks can be programmed and played simultaneously. Sequence 1 is started by pressing the key \textbf{SEQ 1}, sequence 2 is started by pushing the button \textbf{SEQ 2}. The LED of the running sequencer is always on. Live sound control via panel controls, menu parameters and MIDI CC as well as playing via keyboard and/or MIDI is fully supported while the sequencer is running. To stop either sequence, press the respective sequencer button again. The LED of the stopped sequencer is off. 
+The live sequencer of the original Prophet 600 has been replaced by a step sequencer which supports polyphony. Two tracks can be programmed and played simultaneously. Sequence 1 is started by pressing the key \seqone, sequence 2 is started by pushing the button \seqtwo. The LED of the running sequencer is always on. Live sound control via panel controls, menu parameters and MIDI CC as well as playing via keyboard and/or MIDI is fully supported while the sequencer is running. To stop either sequence, press the respective sequencer button again. The LED of the stopped sequencer is off. 
 
 By default the sequences are empty, so even with the started sequencer no sound will play. If either sequence is activated and no sound plays, then it is worth checking the following potential reasons: Has a note been added? Is the sync set to \textit{internal} and is the speed greater than zero? If the sync is not \textit{internal} does the instrument receive a clock, e.g. via MIDI on the correct channel or via tape in?
 
 \textbf{Creating / editing a sequence}
 
-The following is an example work flow for adding notes, rests and ties to a sequence and covers all editing functions needed. To enter the editing mode press the \textbf{Record} button and then the respective sequencer track button as shown below (example for editing sequencer track 1):
+The following is an example work flow for adding notes, rests and ties to a sequence and covers all editing functions needed. To enter the editing mode press the \record button and then the respective sequencer track button as shown below (example for editing sequencer track 1):
 
 \begin{center}
   
@@ -12,11 +12,11 @@ The following is an example work flow for adding notes, rests and ties to a sequ
   \begin{tikzpicture}[scale=0.8]
     \arpsqbuttons{9cm, 6cm}{}{}
     \draw [-to, line width=2pt](22cm,9cm) -- (28cm,9cm);
-    \node[font=\fontsize{22}{22}\selectfont, align=left, outer sep=0.5mm, anchor = south west, text width=10cm] at (22cm,9.5cm) {Press \textbf{Record}};
+    \node[font=\fontsize{22}{22}\selectfont, align=left, outer sep=0.5mm, anchor = south west, text width=10cm] at (22cm,9.5cm) {Press \record};
 
     \arpsqbuttons{29cm, 6cm}{R}{R}
     \draw [-to, line width=2pt](42cm,9cm) -- (48cm,9cm);
-    \node[font=\fontsize{22}{22}\selectfont, align=left, outer sep=0.5mm, anchor = south west, text width=10cm] at (42cm,9.5cm) {Press \textbf{SEQ 1}};
+    \node[font=\fontsize{22}{22}\selectfont, align=left, outer sep=0.5mm, anchor = south west, text width=10cm] at (42cm,9.5cm) {Press \seqone};
 
     \arpsqbuttons{49cm, 6cm}{R1}{1}
   \end{tikzpicture}
@@ -24,16 +24,16 @@ The following is an example work flow for adding notes, rests and ties to a sequ
 \end{center}
 
 \begin{enumerate}
-  \item Press the \textbf{Record} button. Its LED starts flashing.
-  \item Press the sequencer button of the sequence you would like to edit (SEQ 1 or SEQ 2). The LED of the respective sequencer button starts flashing, and the Record button light becomes solid. The sequence is in record mode an awaits notes, rest to be added to the sequence.Note: The sequencer is running in this mode, so as soon as the first note is entered this note is repeatedly replayed at the current sequencer/arpeggiator tempo. If notes have previously been added to the sequence, this sequence is played and any new notes are added. 
-  \item Adjust the tempo. Note that you can set the speed dial to control the clock tempo before starting the sequencer editing mode. The parameter selection is preserved. Be careful when selecting the parameter in record mode. It requires pushing and holding  the \textbf{To Tape} button. Otherwise pushing the 0 button has a different, sequencer specific function: it clears the sequence.  
+  \item Press the \record button. Its LED starts flashing.
+  \item Press the sequencer button of the sequence you would like to edit (SEQ 1 or SEQ 2). The LED of the respective sequencer button starts flashing, and the \record button LED becomes solid. The sequence is in \seqedit and awaits notes, ties and rest to be added to the sequence. Note: The sequencer is running in this mode, so as soon as the first note is entered this note is repeatedly replayed at the current sequencer/arpeggiator tempo. If notes have previously been added to the sequence, this sequence is played and any new notes are added. 
+  \item Adjust the tempo. Note that you can set the \datadial to control the clock tempo before starting the sequencer editing mode. The parameter selection is preserved. Be careful when selecting the parameter in record mode. It requires pushing and holding  the \totape button. Otherwise pushing the \numberbut{0} button has a different, sequencer specific function: it clears the sequence!  
   \item Play the notes to be added to the sequence. The display screen shows which step is currently being added, e.g. it is the current length of the recorded sequence including rests and ties.
-  \item Pressing 0 on the keypad resets the sequence and deletes any notes. Note: there is no confirmation step. 
-  \item In sequencer record mode the 2 button on the number pad inserts rests or ties. It adds a rest when no key is pressed, and a tie when a key is pressed.
-  \item Added notes (or chords), ties and rests can be successively deleted/undone using the 1 button on the number pad. 
-  \item In order to complete the sequence editing and to leave the record mode, press the respective sequencer button (\textbf{SEQ 1} or \textbf{SEQ 2}). The sequencer button LED becomes solid, and the \textbf{RECORD} button LED does off. The sequence is saved. 
+  \item Pressing \numberbut{0} resets the sequence and deletes any notes. Note: there is no confirmation step. 
+  \item In \seqedit the \numberbut{2} button on the \termnumberpad inserts rests or ties. It adds a rest when no key is pressed, and a tie when a key is pressed.
+  \item Added notes (or chords), ties and rests can be successively deleted/undone using the \numberbut{1} button on the number pad. 
+  \item In order to complete the sequence editing and to leave the \seqedit, press the respective sequencer button (\seqone or \seqtwo). The sequencer button LED becomes solid, and the \record button LED does off. The sequence is saved. 
 \end{enumerate}
 
 \textbf{Transposing a  sequence}
 
-To transpose a sequence use the keyboard in shifted or shift-locked mode. The C3 key is zero or standard tuning, and will not transpose. Playing C sharp 3 will transpose the sequence up a half step, playing D3 will transpose the sequence up a whole step, etc.
+To transpose a sequence use the keyboard in shifted or shift-locked mode. The C3 key is zero or standard tuning, and will not transpose. Playing C sharp 3 will transpose the sequence up a half step, playing D3 will transpose the sequence up a whole step, etc. See section \ref{transposition} for details.

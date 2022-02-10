@@ -1,23 +1,22 @@
-The upgraded Prophet 600 can operated in the following voice modes
-
+The upgraded Prophet 600 can be played in the following voice modes
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item \textit{polyphonic}: This mode is set by setting the \textbf{Unison Switch} on the panel to \textit{off}. In this mode any new note is assigned to one of the 6 voices. 
-  \item \textit{unison}: This mode is activated by switching the panel \textbf{Unison} switch from \textit{off} to \textit{on} while not holding any keyboard key pressed. In this mode all 6 voices play the same note. Note that using the additional patch parameter \textbf{(8) Detune} to detune the single oscialltors is used to create thickened sounds in unison mode.
-  \item \textit{chord}: This mode is activated by switching the panel \textbf{Unison} switch from \textit{off} to \textit{on} while holding down one or more keys (the "chord"). In this mode the synthesizer transposes that chord over the whole keyboard. Note that independently of how many notes the chord contains (and therefore how many voices would be left in principle), only one chord can be played at a time, similar to unison mode.
+  \item \textit{polyphonic}: This mode is set by setting the \unison on the panel to \textit{off}. In this mode any new note is assigned to one of the 6 voices. 
+  \item \textit{unison}: This mode is activated by switching the panel \unison switch from \textit{off} to \textit{on} without holding any keyboard key pressed. In this mode all 6 voices play the same note. Apply the additional patch parameter \detune to create thickened sounds in unison mode, see section \ref{detune}.
+  \item \textit{chord}: This mode is activated by switching the panel \unison switch from \textit{off} to \textit{on} while holding down one or more keys (the "chord"). In this mode the synthesizer transposes that chord over the whole keyboard. Note that independently of how many notes the chord contains (and therefore how many voices would be left in principle), only one chord can be played at a time, similar to unison mode.
 \end{itemize} 
 
-The choice of voice mode is a patch parameter e.g. is stored with the patch.
+The setting of \unison is a patch parameter e.g. is stored with the patch.
 
-Note that in unison/chord voice modes the foot switch does not hold notes but instead can be used to latch a new patterns of notes / chords on the fly without leaving and reactivating the unison mode. To do so, hold down the chord you want to latch in unison/chord mode and press the footswitch. In order to return to normal unison mode pres the fottswitch with no key held down. 
+Note that in unison/chord voice modes the foot switch does not hold/sustain notes as in polyphonic mode but instead latches patterns of notes / chords on the fly without leaving and reactivating the unison mode. To do so, hold down the chord you want to latch in unison/chord mode and press the foot switch. In order to return to normal unison mode press the foot switch with no key held down. Using the foot switch with \unison on re-triggers the currently held notes. 
 
-In polyphonic mode the assignment of voices to new played notes can be customized using the additional patch parameter \textbf{(77) Assigner Priority}.New notes will be assigned to voices according to the following priority rules:
+The assignment of voices to new played notes can be customized using the additional patch parameter \prio. New notes will be assigned to voices according to the following priority rules:
 
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item \textit{last}: New notes always play and if 6 voices already playing then the oldest played notes is "stolen".
-  \item \textit{low}: A new played note only plays if it is lower than all 6 voices already playing. In \textit{unison} or \textit{chord} mode, legato is active. This is the preferred setting when bass accompaniment is important and the sudden stop of bass notes would create unwanted disruptions. 
-  \item \textit{high}: A new played note only plays if it is higher than the 6 voices already playing. In \textit{unison} or \textit{chord} mode, legato is active. This is the preferred setting for a synthesizer lead situation where the sudden stop of a high note would create unwanted disruptions. 
+  \item \textit{last}: New notes always play and if 6 voices are already playing then the oldest played notes is "stolen".
+  \item \textit{low}: A new played note only plays if it is lower than the highest note already playing. The highest note is "stolen". With \unison on, legato is active. This is the preferred setting when bass accompaniment is important and the sudden stop of bass notes would create unwanted disruptions. 
+  \item \textit{high}: A new played note only plays if it is higher than the lowest note already playing. The lowest note is "stolen". With \unison on, legato is active. This is the preferred setting for a synthesizer lead situation where the sudden stop of a high note would create unwanted disruptions. 
 \end{itemize}
 
 The assigner priority of voice mode is a patch parameter e.g. is stored with the patch.
@@ -27,6 +26,8 @@ The assigner priority of voice mode is a patch parameter e.g. is stored with the
 The assigner priority can be used effectively in combination with the voice modes to customize solo voices. For example combine the priority \textit{high} (or \textit{low}) with ...
 \begin{itemize}
   \item ...\textit{unison} mode for a massive legato solo voice
-  \item ...\textit{chord} mode with a one one "chord" (hold down C3) to achieve a more delicate legato mono solo voice
+  \item ...\textit{chord} mode with a one key "chord" (hold down only C3) to achieve a more delicate legato mono solo voice
   \item ...\textit{chord} mode with octaves (hold down C3 plus C4 plus more if desired) for a more assertive mono solo voice   
 \end{itemize}
+
+In the default setup the voice allocation follows a "first voice found" logic. This means that when a new key is played the first free voice (first in the sense of the internal numbering of voices) will be allocated. In practise this means that when a note is released and played again the same voice is used. Since voices can have different characteristics in analogue synthesizer such as the Prophet 600, such a voice allocation logic favours more stable and consistent note sequences. However, the variations in voices can also be deliberately used to create more lively and animated sequences. This becomes very pronounced when vintage spread is activated (see section \ref{spreadsett}). In order to give users the choice, the advanced menu parameter \assign has been introduced which offers the choices \textit{first} and \textit{cycle}. The second option activates a "round robin" logic which always selects a new (free) voice for allocation, e.g. distributing the assignments evenly among the 6 voices.   
