@@ -1747,8 +1747,18 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
             {
                 // half strength for VCO modulation
                 modBitShift=mr[currentPreset.steppedParameters[spModWheelRange]];
-                //synth.modwheelAmount=(((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f))>>modBitShift);
-                synth.modwheelAmount=(((uint16_t)((expf(((float)modulation)/30000.0f )-1.0f)*8310.08f))>>modBitShift);
+                if (currentPreset.steppedParameters[spModWheelRange]<=1)
+                {
+                    synth.modwheelAmount=(((uint16_t)((expf(((float)modulation)/30000.0f )-1.0f)*8310.08f))>>modBitShift);
+                }
+                else if(currentPreset.steppedParameters[spModWheelRange]==2)
+                {
+                    synth.modwheelAmount=(((uint16_t)((expf(((float)modulation)/17000.0f )-1.0f)*1417.6f))>>modBitShift);
+                }
+                else
+                {
+                    synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f));
+                }
             }
             refreshLfoSettings();
         }
