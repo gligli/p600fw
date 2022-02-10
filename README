@@ -2,21 +2,16 @@
 * P600FW *
 **********
 
-Project web page now located there: (downloads, demos, etc.)
+Blog on reason for new development and background: https://prophet600revisited.blogspot.com/
+GliGli p600fw project page: http://gligli.github.io/p600fw/
 
---> http://gligli.github.io/p600fw/ <--
-
+January 2022: NEW Release In Work
 
 Description
 ===========
 
 This is the P600FW project, a CPU/firmware remake for the SCI Prophet 600 (http://www.vintagesynth.com/sci/p600.php).
 It uses a slightly modified Teensy++ board (http://www.pjrc.com/store/teensypp_pins.html) that plugs into the Z80 socket.
-
-Installation and usage
-======================
-
-See documentation...
 
 Compiling the Firmware
 ======================
@@ -45,6 +40,8 @@ History
 	- Dedicated vibrato (independent from the LFO).
 	- Automatic modulation after a delay.
 	- Many bug fixes and tweaks.
+- 2015: Non-published 2.1 RC3
+- 2021/22: restart of development - alpha series 
 
 License
 =======
