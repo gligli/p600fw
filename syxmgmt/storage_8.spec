@@ -34,7 +34,7 @@ Poly Mod Frequency A;1;1
 Poly Mod Filter;1;1
 LFO Shape;1;1
 LFO Sync;1;1
-LPF Targets;1;1
+LFO Targets;1;1
 Tracking Shift;1;1
 Filter Envelope Shape;1;1
 Filter Envelope Speed;1;1
