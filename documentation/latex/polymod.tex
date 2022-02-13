@@ -28,7 +28,7 @@ There are two modulation sources, \polyenv and \oscamt and two destinations, osc
 
 Note that poly-mod is very tuning sensitive and that it maybe necessary to retune the synth more often when using extreme poly-mod settings.
 
-\textbf{Envelope modulation}
+\textbf{Envelope pitch modulation}
 
 The second modulation source in the poly-mod envelope whose strength set by the \polyenv dial. This activates a pitch modulation of oscillator A using an envelope when the Frequency switch is \textit{on}. The \polyenv control is bipolar, that is it provides negative (inverse modulation) and positive values. Note that the poly-mod envelope only affects the frequency of oscillator A. The filter cut-off frequency is already modulated by the filter envelope. 
 
@@ -55,6 +55,8 @@ IN order to further expand the sound design posisbilities, the latest firmware u
 As explained in section \ref{osc}, oscillator A can be sync'ed to oscillator B using the \oscsync switch in the sub-panel for oscillator B. This can also be view as a variant of cross-modulation. The sync function can even be combined with frequency modulation as decribed above. 
 
 Combining oscillator sync with poly-mod pitch modulation by envelope can be used to produce interesting short transients or slow sound evolutions. For example, when oscillator A is a pulse wave, then sync'ing this wave to oscillator B and time modulating the pitch of oscillator A has the effect of pulse width modulation by envelope. It creates a change in timbre which can be short to simulate plucking an brassy attacks or long to produce a sweep of the sound spectrum.
+
+Note: the firmware versions 2.0 and 2.1 RC3 contain a software error which incorrectly reset the pulse widths of oscilators A and B. The manifests itself under the following conditions: \oscamt is turned up and the poly-mod target \plyfreqa is active. The wave shape pulse of oscillator B is not activated. In this case the incorrect reset of the pulse widths leads to a wrong frequency in oscillator A. The effect becomes strong with higher settings of \oscamt. In version \version this bug was corrected but in order to ensure backwards compatibility of older patches, the bug can be switched off in the menu patch parameters: the parameter \syncbug can be set to \textit{off} and \textit{on}. The default value is \textit{off} but for patches from older firmware versions it is set to \textit{on} so that these are unchanged even if the conditions above apply.    
 
 \textbf{Starting points for patch design with poly-mod and sync}
 
