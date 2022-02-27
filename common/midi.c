@@ -572,8 +572,8 @@ void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
 {
     uint8_t lsb, msb;
 
-    lsb=val;
-    msb=(val>>8);
+    lsb=val&0x7F;
+    msb=(val>>7)&0x7F;
 
     midi.send_func(&midi, 3, MIDI_PITCHBEND | (mdchn & MIDI_CHANMASK), lsb, msb);
 }

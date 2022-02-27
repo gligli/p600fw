@@ -41,7 +41,7 @@ const struct uiParam_s uiParameters[] =
 	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo sync",.values={"off","1","2","3","4","5","6","8"}},
     /*2*/ {.type=ptStep,.number=spVibTarget,.name="Vib tgt",.values={"VCO","VCA"}},
 	/*3*/ {.type=ptStep,.number=spModWheelRange,.name="mod rng",.values={"touch","soft", "high", "full"}},
-	/*4*/ {.type=ptStep,.number=spPWMBug,.name="sync bug",.values={"off","on"}},
+	/*4*/ {.type=ptStep,.number=spPWMBug,.name="pulse bug",.values={"off","on"}},
 	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
 	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
     /*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
@@ -119,7 +119,6 @@ static void refreshPresetButton(p600Button_t button)
 	
 	if(change)
 	{
-        ui.lastActivePot=ppNone;
 		ui.presetModified=1;
 		refreshFullState();
 	}
@@ -167,6 +166,7 @@ static int8_t changeMiscSetting(p600Button_t button)
             // reset the pick-up status of the two pots
             currentPreset.contParamPotStatus[cpMixVolA]=0;
             currentPreset.contParamPotStatus[cpGlideVolB]=0;
+            settings_save();
             return 0;
         case pb7:
             return 1;
@@ -413,6 +413,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
         ui.menuParamSelectChange=1;
         potmux_resetSpeedPot();
         ui.lastActivePot=ppNone;
+        ui.lastActivePot=-1;
 
 	}
 }
@@ -475,9 +476,6 @@ void ui_checkIfDataPotChanged(void)
 
     if (ui.isShifted && settings.presetMode && (ui.digitInput==diLoadUnitDigit || ui.digitInput==diLoadDecadeDigit)) // this is preset load patch - we want the data dial to work as selector
     {
-        // to be done:
-        // avoid jumps in selection (pick-up?=
-        //
         // map dial onto 0...99
         // if in local off mode we can still change the program because the incoming MIDI would have no effect
         uint16_t selectedPatch;
@@ -550,7 +548,7 @@ void ui_checkIfDataPotChanged(void)
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
         }
         ui.menuParamSelectChange=0; // ensures that no storage is possible until a new menu parameter is selected
-        if (prm.number==spModWheelRange) synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1,0); // take effect immediately
+        if (prm.number==spModWheelRange || prm.number==spModwheelTarget) synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1,0); // take effect immediately
         if (prm.number!=cpSeqArpClock) ui.presetModified=1;
 		
 		refreshFullState();
@@ -680,7 +678,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
 			}
 		}
-		ui_setNoActivePot(1);
+		ui_setNoActivePot(1); // no active pot status should be carried over to the new state
 	}
 
 	// shifted state (keyboard transposition, ...)
@@ -773,7 +771,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 		else if(button==pbPreset) // toggle between live mode and preset mode
 		{
             // save manual preset to recall it later
-            if(!settings.presetMode)
+            if(!settings.presetMode) // switch to preset mode
             {
                 preset_saveCurrent(MANUAL_PRESET_PAGE);
             }

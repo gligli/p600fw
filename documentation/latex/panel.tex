@@ -1,0 +1,50 @@
+\documentclass[minimal, landscape]{report}
+\usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{scrextend}
+\usepackage{array}
+\usepackage{ProphetPanel}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+
+\thispagestyle{empty}
+
+\begin{document}
+
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \coordinate(orig)at(0cm,0cm);
+  
+      % A-axis
+    \draw[-to, line width = 2pt] (orig) -- ($(orig)+(6cm,0cm)$); 
+    \node[rectangle, font=\fontsize{11}{12}\selectfont, anchor = west] at ($(orig)+(6.1cm,0cm)$) {Osc B}; 
+    \node[rectangle, font=\fontsize{11}{12}\selectfont, anchor = north] at ($(orig)+(5cm,-0.1cm)$) {Full}; 
+    \node[rectangle, font=\fontsize{11}{12}\selectfont, anchor = north] at ($(orig)+(2.5cm,-0.1cm)$) {Half}; 
+    \draw[-to, line width = 2pt] (orig) -- ($(orig)+(0cm,6cm)$); 
+    \node[rectangle, font=\fontsize{11}{12}\selectfont, anchor = south] at ($(orig)+(0cm,6.1cm)$) {Osc A}; 
+    \node[rectangle, font=\fontsize{11}{12}\selectfont, anchor = east] at ($(orig)+(-0.1cm,5cm)$) {Full}; 
+    \node[rectangle, font=\fontsize{11}{12}\selectfont, anchor = east] at ($(orig)+(-0.1cm,2.5cm)$) {Half}; 
+
+    \draw[to-to, line width = 1pt] ($(orig)+(5cm,0.1cm)$) -- ($(orig)+(0.1cm,5cm)$); 
+    \node[rectangle, font=\fontsize{10}{12}\selectfont, rotate=-45, anchor = south] at ($(orig)+(1.9cm,3.1cm)$) {drive=50}; 
+
+    \draw[to-to, line width = 1pt] ($(orig)+(2.5cm,0.1cm)$) -- ($(orig)+(0.1cm,2.5cm)$); 
+    \node[rectangle, font=\fontsize{10}{12}\selectfont, rotate=-45, anchor = south] at ($(orig)+(1cm,1.5cm)$) {drive=25}; 
+
+    \draw[to-to, line width = 1pt] ($(orig)+(1cm,0.1cm)$) -- ($(orig)+(0.1cm,1cm)$); 
+
+    \draw[-to, line width = 1pt] ($(orig)+(3.8cm,3.8cm)$) -- ($(orig)+(0.3cm,4.95cm)$); 
+    \draw[-to, line width = 1pt] ($(orig)+(3.8cm,3.8cm)$) -- ($(orig)+(4.95cm,0.3cm)$); 
+    \node[rectangle, font=\fontsize{10}{12}\selectfont, rotate=-18.4, anchor = east] at ($(orig)+(3.85cm,4.02cm)$) {drive=75}; 
+
+    \draw[-to, line width = 1pt] ($(orig)+(4.5cm,4.5cm)$) -- ($(orig)+(0.1cm,5.1cm)$); 
+    \draw[-to, line width = 1pt] ($(orig)+(4.5cm,4.5cm)$) -- ($(orig)+(5.1cm,0.1cm)$); 
+    \node[rectangle, font=\fontsize{10}{12}\selectfont, rotate=-6.39, anchor = east] at ($(orig)+(4.45cm,4.78cm)$) {drive=90}; 
+
+  \end{tikzpicture}
+}
+
+\end{document}  

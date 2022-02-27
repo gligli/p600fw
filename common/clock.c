@@ -20,7 +20,6 @@ inline void clock_setSpeed(uint16_t speed)
 		clock.speed=exponentialCourse(speed,22000.0f,500.0f);
 	else
         clock.speed=extClockDividers[(((uint32_t)speed)*16)>>16];
-		//clock.speed=extClockDividers[((uint32_t)speed*(sizeof(extClockDividers)/sizeof(uint16_t)))>>16];
 }
 
 inline uint16_t clock_getSpeed(void)

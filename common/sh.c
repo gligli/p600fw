@@ -100,6 +100,10 @@ FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 	
 	// deselect it
 	io_write(0x0d,dmux1);
+
+    // let analog hardware stabilize
+    // CYCLE_WAIT(1);
+
 }
 
 FORCEINLINE void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value)
