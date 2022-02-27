@@ -15,7 +15,7 @@ void potmux_resetSpeedPot(void);
 
 void potmux_init(void);
 
-void potmux_update(uint8_t updateAll, uint8_t potsPerCycle);
+void potmux_update(uint8_t updateAll);
 uint8_t comparePotVal(p600Pot_t pot, uint16_t potValue, uint16_t compareValue);
 
 int8_t potmux_isPotZeroCentered(p600Pot_t pot, uint8_t layout);

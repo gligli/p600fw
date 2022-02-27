@@ -140,7 +140,6 @@ static void resetPickUps(void)
 {
     uint8_t cnt;
     for (cnt=0;cnt<cpCount;++cnt) currentPreset.contParamPotStatus[cnt]=0;
-    currentPreset.switchStatus=0;
 }
 
 static LOWERCODESIZE int8_t storageLoad(uint16_t pageIdx, uint8_t pageCount)
@@ -215,10 +214,10 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.midiReceiveChannel=-1; // default is 'OMNI'
 		settings.voiceMask=0x3f; // default is: all on
 		settings.midiSendChannel=0; // deault is: 1
-		settings.syncMode=smInternal; // default ist internal clock
+		settings.syncMode=smInternal; // default is internal clock
 		settings.vcfLimit=0; // default is: no limit on the VCF
 		settings.midiMode=0; // normal mode
-		settings.panelLayout=0; // normal mode
+		settings.panelLayout=0; // GliGli layout
 
 		if (storage.version<1)
 			return 1;
@@ -353,6 +352,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 {
 	uint8_t i;
 	int8_t readVar;
+	int16_t readVarLong;
 	
 	BLOCK_INT
 	{
@@ -367,9 +367,6 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         }
         else
         {
-
-            resetPickUps();
-
             // check the storage MAGIC
             storage.bufPtr=storage.buffer;
 
@@ -379,6 +376,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
                 return 0;
             }
             storage.version=storageRead8();
+            resetPickUps();
         }
 
         // compatibility with previous versions require the ""Pulse Width Sync Bug""
@@ -482,7 +480,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 		// v7
 		
         for (i=0; i<TUNER_NOTE_COUNT; i++)
-			currentPreset.perNoteTuning[i]=storageRead16();
+        {
+            readVarLong=storageRead16();
+            if (number!=MANUAL_PRESET_PAGE || loadFromBuffer) currentPreset.perNoteTuning[i]=readVarLong; // always reset equal tempered tuning for manual mode: keep defaults
+        }
 			
 		if (storage.version<8)
         {
@@ -671,9 +672,8 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
 		currentPreset.continuousParameters[cpAmpSus]=UINT16_MAX;
 		currentPreset.continuousParameters[cpAmpVelocity]=HALF_RANGE;
 		currentPreset.continuousParameters[cpVibFreq]=HALF_RANGE;
+		if (settings.panelLayout==1) currentPreset.continuousParameters[cpDrive]=HALF_RANGE;
         if (settings.panelLayout==0) currentPreset.continuousParameters[cpMixVolA]=UINT16_MAX;
-		//currentPreset.continuousParameters[cpDrive]=HALF_RANGE; // this is internal parameter for SCI panel layout
-		//currentPreset.continuousParameters[cpVolA]=UINT16_MAX;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
 		currentPreset.steppedParameters[spBenderTarget]=modAB;
@@ -703,9 +703,10 @@ LOWERCODESIZE void settings_loadDefault(void)
 		memset(&settings,0,sizeof(settings));
 		
 		settings.benderMiddle=HALF_RANGE;
-		settings.midiReceiveChannel=-1;
+		settings.midiReceiveChannel=-1; // OMNI
 		settings.voiceMask=0x3f;
 		settings.seqArpClock=HALF_RANGE;
+        settings.panelLayout=0; // GliGli layout
 		
 		tuner_init(); // use theoretical tuning
 	}
