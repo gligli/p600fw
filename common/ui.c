@@ -16,7 +16,7 @@ const struct uiParam_s uiParameters[] =
 {
 	/*first press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
-	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"puls-tri","rnd-sin","nois-saw"}},
+	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"tri-puls","sin-rnd","saw-nois"}},
 	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
 	/*3*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
 	/*4*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct", "oct-semi", "semi-oct", "oct-free", "free-oct"}},
