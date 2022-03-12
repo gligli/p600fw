@@ -38,7 +38,7 @@ const struct uiParam_s uiParameters[] =
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 	/*third press*/
 	/*0*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo sync",.values={"off","1","2","3","4","5","6","8"}},
+	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo clk sync",.values={"off","1","2","3","4","5","6","8"}},
     /*2*/ {.type=ptStep,.number=spVibTarget,.name="Vib tgt",.values={"VCO","VCA"}},
 	/*3*/ {.type=ptStep,.number=spModWheelRange,.name="mod rng",.values={"touch","soft", "high", "full"}},
 	/*4*/ {.type=ptStep,.number=spPWMBug,.name="pulse bug",.values={"off","on"}},
@@ -401,21 +401,24 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 			ui.activeParamIdx-=20;
 		else
 			ui.activeParamIdx=new;
-		ui.previousData=-1;
+
+        ui.previousData=-1;
 	}
 
-	if(ui.activeParamIdx!=prev)
+	if(ui.activeParamIdx!=prev || ui.lastActivePot!=ppNone) // shoudl be displayed either if
 	{
 		// display param name + value
 		displayUIParameter(ui.activeParamIdx);
 		
 		// set flag for enabling storage of manual preset if that new parameter is changed
         ui.menuParamSelectChange=1;
-        potmux_resetSpeedPot();
-        ui.lastActivePot=ppNone;
-        ui.lastActivePot=-1;
-
+        ui.lastActivePotValue=-1;
 	}
+
+    //potmux_resetSpeedPot();
+    ui_setNoActivePot(1);
+    ui.lastActivePot=ppNone;
+
 }
 
 static LOWERCODESIZE void handleSequencerPage(p600Button_t button)

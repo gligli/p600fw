@@ -772,7 +772,7 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
             if (lastPotcP>=0)
                 if (currentPreset.contParamPotStatus[lastPotcP]==1) isPickedUp=1;
 
-            if (lastPotcP<0 || isPickedUp) // it's a value not part of the currentPreset.cp, e.g. not stored in a patch; always show as is
+            if (lastPotcP<0 || isPickedUp) // it's a value not part of the currentPreset.cp , e.g. not stored in a patch; (always show as is) or it is pick up (also show)
             {
                 if ((ui.lastActivePot==ppFreqA && (synth.freqDial&1)==0) || (ui.lastActivePot==ppFreqB && ((synth.freqDial>>2)&1)==0))
                 {
