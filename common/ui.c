@@ -405,19 +405,18 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
         ui.previousData=-1;
 	}
 
-	if(ui.activeParamIdx!=prev || ui.lastActivePot!=ppNone) // shoudl be displayed either if
+    //potmux_resetSpeedPot();
+    ui_setNoActivePot(1);
+
+    if(ui.activeParamIdx!=prev || ui.lastActivePot!=ppNone) // shoudl be displayed either if
 	{
 		// display param name + value
 		displayUIParameter(ui.activeParamIdx);
 		
 		// set flag for enabling storage of manual preset if that new parameter is changed
         ui.menuParamSelectChange=1;
-        ui.lastActivePotValue=-1;
 	}
 
-    //potmux_resetSpeedPot();
-    ui_setNoActivePot(1);
-    ui.lastActivePot=ppNone;
 
 }
 
