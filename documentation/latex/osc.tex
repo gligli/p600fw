@@ -1,19 +1,45 @@
-For each of the six voices the Prophet 600 has two voltage controlled oscillators (VCOs) VCO A and VCO B. Each one has a dedicated sub-panel on the panel. The oscillators are identical, offering three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The pulse width of the pulse shape can be adjusted using the corresponding \pulsewidth dial. All three shapes can be activated simultaneously. 
+Each of the six voices of the Prophet 600 has two voltage controlled oscillators (VCOs). VCO A and VCO B have dedicated sub-panels. The oscillators are basically identical. They offer three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The pulse width of the pulse shape can be adjusted using the corresponding \pulsewidth dial. All three shapes can be activated simultaneously. The figures below are for \textit{GliGli} panel layout and \textit{SCI} panel layout, which differ in the way the oscillator volumes are controlled.
+
+\textbf{Oscillators in GliGli panel layout}
 
 \begin{center}
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
     \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter oscillator sets the units of the two oscillator frequency dials, e.g. \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
-    \oscapanel{0,10cm}
-    \oscbpanel{0,0cm}
+    \oscapanelsci{0cm,9.5cm}
+    \oscbpanelsci{0cm,0cm}
+    \mixerpanel{31.9cm,0cm}
     \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,15cm);
     \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,6cm);
   \end{tikzpicture}
 }
 \end{center}
 
+\textbf{Oscillators in SCI panel layout}
 
-Both oscillators have a \oscfreq dial which determines the frequency range of the oscillators when played from the keyboard or via MIDI.  The user can choose the granularity of the Frequency dials: 
+\begin{center}
+\scalebox{0.4}{
+  \begin{tikzpicture}[scale=0.8]
+    \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter sets the units of the two oscillator frequency dials, e.g. \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
+    \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,15cm);
+    \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,6cm);
+    \oscapanelsci{0cm,9.5cm}
+    \oscbpanelsci{0cm,0cm}
+    
+    \prophetpotbiplar{35cm, 14.5cm}{MIX}{75}
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center] at (33cm,12.5cm) {\panelfont{OSC A}};
+    \node[rectangle, font=\fontsize{14}{12}\selectfont, anchor = center] at (37cm,12.5cm) {\panelfont{OSC B}};
+
+    \addpar{42cm,13cm}{\drive \\ This menu parameter modifies the drive factor of the oscillator mix dial (applies to SCI panel layout only)};
+    \draw[line width = 2pt, dashed] (41cm,15cm) -- (38cm,15cm);
+  
+  \end{tikzpicture}
+}
+\end{center}
+
+\textbf{Oscillator controls}
+
+Both oscillators have a \oscfreq dial which determines the frequency range of the oscillators when played from the keyboard or via MIDI.  You can choose the granularity of the frequency dials: 
 \begin{itemize}
   \item \textit{free}: the base frequency can be chosen freely. The dial value selection is continuous and the \display shows approximate values between 0 and 99 in the normal way
   \item \textit{semitone}: the base frequency can be selected in semitones. The dial value selection is discrete and the \display shows values from 0 to 63 (semitones).   
@@ -21,19 +47,19 @@ Both oscillators have a \oscfreq dial which determines the frequency range of th
 \end{itemize}  
 In addition there are mixed settings, e.g. \textit{octave-semitone}, \textit{semitone-octave}, \textit{octave-free} and \textit{free-octave} providing different granularity for oscillators A and B. The parameter to select the granularity is the additional patch parameter \oscpitchmode. 
 
-An additional \freqfine dial (available for oscillator B only) is bipolar and it is used for frequency fine tuning with a range of about $\pm 1$ semitone. The main purpose of separate frequency settings per oscillator as part of a patch is to be able to detune them against one another. This can be used to create thick and lively patches (when pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of the poly-mod, see section \ref{polymod}. To be able to tune the relative frequency very accurately, the \freqfine control has a very sensitive (e.g. slow changing) mid region between -1 and 1.
+The additional \freqfine dial for oscillator B is bipolar and provides frequency fine tuning with a range of about $\pm 1$ semitone. The main purpose of separate frequency settings per oscillator is to be able to detune them against one another. This can be used to create thick and lively patches (when the pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of poly-mod, see section \ref{polymod}. To be able to tune the relative frequency very accurately, \freqfine has a very sensitive (e.g. slow changing) mid region between -1 and 1.
 
 The oscillator A has an additional \oscsync switch. The hardware of the Prophet 600 offers hard sync of oscillator A to oscillator B, e.g. when \oscsync is activated, oscillator A is reset to the cycle start when oscillator B completes a cycle. 
 
-Finally, the outputs of both oscillators are mixed into one signal before entering the filter and output stages. The volume of oscillators A and B are either set by the \vola and \volb dials in the GliGli panel layout or the \mixer and \drive parameters in SCI panel layout as described in the following. For details on switching the panel layout, see section \ref{panelswitch}.
+Finally, the outputs of both oscillators are mixed into one signal before entering the filter and output stages. The volume of oscillators A and B are either set by the \vola and \volb dials in GliGli panel layout or the \mixer and \drive parameters in SCI panel layout as described in the following. For details on switching the panel layout, see section \ref{panelswitch}.
 
 \textbf{Oscillator mix in GliGli panel layout}
 
-The panel schematic is shown above. Each oscillator has a volume control. The normalised output of either oscillator is about half way of the respective dial. Beyond this, the amplifiers into the filter can be over-driven. This is a new feature of the upgraded firmware from version 2.0 on.
+The panel schematic is shown above. In GliGli panel layout the volume of each oscillator has a dedicate control in the mixer sub-panel. The normalised output of either oscillator is about half way of the respective dial. Beyond this, the amplifiers into the filter can be over-driven. This is a new feature of the upgraded firmware from version 2.0 on.
 
 \textbf{Oscillator mix in SCI panel layout}
 
-In the SCI panel layout the two dials are designated \mixer (becoming a bipolar dial) and \glidepot and these control the oscillator mix and the glide time, respectively. For glide amount see section \ref{glide}. In order to cover the entire range of oscillator volumes which the GliGli controls provide, there is an additional menu parameter \drive which becomes available available when the SCI panel layout is selected. The original Sequential Circuits mix function corresponds to a half-way value for \drive at which oscillators A and B are mixed linearly. At \mixer =-50 oscillator A is at full volume and oscillator B is silent. At \mixer =+50 oscillator B is at full volume and oscillator A is silent.  For smaller and larger values of \drive the oscillator mix function is modified as shown below.
+In the SCI panel layout the two dials are designated \mixer (becoming a bipolar dial) and \glidepot and these control the oscillator mix and the glide time, respectively. (For glide amount see section \ref{glide}.) In order to cover the entire range of oscillator volumes which the GliGli controls provide, there is an additional menu parameter \drive which becomes available available when the SCI panel layout is selected. The original Sequential Circuits mix function corresponds to a half-way value for \drive at which oscillators A and B are mixed linearly. At \mixer =-50 oscillator A is at full volume and oscillator B is silent. At \mixer =+50 oscillator B is at full volume and oscillator A is silent.  For smaller and larger values of \drive the oscillator mix function is modified as shown below.
 
 
 \scalebox{0.4}{

@@ -7,6 +7,6 @@ The firmware stores the following data:
   \item Sequencer data (track 1 and 2): 1 page each at pointers 456 (track 1) and 457 (track 2)
 \end{itemize}
 
-Thedata is written into application part of the storage, into the RWW (read-while-write) section of the memory. The number of pages used a firmward version can be obtained by counting the pages contained in the SysEx file.
+The data is written into application part of the storage, into the RWW (read-while-write) section of the memory. The number of pages used a firmward version can be obtained by counting the pages contained in the SysEx file.
 
-Note to developers: the application code must fit into the first 256 pages (up to and including page pointer 255). This corresponds to a SysEx size of 85258 kB which is the equivalent of 65536 kB hex file. Code beyond this size will overwrite patches and will be corrupted by patche storage operations.
+Note to developers: the application code must fit into the first 256 pages (up to and including page pointer 255). This corresponds to a SysEx size of 85258 kB which is the equivalent of 65536 kB hex file. Code beyond this size will overwrite patches and will be corrupted by patch storage operations.

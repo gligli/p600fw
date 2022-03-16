@@ -1,16 +1,16 @@
-The 2 digit 7 segment display is used for different purposes depending on the mode and selected function as shown below. There are three distinct types of information: display of numeric values (parameters values), scrolling of (short) texts, indicators symbols for pick-me-up in Preset Panel mode, etc.
+The 2 digit 7 segment display is used for different purposes depending on the mode and selected function as shown below. There are three distinct types of information: display of numeric values (parameters values), scrolling of (short) texts, indicator symbols for pick-me-up in Preset Panel mode, etc.
 
 \scalebox{0.35}{
   \begin{tikzpicture}[scale=0.8]
   \node[font=\fontsize{26}{12}\selectfont, align=right, outer sep=0.5mm, anchor = west, text width=7cm] at (-8cm,21.0cm) {Types of display information:};
     
     \prophetdisplay{9.5cm,20cm}{123456}{123456}{}
-    \prophetdisplay{18cm,20cm}{123467}{1234567}{}
+    \prophetdisplay{18cm,20cm}{123467}{123467}{}
     \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (14cm,20cm) {...};
     \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (24cm,20cm) {Value display of positive parameters with a range 0...MAX (\livemode, \presetpanel)};
     
     \prophetdisplay{9.5cm,15cm}{13467}{123456}{1}
-    \prophetdisplay{18cm,15cm}{2367}{1234567}{}
+    \prophetdisplay{18cm,15cm}{13467}{123456}{}
     \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (14cm,15cm) {...};
     \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (24cm,15cm) {Value display of bipolar parameters with a range -MAX...MAX. The dot indicates negative values. (\livemode, \presetpanel)};
 
@@ -39,7 +39,7 @@ The 2 digit 7 segment display is used for different purposes depending on the mo
       \SSGBit[1.0cm]{20.9cm,0cm}{1567}
     \end{scope}
     \prophetdisplay{6.4cm,0cm}{13467}{2367}{}
-    \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (24cm,0cm) {Longer texts are scolled through the display, e.g. parameter names, welcome message, etc.};
+    \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (24cm,0cm) {Longer texts are scrolled through the display, e.g. parameter names, message, etc.};
 
     \prophetdisplay{9.5cm,-5cm}{123567}{23}{}
     \prophetdisplay{18cm,-5cm}{1567}{23}{}
@@ -49,8 +49,8 @@ The 2 digit 7 segment display is used for different purposes depending on the mo
     \prophetdisplay{8cm,-10cm}{23456}{}{}
     \prophetdisplay{13cm,-10cm}{13467}{}{}
     \prophetdisplay{18cm,-10cm}{14567}{}{}
-    \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (24cm,-10cm) {Status in firmware update mode, e.g. ready for upload, success, error.};
+    \node[font=\fontsize{26}{12}\selectfont, align=left, outer sep=0.5mm, anchor = west, text width=28cm] at (24cm,-10cm) {Status in SysEx firmware update mode, e.g. ready for upload, success, error.};
   \end{tikzpicture}
 }
 
-Note that while numeric values are shown in the range -50 to 48 or 0 to 98, the internally used accuracy and dial sensitivity is much higher. As a result of this, noticable patch changes can be achieved by turning a dial slightly while the display continues to show the same value. The display is a rough indication of where the current values. However, it can be used accurately when centering bipolar dials.
+Note that while numeric values are shown in the range -50 to 50 or 0 to 99, the internally used accuracy and dial sensitivity is much higher. As a result of this, noticeable patch changes can be achieved by turning a dial slightly while the display continues to show the same value. The display is a rough indication of the current values. However, it can be used accurately when centering bipolar dials.

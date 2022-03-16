@@ -14,7 +14,7 @@
 
 \newcommand{\lfotarget}{\patchparameter{1}{LFO Target}}
 \newcommand{\lfoshape}{\patchparameter{11}{LFO Shape}}
-\newcommand{\lfosync}{\patchparameter{111}{LFO Sync}}
+\newcommand{\lfosync}{\patchparameter{111}{LFO Clock Sync}}
 
 \newcommand{\vibspeed}{\patchparameter{2}{Vibrato Speed}}
 \newcommand{\vibamt}{\patchparameter{22}{Vibrato Amount}}
@@ -28,8 +28,8 @@
 \newcommand{\extvolt}{\patchparameter{44}{External Voltage}}
 \newcommand{\syncbug}{\patchparameter{444}{Pulse Reset Bug Switch}}
 
-\newcommand{\secndenv}{\patchparameter{5}{2nd Envelope Shape}}
-\newcommand{\filenv}{\patchparameter{55}{Filter Envelope Shape}}
+\newcommand{\filenv}{\patchparameter{5}{Filter Envelope Shape}}
+\newcommand{\secndenv}{\patchparameter{55}{2nd Envelope Shape}}
 \newcommand{\envrouting}{\patchparameter{555}{Envelope Routing}}
 
 \newcommand{\bentarget}{\patchparameter{6}{Bender Target}}
@@ -45,6 +45,8 @@
 
 \newcommand{\ampvel}{\patchparameter{9}{Amplitude Velocity}}
 \newcommand{\filvel}{\patchparameter{99}{Filter Velocity}}
+
+\newcommand{\clock}{\patchparameter{(0) Arpeggiator/Sequencer Speed}}
 
 
 % buttons
@@ -64,6 +66,7 @@
 \newcommand{\polymodosc}{\patchparameter{Poly-Mod}{Oscillator B}}
 \newcommand{\polymodfreq}{\patchparameter{Poly-Mod}{Frequency Target}}
 \newcommand{\polymodfilter}{\patchparameter{Poly-Mod}{Filter Target}}
+
 \newcommand{\vola}{\patchparameter{OSC A}{Volume}}
 \newcommand{\oscsync}{\patchparameter{OSC A}{Sync}}
 \newcommand{\volb}{\patchparameter{OSC B}{Volume}}
@@ -76,11 +79,6 @@
 \newcommand{\filterenv}{\patchparameter{Filter}{Envelope Amount}}
 \newcommand{\keyboardtrack}{\patchparameter{Filter}{Keyboard Tracking}}
 
-\newcommand{\polyenv}{\patchparameter{Poly-Mod}{Envelope}}
-\newcommand{\oscamt}{\patchparameter{Poly-Mod}{Envelope}}
-\newcommand{\plyfreqa}{\patchparameter{Poly-Mod}{Frequency A}}
-\newcommand{\plyfilter}{\patchparameter{Poly-Mod}{Filter}}
-
 \newcommand{\attack}{\patchparameter{Envelope}{Attack}}
 \newcommand{\decay}{\patchparameter{Envelope}{Decay}}
 \newcommand{\sustain}{\patchparameter{Envelope}{Sustain}}
@@ -88,40 +86,41 @@
 
 \newcommand{\shapeswitch}{\patchparameter{LFO}{Shape}}
 \newcommand{\lfofreq}{\patchparameter{LFO}{Frequency}}
-\newcommand{\lfovco}{\patchparameter{LFO}{VCO }}
+\newcommand{\lfovco}{\patchparameter{LFO}{VCO}}
 \newcommand{\lfopwm}{\patchparameter{LFO}{PWM}}
 \newcommand{\lfofil}{\patchparameter{LFO}{Filter}}
 \newcommand{\lfoamt}{\patchparameter{LFO}{Initial Amount}}
 
 
 
+
 \newcommand{\mastertune}{\patchparameter{Master}{Tune}}
 \newcommand{\mastervol}{\patchparameter{Master}{Volume}}
-\newcommand{\mixer}{\textbf{Mixer} }
-\newcommand{\glidepot}{\textbf{Glide Time} }
+\newcommand{\mixer}{\textbf{Mixer}\xspace}
+\newcommand{\glidepot}{\textbf{Glide Time}\xspace}
 
-\newcommand{\unison}{\textbf{Unison} }
+\newcommand{\unison}{\textbf{Unison}\xspace}
 
 
 % performance
-\newcommand{\modwheel}{Modulation Wheel}
-\newcommand{\pitchbender}{Pitch Bender}
+\newcommand{\modwheel}{\textbf{Modulation Wheel}\xspace}
+\newcommand{\pitchbender}{\textbf{Pitch Bender}\xspace}
 
 
-\newcommand{\cassettein}{Cassette In}
+\newcommand{\cassettein}{\textbf{Cassette In/Out}\xspace}
 
 % MISC
-\newcommand{\miscsett}{Miscellaneous Settings}
-\newcommand{\clocksync}{\textbf{Clock Sync}}
-\newcommand{\panelswitch}{\textbf{Panel Layout Switch}}
+\newcommand{\miscsett}{\textbf{Miscellaneous Settings}\xspace}
+\newcommand{\clocksync}{\textbf{Clock Sync}\xspace}
+\newcommand{\panelswitch}{\textbf{Panel Layout Switch}\xspace}
 
 
 % panel sections / terms
+\newcommand{\datapad}{\panelelement{Data Pad}}
 \newcommand{\funcbuttons}{\panelelement{Function Buttons}}
 \newcommand{\termnumberpad}{\panelelement{Number Pad}}
 \newcommand{\datadial}{\panelelement{Data/Speed Dial}}
 \newcommand{\display}{\panelelement{Display}}
-\newcommand{\clock}{\panelelement{Arpeggiator/Sequencer Speed}}
 
 
 % modes

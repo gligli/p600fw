@@ -1,4 +1,4 @@
-As the original model, the upgraded Prophet 600 offers a single main LFO (for details on vibrato section \ref{vib}). However, the functionality is substantially enhanced. The frequency range of the LFO is wider, from 1/20 to 60 Hz. There are additional wave forms (a total of 6). The upgraded Prophet 600 offers more modulation target options and, finally, the user has the option to either control the LFO amount using the modulation wheel or to set a modulation delay for the LFO. As a result the controls on the LFO sub-panel shown below are affected by 5 menu parameters. Still, the most important LFO controls can be changed hands-on using the dedicated LFO controls. 
+Like the original model, the upgraded Prophet 600 offers a single main LFO (for details on vibrato see section \ref{vib}). However, the functionality is substantially enhanced. The frequency range of the LFO is wider, from 1/20 to 60 Hz. There are additional wave forms (a total of 6). The upgraded Prophet 600 offers more modulation target options and, finally, the user has the option to either control the LFO amount using the modulation wheel or to set a modulation delay for the LFO. As a result the controls on the LFO sub-panel shown below are affected by 5 menu parameters. Still, the most important LFO controls can be changed hands-on using the dedicated LFO controls. 
 
 
 \begin{center}
@@ -8,7 +8,7 @@ As the original model, the upgraded Prophet 600 offers a single main LFO (for de
     \addpar{-18cm,6cm}{\lfoshape \\ The user can select 3 pairs of different shapes to be assigned to the \shapeswitch};
     \draw[line width = 2pt, dashed] (-5cm,7.5cm) -- (5cm,7.5cm);
 
-    \addpar{-18cm,0.5cm}{\lfosync \\ This parameter activates LFO synchronisation to internal or external clock on selectable time measures};
+    \addpar{-18cm,0.5cm}{\lfosync \\ This parameter activates LFO synchronisation to internal or external clock on selectable time measures (only active when arp and/or seq are playing)};
     \draw[line width = 2pt, dashed] (-5cm,3.5cm) -- (-0.5cm,3.5cm);
 
     \addpar{-12cm,11.5cm}{\modwheeltarget \\ The modulation wheel can be set to control the LFO amount};
@@ -16,7 +16,7 @@ As the original model, the upgraded Prophet 600 offers a single main LFO (for de
 
    \lfosubpanel{-2cm,0}
 
-    \addpar{24cm,11.5cm}{\moddelay \\ The modulation delay applies to LFO when the modulation wheel controls the vibrato};
+    \addpar{24cm,11.5cm}{\moddelay \\ The modulation delay applies to the LFO when the modulation wheel controls the vibrato};
     \draw[line width = 2pt, dashed] (23cm,12.5cm) -- (14cm,6.5cm);
 
     \addpar{28cm,2.5cm}{\lfotarget \\ Different target options include modulating only oscillator A or B and amplitude modulation};
@@ -33,10 +33,10 @@ The LFO speed / frequency is set in the panel using the \lfofreq dial\footnote{U
 
 \textbf{LFO modulation amount and targets}
 
-There are four modulation targets which can be active simultaneously. Three targets are activated using the switches \lfovco (modulation of oscillator pitch), \lfopwm (modulation of pulse width) and \lfofil (modulation of the filter cut-off frequency) in the LFO sub-panel. The modulation amount is set using the \lfoamt control\footnote{The action of the \lfoamt dial has been made exponential, e.g. slower onset in the lower value range. In particular when pitch modulation is active this provides a longer travel for commonly useful modulation amounts, e.g. up to 2-3 on the control scale.} and this amount applies to all activated modulation targets. 
+There are four modulation targets which can be active simultaneously. Three targets are activated using the switches \lfovco (modulation of oscillator pitch), \lfopwm (modulation of pulse width) and \lfofil (modulation of the filter cut-off frequency) in the LFO sub-panel. The modulation amount is set using the \lfoamt control\footnote{The action of the \lfoamt dial has been made exponential, e.g. slower onset in the lower value range. In particular when pitch modulation is active this provides a longer travel for commonly useful modulation amounts, e.g. up to 2-3 on the control scale.} and this amount applies to all activated modulation targets at fixed relative strength. 
 
-In the upgrade Prophet 600 the target VCO Frequency can be customized in the following way. The user can choose which of the two oscillators per voice is modulation. The additional patch parameter \lfotarget
-offer the settings: \textit{A \& B} (both oscillators are modulated, this is the standard of the original Prophet 600), \textit{A} (only VCO A is modulated), \textit{B} (only VCO B is modulated). Finally the parameter represents the 4th modulation target: \textit{VCA} (amplitude modulation, and both both oscillators are selected for all targets). The choices for oscillators A and B affect the targets \textit{VCO} and \textit{PWM} but obviously not \textit{Filter}  as there is only one filter per voice. When the target \textit{VCA} is selected, both oscillators are targets for \textit{VCO} and \textit{PWM} modulation (if the respective switches are on). 
+In the upgraded Prophet 600 the target VCO Frequency can be customized in the following way. The user can choose which of the two oscillators per voice is modulation. The additional patch parameter \lfotarget
+offer the settings: \textit{A \& B} (both oscillators are modulated, this is the standard of the original Prophet 600), \textit{A} (only VCO A is modulated), \textit{B} (only VCO B is modulated). Finally the parameter represents the 4th modulation target: \textit{VCA} (amplitude modulation, and both oscillators are selected for all targets). The choices for oscillators A and B affect the targets \textit{VCO} and \textit{PWM} but obviously not \textit{Filter}  as there is only one filter per voice. When the target \textit{VCA} is selected, both oscillators are targets for \textit{VCO} and \textit{PWM} modulation (if the respective switches are on). 
 
 \textbf{LFO shapes}
 
@@ -62,4 +62,4 @@ The strength LFO effect itself can be modulated by either the modulation wheel o
 
 \textbf{LFO Sync}
 
-As a new feature in version \version, the LFO can be sync'ed to the arpeggiator / sequencer clock. The menu parameter \lfosync provides choices \textit{off} (free running LFO) and \textit{1, 2, 3, 4, 5, 6, 8} to have the LFO reset after 1, 2, 3, 4, 5, 6 or 8 beats. For detail on the clock see \ref{sync}.
+As a new feature in version \version, the LFO can be sync'ed to the arpeggiator / sequencer clock. The menu parameter \lfosync provides choices \textit{off} (free running LFO) and \textit{1, 2, 3, 4, 5, 6, 8} to have the LFO reset after 1, 2, 3, 4, 5, 6 or 8 beats. The clock itself can be internal or external. The LFO sync is a´only active if arpeggiator and/or sequencer is running. For details on clock settings see \ref{sync}.

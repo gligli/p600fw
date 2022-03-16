@@ -1,20 +1,20 @@
 The upgraded Prophet 600 can be played in the following voice modes
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item \textit{polyphonic}: This mode is set by setting the \unison on the panel to \textit{off}. In this mode any new note is assigned to one of the 6 voices. 
-  \item \textit{unison}: This mode is activated by switching the panel \unison switch from \textit{off} to \textit{on} without holding any keyboard key pressed. In this mode all 6 voices play the same note. Apply the additional patch parameter \detune to create thickened sounds in unison mode, see section \ref{detune}.
-  \item \textit{chord}: This mode is activated by switching the panel \unison switch from \textit{off} to \textit{on} while holding down one or more keys (the "chord"). In this mode the synthesizer transposes that chord over the whole keyboard. Note that independently of how many notes the chord contains (and therefore how many voices would be left in principle), only one chord can be played at a time, similar to unison mode.
+  \item \textit{polyphonic}: This mode is set by switching \unison to \textit{off}. In this mode any new note is assigned to one of the 6 voices. 
+  \item \textit{unison}: This mode is activated by switching \unison \textit{on} without holding any keyboard key pressed. In this mode all 6 voices play the same note. Apply the additional patch parameter \detune to create thickened sounds in unison mode, see section \ref{detune}.
+  \item \textit{chord}: This mode is activated by switching \unison \textit{on} while holding down one or more keys (the "chord"). In this mode the synthesizer transposes that chord over the whole keyboard. Note that independently of how many notes the chord contains (and therefore how many voices would be left in principle), only one chord can be played at a time, similar to unison mode.
 \end{itemize} 
 
-The setting of \unison is a patch parameter e.g. is stored with the patch.
+\unison is a patch parameter e.g. is stored with the patch.
 
-Note that in unison/chord voice modes the foot switch does not hold/sustain notes as in polyphonic mode but instead latches patterns of notes / chords on the fly without leaving and reactivating the unison mode. To do so, hold down the chord you want to latch in unison/chord mode and press the foot switch. In order to return to normal unison mode press the foot switch with no key held down. Using the foot switch with \unison on re-triggers the currently held notes. 
+Note that in unison/chord modes the foot switch does not hold/sustain notes as in polyphonic mode but instead latches patterns of notes / chords on-the-fly without the need to leave and reactivating unison/chord mode. To use on-the-fly latching, hold down the chord you want to latch in unison/chord mode and press the foot switch. In order to return to normal unison mode press the foot switch with no key held down. Using the foot switch with \unison on re-triggers the currently held notes. 
 
 The assignment of voices to new played notes can be customized using the additional patch parameter \prio. New notes will be assigned to voices according to the following priority rules:
 
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item \textit{last}: New notes always play and if 6 voices are already playing then the oldest played notes is "stolen".
+  \item \textit{last}: New notes always play and if 6 voices are already playing then the oldest played note is "stolen"
   \item \textit{low}: A new played note only plays if it is lower than the highest note already playing. The highest note is "stolen". With \unison on, legato is active. This is the preferred setting when bass accompaniment is important and the sudden stop of bass notes would create unwanted disruptions. 
   \item \textit{high}: A new played note only plays if it is higher than the lowest note already playing. The lowest note is "stolen". With \unison on, legato is active. This is the preferred setting for a synthesizer lead situation where the sudden stop of a high note would create unwanted disruptions. 
 \end{itemize}
@@ -30,4 +30,4 @@ The assigner priority can be used effectively in combination with the voice mode
   \item ...\textit{chord} mode with octaves (hold down C3 plus C4 plus more if desired) for a more assertive mono solo voice   
 \end{itemize}
 
-In the default setup the voice allocation follows a "first voice found" logic. This means that when a new key is played the first free voice (first in the sense of the internal numbering of voices) will be allocated. In practise this means that when a note is released and played again the same voice is used. Since voices can have different characteristics in analogue synthesizer such as the Prophet 600, such a voice allocation logic favours more stable and consistent note sequences. However, the variations in voices can also be deliberately used to create more lively and animated sequences. This becomes very pronounced when vintage spread is activated (see section \ref{spreadsett}). In order to give users the choice, the advanced menu parameter \assign has been introduced which offers the choices \textit{first} and \textit{cycle}. The second option activates a "round robin" logic which always selects a new (free) voice for allocation, e.g. distributing the assignments evenly among the 6 voices.   
+In the default setup the voice allocation follows a "first voice found" logic. When a new key is played, the first free voice (first in the sense of the internal numbering of voices) will be allocated. In practise this means that when a note is released and played again the same voice is used. Since voices can have different characteristics in analogue synthesizer such as the Prophet 600, this type of voice allocation logic favours more stable and consistent note sequences. However, the variations in voices can also be used deliberately to create more lively and animated sequences. This becomes very pronounced when vintage spread is activated (see section \ref{spreadsett}). In order to give users the choice, the advanced menu parameter \assign has been introduced which offers the choices \textit{first} and \textit{cycle}. The second option activates a "round robin" logic which always selects a new (free) voice for allocation, e.g. distributing the assignments evenly among the 6 voices.   

@@ -4,7 +4,7 @@ For supporting the integration of the Prophet 600 in a studio or live environmen
   \item Note send and receive
   \item Control of many parameters using MIDI CC
   \item Local on and local off modes
-  \item SysEx support for patch management (for this see section \ref{patchmgmt}
+  \item SysEx support for patch management (for this see section \ref{patchmgmt})
 \end{itemize}
 
 The MIDI send and receive channels can be set using dedicated miscellaneous settings as follows. In \shiftmode or \shiftlock:
@@ -22,28 +22,28 @@ The Prophet 600 sends the following MIDI signals.
 \begin{enumerate}
   \setlength\itemsep{0cm}
   \item Key on, key off in all modes
-  \item Pitch Bender
-  \item Hold Pedal (in polyphonic mode, not in unison/chord mode or running arpeggiator or sequencer)
-  \item Modulation Wheel (technically a MIDI CC event)
-  \item Program change (technicaly a MIDI CC event)
+  \item Pitch bender
+  \item Hold pedal (in polyphonic mode, not in unison/chord mode or running arpeggiator or sequencer)
+  \item Modulation wheel (technically a MIDI CC event)
+  \item Program change (technically a MIDI CC event)
 \end{enumerate}
 
 All of the events can also be received and executed with the following exceptions/modifications.
 
 \begin{enumerate}
   \setlength\itemsep{0cm}
-  \item Unlike the internal key on/off events, in arpegiator mode incoming MIDI key on/off are not entered into arpeggiator but play normally 
-  \item Unlike the internal key on/off events, in \shiftmode or \shiftlock incoming MIDI notes do no cause transpositions but a re ignored 
-  \item External MIDI pitch bend is added to the pitch bend from the onboard bender 
+  \item Unlike the internal key on/off events, in arpeggiator mode incoming MIDI key on/off are not entered into arpeggiator but play normally 
+  \item Unlike the internal key on/off events, in \shiftmode or \shiftlock incoming MIDI notes do no cause transpositions (but are ignored) 
+  \item External MIDI pitch bend is added to the pitch bend from the on-board bender 
   \item MIDI Hold Pedal events are also applied in unison/chord mode or running arpeggiator or sequencer where it has the effect of latching notes/chords
   \item MIDI program change messages are only applied in \presetmode and are ignored otherwise  
 \end{enumerate}
 
-The instrument does not send MIDI CC (apart from modulation wheel and program change). However,the Prophet 600 supports a comprehensive list of general and specific MIDI CC events. For reference see section \ref{midiimplementation}. Incoming MIDI CC events are only applied in \presetmode.
+The instrument does not send MIDI CC (apart from modulation wheel and program change). However, the Prophet 600 supports a comprehensive list of general and specific MIDI CC events. For reference see section \ref{midiimplementation}. Incoming MIDI CC events are only applied in \presetmode.
 
 \textbf{Local off mode}
 
-The Prophet 600 supports a \textit{local off} mode which is toggled using the setting at \numberbut{7}. In \textit{local off} various internal events (such as notes) are not executed in the Prophet 600 directly but they are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
+The Prophet 600 supports a \textit{local off} mode which is toggled using the setting at \numberbut{0}. In \textit{local off} various internal events (such as notes) are not executed in the Prophet 600 directly but they are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
 
 Note that in \textit{local on} mode external MIDI does not play into the arpeggiator but plays over the arpeggiator while the local keyboard plays into the arpeggiator.
 
@@ -67,4 +67,3 @@ Note that in \textit{local on} mode external MIDI does not play into the arpeggi
       Other MIDI CC	& Yes & No & in preset mode & Yes & No & in preset mode \\
   \end{tabular}
 \end{table}
-

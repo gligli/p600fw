@@ -1,4 +1,4 @@
-As in the original version the upgraded Prophet 600 offers two ADSR envelopes. The first is the filter envelope, which modulates the filter cut-off frequency. Its parameters are located in the filter section of the panel, see section \ref{filter}. The second envelope has a dedicated sub-panel below the filter section \footnote{In the original Prophet 600 as well as in the upgrade up to version 2.1 RC3 the assignable enevelope is a dedicated amplitude envelope and on the original panel and on the existing panel overlays the sub-panel is marked "Amplifier". With the envelope routing option in latest version the envelope and its sub-panel are more appropriately called "Second Envelope" in this document.}.
+Like the original version, the upgraded Prophet 600 offers two ADSR envelopes. The first one is the filter envelope, which modulates the filter cut-off frequency. Its parameters are located in the filter section of the panel, see section \ref{filter}. The second envelope has a dedicated sub-panel below the filter section\footnote{In the original Prophet 600 as well as in the upgrade up to version 2.1 RC3 the assignable envelope is a dedicated amplitude envelope and on the original panel and on the existing panel overlays the sub-panel is marked "Amplifier". With the envelope routing option in latest version the envelope and its sub-panel are more appropriately called "Second Envelope" in this document.}.
 
 Both envelopes work identically in that they have a classic ADSR setup with an \attack control, a \decay control, a \sustain control and a \release control. 
 
@@ -6,7 +6,7 @@ Both envelopes work identically in that they have a classic ADSR setup with an \
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
 
-    \addpar{-18cm,3.5cm}{\secndenv \\ This modifies the shape and speed of the second envelope, e.g. it influences the attack, decay and release phases of the envelope};
+    \addpar{-18cm,3.5cm}{\secndenv \\ This modifies the overall shape and speed range of the second envelope, e.g. it influences the attack, decay and release phases of the envelope};
     \draw[line width = 2pt, dashed] (-4cm,3.5cm) -- (1cm,3.5cm);
 
       \adsrpanel{0,0}
@@ -14,9 +14,9 @@ Both envelopes work identically in that they have a classic ADSR setup with an \
 }
 \end{center}
 
-Compared to the original, the upgraded Prophet 600 provides not only faster and smoother envelopes but also offers two different envelope speed regimes, \textit{slow} and \textit{fast}, as well as two envelope shapes, \textit{linear} and \textit{exponential}.
+The upgraded Prophet 600 provides not only faster and smoother envelopes. It also offers two different envelope speed regimes, \textit{slow} and \textit{fast}, as well as two envelope shapes, \textit{linear} and \textit{exponential}.
 
-The shape and the speed can be set independently for the filter and the assignable envelope using two additional patch parameters. The parameter \secndenv changes the second envelope and the parameter \filenv changes the filter envelope. Each of the two parameters can take the following values:
+The shape and speed range can be set independently for the filter and the 2nd envelope using two additional patch parameters. The parameter \secndenv changes the 2nd envelope and the parameter \filenv changes the filter envelope. Each of the two parameters can take the following values:
 
 \begin{itemize}
   \setlength\itemsep{0cm}
@@ -26,7 +26,7 @@ The shape and the speed can be set independently for the filter and the assignab
   \item \textit{fast - exponential}
 \end{itemize}
  
- The envelope shapes are shown below. The "linear shape" is strictly linear in the entire attack phase and in the main attenuation phases of decay and release, but it tails out exponentially. Up to version 2.1 RC3 the linear envelope shape was strictly linear in the decay and release without a soft tail. The new shape shown below replaces the former linear shape. The linear shape with exponential tail sounds more organic as it does not drop hard to to zero. Yet, it is also more musical than the exponential shape which tails out very long but drops too fast in early decay phase. Imn short, the new modified linear shape sounds thicker and fades out smoothly. The shape is was inspired by the Prophet 5 rev 1/2 envelope behaviour. 
+ The envelope shapes are shown below. The "linear shape" is strictly linear in the entire attack phase and in the main attenuation phases of decay and release, but it tails out exponentially. Up to version 2.1 RC3 the linear envelope shape was strictly linear in the decay and release without a soft tail. The new shape shown below replaces the former linear shape. The linear shape with exponential tail sounds more organic as it does not drop hard to zero. Yet, it is also more musical than the exponential shape which tails out very long but drops too fast in early decay phase. In short, the new modified linear shape sounds thicker and fades out smoothly. The shape was inspired by the Prophet 5 rev 1/2 envelope behaviour. 
  
  \scalebox{0.6}{
   \begin{tikzpicture}[scale=0.8]
@@ -39,6 +39,6 @@ The phase durations of the ADSR envelopes range between $<30 ms$ to $>50 s$.
 
 \textbf{Envelope modulation targets}
  
-The envelopes have three available targets: filter cut-off frequency, amplitude and poly-mod (for this see section \ref{polymod}). The filter envelope is always routed to the filter cut-off frequency and the modulation strength is controlled by the \filenv control. For the  amplitude and poly-mod targets different routing options are provided as described in detail in the section on poly-mod \ref{polymod}. The additional patch parameter \envrouting is used to configure which envelope modulates which target. The main benefit from the routing options is to make poly-mod independent from the filter dynamics. The default routing is that the poly-mod is modulated by the filter envelope and the amplitude is modulated by the assignable envelope. This is the original routing and the routing of upgrade versions 2.0 and 2.1 RC3. 
+The envelopes have three available targets: filter cut-off frequency, amplitude and poly-mod (for this see section \ref{polymod}). The filter envelope is always routed to the filter cut-off frequency and the modulation strength is controlled by the \filenv control. For the  amplitude and poly-mod targets different routing options are provided as described in detail in the section on poly-mod \ref{polymod}. The additional patch parameter \envrouting is used to configure which envelope modulates which target. The main benefit from the routing options is to make poly-mod independent from the filter dynamics. The default routing is that the poly-mod is modulated by the filter envelope and the amplitude is modulated by the 2nd envelope. This is the original routing and the routing of versions 2.0 and 2.1 RC3. 
 
-The modulation strength of the amplitude is fixed in the Prophet 600 and positive there is no offset. The modulation strength of the poly-mod is set by the bipolar \polyenv control as explained in section \ref{polymod}. 
+The modulation strength of the amplitude is fixed and positive in the Prophet 600. The modulation strength of the poly-mod is set by the bipolar \polymodenv control as explained in section \ref{polymod}. 

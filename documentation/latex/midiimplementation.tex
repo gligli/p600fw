@@ -5,7 +5,7 @@ Two types of MIDI events are implemented, e.g. the upgraded prophet 600 can rece
   \item MIDI CC Continuous parameters: 0-16383 using 2 CCs, or 0-127 using only the coarse one
   \item MIDI CC Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore 2 has choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
   \item performance events (note events, pitch bend)
-  \item Realtime events
+  \item Real time events
   \item SysEx (for different purposes)
 \end{itemize}
 
@@ -17,7 +17,7 @@ The Prophet 600 receives Continuous Controllers (CC) in \presetmode only.
 \renewcommand{\arraystretch}{1.3}
 
 \begin{longtable}[l]{ p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{5cm}|p{2cm}|p{1cm}} 
-\textbf{Continuous Parameter} & \textbf{Type} & \textbf{ CC Coarse} & \textbf{CC Fine} & \textbf{Stepped Parameter} & \textbf{Type} & \textbf{CC} \\ \hline
+\textbf{Continuous Parameter} & \textbf{Type} & \textbf{CC Coarse} & \textbf{CC Fine} & \textbf{Stepped Parameter} & \textbf{Type} & \textbf{CC} \\ \hline
 Osc A Frequency & Continuous & 16 & 80 & Osc A Saw & Stepped & 48 \\ \hline
 Osc A Volume & Continuous & 17 & 81 & Osc A Triangle & Stepped & 49 \\ \hline
 Osc A Pulse Width & Continuous & 18 & 82 & Osc A Square & Stepped & 50 \\ \hline
@@ -44,21 +44,21 @@ Glide & Continuous & 38 & 102 & Mod Wheel Target & Stepped & 71 \\ \hline
 Amp Velocity & Continuous & 39 & 103 & Vibrato Target & Stepped & 72 \\ \hline
 Filter Velocity & Continuous & 40 & 104 &  2nd Envelope Fast/Slow & Stepped & 73 \\ \hline
 Modulation delay & Continuous & 41 & 105 & Sync Bug & Stepped & 74 \\ \hline
-Vibrato frequency & Continuous & 42 & 106 & Voice Assign & 75 & \\ \hline
-Vibrato amount & Continuous & 43 & 107 & Envelope Routing & 76  & \\ \hline
+Vibrato frequency & Continuous & 42 & 106 & Voice Assign & Stepped & 75 \\ \hline
+Vibrato amount & Continuous & 43 & 107 & Envelope Routing & Stepped & 76 \\ \hline
 Unison detune & Continuous & 44 & 108 & & &  \\ \hline
-Sequencer / arpeggiator clock & Continuous & 45 & 109 &  &  &  \\ \hline
 External CV amount & Continuous & 46 & 110 &  &  &  \\ \hline
-Spread & Continuous & 47 & 111 &  &  &  \\ \hline 
+Vintage / Spread & Continuous & 47 & 111 &  &  &  \\ \hline 
 \end{longtable}
 
 \textbf{Other MIDI CC Settings}
 
 \begin{longtable}[l]{ p{5cm}|p{2cm}|p{2cm}|p{1cm}} 
-\textbf{Parameter} & \textbf{Type} & \textbf{ CC} \\ \hline
+\textbf{Parameter} & \textbf{Type} & \textbf{CC} & \textbf{CC Fine} \\ \hline
 Toggle Live/Preset Mode & Stepped & 0 & \\ \hline
 Mod Wheel & Continuous & 1 & \\ \hline
 Master Volume & Continuous & 7 & \\ \hline
+Sequencer / arpeggiator clock & Continuous & 45 & 109 \\ \hline
 Hold Pedal & Stepped & 64 & \\ \hline
 Local On/Off & Stepped & 120 & \\ \hline
 All Notes Off & Stepped & 123 & \\ \hline

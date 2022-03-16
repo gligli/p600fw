@@ -1,10 +1,12 @@
-The original Prophet 600 panel layout (called \textit{SCI}) in the following provided panel controls \mixer (oscillator A vs. B mix) and \glidepot (glide time). The \textit{GliGli} panel layout redesignated the \mixer to control \vola and the \glidepot to control \volb. During the main development phase of the firmware upgrade project a panel overlay from synthgraphics\cite{synthgraphics} was available which - among other differences - reflects the change in function of those two controls. Amonst the GliGli upgraded Prophet 600s out there only some are equipped with such an overlay and others have the original pot naming ("Mixer" and "Glide"). The two layouts are shown below\footnote{the \textit{GliGli} panel layout shown here does not exactly correspond to the synthpgrahics layover. In particular the synthgraphics layover grouped the volume A and B controls in a "mixer" sub-panel.}. 
+The original Prophet 600 panel layout (referred to as \textit{SCI}) in the following provides the panel controls \mixer (oscillator A vs. B mix) and \glidepot (glide time). The \textit{GliGli} panel layout re-designated the \mixer to control \vola and the \glidepot to control \volb. During the main development phase of the firmware upgrade project a panel overlay from synthgraphics\cite{synthgraphics} was available which - among other differences - reflects the change in function of those two controls. The overlay was limited so that many upgraded Prophet 600s have the original pot naming ("Mixer" and "Glide"). The two layouts are shown below. 
 
 \scalebox{0.25}{
   \begin{tikzpicture}[scale=0.8]
 
-  \oscapanel{0cm,9.5cm}
-  \oscbpanel{0cm,0cm}
+
+  \oscapanelsci{0cm,9.5cm}
+  \oscbpanelsci{0cm,0cm}
+  \mixerpanel{31.9cm,0cm}
   \node[font=\fontsize{42}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=16cm] at (0cm,21cm) {\textit{GliGli} panel layout};
   
   \oscapanelsci{44.5cm,9.5cm}
@@ -18,9 +20,9 @@ The original Prophet 600 panel layout (called \textit{SCI}) in the following pro
   \end{tikzpicture}
 }
 
-Since then many users have asked for the original panel layout to be made available in the upgrade. With version \version it is now possible to switch between the two layouts, \textit{GliGli} and \textit{SCI}. However, this panel switching has some technical implication. Concretely, the single \mixer control does not cover the entire value range provided by the separate \vola and \volb controls. In order to be able to translate between the two "perspectives" a new menu parameter \drive has been introduced which, in combination with \mixer, provides an alternative but fully equivalent way of setting the volume of oscillators and B. For details on this function see section \ref{osc}. Technically, the patch storage uses volume \vola and \volb rather than \mixer and \drive. This means that there is also no MIDI CC equivalent of \mixer and \drive.
+Since then many users have asked for the original panel layout to be made available again. With version \version it is now possible to switch between the two layouts, \textit{GliGli} and \textit{SCI}. However, this panel switching has some technical implication. Concretely, the single \mixer control does not cover the entire value range provided by the separate \vola and \volb controls. In order to be able to translate between the two "perspectives" a new menu parameter \drive has been introduced which, in combination with \mixer, provides an alternative but fully equivalent way of setting the volume of oscillators A and B. For details on this function see section \ref{osc}. Technically, the patch storage uses volume \vola and \volb rather than \mixer and \drive. This means that there is also no MIDI CC equivalent of \mixer and \drive.
 
-Changing the panel layout is done by pressing \numberbut{6} in \shiftmode or \shiftlock. Pressing \numberbut{6} once shows the current active layot and pressing \numberbut{6} twice (in \shiftlock or holding \shiftmode) change the panel layout. 
+Changing the panel layout is done by pressing \numberbut{6} in \shiftmode (e.g. while pressing \fromtape) or \shiftlock (e.g. after double-pressing \fromtape and blinking \fromtape LED). Pressing \numberbut{6} once shows the current active layout and pressing \numberbut{6} twice changes the panel layout. 
 
 
 The layout switch does not only affect the function of the two controls on the panel. It also modifies the parameter menu. In \textit{GliGli} layout the parameter \drive is suppressed while in \textit{SCI} layout the menu parameter \glide is suppressed. The parameters are preserved, however, e.g. the value selected using the \glidepot in \textit{SCI} layout is transferred to the menu parameter \glide. And the value of \drive used in \textit{SCI} layout is used to determine the value for \vola and \volb when switching from \textit{SCI} to \textit{GliGli} layout. 

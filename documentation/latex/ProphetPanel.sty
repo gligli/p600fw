@@ -212,8 +212,8 @@
     \coordinate(orig)at(#1);
     \def\yscale{#2};  
     
-    \node[font=\fontsize{24}{12}\selectfont, fill=white, align=left, text width = 5cm, inner sep=0.5mm, anchor = west] at ($(orig)+\yscale*(0cm, 0.5cm)+(-8cm, 0cm)$) {Exponential shape:};
-    \node[font=\fontsize{24}{12}\selectfont, fill=white, align=left, text width = 5cm, inner sep=0.5mm, anchor = west] at ($(orig)+\yscale*(0cm, 1.5cm)+(-8cm, 4cm)$) {Linear shape:};
+    \node[font=\fontsize{20}{12}\selectfont, fill=white, align=left, text width = 5cm, inner sep=0.5mm, anchor = west] at ($(orig)+\yscale*(0cm, 0.5cm)+(-8cm, 0cm)$) {Exponential shape:};
+    \node[font=\fontsize{20}{12}\selectfont, fill=white, align=left, text width = 5cm, inner sep=0.5mm, anchor = west] at ($(orig)+\yscale*(0cm, 1.5cm)+(-8cm, 4cm)$) {Linear shape:};
 
     % time-axis
     \draw[-to, line width = 2pt] ($(orig)+(-1cm,0cm)$) -- ($(orig)+#3*(1cm,0cm)+#4*(1cm,0cm)+#5*(1cm,0cm)+#6*(1cm,0cm)+(1cm,0cm)$); 
@@ -1620,6 +1620,15 @@
     \prophetpot{$(orig) + (33cm,5cm)$}{VOLUME}{75};
 }
 
+\newcommand\mixerpanel[1]
+{
+    \coordinate(orig)at(#1);
+    \node[rectangle, draw, rounded corners=7pt, line width=1pt, minimum width = 4.8cm, minimum height = 14.6cm, anchor = south west](r) at (#1) {};
+    \node[rectangle, font=\fontsize{20}{12}\selectfont, fill=white, anchor = center] at ($(orig) + (3cm,18.25cm)$) {\panelfont{MIXER}};
+    \prophetpot{$(orig) + (3cm,14.5cm)$}{VOL A}{75};
+    \prophetpot{$(orig) + (3cm,5cm)$}{VOL B}{75};
+}
+
 \newcommand\oscpanelbasicsci[2]
 {
     \coordinate(orig)at(#1);
@@ -1762,5 +1771,3 @@
     \coordinate(orig)at(#1);
     \node[rectangle, font=\fontsize{20}{12}\selectfont, inner sep = 0.2cm, , anchor = north west, text width = 10cm, text height = 2cm] at ($(orig) + (0cm,5cm)$) {\baselineskip=25pt #2 \par};
 }
-
-

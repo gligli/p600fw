@@ -1,12 +1,12 @@
-The mix of the two VCOs is routed through a resonant 24db low pass filter (built on a Curtis CEM3372 filter). The control for the filter consists of a \filtercutoff dial regulating the cut-off frequency, and a \filterres dial for the resonance. The \filterenv dial regulates how strongly the cut-off frequency is modulated by the filter envelope. This dial is bipolar, e.g. it supports positive and negatives values (effectively an inverse envelope setting). The display will show values between -50 and 50 depending on position. This is major enhancement compared to the original Prophet 600 firmware.
+The mix of the two VCOs is routed through a resonant 24db low pass filter (built on a Curtis CEM3372 filter). The control for the filter consists of a \filtercutoff dial regulating the cut-off frequency, and a \filterres dial for the resonance. The \filterenv dial regulates how strongly the cut-off frequency is modulated by the filter envelope. This dial is bipolar, e.g. it supports positive and negatives values (effectively an inverse envelope setting). The display will show values between -50 and 50 depending on position. This is major enhancement compared to the original Prophet 600 firmware (which only featured positive values).
 
 \begin{center}
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
-    \addpar{-18cm,9.3cm}{\textbf{Filter Limit} \\ With the miscellaneous setting the cut-off frequency can be limited to 22kHz, see section \ref{limitsett} for details.};
+    \addpar{-18cm,9.8cm}{\textbf{Filter Limit} \\ Using the miscellaneous setting options the cut-off frequency can be limited to 22kHz, see section \ref{limitsett} for details.};
     \draw[line width = 2pt, dashed] (-4cm,9.3cm) -- (1cm,9.3cm);
 
-    \addpar{-18cm,3.5cm}{\textbf{\filenv} \\ This modifies the shape and speed of the envelope, e.g. it influences the attack, decay and release phases, see \ref{envelopes} for details};
+    \addpar{-18cm,2cm}{\textbf{\filenv} \\ This modifies the overall shape and speed range of the envelope, e.g. it influences the attack, decay and release phases, see \ref{envelopes} for details};
     \draw[line width = 2pt, dashed] (-4cm,3.5cm) -- (1cm,3.5cm);
 
     \filterpanel{0,0}
