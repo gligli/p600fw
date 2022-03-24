@@ -10,7 +10,7 @@
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 {
-    /*Mixer*/8,
+    /*Vol A / Mixer*/8,
     /*Cutoff*/12,
     /*Resonance*/8,
     /*FilEnvAmt*/10,
@@ -22,7 +22,7 @@ static const int8_t potBitDepth[POTMUX_POT_COUNT]=
     /*AmpSus*/10,
     /*AmpDec*/8,
     /*AmpAtt*/8,
-    /*Glide*/8,
+    /*Vol B / Glide*/8,
     /*BPW*/10,
     /*MVol*/8,
     /*MTune*/12,

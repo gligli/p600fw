@@ -910,7 +910,7 @@ static void refreshPresetPots(int8_t force) // this only affects current preset 
             }
             else // pot is still off
             {
-                if ((currentPreset.continuousParameters[cp]>>9)==(value>>9)) // pick up pot when close enough
+                if ((currentPreset.continuousParameters[cp]>>10)==(value>>10)) // pick up pot when close enough
                 {
                     currentPreset.contParamPotStatus[cp]=1;
                     currentPreset.continuousParameters[cp]=value;
