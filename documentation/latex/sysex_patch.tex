@@ -1,0 +1,117 @@
+Patch parameters are stored as patches in each of the 100 slots on the Teensy 2.0++ board (see section on memory usage). Apart from technical overhead this covers:
+\begin{itemize}
+  \item panel control settings
+  \item menu parameters
+  \item special date: per note tuning
+  \item special data: note pattern (when the patch has unison activated with a chord pattern this contains the pattern) 
+\end{itemize}
+The SysEx MIDI data is build directly from the stoage data, e.g. it has the same structure (order of parameters). 
+
+\subsection{Storage version}
+
+\begin{itemize}
+  \item Firmware version 2.0: storage version 2
+  \item Firmware version 2.1 RC3: storage version 7
+  \item Firmware version \version: storage version 8  
+\end{itemize}
+
+
+\subsection{Patch storage structure}
+
+The following table specifies the patch data storage up to and including storage version 8. 
+
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}[l]{|p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|p{1.5cm}|} 
+\hline
+\textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} \\ \hline
+Storage Key (aka MAGIC) & Technical & 4 & 1 & 4 & 0 \\ \hline
+Storage Version & Technical & 1 & 1 & 1 & 0 \\ \hline
+Fequency A & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Volume A & Continuous & 2 & 1 & 2 & 1 \\ \hline
+PWA & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Fequency B & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Volume B & Continuous & 2 & 1 & 2 & 1 \\ \hline
+PWB & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Frequency Fine B & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Cutoof & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Resonance & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Filter Envelope Amount & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Filter Release & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Filter Sustain & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Filter Decay & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Filter Attack & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Amp Release & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Amp Sustain & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Amp Decay & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Amp Attack & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Poly Mod Envelope Amount & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Poly Mod OSC B & Continuous & 2 & 1 & 2 & 1 \\ \hline
+LFO Frequency & Continuous & 2 & 1 & 2 & 1 \\ \hline
+LFO Amount & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Glide & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Amp Velocity & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Filter Velocity & Continuous & 2 & 1 & 2 & 1 \\ \hline
+Saw A & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Tri A & Stepped & 1 & 1 & 1 & 1 \\ \hline
+SQR A & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Saw B & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Tri B & Stepped & 1 & 1 & 1 & 1 \\ \hline
+SQR B & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Sync & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Poly Mod Frequency A & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Poly Mod Filter & Stepped & 1 & 1 & 1 & 1 \\ \hline
+LFO Shape & Stepped & 1 & 1 & 1 & 1 \\ \hline
+LFO Sync & Stepped & 1 & 1 & 1 & 8\footnote{This slot was used for \textit{LFO Frequency Range} from versions 1 to 7} \\ \hline
+LPF Targets & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Tracking Shift & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Filter Envelope Shape & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Filter Envelope Speed & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Amp Envelope Shape & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Amp Envelope Speed & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Unison & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Assigner Priority & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Bender Semitones & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Bender Target & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Mod Wheel Shift & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Chromatic Pitch & Stepped & 1 & 1 & 1 & 1 \\ \hline
+Modulation Delay & Continuous & 2 & 1 & 2 & 2 \\ \hline
+Vibrato Frequency & Continuous & 2 & 1 & 2 & 2 \\ \hline
+Vibrato Amount & Continuous & 2 & 1 & 2 & 2 \\ \hline
+Unison Detune & Continuous & 2 & 1 & 2 & 2 \\ \hline
+(unused) & n/a & 2 & 1 & 2 & n/a\footnote{This slot was used for arpeggiator/sequencer clock speed fro versions 1 to 7. From version 8 on clock speed is consistently implemented as a setting only.} \\ \hline
+Modulation Wheel Target & Stepped & 1 & 1 & 1 & 2 \\ \hline
+Vibrato Target & Stepped & 1 & 1 & 1 & 2 \\ \hline
+Voice Pattern (6 voices) & Special & 1 & 6 & 6 & 2 \\ \hline
+Tuning per Note (12 notes) & Special & 2 & 12 & 24 & 7 \\ \hline
+Sync Bug & Stepped & 1 & 1 & 1 & 8 \\ \hline
+Vintage (Spread) & Continuous & 2 & 1 & 2 & 8 \\ \hline
+External CV & Continuous & 2 & 1 & 2 & 8 \\ \hline
+Envelope Routing & Stepped & 1 & 1 & 1 & 8 \\ \hline
+Voice Assign & Stepped & 1 & 1 & 1 & 8 \\ \hline
+Patch Name & Technical & 1 & 16 & 16 & 8 \\ \hline
+\end{longtable}
+
+\subsection{Patch MIDI SysEx structure}
+
+The SysEx structure for patch is as follows:
+
+\begin{itemize}
+  \item "F0": SysEx start
+  \item Prophet 600 signature: "00 61 16"
+  \item Prophet 600 SysEx patch dump type: "01"
+  \item Patch data section: series of MIDI data blocks, eachconsisting of 5 MIDI bytes (14 bit) 
+  \item 3 bytes of checksum
+  \item "F7": SysEx end
+\end{itemize}
+
+The data part of the patch SysEx has the same underlying structure as the internal storage in the sense that the parameters are stored in exactly the same order. As described in section \ref{midibyteconversion} the storage of double  byte values ist added to the MIDI byte sequence in the order \textit{LSB}, \textit{MSB}. E.g the lower byte comes first. This also applies if a double byte is split across two MIDI data blocks (e.g. the \textit{LSB} is the fourth byte of one MIDI data block and the \textit{MSB} is the first byte of the next MIDI data block. 
+
+The technical overhead inside the data section consists of a specific key (\textit{storage magic}) and the stroage version. The key can be used to identify whether the data section of the SysEx represents a storage page of the Prophet 600. It should  always be present for any valid patch data independently from the storage version. The storage version should be used to identify the correct mapping of values.  
+
+Note that the MIDI SysEx patch data contains all parameters up to and including the last non-zero value. It there has variable a size.
+
+\textbf{Checksum}
+
+(this needs to be done)

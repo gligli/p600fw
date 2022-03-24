@@ -1,14 +1,21 @@
-\documentclass[draft,landscape, 11pt, oneside]{report}
+\documentclass[landscape, 11pt, oneside]{report}
 \usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
-%\usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{hyperref}
 \usepackage{titlesec}
 \usepackage{scrextend}
 \usepackage{array}
-%\usepackage{fontspec}
-\usepackage[inline]{showlabels}
-%\setmainfont{FiraSans-SemiBold}
+\usepackage{ProphetPanel}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+\usepackage{ProphetTerms}
+\usepackage{float}
+%\usepackage[inline]{showlabels}
+\setmainfont[
+ BoldFont={FiraSans-Bold}, 
+ ItalicFont={FiraSans-Italic},
+ ]{FiraSans}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
 \setlength{\leftmargin}{-4cm}
@@ -16,8 +23,7 @@
 \setlength{\paperwidth}{297mm}
 \setlength{\textwidth}{26cm}
 \setlength{\footskip}{2.5cm}
-\renewcommand{\familydefault}{\sfdefault}
-
+%\input{defined_terms.tex}
 \newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
 
 \title{[DRAFT] Technical Reference for the GliGli upgraded Prophet 600}
@@ -51,19 +57,37 @@ The Teensy++ 2.0 hardware uses a memory which is structured in 512 pages with 25
 
 \begin{flowtext}
 
-\section{Memory usage}\label{memory}
+\section{MIDI bytes to full byte conversion}\label{midibyteconversion}
 
-\include{memory.tex}
+The data section in Prophet 600 MIDI SysEx commands consist of blocks of 5 MIDI bytes. Each MIDI byte can hold values up to 127 (14 bit). 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first 7 bits of the 4 bytes to be encoded. The 8th bit of the 4 bytes is encoded in the first 4 bits of the 5th MIDI byte.   
 
-\section{SysEx structure}\label{sysex}
+Examples:
 
-\include{sysex.tex}
+\begin{itemize}
+  \item "01 00 00 00" is encoded in SysEx MIDI as "01 00 00 00 00"
+  \item "80 00 00 00" is encoded in SysEx MIDI as "00 00 00 00 08"
+  \item "FF 00 00 00" is encoded in SysEx MIDI as "7F 00 00 00 08"
+  \item "00 00 00 FF" is encoded in SysEx MIDI as "00 00 00 7F 01"
+  \item "FF FF FF FF" is encoded in SysEx MIDI as "7F 7F 7F 7F 0F"
+\end{itemize}
+ 
+In this way, a sequence of $X$ MIDI blocks (5 MIDI bytes) is be converted to a bytes sequence of $4\dot X$ full bytes. Note, however, that double byte parameter (which is applies to most continuous patch parameters) are sequenced such that in the full bytes sequence the least significant byte (LSB) comes before the most significant byte (MSB), see section on patch data encoding in MIDI SysEx.  
+
+\section{Patch SysEx structure}\label{sysex}
+
+\include{sysex_patch.tex}
 
 \end{flowtext}
 
 \chapter{Firmware structure}
 
-(this needs to be done)
+\section{Memory usage}\label{memory}
+
+\include{memory.tex}
+
+\section{Firmware SysEx structure}\label{sysex}
+
+\include{sysex_firmware.tex}
 
 \section{Timer interrupt}\label{timeinterrupt}
 
