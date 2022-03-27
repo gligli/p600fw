@@ -132,6 +132,13 @@
     \node[font=\fontsize{20}{12}\selectfont, text width=1.8cm, text centered, inner sep=0.0mm] at (butPos) {\panelfont{#2}};
 }
 
+\newcommand\numberbuttonwht[2]
+{
+  \coordinate(butPos)at(#1);
+    \node[rectangle, draw, rounded corners=7pt, color = white, line width=2pt, minimum width = 1.7cm, minimum height = 1.7cm] (r) at (butPos) {};
+    \node[font=\fontsize{20}{12}\selectfont, text width=1.8cm, text centered, inner sep=0.0mm] at (butPos) {\textcolor{white}{\panelfont{#2}}};
+}
+
 \newcommand\numberpad[1]
 {
   \coordinate(numbutPos)at(#1);
@@ -147,9 +154,26 @@
   \numberbutton{$ (numbutPos) + (6.8cm, 9.6cm)$}{3}
 }
 
+\newcommand\numberpadcc[1]
+{
+  \coordinate(numbutPos)at(#1);
+  \node[rectangle, draw, line width=2pt, minimum width = 6.88cm, minimum height = 9.22cm, anchor = south west, fill=black] at ($ (numbutPos) + (-0.35cm, -0.3cm)$) {};
+  \numberbuttonwht{$ (numbutPos) + (4cm, 1.2cm)$}{CLK}
+  \numberbuttonwht{$ (numbutPos) + (1.2cm, 4cm)$}{PRF}
+  \numberbuttonwht{$ (numbutPos) + (4cm, 4cm)$}{OSC}
+  \numberbuttonwht{$ (numbutPos) + (6.8cm, 4cm)$}{VEL}
+  \numberbuttonwht{$ (numbutPos) + (1.2cm, 6.8cm)$}{CFG}
+  \numberbuttonwht{$ (numbutPos) + (4cm, 6.8cm)$}{ENV}
+  \numberbuttonwht{$ (numbutPos) + (6.8cm, 6.8cm)$}{BND}
+  \numberbuttonwht{$ (numbutPos) + (1.2cm, 9.6cm)$}{LFO}
+  \numberbuttonwht{$ (numbutPos) + (4cm, 9.6cm)$}{VIB}
+  \numberbuttonwht{$ (numbutPos) + (6.8cm, 9.6cm)$}{MOD}
+}
+
 \newcommand\prophetpotbiplar[3]
 {
   \prophetpotgen{#1}{#2}{#3}
+
   \node[font=\fontsize{13}{12}\selectfont, text centered] at (d.0) {\panelfont{3}};
   \node[font=\fontsize{13}{12}\selectfont, text centered] at (d.30) {\panelfont{2}};
   \node[font=\fontsize{13}{12}\selectfont, text centered] at (d.60) {\panelfont{1}};
