@@ -327,8 +327,18 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
         if (BNote<0)
             BNote=0;
 
-        detune=0;
-        if (spreadRaw>1000) detune=(spreadRaw>>11); // this is spread detune, e.g. analog out of tune whack
+        detune=0; // this is the pitch part of the vintage spread detune
+        if (spreadRaw>1000)
+        {
+            if (spreadRaw<=HALF_RANGE)
+            {
+                detune=(spreadRaw>>12);
+            }
+            else
+            {
+                detune=(spreadRaw>>10)-24;
+            }
+        }
 
         v_aux=v;
         synth.oscABaseCV[v]=satAddU16S16(tuner_computeCVFromNote(ANote,baseAPitch,pcOsc1A+v),(1+(v_aux>>1))*(v_aux&1?-1:1)*detune);
@@ -354,7 +364,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
         v_aux=(v+5)%6;
         synth.filterBaseCV[v]=satAddU16S16(tuner_computeCVFromNote(trackingNote,baseCutoff,pcFil1+v),(1+(v_aux>>1))*detune);
 
-        // detune
+        // unison detune
 
         if(currentPreset.steppedParameters[spUnison])
         {
