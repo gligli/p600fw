@@ -847,7 +847,6 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
             if(ui.presetAwaitingNumber>=0)
                 sevenSeg_setAscii('0'+ui.presetAwaitingNumber,' ');
             else
-                if (!ui.isInPatchManagement) sevenSeg_setAscii(' ',' '); // kep the previous display (might be a MIDI load message)
                 if (!ui.isInPatchManagement) sevenSeg_setAscii(' ',' '); // keep the previous display (might be a MIDI load or dump message)
         }
         else
@@ -1261,7 +1260,8 @@ void synth_init(void)
 
     // a nice welcome message, and we're ready to go :)
 
-    sevenSeg_scrollText("GliGli's P600 upgrade "VERSION,1);
+    //sevenSeg_scrollText("GliGli's P600 upgrade "VERSION,1);
+    sevenSeg_scrollText(VERSION,1);
 }
 
 void synth_update(void)
@@ -1611,10 +1611,10 @@ void LOWERCODESIZE synth_buttonEvent(p600Button_t button, int pressed)
 void synth_keyEvent(uint8_t key, int pressed, int fromKeyboard, uint16_t velocity)
 {
 
-    if ((ui.isShifted || ui.isDoubleClicked) && fromKeyboard)
+    if (ui.isShifted || ui.isDoubleClicked)
     {
         // keyboard transposition
-        if(pressed && fromKeyboard) // don't support transpose by MIDI key event
+        if(pressed && (fromKeyboard || settings.midiMode==1)) // support transpose by MIDI key event only for local off
         {
             char s[16]="trn = ";
 

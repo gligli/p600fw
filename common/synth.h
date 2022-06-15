@@ -7,6 +7,7 @@
 
 //#define DEBUG
 //#define RELEASE "Ver 2.00" // will keep this as is until new release plan. Version 2.1 has never been officially released.
+#define RELEASE "beta 2022_2"
 
 
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
