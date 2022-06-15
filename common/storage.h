@@ -44,7 +44,6 @@ typedef enum
 	spSync=6,spPModFA=7,spPModFil=8,
 			
 	spLFOShape=9,
-    spLFOSync=10,
     spLFOTargets=11,
 
 	spTrackingShift=12,
@@ -65,6 +64,7 @@ typedef enum
 	spPWMBug=26,
     spAssign=27,
 	spEnvRouting=28,
+    spLFOSync=29,
 
 	// /!\ this must stay last
 	spCount

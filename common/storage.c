@@ -516,6 +516,8 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         readVar=storageRead8();
         currentPreset.steppedParameters[spAssign]=(readVar>1)?0:readVar;
 
+		readVar=storageRead8();
+		currentPreset.steppedParameters[spLFOSync]=(readVar>7)?0:readVar;
         for (i=0;i < 16; i++)
             currentPreset.patchName[i]=storageRead8();
 
@@ -569,6 +571,7 @@ LOWERCODESIZE void preset_saveCurrent(uint16_t number)
 		storageWrite16(currentPreset.continuousParameters[cpExternal]);
         storageWrite8(currentPreset.steppedParameters[spEnvRouting]);
         storageWrite8(currentPreset.steppedParameters[spAssign]);
+        storageWrite8(currentPreset.steppedParameters[spLFOSync]);
 
         for (i=0;i < 16; i++)
             storageWrite8(currentPreset.patchName[i]);
