@@ -5,7 +5,7 @@ Like the original model, the upgraded Prophet 600 offers a single main LFO (for 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
 
-    \addpar{-18cm,6cm}{\lfoshape \\ The user can select 3 pairs of different shapes to be assigned to the \shapeswitch};
+    \addpar{-18cm,6cm}{\lfoshape \\ You can select 3 pairs of different shapes to be assigned to the \shapeswitch};
     \draw[line width = 2pt, dashed] (-5cm,7.5cm) -- (5cm,7.5cm);
 
     \addpar{-18cm,0.5cm}{\lfosync \\ This parameter activates LFO synchronisation to internal or external clock on selectable time measures (only active when arp and/or seq are playing)};
@@ -35,8 +35,17 @@ The LFO speed / frequency is set in the panel using the \lfofreq dial\footnote{U
 
 There are four modulation targets which can be active simultaneously. Three targets are activated using the switches \lfovco (modulation of oscillator pitch), \lfopwm (modulation of pulse width) and \lfofil (modulation of the filter cut-off frequency) in the LFO sub-panel. The modulation amount is set using the \lfoamt control\footnote{The action of the \lfoamt dial has been made exponential, e.g. slower onset in the lower value range. In particular when pitch modulation is active this provides a longer travel for commonly useful modulation amounts, e.g. up to 2-3 on the control scale.} and this amount applies to all activated modulation targets at fixed relative strength. 
 
-In the upgraded Prophet 600 the target VCO Frequency can be customized in the following way. The user can choose which of the two oscillators per voice is modulation. The additional patch parameter \lfotarget
-offer the settings: \textit{A \& B} (both oscillators are modulated, this is the standard of the original Prophet 600), \textit{A} (only VCO A is modulated), \textit{B} (only VCO B is modulated). Finally the parameter represents the 4th modulation target: \textit{VCA} (amplitude modulation, and both oscillators are selected for all targets). The choices for oscillators A and B affect the targets \textit{VCO} and \textit{PWM} but obviously not \textit{Filter}  as there is only one filter per voice. When the target \textit{VCA} is selected, both oscillators are targets for \textit{VCO} and \textit{PWM} modulation (if the respective switches are on). 
+In the upgraded Prophet 600 you can customize the LFO target. The additional patch parameter \lfotarget
+offer the settings: 
+
+\begin{itemize}
+  \item \textit{A \& B}: Both oscillators are modulated, this is the standard of the original Prophet 600 
+  \item \textit{A}: Only VCO A is modulated
+  \item \textit{B}: Only VCO B is modulated
+  \item \textit{VCA}: Amplitude modulation, and both oscillators are selected for all targets
+\end{itemize}
+
+The choices for oscillators A and B affect the targets \textit{VCO} and \textit{PWM} but obviously not \textit{Filter} as there is only one filter per voice. When the target \textit{VCA} is selected, both oscillators are targets for \textit{VCO} and \textit{PWM} modulation (if the respective switches are on). 
 
 \textbf{LFO shapes}
 

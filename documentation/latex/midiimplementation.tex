@@ -1,10 +1,10 @@
-Two types of MIDI events are implemented, e.g. the upgraded prophet 600 can receive and apply them:
+Two types of MIDI events are implemented, e.g. the upgraded Prophet 600 can receive and apply them:
 
 \begin{itemize}
   \setlength\itemsep{0cm}
-  \item MIDI CC Continuous parameters: 0-16383 using 2 CCs, or 0-127 using only the coarse one
-  \item MIDI CC Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore 2 has choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
-  \item performance events (note events, pitch bend)
+  \item MIDI CC Continuous parameters: value resolution of 0-16383 using 2 CCs (fine and coarse), or value resolution of 0-127 using only the coarse one
+  \item MIDI CC Stepped parameters: 0-127, variable number of steps. They work by dividing the 0-127 range in as many zones as there are choices for the parameter. E.g.: "Unison" is an on-off parameter and therefore has s choices. In this case it is \textit{off} for 0-63 and it is \textbf{on} for 64-127.
+  \item Performance events (note events, pitch bend)
   \item Real time events
   \item SysEx (for different purposes)
 \end{itemize}
@@ -28,28 +28,41 @@ Osc B Fine & Continuous & 22 & 86 & Sync & Stepped & 54 \\ \hline
 Cutoff & Continuous & 23 & 87 & Poly Mod Oscillator A Destination & Stepped & 55 \\ \hline
 Resonance & Continuous & 24 & 88 & Poly Mod Filter Destination & Stepped & 56 \\ \hline
 Filter Envelope Amount & Continuous & 25 & 89 & LFO Shape & Stepped & 57 \\ \hline
-Filter Release & Continuous & 26 & 90 & LFO Sync\footnote{Up to version 2.1 RC3 CC was used for the legacy LFO speed range} & Stepped & 58 \\ \hline
-Filter Sustain & Continuous & 27 & 91 & LFO Targets & Stepped & 59 \\ \hline
-Filter Decay & Continuous & 28 & 92 & Keyboard Filter Tracking & Stepped & 60 \\ \hline
-Filter Attack & Continuous & 29 & 93 & Filter Envelope Shape & Stepped & 61 \\ \hline
-Amp Release & Continuous & 30 & 94 & Filter Envelope Fast/Slow & Stepped & 62 \\ \hline
-Amp Sustain & Continuous & 31 & 95 & 2nd Envelope Shape & Stepped & 63 \\ \hline
-Amp Decay & Continuous & 32 & 96 & Unison & Stepped & 65 \\ \hline
-Amp Attack & Continuous & 33 & 97 & Assigner Priority Mode & Stepped & 66 \\ \hline
-Poly Mod Filter Amount & Continuous & 34 & 98 & Bender Range (semitones) & Stepped & 67 \\ \hline
-Poly Mod Osc B Amount & Continuous & 35 & 99 & Bender Target & Stepped & 68 \\ \hline
-LFO Frequency & Continuous & 36 & 100 & Mod Wheel Range \footnote{The configuration of this parameter was changed in \version} & Stepped & 69 \\ \hline
-LFO Amount & Continuous & 37 & 101 & Osc pitch mode & Stepped & 70 \\ \hline
-Glide & Continuous & 38 & 102 & Mod Wheel Target & Stepped & 71 \\ \hline
-Amp Velocity & Continuous & 39 & 103 & Vibrato Target & Stepped & 72 \\ \hline
-Filter Velocity & Continuous & 40 & 104 &  2nd Envelope Fast/Slow & Stepped & 73 \\ \hline
-Modulation delay & Continuous & 41 & 105 & Sync Bug & Stepped & 74 \\ \hline
-Vibrato frequency & Continuous & 42 & 106 & Voice Assign & Stepped & 75 \\ \hline
-Vibrato amount & Continuous & 43 & 107 & Envelope Routing & Stepped & 76 \\ \hline
-Unison detune & Continuous & 44 & 108 & & &  \\ \hline
-External CV amount & Continuous & 46 & 110 &  &  &  \\ \hline
-Vintage / Spread & Continuous & 47 & 111 &  &  &  \\ \hline 
+Filter Release  &  Continuous  & 26 & 90 &  LFO Targets  &  Stepped  &  59 \\ \hline
+Filter Sustain  &  Continuous  & 27 & 91 &  Keyboard Filter Tracking  &  Stepped  &  60 \\ \hline
+Filter Decay  &  Continuous  & 28 & 92 &  Filter Envelope Shape  &  Stepped  &  61 \\ \hline
+Filter Attack  &  Continuous  & 29 & 93 &  Filter Envelope Fast/Slow  &  Stepped  &  62 \\ \hline
+2nd Release  &  Continuous  & 30 & 94 &  2nd Envelope Shape  &  Stepped  &  63 \\ \hline
+2nd Sustain  &  Continuous  & 31 & 95 &  Unison  &  Stepped  &  65 \\ \hline
+2nd Decay  &  Continuous  & 32 & 96 &  Assigner Priority Mode  &  Stepped  &  66 \\ \hline
+2nd Attack  &  Continuous  & 33 & 97 &  Bender Range (semitones)  &  Stepped  &  67 \\ \hline
+Poly Mod Filter Amount  &  Continuous  & 34 & 98 &  Bender Target  &  Stepped  &  68 \\ \hline
+Poly Mod Osc B Amount  &  Continuous  & 35 & 99 &  Mod Wheel Range  &  Stepped  &  69 \\ \hline
+LFO Frequency  &  Continuous  & 36 & 100 &  Osc pitch mode  &  Stepped  &  70 \\ \hline
+LFO Amount  &  Continuous  & 37 & 101 &  Mod Wheel Target  &  Stepped  &  71 \\ \hline
+Glide  &  Continuous  & 38 & 102 &  Vibrato Target  &  Stepped  &  72 \\ \hline
+Amp Velocity  &  Continuous  & 39 & 103 &   2nd Envelope Fast/Slow  &  Stepped  &  73 \\ \hline
+Filter Velocity  &  Continuous  & 40 & 104 &  Sync Bug  &  Stepped  &  74 \\ \hline
+Modulation delay  &  Continuous  & 41 & 105 &  Voice Assign  &  Stepped  &  75 \\ \hline
+Vibrato frequency  &  Continuous  & 42 & 106 &  Envelope Routing  &  Stepped  &  76 \\ \hline
+Vibrato amount  &  Continuous  & 43 & 107 &  LFO Sync  &  Stepped  &  77 \\ \hline
+Unison detune  &  Continuous  & 44 & 108 &    &    &   \\ \hline
+External CV amount  &  Continuous  & 46 & 110 &  &  &   \\ \hline 
+Vintage / Spread  &  Continuous  & 47 & 111 &  &  &   \\ \hline 
+ 
 \end{longtable}
+
+\textbf{Change in MIDI CC from version 2.1 RC3 to \version}
+
+The following MIDI CC have been changed.
+
+\begin{itemize}
+  \item The filter envelope release and decay and 2nd envelope release decay when envelope shape is set to linear: the value range has been rescaled. This is a necessary side effect of changing the strictly linear shapes to linear shapes with soft tails. The exponential envelopes are unaffected.
+  \item The LFO frequency has been totally rescaled. The stepped frequency range parameter has been omitted and the value range of  the LFO frequency now covers the entire frequency range. However, the value to frequency relation has also been changed to exponential (instead of linear)
+  \item MIDI CC 58 (up to version 7 this was the LFO Frequency Range): this parameter has been omitted. In order to avoid potential conflicts with MIDI tools developed for firmware versions 2.0 and 2.1 RC3, this MIDI CC has not been re-designated.
+  \item The value to frequency relation for the vibrato frequency has also been changed to exponential (instead of linear)   
+  \item The Mod Wheel Range has been reconfigured with new value which also produce different wheel actions.
+\end{itemize}
 
 \textbf{Other MIDI CC Settings}
 

@@ -86,7 +86,7 @@
 
 \section{What you can expect from the Firmware Upgrade}
 
-The original Sequential Circuits Prophet 600 from around 1982 is run by a Zilog Z80 processor. This processor and the firmware written for it, reach their limits when computing and applying the voltages, scanning user inputs and managing MIDI events, making the instrument steppy, glitchy and non-responsive. That is a pity, because the basic synth voice hardware of the Prophet 600 is good: unlike than many DCO synths which became popular and affordable at the time, the Prophet 600 is a 6 voice analog synthesizer driven by 2 voltage controlled oscillators (VCOs) and a 24db low pass filter per voice, all implemented using the renowned Curtis chips\cite{curtis}. The hardware also provides hard sync, frequency modulation and even modulation of cut-off by VCO. It is very versatile. The shortcomings of the original Prophet 600 were only due to the unfortunate circumstance that commonly available micro-processors at the time of the Prophet 600 were not powerful enough. So the idea to make use of more modern processors 30 years later was interesting. Around 2013 GliGli\cite{gligli} started reverse engineering the original firmware for the Z80 and found that the Z80 can be replaced by a (more) modern Teensy 2.0++ USB programmable microprocessor \cite{teensy} (with some hardware modifications). This was the start of what is now know as the \textit{Prophet 600 GliGli firmware upgrade}. GliGli describes his motivation as follows:
+The original Sequential Circuits Prophet 600 from around 1982 is run by a Zilog Z80 processor. This processor (and the firmware written for it) is pushed beyond its limits for computing and applying the voltages, for scanning user inputs and managing MIDI events. The necessary compromises made the instrument steppy, glitchy and non-responsive. That is a pity, because the basic synth voice hardware of the Prophet 600 is good: unlike DCO synths which became popular and affordable at the time, the Prophet 600 is a 6 voice analog synthesizer driven by 2 voltage controlled oscillators (VCOs) and a 24db low pass filter per voice, all implemented using the renowned Curtis chips \cite{curtis}. The hardware also provides hard sync, frequency modulation and even modulation of cut-off by VCO. It is very versatile. The shortcomings of the original Prophet 600 were only due to the unfortunate circumstance that the selected and commonly available micro-processors at the time were not powerful enough for the Prophet 600. So the idea to make use of a more modern processor 30 years later was interesting. Around 2013 GliGli \cite{gligli} started reverse engineering the original firmware for the Z80 and found that the Z80 can be replaced by a (more) modern Teensy++ 2.0 USB programmable microprocessor \cite{teensy} (with some hardware modifications). This was the start of what is now know as the \textit{Prophet 600 GliGli firmware upgrade}. GliGli describes his motivation as follows:
 
 \begin{addmargin}[2cm]{1cm}
 
@@ -94,29 +94,29 @@ The original Sequential Circuits Prophet 600 from around 1982 is run by a Zilog 
 
 \end{addmargin}
 
-There are various modifications and modern CPU "implants" for some vintage analog synthesizers. Since the Teensy 2.0++ board fits in to the same 2x20 pin standard socket of the Z80, the decisive advantage of the GlIGli approach is that it is an easy-to-install and non-destructive firmware drop-in replacement\footnote{There are two versions of the Prophet 600. One has the Z80 on a socket. In this case replacement is truly "drop-in". The other version has the Z80 soldered to the circuit board. In this case the Z80 needs to be removed and a socket has to be soldered in its place first.}. It is completely safe to try out the Teensy 2.0++ upgrade because one can always remove the board and restore the Z80 without technical expertise or training. 
+There are various modifications and modern CPU "implants" for some vintage analog synthesizers. Since the Teensy++ 2.0 board fits in to the same 2x20 pin standard socket of the Z80, the decisive advantage of the GliGli approach is that it is an easy-to-install and non-destructive firmware drop-in replacement\footnote{There are two versions of the Prophet 600. One has the Z80 on a socket. In this case replacement is truly "drop-in". The other version has the Z80 soldered to the circuit board. In this case the Z80 needs to be removed and a socket has to be soldered in its place first.}. It is completely safe to try out the Teensy++ 2.0 upgrade because one can always remove the board and restore the Z80 without technical expertise or training. 
 
-The Teensy 2.0++ offers completely new possibilities. Just looking at the pure computation power: the Z80 version of the Prophet 600 ran at 4 MHz while the AVR processor on the Teensy board runs at 16 MHz. Also, the on-board flash memory provides much better storage and firmware handling possibilities compared to the EPROM which the Z80 uses. With the replacement the obvious limitations of the original Prophet 600 could be overcome - but more than that, it opened the possibility for new and for enhanced features. 
+The Teensy++ 2.0 offers completely new possibilities. Just looking at specs: the Z80 version of the Prophet 600 ran at 4 MHz while the ATMEL processor on the Teensy board is operated at 16 MHz. Also, the on-board flash memory provides much better storage and firmware handling possibilities compared to the EPROM which the Z80 uses. The firmware does not rely on a battery for keeping patch data in memory. With the replacement the obvious limitations of the original Prophet 600 could be overcome - but more than that, it opened the possibility for new and for enhanced features. 
 
 Developing the software was a major effort with low-level functions and basic hardware communication at the core, e.g. instruction to set voltages to the electronic components, MIDI (interrupt) implementation, multiplexer operations and DAC operations. On top of this there is the "musical" part of coding, e.g. envelopes, LFOs, modulations and sequencing functions as well as UI functions. Many people have contributed, most probably out of curiosity and passion for synthesizers and driven by the excitement that such a project could not only be conjured up but also be implemented and brought to life. 
 
-The first stable version of the firmware upgrade was version 2.0 in 2014. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 (2.1 RC3) has been available from September 5th 2015 on \cite{gligli}. The latest release version \version is the result of continued development between September 2021 and March 2022. It is meant as a celebration and revival of the original idea and it provides various new features and also improvements which utilize progress in compiler technology. The latest firmware version can be found on the project page\cite{newversion}.
+The first stable version of the firmware upgrade was version 2.0 in 2014. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 (2.1 RC3) has been available from September 5th 2015 on GliGli's webpages \cite{gligli}. The latest release version \version is the result of continued development between September 2021 and March 2022. It is meant as a celebration and revival of the original idea and it provides various new features and also significant improvements in core functions. The latest firmware version can be found on the project page\cite{newversion}.
 
-While there is a realistic backlog of additional ideas to come in the future, the is a clear end of Prophet 600 upgrade story in sight because of ultimate hardware limitations. Firstly, pjrc has stopped producing the Teensy 2.0++ board, so that it has become difficult to find them. Secondly, after extensive performance testing in the latest firmware developments efforts, it has become clear that the performance (smoothness and responsiveness of controls, timely and accurate processing of information) is finally limited by the built-in hardware, in particular the DAC (limited by voltage rise times) and multiplexer (limited by switching times). 
+While there is a realistic backlog of additional ideas to come in the future, the is a clear end of Prophet 600 upgrade story in sight because of ultimate hardware limitations. Firstly, PJRC (the manufacturer of the Teensy boards) has stopped producing the Teensy++ 2.0 board, so that it has become difficult to find them. Secondly, after extensive performance testing in the latest firmware developments efforts, it has become clear that the performance (smoothness and responsiveness of controls, timely and accurate processing of information) is finally limited by the built-in hardware, in particular the DAC (limited by voltage rise times) and multiplexer (limited by switching times). 
 
-If you own a Teeny 2.0++ upgraded Prophet 600 you can still enjoy some exciting new developments. The following is a compact summary of the improved and the new features. The manual general refers to the latest version \version and differences between versions are marked or commented in the text for your information. Share the passion of analog synthesizers with the Prophet 600 upgrade story!  
+If you own a Teensy++ 2.0 upgraded Prophet 600 you can still enjoy some exciting new developments. The following is a compact summary of the improved and the new features. The manual general refers to the latest version \version and differences between versions are marked or commented in the text for your information. Share the passion for analog synthesizers with the Prophet 600 upgrade story!  
 
-\textbf{General features}
+\textbf{General features compared to the original Z80 version}
   
 \begin{itemize}
   \setlength\itemsep{0cm}
   \item Greater resolution of many of the sound parameters with an improved refresh rate that is making the instrument much more responsive, again improved in \version using a dynamic scheme for reading user controls.
-  \item Faster and smoother ADSR envelopes with support of two speed regimes (slow, fast) and two shapes (linear, exponential). The latest version \version has new linear shapes which were inspired by Prophet 5 rev 1/2 envelopes and designed to be more organic and musical then the former linear shapes.
+  \item Faster and smoother ADSR envelopes with support of two speed regimes (slow, fast) and two shapes (linear, exponential). The latest version \version has new linear shapes which were inspired by Prophet 5 rev 1/2 envelopes and designed to be more organic and musical than the former linear shapes.
   \item Positive and negative envelope amount settings for filter and poly-mod 
   \item A new LFO function generator with a wider frequency range from one cycle every 20 seconds to about 60Hz
   \item Assignable, random and up/down arpeggiator, optionally sync-able to MIDI clock
   \item Multiple note assignment modes including last/low/high note priority
-  \item Full MIDI In control including amplitude and filter velocity sensitivity with an external keyboard controller, continuous Controllers (CC) of all sound parameters, program change (PC) to choose current preset
+  \item Full MIDI In control including amplitude and filter velocity sensitivity with an external keyboard controller, continuous controllers (CC) of all sound parameters, program change (PC) to choose current preset
   \item A dedicated vibrato which can be controlled by the modulation wheel
   \item Unison chord mode
   \item Four new LFO waveforms in addition to the original triangle and square including sine, random stepped, noise (like on the original Prophet 5, but non-periodic) and sawtooth (ramp up)
@@ -129,7 +129,7 @@ If you own a Teeny 2.0++ upgraded Prophet 600 you can still enjoy some exciting 
   \item Debounce feature that prevents unintended re-triggering caused by the old keyboard
 \end{itemize}
 
-\textbf{Specific features from version 2.1 RC3 on}
+\textbf{Specific features from version 2.1 RC3 onwards}
   
 \begin{itemize}
   \setlength\itemsep{0cm}
@@ -138,7 +138,7 @@ If you own a Teeny 2.0++ upgraded Prophet 600 you can still enjoy some exciting 
   \item Improved UI, introducing display of -50...50 range for bipolar dials and center deadband for better handling  
   \item VCF limit option
   \item Maintenance mode / adjustment scaling
-  \item Vintage (spread) function for voice variations in tune and envelopes, re-designed as continuous patch parameter in version \version   
+  \item Vintage (spread) function for voice variations in tune and envelopes, re-designed as a continuous parameter in version \version which can even be controlled by MIDI CC   
   \item Support for pedal to sustain notes and to hold chords (in unison)
   \item On-the-fly transpose function for arpeggiator and sequencer
 \end{itemize}
@@ -151,10 +151,10 @@ If you own a Teeny 2.0++ upgraded Prophet 600 you can still enjoy some exciting 
   \item Softer (exponential) action of LFO control (frequency and amount) to provide more travel for common "musical" value ranges
   \item Super accurate oscillator B fine tuning using a slow mid region
   \item Improved envelope shapes inspired by the Prophet 5 rev 1/2 shapes, replacing the linear shape in versions 2.0 and 2.1 RC3.  
-  \item Revised and more intuitive organisation of menu parameters in groups 
+  \item Revised and more intuitive organisation of menu parameters in groups with corresponding "cheat sheet"
   \item A new UI concept with pick-me-up behaviour, in order to avoid discontinuous value changes and to make the differences between panel and internal values transparent 
-  \item Switchable panel layout with choices: Mix / Glide and Volume A / Volume B 
-  \item Flexible envelope routing allowing the poly-mod to by modulated by either envelope generator
+  \item Switchable panel layout with choices: Mix / Glide (Sequential Circuits / SCI layout)and Volume A / Volume B (synthgraphics suported GliGli layout) 
+  \item Flexible envelope routing allowing the poly-mod to be modulated by either envelope generator
   \item Possibility to sync the LFO to the arpeggiator and sequencer
   \item Better MIDI integration possibilities through new local off mode and MIDI input into sequencer and arpeggiator
   \item Improved and protected patch management via MIDI, supporting single patch dump and loading MIDI patch to active controls 
@@ -163,32 +163,33 @@ If you own a Teeny 2.0++ upgraded Prophet 600 you can still enjoy some exciting 
   \item Vibrato target VCA
 \end{itemize}
 
-In addition to this several more technical / advanced changes were made such as the possibility to switch between "round robin" and "first" voice assign logic, possibility to toggle a pulse width sync bug which has been introduced in the version 2.0 (and kept for compatibility in version 2.1 RC3), changes to remove the interference  of internal and external (MIDI) pitch bend by adding the two (as in the original SCI firmware), stabilization of the external analog clock input.
+In addition to this, several more technical / advanced changes were made such as the possibility to switch between "round robin" and "first" voice assign logic, possibility to toggle a pulse width sync bug which has been introduced in the version 2.0 (and kept for compatibility in version 2.1 RC3), changes to remove the interference  of internal and external (MIDI) pitch bend by adding the two (as in the original SCI firmware), stabilization of the external analog clock input.
 
 \section{Versions of the firmware upgrade and compatibility}
 
-Upgrading the firmware can be done by SysEx or by directly loading the firmware onto the Teensy 2.0++ board via the USB (see section \ref{fwupgrade}). When upgrading by SysEx, both patch data and settings are preserved. Backward compatibility is ensured, e.g. patches created in prior firmware version (including Z80) still work properly on new firmware versions. Note that as a general principle, before performing any upgrade the safekeeping of patches is not only best practice but also strongly recommended. The following contains some remarks on changes which users upgrading to version \version from version 2.0 or 2.1 RC3 should be aware of.
+You can upgrade the firmware by SysEx or by directly loading the firmware onto the Teensy++ 2.0 board via USB (see section \ref{fwupgrade}). When upgrading by SysEx, both patch data and settings are preserved. Backward compatibility is ensured, e.g. patches created in prior firmware version (including Z80) still work properly on new firmware versions. Note that as a general principle, before performing any upgrade the safekeeping of patches is not only best practice but also strongly recommended. The following contains some remarks which are relevant if you are upgrading to version \version from version 2.0 or 2.1 RC3.
 
-\textbf{Panel}: If you have a synthgraphics overlay, there are some minor changes (also reflected in the figures in this manual). Firstly, the layout of the menu parameters has been changed - these are now grouped in themes and since there are more parameters,  selecting a parameters requires three presses in some cases. So the "cheat sheet" that some users have attached to the left of the number pad is not correct any more. Secondly (and less significant), what was formerly the "amplitude envelope" is now referred to more generally as the "2nd envelope". There are additional envelope routing options so that this envelope has a more generalized role. 
+\textbf{Panel}: If you have a synthgraphics overlay, there are some minor changes (also reflected in the figures in this manual). Firstly, the layout of the menu parameters has been changed - these are now grouped in themes and since there are more parameters, selecting a parameter requires three presses in some cases. So the "cheat sheet" that some users have attached to the left of the number pad is not correct any more. Secondly (and less significant), what was formerly the "amplitude envelope" is now referred to more generally as the "2nd envelope". There are additional envelope routing options so that this envelope has a more generalized role. 
 
-\textbf{Vintage / Spread}: With 2.1 RC3 a "spread" switch was introduced as part of the global settings (not part of the patch). With version \version this has been removed and replaced by a vintage patch parameter. It serves the same purpose, but it can be controlled continuously and it is more randomized than the former spread switch.
+\textbf{Vintage / Spread}: With 2.1 RC3 a "spread" switch was introduced as part of the global settings (not part of the patch). With version \version this has been removed as a settings and has been reintroduced as the patch parameter \textit{vintage spread}. It serves the same purpose, but it can be controlled continuously and it is more randomized than the former spread switch for more realistic results.
 
-\textbf{Detune}: The unison detune has undergone as scaling re-design in version \version: the detune is now less pronounced at higher frequencies. This has been done to achieve the same subjective detuning effect across the whole frequency range. This is a change to the sound of instrument and depending on how detune is being used, patch may sound different compared to prior firmware versions.  
+\textbf{Detune}: The unison detune has undergone a scaling re-design in version \version: the detune is now less pronounced at higher frequencies. This has been done to achieve the same subjective detuning effect across the whole frequency range. This is a change to the sound of instrument and depending on how you use detune, your detuned unison patches may sound slightly different at higher registers compared to prior firmware versions. The idea is of course, that this is an agreeable change for everybody.
 
 \textbf{Arpeggiator}: The arpeggiator patterns up/down and random have been changed in version \version
 
-\textbf{MIDI CC}: Due to the change in menu parameters (obsolete parameters) and subsequent reshuffling, the specification of MIDI CC has changed slightly. As a result of rescaling of parameters the MIDI CC value to action has change, e.g. for LFO and vibrato frequencies, LFO and vibrato amounts
+\textbf{MIDI CC}: Due to the change in menu parameters (obsolete parameters) and subsequent reshuffling (e.g. re-designation of the CC values for the legacy LFO frequency range), the specification of MIDI CC has changed slightly. As a result of rescaling of parameters the MIDI CC value to action has changed for LFO and vibrato frequencies and LFO and vibrato amounts as well as decay and release times of envelopes with linear shape. When loading older patches, the changes are taken into account to ensure compatibility.
 
-\textbf{Envelopes}: The linear envelope shape has been revised in version \version. It is now a linear shape with an exponential tail (e.g. a softer roll-off).   
-
+\textbf{Envelopes}: The linear envelope shape has been revised in version \version. It is now a linear shape with an exponential tail (e.g. a softer roll-off) for decay and release. It was a deliberate decision to replace the linear shape altogether. Note that the smooth roll-off required a rescaling of the envelope decay and release controls for linear shapes. When loading older patches, the changes are taken into account to ensure compatibility: the effective decay and release times are preserved. However, the application of MIDI CC values is different, so if you are controlling sound by MIDI CC you may need to make adjustments.
 
 \section{Credits and license}
 
-The firmware upgrade project is an open source project. The firmware  is under GPL v3 license, except files / libraries / other open source components that have their own license in the header. Many have contributed and have spent considerable time to make this software as useful and consistent as possible and many users continue to enjoy the upgrade. However, the usage of the software and related documentation (including descriptions and references to descriptions for making modifications to hardware) are understood to be at the user's own risk. The firmware program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+The firmware upgrade project is an open source project. The GliGli code base (up to and including version 2.1 RC3) can be found in \cite{gligli} and the new code base of the latest development can be found in \cite{imogen}. When I first drafted this manual I hoped to put together a credits section by assembling a fair and comprehensive list of contributors. I have given up. There was no one who could, with authority, list and assess what came from where and who added what. From my research I can say that a \textbf{lot} of people have contributed and some have obviously spent considerable time to make this software as useful and consistent as possible. Let just give some highlights and do a round-up. First, I think that the original technical documentation of the Prophet 600 by Stanley Jungleib is great and such documentation helps. Then there is an elaborate blog "Prophet 600 Spirit" by \textit{minisystem} \cite{p600spirit} which is legacy by now but still available. It contains a lot more technical information, Prophet 600 hardware related ground work, I would call it and impression was that it significantly helped the project too. The contributors to the actual code can be obtained from the submit history of the code base on Github \cite{imogen}. Apart from GliGli I found \textit{snickell} and \textit{Ricard Wanderlof} with many commits. Then there is the community, especially (but certainly not exclusively) on Gearspace (formerly known as Gearslutz): testing, giving feedback, spreading the word, supporting the project by appreciation and enthusiasm. Since I started picking up the development in November 2021 I joined with a group of supporters and musicians loosely bound together by a forum thread on Gearspace. I neither want to list all, nor single someone out. Let me just say, that was real fun to jointly develop the new envelopes and to experiment with different and sometimes really tricky aspects of the Prophet 600 hardware and the firmware.
 
-(the list of contributors will go here once it is finalized)
+The firmware  is under GPL v3 license, except files / libraries / other open source components that have their own license in the header. The usage of the software and related documentation (including descriptions and references to descriptions for making modifications to hardware) are understood to be at the user's own risk. The firmware program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 \end{flowtext}
+
+\pagebreak
 
 \chapter{Finding your way around your new  Prophet 600}    
 
@@ -222,11 +223,11 @@ The following sections contain a brief explanation of the controls and interface
 
 \section{Data Pad and basic operation}\label{datapad}
 
-The \datapad consists of the \display (2 two digit 7 segment display with one dot), the \termnumberpad, the \funcbuttons and the \datadial. 
+The \datapad consists of the \display (2 two digit 7 segment display with one dot\footnote{The were good ideas for using a second display dot to make the UI more sphisticated, but - unfortunately - the even though the display has the dot, the Prophet 600 hardware only supports the one dot.}), the \termnumberpad, the \funcbuttons and the \datadial. 
 
 \textbf{Function Buttons}
 
-The block of 9 \funcbuttons is the main control from where the operation modes and functions of the Prophet 600 are activated. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below. (The \record button has a function of both.)
+The block of 9 \funcbuttons is the main control from where you activate and toogle the operation modes and functions of the Prophet 600. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below. (The \record button has a function of both.)
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -271,7 +272,7 @@ This pad has three usages depending on mode and selected functions:
 
 \textbf{Preset panel mode, live mode and additional patch parameters menu}\label{app}
 
-The Prophet 600 operates in two modes, \presetmode and \livemode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when pressing the number pad buttons, as shows in the table below.
+The Prophet 600 operates in two modes, \presetmode and \livemode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when you press the number pad buttons, as shows in the table below.
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -313,25 +314,25 @@ The Prophet 600 operates in two modes, \presetmode and \livemode, see section \r
   \end{tikzpicture}
 }
 
-The following section describes how patch parameters are accessed and modified in live mode and in \presetpanel. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the Panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. There are \textit{continuous} parameters (numeric) and \textit{stepped} parameters (choices of options). Changing these parameters can only be done in \presetpanel or in \livemode. You must select the parameter first and then change the value using the \datadial. A parameter is selected by pressing the buttons 0...9 on the \termnumberpad (or pressing them twice or in some cases three times). If you select a new parameter, the respective parameter name is scrolled through the display. The display then shows the current value. Numeric values are shown permanently and choice settings are scrolled through the display. 
+The following section describes how patch parameters are accessed and modified in live mode and in \presetpanel. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the \panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. There are \textit{continuous} parameters (numeric) and \textit{stepped} parameters (select options). Changing these parameters can only be done in \presetpanel or in \livemode. You must select the parameter first and then change the value using the \datadial. A parameter is selected by pressing the buttons 0...9 on the \termnumberpad (or pressing them twice or in some cases three times). If you select a new parameter, the respective parameter name is scrolled through the display. The display then shows the current value. Numeric values are shown permanently and choice settings are scrolled through the display. 
 
 Each parameter is explained in the respective functional context in the next chapter. For a quick reference of additional patch parameters please see section \ref{patchref}. 
 
-Note 1: The parameter accessed using the number 0 is an exception. The parameter \clock controls the internal sequencer and arpeggiator speed or external clock divide and this speed is stored as a instrument settings (see next section) and not as a patch parameter. For details on \clock see \ref{sync}.
+Note 1: The parameter accessed using the number 0 is an exception. The parameter \clock controls the internal sequencer and arpeggiator speed or external clock divide and this speed is stored as an instrument setting (see next section) and not as a patch parameter. For details on \clock see \ref{sync}.
 
 
 \textbf{Shift mode and miscellaneous settings}
 
 The \miscsett are patch independent instrument settings and functions. These settings are stored and re-loaded after a power cycle. The miscellaneous settings are accessed via the \termnumberpad in \shiftmode. To activate this mode either hold down the button \fromtape while selecting one of the additional functions or double click \fromtape to enter \shiftlock (permanent shift) indicated by a blinking \fromtape LED. To exit the mode push the button again. 
 
-In \shiftmode the numbers 0...9 on the \termnumberpad access some of the \miscsett, others use different functional buttons. The settings are edited by pressing one of the number keys repeatedly to cycle through values or to initiate actions. The first time a number is pressed the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. 
+In \shiftmode the numbers 0...9 on the \termnumberpad as well as some of the function buttons let you access the \miscsett. The settings are edited by pressing the respective buttons repeatedly to cycle through values or to initiate actions. The first time a button is pressed the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. 
 
-Some important functions which are accessed through \shiftmode and \shiftlock are ...
+Some important functions which you access in \shiftmode and \shiftlock are ...
 \begin{itemize}
   \item ... the numbers 0...9 access MIDI setup, voice (de-)activation, panel layout, pitch bender calibration, panel layout switch, etc. 
   \item ... the keys on the keyboard are used to set the keyboard transposition (see section \ref{transposition}) 
-  \item ... the \tune button activates the per note tuning mode (see section \ref{tuning}).
-  \item ... pressing the \record activates the patch management mode (see section \ref{patchmgmt})
+  \item ... the \tune button activates the \pernote  (see section \ref{tuning}).
+  \item ... pressing the \record activates the \patchmgmt (see section \ref{patchmgmt})
   \item ... pressing the \preset (and confirmation) loads the default patch (see section \ref{defaultpatch})
 \end{itemize}
 
@@ -339,28 +340,28 @@ The list of miscellaneous settings can be found in section \ref{settingsref}. Ea
 
 \section{Panel}\label{panel}
 
-There are two slightly different panel layouts to chose from. In \textit{SCI} layout the panel is organized in 6 sub-panels, 3 additional patch controls (\unison, \mixer and \glidepot) plus two global controls, \mastertune and \mastervol. In \textit{GliGli} the panel is organized in 7 sub-panels (an additional mixer sub-panel), the patch parameter \unison and the two global controls \mastertune and \mastervol. 
+There are two slightly different panel layouts to chose from. In \textit{SCI} layout the panel is organized in 6 sub-panels, 3 additional patch controls (\unison, \mixer and \glidepot) plus two global controls, \mastertune and \mastervol. In \textit{GliGli} layout the panel is organized in 7 sub-panels (an additional mixer sub-panel), the patch parameter \unison and the two global controls \mastertune and \mastervol. 
 
 \begin{itemize}
   \item Poly-Mod sub-panel (see section \ref{polymod})
   \item LFO sub-panel (see section \ref{lfo})
   \item Oscillator A sub-panel (see section \ref{osc})
   \item Oscillator B sub-panel (see section \ref{osc})
-  \item Mixer sub-panel (see section \ref{osc}, in Sequential Circuits panel layout only, see section \ref{osc}).  
+  \item Mixer sub-panel (in GliGli panel layout only, see section \ref{osc}).  
   \item Filter sub-panel (see section \ref{filter} and \ref{envelopes}) 
   \item 2nd Envelope sub-panel (see section \ref{envelopes})
   \item Unison switch (see section \ref{poly-unison-voice})
-  \item Mix dial (in Sequential Circuits panel layout only, see section \ref{panelswitch})
-  \item Glide dial (in Sequential Circuits panel layout only, see section \ref{panelswitch})
+  \item Mix dial (in Sequential Circuits panel layout only, see section \ref{osc})
+  \item Glide dial (in Sequential Circuits panel layout only, see section \ref{glide})
 \end{itemize}
 
-These controls are all patch parameters, e.g. stored, loaded, imported and exported with a patch. The panel control \mastertune and \mastervol to the very right of the panel are not part of the patch. These control are always applied as they are set because these are provided to adjust the instrument to the performance environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume).
+These controls are all patch parameters, e.g. stored, loaded, imported and exported with a patch. The panel controls \mastertune and \mastervol to the very right of the panel are not part of the patch. These controls are always applied as they are. They are meant to adjust the instrument to the performance environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume). Also, you can always reliably start the instrument with volume turned to zero.
 
 \section{Keyboard and performance section}
 
-Without modifications, the Prophet 600 comes with a non-weighted, 5 octave (61 key) keyboard. The keyboard does not support touch sensitivity (although the upgraded Prophet 600 supports velocity sensitivity for amplitude and filter via MIDI, see section \ref{velocity}). Apart from playing, the keyboard is used for sequencer input (see section \ref{seq}) and for transposition (see section \ref{transposition}). 
+Without modifications, the Prophet 600 comes with a non-weighted, 5 octave (61 key) keyboard. The keyboard does not support touch sensitivity (although the upgraded Prophet 600 supports velocity sensitivity for amplitude and filter via MIDI, see section \ref{velocity}). Apart from playing, the keyboard is used for arpeggiator and sequencer input (see section \ref{seq}) and for transposition (see section \ref{transposition}). 
 
-The Prophet 600 offers a \pitchbender (unfortunately without a spring mechanism) and a \modwheel. The mid position of \pitchbender can be calibrated and there are several different targets to choose from, see section section \ref{pitchbend}. The modulation wheel can be adjusted in effect strength and you can choose if it modulates the LFO or the vibrato, see section \ref{modwheel}.
+The Prophet 600 offers a \pitchbender (unfortunately without a spring mechanism) and a \modwheel. The mid position of \pitchbender can be calibrated and there are several different bend targets to choose from, see section section \ref{pitchbend}. You can adjust the effect strength or action profile of the modulation wheel, and you choose if it should modulate the LFO or the vibrato, see section \ref{modwheel}.
 
 \section{Rear, inputs and output}
 
@@ -379,7 +380,7 @@ A useful work flow of the upgraded Prophet 600 for creating or editing patches c
 \begin{enumerate}
   \item Pre-production: set basic overall patch parameters, such as envelope shapes and routing, LFO targets and shape
   \item Production: use the panel controls to interactively design the sound 
-  \item Post-production: add additional features, such as vibrato and bend modulation for a final touch, vintage spread
+  \item Post-production: add additional features, such as vibrato, bend modulation, spread, etc. for a final touch
 \end{enumerate} 
 
 Ideally, menu diving should be largely restricted to steps 1 and 3 so that uninterrupted hands-on and interactive work with the synthesizer is possible in step 2. 
@@ -400,7 +401,7 @@ Ideally, menu diving should be largely restricted to steps 1 and 3 so that unint
 
 \section{Volume and master tune}
 
-To the right of the panel there are two global control, \mastertune and \mastervol. The master tuning has a range of approximately $\pm 1$ semitone. Its purpose is to be able to tune the synth to other instruments without touching the internal, relative frequencies of the oscillators and thereby potentially changing the patch.
+To the right of the panel there are two global controls, \mastertune and \mastervol. The master tuning has a range of approximately $\pm 1$ semitone. Its purpose is to be able to tune the synth to other instruments without touching the internal, relative frequencies of the oscillators and thereby potentially changing the patch.
 
 \mastervol and \mastertune are neither patch parameters nor settings. The two values are applied as set on the panel. The only exception is external MIDI control of volume (see section \ref{midiimplementation}). When the master volume is set via MIDI CC that volume level continues to be applied until either a new value is set by MIDI or until the \mastervol control is touched/changed. 
 
@@ -524,7 +525,7 @@ Note: the voice masking is stored in the settings. E.g. it applies to all patche
 
 The upgraded Prophet 600 provides a method for transposing the keyboard on the fly. In \shiftmode or \shiftlock the last pressed key will define the transposition, the middle C3 being zero transposition. The transposition is also scrolled through the display for conformation. 
 
-Transposition also applies to arpeggiator and sequencer and the transposition procedure also works in the respective run and latch modes. Transposition by MIDI note input is \underline{not supported}.
+Transposition also applies to arpeggiator and sequencer and the transposition procedure also works in the respective run and latch modes. Transposition by MIDI note input is \underline{not supported} in \textit{local on} mode, only in \textit{local off} mode. 
 
 \section{VCF limit}\label{limitsett}
 
@@ -871,14 +872,16 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
 
 \bibitem{newversion}Latest firmware project page (to follow)
 \bibitem{gligli}GliGli blog and project pages, http://gliglisynth.blogspot.com/, http://gligli.github.io/p600fw/
+\bibitem{imogen}Imogen Synth blog and project pages, https://prophet600revisited.blogspot.com/, https://github.com/image-et-son/p600fw
 \bibitem{curtis}Curtis Electro Music on Webarchive, https://web.archive.org/web/20130502132536/http://curtiselectromusic.com/Customers\_and\_Instruments.html
 \bibitem{modinstructions} Prophet600 Modification Instructions, see GliGli project pages and links above
 \bibitem{techmanual} Technical Manual for the upgraded Prophet (to be completed) 
-\bibitem{teensy}Teensy 2.0++ manufacturer information: http://www.pjrc.com/teensy/index.html
+\bibitem{teensy}Teensy++ 2.0 manufacturer information: http://www.pjrc.com/teensy/index.html
 \bibitem{p600siownersmanual}Prophet 600 Owner's Manual, Sequential Circuits
 \bibitem{p600siservicemanual} Prophet 600 Service Manual, Sequential Circuits
 \bibitem{synthgraphics} Synthgraphics (http://www.synthgraphics.com/). The provider of panel overlays for modded synthesizers created an overlay for the GliGli firmare panel layout of the Prophet 600.
 \bibitem{teensyloader} Teensy code loader application from pjrc, https://www.pjrc.com/teensy/loader.html
+\bibitem{p600spirit}Prophet 600 Spirit blog, http://prophet600.blogspot.com/
 
 \end{thebibliography}
 

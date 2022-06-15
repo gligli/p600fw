@@ -1,4 +1,4 @@
-The mix of the two VCOs is routed through a resonant 24db low pass filter (built on a Curtis CEM3372 filter). The control for the filter consists of a \filtercutoff dial regulating the cut-off frequency, and a \filterres dial for the resonance. The \filterenv dial regulates how strongly the cut-off frequency is modulated by the filter envelope. This dial is bipolar, e.g. it supports positive and negatives values (effectively an inverse envelope setting). The display will show values between -50 and 50 depending on position. This is major enhancement compared to the original Prophet 600 firmware (which only featured positive values).
+The mix of the two VCOs is routed through a resonant 24db low pass filter (built on a Curtis CEM3372 filter). The control for the filter consists of a \filtercutoff dial regulating the cut-off frequency, and a \filterres dial for the resonance. The \filterenv dial regulates how strongly the cut-off frequency is modulated by the filter envelope. This dial is bipolar, e.g. it supports positive and negatives values (effectively an inverse envelope setting). The display will show values between -50 and 50 depending on position. This is major enhancement compared to the original Prophet 600 firmware which  featured only positive values.
 
 \begin{center}
 \scalebox{0.4}{
@@ -15,3 +15,14 @@ The mix of the two VCOs is routed through a resonant 24db low pass filter (built
 \end{center}
 
 The \keyboardtrack switch has the setting \textit{Off}, \textit{1/2} and \textit{Full}. It lifts the cut-off frequency depending on keyboard note, e.g. the cut-off frequency is higher for higher notes. The effect applies to the cut-off frequency resulting from the fixed \filtercutoff setting plus any envelope and LFO modulation, e.g. it applies to the sum.  
+
+\textbf{Equal tempered tuning of the filter cut-off frequency)
+
+In the Prophet 600 the filter frequency is tuned in the same as the oscillator frequencies. Furthermore \keyboardtrack is implemented in a way to allow equal tempered play using the filter:
+
+\begin{itemize}
+  \item When \keyboardtrack is set to \textit{half} then the filter cut-off is increased by a semitone every two semitones on the keyboard 
+  \item When \keyboardtrack is set to \textit{full} then the filter cut-off is increased by a semitone with every semitone on the keyboard, e.g. if follows the scale 
+\end{itemize}
+
+With this feature essentially provides a third oscillator per voice. You can either play harmonically using the filter at self resonance even without oscillator A or B active (you should set the \filterenv dial to zero, at least in first experiments). The \filtercutoff acts as a tuning dial in this case. Or you can use the self resonant filter in combination with oscillators A and B if you "tune" the filter frequency appropriately. You can even use cross-modulation using the poly-mod function to modulate the filter cut-off using oscillator B (see section \ref{polymod}). However, there is no way to control the volume of the self-resonance relative to the volume of oscillators A and B.   

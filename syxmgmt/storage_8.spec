@@ -33,7 +33,7 @@ Sync;1;1
 Poly Mod Frequency A;1;1
 Poly Mod Filter;1;1
 LFO Shape;1;1
-LFO Sync;1;1
+(unused, LFO range slot);1;1
 LFO Targets;1;1
 Tracking Shift;1;1
 Filter Envelope Shape;1;1
@@ -60,4 +60,5 @@ Vintage;1;2
 Ext Voltage;1;2
 Envelope Routing;1;1
 Voice Assigner;1;1
+LFO Sync;1;1
 Patch Name;16;1

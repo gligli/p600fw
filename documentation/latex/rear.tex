@@ -2,13 +2,13 @@
 
 When turned on, the Prophet 600 starts in normal mode if no buttons are held down. The Prophet 600 can be powered up in two different modes related to maintenance tasks: firmware upgrade mode (see section \ref{fwupgrade}) and scaling adjustment mode (see section \ref{scalingadj}).  
 
-When started in normal mode the specification of the installed version is scrolled through the display. After power-up the instrument remembers that last state, e.g. it will start in \livemode or \presetmode and in \presetmode it will activate and load the last selected patch.
+When you start the instrument in normal mode the specification of the installed version is scrolled through the display. After power-up the instrument remembers that last state, e.g. it will start in \livemode or \presetmode and in \presetmode it will activate and load the last selected patch.
 
-Note: earlier versions of the firmware upgrade went into tuning mode directly when powered up. From version 2.1 RC3 on this is no longer the case. In practice, the instrument needs to warm up and stabilize before tuning makes sense. For details on tuning see section \ref{tuning}. If the tuning data is invalid or there is no tuning data (for example after a firmware upgrade using USB), the Prophet 600 performs goes into tuning mode on start-up.
+Note: earlier versions of the firmware upgrade went into tuning mode directly when powered up. From version 2.1 RC3 on this is no longer the case. In practice, the instrument needs to warm up and stabilize before tuning makes sense. For details on tuning see section \ref{tuning}. If the tuning data is invalid or there is no tuning data (for example after a firmware upgrade using USB), the Prophet 600 goes into tuning mode on start-up.
 
 \textbf{Line voltage selector}
 
-The selector next to the main plug provides the option to switch between 110V and 220V mains voltage, whichever is appropriate for the line voltage where the instrument is operated. A flat head screw driver can be used to rotate the line voltage selector to the appropriate setting. Instrument should be powered down and unplugged when line voltage selector is adjusted.
+The selector next to the main plug provides the option to switch between 110V and 220V mains voltage, whichever is appropriate for the line voltage where the instrument is operated. Use a flat head screw driver to rotate the line voltage selector to the appropriate setting. Instrument should be powered down and unplugged when line voltage selector is adjusted.
 
 \textbf{Fuse holder}
 
@@ -22,9 +22,9 @@ The Prophet 600 has a monophonic output signal, but the jack is wired so that bo
 
 \textbf{Filter CV In}
 
-This jack accepts a 0-10 Vdc control voltage (CV) which is applied to the filter cut-off frequency (all voices). This enables remote and spontaneous increase (but not decrease) of the filter cut-off, e.g. making the sound brighter. The CV can be usually provided by an accessory voltage pedal or an external LFO. The strength of the external CV influence is controlled by an additional patch parameter (see section \ref{extcv}). The default value (cf. default patch) of this parameter is zero. 
+This jack accepts a 0-10 V control voltage (CV) which is applied to the filter cut-off frequency (all voices). This enables remote and spontaneous increase (but not decrease) of the filter cut-off, e.g. making the sound brighter. The CV can be usually provided by an accessory voltage pedal or an external LFO. The strength of the external CV influence is controlled by an additional patch parameter (see section \ref{extcv}). The default value (cf. default patch) of this parameter is zero. 
 
-Note that porpular "noise mods" for the Prophet 600 use the external CV In control as an auxiliary control voltage for the noise amount, e.g. for such modifications the patch parameter controls the noise level.
+Note that popular "noise mods" for the Prophet 600 use the external CV In control as an auxiliary control voltage for the noise amount, e.g. for such modifications the patch parameter controls the noise level.
 
 \textbf{Foot switch}
 
@@ -34,7 +34,7 @@ The foot switch jack allows for the use of a sustain pedal (only supported from 
 
 \cassettein can be used for sending a pulsed clock to the Prophet 600 to sync to the sequencer and/or arpeggiator. However, in the upgraded version the functionality to receive or send patch data via \cassettein has been omitted. 
 
-When the instrument is set to use external analog clock the \datadial (when set to control \clock) selects the clock divider. See section \ref{sync} for details.
+When you set the instrument to use external analog clock (using the setting \clocksync), the \datadial (when set to control \clock) selects the clock divider rather than a clock speed. See section \ref{sync} for details.
 
 \textbf{MIDI In/Out}
 
