@@ -535,6 +535,20 @@ static inline void computeGlide(uint16_t * out, const uint16_t target, const uin
     }
 }
 
+static void refreshVibLFO(void)
+{
+    if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
+    {
+        lfo_setAmt(&synth.lfo, satAddU16U16(synth.lfoAmt, synth.modwheelAmount));
+        lfo_setAmt(&synth.vibrato, scaleU16U16(synth.vibAmt,synth.dlyAmt));
+    }
+    else // targeting vibrato
+    {
+        lfo_setAmt(&synth.lfo, scaleU16U16(synth.lfoAmt, synth.dlyAmt));
+        lfo_setAmt(&synth.vibrato, satAddU16U16(synth.vibAmt, synth.modwheelAmount));
+    }
+}
+
 
 static void refreshModulationDelay(int8_t refreshTickCount)
 {
@@ -549,9 +563,11 @@ static void refreshModulationDelay(int8_t refreshTickCount)
         synth.modulationDelayStart=UINT32_MAX;
     }
 
-    if(anyPressed && !prevAnyPressed)
+    if(anyPressed && !prevAnyPressed) // restart the delay
     {
         synth.modulationDelayStart=currentTick;
+        synth.dlyAmt=0;
+        refreshVibLFO();
     }
 
     prevAnyPressed=anyPressed;
@@ -721,6 +737,7 @@ static void refreshDlyAmount(void)
     }
 }
 
+
 static void refreshLfoSettings(void)
 {
     lfoShape_t shape;
@@ -735,7 +752,8 @@ static void refreshLfoSettings(void)
 
     lfo_setFreq(&synth.lfo,currentPreset.continuousParameters[cpLFOFreq]);
 
-    if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
+    refreshVibLFO();
+    /*if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
     {
         lfo_setAmt(&synth.lfo, satAddU16U16(synth.lfoAmt, synth.modwheelAmount));
         lfo_setAmt(&synth.vibrato, scaleU16U16(synth.vibAmt,synth.dlyAmt));
@@ -744,8 +762,10 @@ static void refreshLfoSettings(void)
     {
         lfo_setAmt(&synth.lfo, scaleU16U16(synth.lfoAmt, synth.dlyAmt));
         lfo_setAmt(&synth.vibrato, satAddU16U16(synth.vibAmt, synth.modwheelAmount));
-    }
+    }*/
 }
+
+
 
 static void refreshSevenSeg(void) // imogen: this function would be more suited for ui.c than synth.c
 {
