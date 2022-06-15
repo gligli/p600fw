@@ -1,0 +1,135 @@
+\documentclass[landscape, 11pt, oneside]{report}
+\usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{scrextend}
+\usepackage{array}
+\usepackage{ProphetPanel}
+\usepackage{fontspec}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+\usepackage{ProphetTerms}
+\usepackage{float}
+%\usepackage[inline]{showlabels}
+\setmainfont[
+ BoldFont={FiraSans-Bold}, 
+ ItalicFont={FiraSans-Italic},
+ ]{FiraSans}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+\setlength{\leftmargin}{-4cm}
+%\setlength{\paperheight}{210mm}
+%\setlength{\paperwidth}{297mm}
+\setlength{\textwidth}{25cm}
+\setlength{\footskip}{2.5cm}
+%\input{defined_terms.tex}
+%\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
+
+\title{MIDI Specification for the 2022 upgraded Prophet 600}
+\pagestyle{myheadings}\markright{Technical Reference for the GliGli upgraded Prophet 600}
+\makeatletter
+\renewcommand\chapter{\pagestyle{myheadings}\markright{Technical Reference for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+\makeatother
+\titleformat{\chapter}[display]{\LARGE\bfseries}{}{0.0cm}{}
+\titlespacing{\chapter}{0pt}{*0}{*0}
+%\titleformat{\section}[display]{\Large\bfseries}{}{0.0cm}{}
+\titlespacing{\section}{0pt}{*0}{*0}
+
+\begin{document}
+
+
+% this it the title "Prophet 600"
+  \begin{tikzpicture}[scale=0.7]
+    \begin{scope}[xslant=0.1]
+        \SSGBit[1.5cm]{0,0}{12567}
+        \SSGBit[1.5cm]{2.5cm,0}{57}
+        \SSGBit[1.5cm]{5cm,0}{5734}
+        \SSGBit[1.5cm]{7.5,0}{12567}
+        \SSGBit[1.5cm]{10cm,0}{3567}
+        \SSGBit[1.5cm]{12.5cm,0}{14567}
+        \SSGBit[1.5cm]{15cm,0}{4567}
+        \SSGBit[1.5cm]{17.5cm,0}{}
+        \SSGBit[1.5cm]{20cm,0}{134567}
+        \SSGBit[1.5cm]{22.5cm,0}{123456}
+        \SSGBit[1.5cm]{25cm,0}{123456}
+      \end{scope}
+  \end{tikzpicture}
+
+\vspace{1cm}
+  
+  \Large
+  MIDI Specification for the Prophet 600 GliGli based firmware \\
+  \large
+  Refers to software version: \version \\
+  Refers to storage version: 8
+  \normalsize
+
+%\maketitle
+%\tableofcontents
+
+\chapter{Preface}
+
+The purpose of this technical reference is to provide reliable reference material for people implementing interfaces to/from the Prophet 600, for example a MIDI SysEx patch editor or a MIDI CC patch editor. Although designed to be helpful and drafted with care, this document comes with no warranty for completeness and correctness. If you find that something is wrong or missing or if you have an idea what should be documented, please get in contact via github (https://github.com/image-et-son/p600fw).
+
+\chapter{MIDI SysEx Patch Data Implementation}
+
+\section{MIDI bytes to full byte conversion}\label{midibyteconversion}
+
+The data stream embedded in Prophet 600 MIDI SysEx patch commands consist of blocks of 5 MIDI bytes which encode 4 full bytes\footnote{This encoding is commonly used but by no means universal. Still, I could find no reference or standard source for this encoding and also no commonly used designation.}. Each MIDI byte can hold values up to 127 since the 8th bit is reserved. In a MIDI data block of 5 bytes the first 4 MIDI bytes contain the first (lowest) 7 bits of the 4 data bytes to be encoded. The 8th bits of the 4 data bytes are encoded in the first (lowest) 4 bits of the 5th MIDI byte.   
+
+Examples:
+
+\begin{itemize}
+  \item "01 00 00 00" is encoded in SysEx MIDI as "01 00 00 00 00"
+  \item "80 00 00 00" is encoded in SysEx MIDI as "00 00 00 00 08"
+  \item "FF 00 00 00" is encoded in SysEx MIDI as "7F 00 00 00 08"
+  \item "00 00 00 FF" is encoded in SysEx MIDI as "00 00 00 7F 01"
+  \item "FF FF FF FF" is encoded in SysEx MIDI as "7F 7F 7F 7F 0F"
+\end{itemize}
+ 
+Note, however, that double byte parameters (which is applies to most continuous patch parameters in the firmware) are sequenced such that in the full bytes sequence the least significant byte (LSB) comes before the most significant byte (MSB). 
+
+Note: patch parameters  consist only of single byte parameters (typically stepped parameters) or double byte parameters (all continuous parameters). However, in the patch structure overhead there are longer byte sequences: the unique Prophet 600 SysEx command identifier (3 byte hex value: 00 61 16) and the Prophet 600 storage page initialization number (4 byte hex value: 00 61 16 A5, referred to as \textit{Storage Magic} in the code). 
+
+\section{Patch SysEx structure}\label{sysexpatch}
+
+\input{sysex_patch.tex}
+
+\section{Tools}
+
+The release comes with a Python script which converts Prophet 600 Patch MIDI SysEx to plain values. This is a specialist tool (which came in handy during the testing phase) but can also be the starting point for the development of a proper patch management tool. The following rfers to the (still rudimentary) version 1 of this tool.
+
+The tool consists of the script \textit{syx\_converter\_v1.py} and the two configuration files \textit{storage\_7.spec} and \textit{storage\_8.spec}. The script expectes the two configuration files in the folder. To use the tool you need to have Python 3 installed. The command line usage would be \textit{>py syx\_converter\_v1.py <filename> [-p<patchnumber>]}. The filename (or path) must be provided. It is the SysEx File to be converted. The parameter \textit{p} is optional. When provided and \textit{<patchnumber>} ist between 0 and 99, then the script will try to extract that patch from the file. If the SysEx file does not contain that patch number the output is empty.
+
+The script lists the parameters in the SysEx is a simple way as shown here for patch in slot 20 (only parts of the the result):
+
+\begin{itemize}
+  \item[>] Patch Number:  20 
+  \item[>] Storage version is 8
+  \item[>] Fequency A :  59776
+  \item[>] Volume A :  52224
+  \item[>] PWA :  24000 
+  \item[>] Fequency B :  7408 
+  \item[>] Volume B :  54528
+  \item[>] PWB :  52416
+  \item[>] Frequency Fine B :  40344
+  \item[>] Cutoff :  240
+  \item[>] Resonance :  7936
+  \item[>] Filter Envelope Amount :  48538
+  \item[>] Filter Release :  54016
+  \item[>] ...  
+  \item[>] Bender Semitones :  3
+  \item[>] Bender Target :  1
+  \item[>] ...  
+\end{itemize}
+
+The continuous parameter have a value range of 0 to 65535 (16 bit resolution). Up to version 1 of the script, the values of stepped parameters are not name resolved but instead the index of the choice is displayed. In the example above, the bender semitones "3" means 3 semitones but the bender target value "1" means \textit{AB} (pitch bend of oscillators A and B) which is the second value in the choice list. The indexing always starts at "0". There are also some special parameters as decribed in this document.
+ 
+The SysEx specification for version 7 (corresponds to version 2.1 RC3) is supported.
+
+\chapter{MIDI CC Implementation}
+
+\input{midiimplementation.tex}
+
+\end{document}

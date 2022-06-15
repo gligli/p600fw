@@ -1,12 +1,27 @@
+The ATML processor on the Teensy++ 2.0 hardware uses a memory which is structured in 512 pages with 256 bytes each. The memory is divided between a large RWW (read-while-write) section with 480 pages (address range 0x0000 - 0xEFFF) and a smaller NRWW (non-read-while-write) section with 32 pages (address range 0xF000 - 0xFFFF in word or 0x00000 - ).
+
 The firmware stores the following data:
+
 \begin{itemize}
-  \item Application code: starting at page pointer 0
+  \item Application code: starting at page pointer 0 \footnote{Except for critical code which needs to reside in the lower part of the NRWW}
   \item Settings: 2 pages starting at page pointers 476 and 477 
   \item 100 patches: 100 pages starting at page pointer 256
   \item Current panel patch data: one page at page pointer 475
   \item Sequencer data (track 1 and 2): 1 page each at pointers 456 (track 1) and 457 (track 2)
 \end{itemize}
 
-The data is written into application part of the storage, into the RWW (read-while-write) section of the memory. The number of pages used a firmward version can be obtained by counting the pages contained in the SysEx file.
+The number of pages used by the firmware can be determined by counting the pages contained in the SysEx file. Note to developers: the application code (at least the part which does not end up in NRWW) must fit into the first 256 pages (up to and including page pointer 255). This corresponds to a SysEx size of 85258 kB which is the equivalent of 65536 kB hex file. Code beyond this size will overwrite patches and will be corrupted by patch storage operations.
 
-Note to developers: the application code must fit into the first 256 pages (up to and including page pointer 255). This corresponds to a SysEx size of 85258 kB which is the equivalent of 65536 kB hex file. Code beyond this size will overwrite patches and will be corrupted by patch storage operations.
+\textbf{Bootloader Hack}
+
+Writing to flash memory is reserved for the \textit{bootloader}. The bootloader is a program placed in the so called bootloader section in the NRWW and has the function of transferring executable code, typically received via USB to the flash memory. In the case of the Teensy board the special PJRC bootloader (aka ) communicates with the Teensy loader app. When you connect the UDB to the Teensy board and push the loader button the Teensy is set to USB receive mode and the Teensy loader app recognizes it as a USB device. When you click \textit{program} in the app your application code (selected hex file) is transferred to the Teensy flash memory. The bootloader code itself is never changed in this process.
+
+Now, the GliGli upgrade firmware relies on being able to modify the flash memory. It does this to 1) be able to load firmware code from MIDI SysEx (which the PJRC bootloader would be able to recognize) and 2) to "abuse" the flash memory for permanent storage of patches, settings and other user data. All these functions are part of the firmware application code. However, normally application code is not allowed to write to flash memory. By construction of the ATMEL chip, only the code in the bootloader section can do this. So the Prophet 600 firmware contains a \textit{bootloader hack} which exploits the fact the PJRC bootloader contains subroutines with "write to flash commands" and you can call these using the assembler command \textit{rcall} . The hack consists of "blindly" calling an program address inside the bootloader section which contains the write command. The PJRC bootloader code is proprietary and unknown. A working hack address was identified by GliGli by cycling through possible adresses and looking for successful write execution. The subroutine found in this way is likely to contain additional commands which are in the best case of no effect. One unwanted side effect was identified, in that an address was clobbered that needed to be made known to the assembler. Here is a summary of information and starting points for those more interested in the hack (slightly simplified for better reading):
+
+\begin{itemize}
+  \item The read/write operations are exposed in \textit{firmware.h} in the functions \textit{void storage\_write(page, buffer)} and \textit{void storage\_read(page, buffer)} 
+  \item The implementation uses the following assembler functions defined in \textit{teensy\_bootloader\_hack.h}: \textit{blHack\_page\_erase(page)}, \textit{blHack\_page\_fill(page, buffer)}, \textit{blHack\_page\_write(page)}, \textit{blHack\_rww\_enable()}
+  \item The actual routing call is defined in \textit{blHack\_call\_SPM}: \textit{rcall 0x1f000+0xe4a}. Note: \textit{0x1f000} is the start address of the bootloader section (it is defined in the Makefile), so the relative address \textit{0xe4a} is the hacked routine determined using probing 
+\end{itemize} 
+
+Note that the firmware code doe not work with copy-cat Teensy boards, e.g. board which you buy on the market but which are not produced by PJRC. Es of the writing of this manual, the assupmtion is the bootload code on those boards differs from the PJRC version and that therefore the hack as described above does not work. The bootloader hack is essential to the functioning of the firmware.

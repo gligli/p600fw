@@ -43,9 +43,9 @@ The instrument does not send MIDI CC (apart from modulation wheel and program ch
 
 \textbf{Local off mode}
 
-The Prophet 600 supports a \textit{local off} mode which is toggled using the setting at \numberbut{0}. In \textit{local off} various internal events (such as notes) are not executed in the Prophet 600 directly but they are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
+The Prophet 600 supports a \textit{local off} mode which is toggled using the setting at \numberbut{0}. In \textit{local off} mode various internal events (such as notes) are not executed in the Prophet 600 directly but they are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
 
-Note that in \textit{local on} mode external MIDI does not play into the arpeggiator but plays over the arpeggiator while the local keyboard plays into the arpeggiator.
+Note that in \textit{local on} mode external MIDI does not play into the arpeggiator but plays over the arpeggiator while the local keyboard plays into the arpeggiator. Since the arpeggiator and the playing the external MIDI notes share the 6 voices this can lead to interference of the two, such as missed arpeggiator notes, depending on what play using MIDI. 
 
 \textbf{Overview of MIDI integration}
 
@@ -54,16 +54,17 @@ Note that in \textit{local on} mode external MIDI does not play into the arpeggi
      &
       \multicolumn{3}{c}{\textit{local on}} &
       \multicolumn{3}{c}{\textit{local off}} \\   \cline{2-7} 
-    & Apply & Send MIDI & Apply MIDI & Apply & Send MIDI & Apply MIDI \\
+    & Apply local & Send MIDI & Apply MIDI & Apply local & Send MIDI & Apply MIDI \\
     \hline
       \vline Keys on/off playing	& Yes & Yes	& Yes & No & Yes & Yes \\
-      Keys into arpeggiator	& Yes & Yes	& Played & No & Yes & Yes \\
+      Keys into arpeggiator	& Yes & Yes	& No\footnote{MIDI notes will play normally / freely on top of the running arpeggiator. note that voice sharing between arpeggiator and playing MIDI notes can lead to unwanted interference such as missed arpeggiator notes etc.} & No & Yes & Yes \\
       Keys into sequencer	& Yes & Yes	& Yes & No & Yes & Yes \\
       Modulation Wheel	& Yes & Yes	& Yes & No & Yes & Yes \\
       Pitch Bend	& Yes & Yes	& Added & No & Yes & Yes \\
       Program Change	& Yes & Yes	& in preset mode & Yes & Yes & in preset mode \\
       Pedal Hold (Latch)	& Yes & No & No & Yes & No & No \\
       Pedal Hold (Sustain)	& Yes & Yes & Yes & No & Yes & Yes \\
+      Transpose & Yes & No & No & Yes & No & Yes \\
       Other MIDI CC	& Yes & No & in preset mode & Yes & No & in preset mode \\
   \end{tabular}
 \end{table}

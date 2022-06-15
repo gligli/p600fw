@@ -1,4 +1,4 @@
-\documentclass[landscape, 11pt, oneside]{report}
+\documentclass[portrait, 11pt, oneside]{report}
 \usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
 \usepackage{lmodern}
 \usepackage{hyperref}
@@ -19,12 +19,12 @@
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
 \setlength{\leftmargin}{-4cm}
-\setlength{\paperheight}{210mm}
-\setlength{\paperwidth}{297mm}
-\setlength{\textwidth}{26cm}
+%\setlength{\paperheight}{210mm}
+%\setlength{\paperwidth}{297mm}
+\setlength{\textwidth}{17cm}
 \setlength{\footskip}{2.5cm}
 %\input{defined_terms.tex}
-\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
+%\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
 
 \title{[DRAFT] Technical Reference for the GliGli upgraded Prophet 600}
 \author{Florian Merz (Editor)}
@@ -32,34 +32,66 @@
 \makeatletter
 \renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
 \makeatother
-\titleformat{\chapter}[display]{\pagebreak\LARGE\bfseries}{}{0.0cm}{}
+\titleformat{\chapter}[display]{\LARGE\bfseries}{}{0.0cm}{}
 \titlespacing{\chapter}{0pt}{*0}{*0}
 %\titleformat{\section}[display]{\Large\bfseries}{}{0.0cm}{}
 \titlespacing{\section}{0pt}{*0}{*0}
 
 \begin{document}
 
+
+% this it the title "Prophet 600"
+  \begin{tikzpicture}[scale=0.5]
+    \begin{scope}[xslant=0.1]
+        \SSGBit[1.5cm]{0,0}{12567}
+        \SSGBit[1.5cm]{2.5cm,0}{57}
+        \SSGBit[1.5cm]{5cm,0}{5734}
+        \SSGBit[1.5cm]{7.5,0}{12567}
+        \SSGBit[1.5cm]{10cm,0}{3567}
+        \SSGBit[1.5cm]{12.5cm,0}{14567}
+        \SSGBit[1.5cm]{15cm,0}{4567}
+        \SSGBit[1.5cm]{17.5cm,0}{}
+        \SSGBit[1.5cm]{20cm,0}{134567}
+        \SSGBit[1.5cm]{22.5cm,0}{123456}
+        \SSGBit[1.5cm]{25cm,0}{123456}
+      \end{scope}
+  \end{tikzpicture}
+
+\vspace{1cm}
+  
+  \Huge
+  Technical Reference (Firmware version\version)
+  \normalsize
+
 %\maketitle
-\tableofcontents
+%\tableofcontents
 
 
-\pagebreak
+\chapter{Preface}
 
-\chapter{Overview of technical implementation}
+The purpose of this technical reference is to ...
 
-\begin{flowtext}
-The Teensy++ 2.0 hardware uses a memory which is structured in 512 pages with 256 bytes each.
+  \begin{itemize}
+    \item ... provide software related information which should make it easier for people interested in the development project to understand the code structure and the mechanics of the firmware
+    \item ... provide reliable reference material for people implementing interfaces to/from the Prophet 600, for example a MIDI SysEx patch editor or a MIDI CC patch editor 
+  \end{itemize}
+  
+If you use this document you should also read the upgraded firmware User Manual. Things documented in the User Manual are not repeated here. This manual is focussed on topics related specifically to the upgraded Teensy++ 2.0 firmware. Therefore, for anything related to the Prophet 600 hardware and Z80 firmware you should refer to the original Sequential Circuits Service Manual. Most of the original manual should be valid. Note that the procedure for scaling adjustments has changed. So the description in the original service manual is no longer valid unless you refit the original Z80. The new scaling adjustment procedure for the upgraded Prophet 600 is described in the User Manual for the upgraded Prophet 600. 
 
-(this needs to be done)
-\end{flowtext}
+This document come with no warranty for completeness and correctness. If you find that something is wrong or missing or if you have an idea what should be documented, please get in contact via github (https://github.com/image-et-son/p600fw).
 
-\chapter{Implementation}
+\chapter{MIDI SysEx Implementation}
 
-\begin{flowtext}
+SysEx is supported in the Prophet 600 firmware to ...
+
+\begin{itemize}
+  \item ... receive the firmware upgrade in upgrade mode
+  \item ... send and receive patches
+\end{itemize}
 
 \section{MIDI bytes to full byte conversion}\label{midibyteconversion}
 
-The data section in Prophet 600 MIDI SysEx commands consist of blocks of 5 MIDI bytes. Each MIDI byte can hold values up to 127 (14 bit). 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first 7 bits of the 4 bytes to be encoded. The 8th bit of the 4 bytes is encoded in the first 4 bits of the 5th MIDI byte.   
+The data section in Prophet 600 MIDI SysEx commands consist of blocks of 5 MIDI bytes encoding 4 full bytes\footnote{This encoding is commonly used but by no means universal. Still, I could find no reference or standard source for this encoding and also no commonly used designation.}. Each MIDI byte can hold values up to 127 (14 bit). 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first (lowest) 7 bits of the 4 bytes to be encoded. The 8th bits of the 4 bytes are encoded in the first (lowest) 4 bits of the 5th MIDI byte.   
 
 Examples:
 
@@ -71,31 +103,82 @@ Examples:
   \item "FF FF FF FF" is encoded in SysEx MIDI as "7F 7F 7F 7F 0F"
 \end{itemize}
  
-In this way, a sequence of $X$ MIDI blocks (5 MIDI bytes) is be converted to a bytes sequence of $4\dot X$ full bytes. Note, however, that double byte parameter (which is applies to most continuous patch parameters) are sequenced such that in the full bytes sequence the least significant byte (LSB) comes before the most significant byte (MSB), see section on patch data encoding in MIDI SysEx.  
+In this way, a sequence of $X$ MIDI blocks (5 MIDI bytes) is be converted to a bytes sequence of $4\dot X$ full bytes. Note, however, that double byte parameters (which is applies to most continuous patch parameters in the firmware) are sequenced such that in the full bytes sequence the least significant byte (LSB) comes before the most significant byte (MSB). 
 
-\section{Patch SysEx structure}\label{sysex}
+Note: patch parameters  consist only of single byte parameters (typically stepped parameters) or double byte parameters (all continuous parameters). However, in the patch structure overhead there are longer byte sequences: the unique Prophet 600 SysEx command identifier (3 byte hex value: 00 61 16) and the Prophet 600 storage page initialization number (4 byte hex value: 00 61 16 A5, referred to as \textit{Storage Magic} in the code). 
 
-\include{sysex_patch.tex}
+\section{Firmware SysEx structure}\label{sysex}
 
-\end{flowtext}
+\input{sysex_firmware.tex}
 
 \chapter{Firmware structure}
 
 \section{Memory usage}\label{memory}
 
-\include{memory.tex}
+\input{memory.tex}
 
-\section{Firmware SysEx structure}\label{sysex}
+\section{Main loop and 2kHz timed interrupts}
 
-\include{sysex_firmware.tex}
+The \textit{init} function of the firmware is overwritten such that upon power up, the firmware code starts into the function \textit{updater\_main()} (defined in \textit{firmware.c}) before going into \textit{main()} (defined in \textit{firmware.c}). The function \textit{updater\_main()} checks for the \fromtape and \totape button to determine whether the unit has been started in firmware upgrade mode. The function \textit{updater\_main()} then contains all the code to receive and convert MIDI SysEx and writes the firmware to the flash memory. Otherwise the execution returns to the function \textit{main()} which is the main code loop which is continuously running during normal operation.
 
-\section{Timer interrupt}\label{timeinterrupt}
+Note that before starting into the main loop inside \textit{main()} the hardware and synth are initialized. The function \textit{synth\_init()} contains a test if the unit has been started in scaling adjustment mode (see User Manual) and the code for the scaling adjustment is called from there.
 
-\section{UART interrupt}\label{uartinterrupt}
+The main operational loop is a continuous and call of the function \textit{synth\_update()} (defined in \textit{synth.c}). This function contains the scanning of user controls and updates for non time-critical voltages and variables, such as volume, ADSR settings, glide setting, LFO and vibrato frequencies etc. These are controls and operations which do not depend on time. For timed operations, e.g. operations which have to happen at well defined time intervals (such as envelope and LFO changes) the firmware relies on a timed interrupt of the main loop. This is the interrupt vector \textit{ISR(TIMER0\_COMPA\_vect)} defined in \textit{firmware.c}). It runs at 2kHz and each time the main loop is interrupted in this way, the function \textit{synth\_timerInterrupt()} in (defined in \textit{synth.c}) is called. The function \textit{synth\_timerInterrupt()} executes the following steps:
+
+\begin{itemize}
+  \item LFO incrementation (e.g. advancing the LFO by 0.5 milliseconds) 
+  \item 
+  \item 6 times call function \textit{refreshVoice()}
+  \subitem envelope incrementation (2 envelopes) 
+  \subitem update of 2 oscillator frequencies, filter frequency and amplitude 
+  \item Decode bit input (pedal, clock)
+  \item Every 4th call: MIDI update (processing of incoming MIDI, see also UART interrupt)
+  \item Every 4th call: external clock handling
+  \item Every 4th call: advancing and executing the arpeggiator
+  \item Every 4th call: advancing and executing the sequencers
+  \item Every 4th call: recalculating glide 
+  \item Every 4th call: Vibrato incrementation (and PWM update)
+  \item Every 4th call: keyboard, bender and mod wheel scanning  
+\end{itemize}
+
+It is important not note that the computational load of the timed interrupt is not constant but depends on: incoming MIDI, sequencer and/or arpeggiator load (esp. speed) and playing (notes, performance). The entire cycle robustly fits into the 0.5 milliseconds in between interrupts, but the more time the timed interrupt cycle uses, the less time is left for the cycle of \textit{synth\_update()}. The functions inside \textit{synth\_update()} determine the responsiveness of user interaction. So the responsiveness deteriorates under load. When no notes are playing and no external MIDI is received the function \textit{synth\_update()} typically executes at 150 times per second. This can go down to 80 times per second or less under full stress.
+
+Note that the is a second interrupt, which is not triggered by time intervals but by UART. This interrupt is used to processes incoming MIDI. Whenever there is an external MIDI event the interrupt calls the function \textit{synth\_uartInterrupt()}.
 
 \section{Multiplexer / DAC}\label{potmux}
 
-\section{Mix and Drive vs. Volume A and Volum B}
+To convert digital representations of values in the software to real voltages which can then be applied to the analogue components, the Prophet 600 has a Digital Analog Converter (DAC). In order to set  control voltages the Prophet 600 uses 4 multiplexers of type 4051, each having a selection of 8 outputs. The resulting 32 control voltages covered in this way are: 6 for oscillator A frequency, 6 for oscillator B frequency,  6 for filter cut-off frequency, 6 for voice amplitude (VCA) and then 8 more controls (pulse width A and B, volume A and B, resonance, cross-modulation amount, master volume and the level of external filter CV). In the schematics for circuit board 4 the first 24 voltages are covered by the 3 multiplexers with component number 415-417 and the last 8 voltages are covered by the multiplexer 418. Note that while the first 24 voltages are voice specific, the latter 8 voltages are not - which is the reason why multi-timbrality is impossible on the Prophet 600 hardware.
+
+With the multiplexer approach you can only set one voltage at a time and so the firmware sets all voltages in cycle. However, neither the DAC nor the multiplexer respond instantaneously - there is a component specific delay. The function for setting voltages in defined in the sample and hold class \textit{sh.c}. There are two functions, a "normal" one \textit{updateCV(control, value)} and a fast one \textit{sh\_setCV\_FastPath(control, value)}. The fast one is used for the voltages through multiplexers 415-417 (voice controls) during normal operation and the "normal" one is used for all other voltages during normal operation and for voices controls (frequencies) during tuning and in scaling adjustment mode.
+
+Both function have the same structure:
+
+\begin{enumerate}
+  \item Prepare the multiplexer for a voltage change so none of the outputs are affected
+  \item Set the input to the DAC to produce the voltage
+  \item Wait for a reasonable time so that the DAC voltage can rise to the desired value  
+  \item Select the output on the multiplexer to apply the voltage
+  \item Wait for a reasonable time with the selection active so that the output has time to adopt the input voltage precisely
+  \item Deselect the output on the multiplexer 
+  \item Wait for the hardware to stabilize 
+\end{enumerate} 
+
+The two function differ in the 3 wait times: (4, 8, 8) wait cycles in the "normal" function and a much faster (1,1,0) in the fast path function.
+
+Note that overall the firmware version \version is more tuned and drives the hardware harder. The switching and propagations times of the multiplexers are on the critical path. Some units may have multiplexer variants which cannot cope with the speed of the firmware. This may lead to glitches and even non-updating of single voices (in the extreme case). The following list of variants of 4051 multiplexers summarizes the observations from different units. If you find that your unit has one or more slow multiplexers and you are trying to find the cause of unwanted glitchy behaviour, it is recommended that you try different multiplexers. This list is meant as a starting point for trouble shooting and it is clear that other components and circumstances have an impact, too.
+
+\begin{itemize}
+  \item CD74HCT4051E (Texas Instruments): fast propagation and very fast switching. This is an excellent choice. 
+  \item MC74HC4051N (Motorola): fast propagation and fast switching. This is also a very good choice.
+  \item CD4051BE (Texas Instruments): fast propagation but slow switching. This is what I think was the Prophet 600 factory standard. It gets the job done.  
+  \item BU4051B (Rohm): medium propagation and slow switching. Not a good choice, appears to be acceptable for component 418.
+  \item HCF4051BE (STMicroelectronics): slow propagation and slow switching. Not ideal, can produce glitches.
+  \item MC14051B (Motorola): very slow propagation and slow switching. This is too slow in switching and creates significant glitches. Not recommended.
+  \item HD14051BP (Hitachi): slow propagation and very slow switching. This is too slow and creates serious problems on later firmware versions.
+\end{itemize}
+
+
+\section{Mix and Drive vs. Volume A and Volume B}
 
 \textbf{Mapping from mix and drive to volumes} 
 
@@ -133,19 +216,5 @@ When $VolA+VolB>1$ then $mix = (1+VolB-VolA)/2$ and
 
 It is important to manage the singularities at $VolA=0$ and $VolB=0$. The following solution is chosen. In the regime $VolA+VolB>1$ the smaller of the two volumes is cut-off at a small value so that the denominator is well behaved.
 
-
-\begin{thebibliography}{50} 
-
-\bibitem{gligli}GliGli Projects Page, http://gliglisynth.blogspot.com/
-\bibitem{curtis}Curtis Electro Music on Webarchive, https://web.archive.org/web/20130502132536/http://curtiselectromusic.com/Customers\_and\_Instruments.html
-\bibitem{versiontwo}GliGli upgrade release 2.0,  https://gligli.github.io/p600fw/
-\bibitem{modinstructions} Prophet600 Modification Instructions
-\bibitem{projectsite} Project Site: http://gligli.github.io/p600fw/
-\bibitem{repository} Repository: https://github.com/gligli/p600fw/
-\bibitem{teensy}Teensy Site: http://www.pjrc.com/teensy/index.html
-\bibitem{p600siownersmanual}Prophet 600 Owner's Manual, Sequential Circuits
-\bibitem{p600siservicemanual} Prophet 600 Service Manual, Sequential Circuits
-
-\end{thebibliography}
 
 \end{document}

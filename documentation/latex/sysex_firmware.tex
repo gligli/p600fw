@@ -1,4 +1,4 @@
-The firmware SysEx has the following structure:
+The firmware SysEx has the following structure. It created from the hex file (the result of the AVR complilation) by the Python script\footnote{As of the writing of this manual the script complies with Python 2 but not the newer Python 3. So depending on your local Python installation the execution inside the Makefile may need to be adjusted to ensure that script is run in Python 2.} \textit{fw2syx.py} (fw2syx subfolder). The conversion of 4 full bytes to 5 MIDI bytes is done in the same way as for patches (as described in this document). As for patch data there is one complete SysEx command per flash storage page. In case of the firmware, an additional check sum is included for each page. A special termination SysEx command is used to signal the firmware that the data stream is complete. The firmware SysEx is received and decoded in the function \textit{updater\_main()} in the class \textit{firmware.c} (firmware subfolder). 
 
 \begin{itemize}
   \item Chain of data SysEx block, each representing a storage page in the Teensy++ 2.0
@@ -19,20 +19,6 @@ The firmware SysEx has the following structure:
 \end{itemize}
 
 
-\textbf{Conversion of MIDI bytes to full bytes}
-
-Each MIDI byte can hold values up to 127 (14 bit). To encode full bytes, 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first 7 bits of the 4 bytes to be encoded. The 8th bit of the 4 bytes is encoded in the first 4 bits of the 5th MIDI byte.   
-
-Examples:
-
-\begin{itemize}
-  \item "01 00 00 00" is encoded in SysEx MIDI as "01 00 00 00 00"
-  \item "80 00 00 00" is encoded in SysEx MIDI as "00 00 00 00 08"
-  \item "FF 00 00 00" is encoded in SysEx MIDI as "7F 00 00 00 08"
-  \item "00 00 00 FF" is encoded in SysEx MIDI as "00 00 00 7F 01"
-  \item "FF FF FF FF" is encoded in SysEx MIDI as "7F 7F 7F 7F 0F"
-\end{itemize}
-
 \textbf{Checksum}
 
-(this needs to be done)
+(this needs to be described)
