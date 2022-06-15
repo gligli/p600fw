@@ -813,10 +813,12 @@ static void refreshSevenSeg(void) // imogen: this function would be more suited 
     {
         if(ui.digitInput!=diLoadDecadeDigit)
         {
+            led_set(plDot,0,0);
             if(ui.presetAwaitingNumber>=0)
                 sevenSeg_setAscii('0'+ui.presetAwaitingNumber,' ');
             else
                 if (!ui.isInPatchManagement) sevenSeg_setAscii(' ',' '); // kep the previous display (might be a MIDI load message)
+                if (!ui.isInPatchManagement) sevenSeg_setAscii(' ',' '); // keep the previous display (might be a MIDI load or dump message)
         }
         else
         {

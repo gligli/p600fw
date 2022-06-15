@@ -847,10 +847,13 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                     }
                     else
                     {
-                        midi_dumpPreset(ui.presetAwaitingNumber); // dump that patch
-                        sprintf(s, "patch %u dumped", ui.presetAwaitingNumber);
-                        sevenSeg_scrollText(s,1);
+                        sevenSeg_setAscii(' ',' ');
                         ui.digitInput=diStoreDecadeDigit;
+                        if (midi_dumpPreset(ui.presetAwaitingNumber)) // dump that patch
+                        {
+                            sprintf(s, "patch %u dumped", ui.presetAwaitingNumber);
+                            sevenSeg_scrollText(s,1);
+                        }
                     }
 
                     ui.presetAwaitingNumber=-1;

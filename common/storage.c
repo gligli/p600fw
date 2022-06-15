@@ -347,6 +347,17 @@ LOWERCODESIZE void settings_save(void)
 }
 
 
+LOWERCODESIZE int8_t preset_checkPage(uint16_t number)
+{
+	BLOCK_INT
+	{
+		if(!storageLoad(number,1))
+		{
+			return 0;
+		}
+	}
+	return 1;
+}
 
 LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 {

@@ -489,18 +489,20 @@ void midi_newData(uint8_t data)
 	midi_device_input(&midi,1,&data);
 }
 
-void midi_dumpPreset(int8_t number)
+uint8_t midi_dumpPreset(int8_t number)
 {
 	int16_t size=0;
 	
 	if(number<0 || number>99)
-		return;
+		return 0;
 
-    if(preset_loadCurrent(number,0))
+    if(preset_checkPage(number))
     {
         storage_export(number,tempBuffer,&size);
         sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
+		return 1;
     }
+    return 0;
 }
 
 void midi_dumpPresets(void)

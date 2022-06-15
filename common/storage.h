@@ -117,6 +117,7 @@ extern const uint8_t steppedParameterRange[spCount];
 int8_t settings_load(void);
 void settings_save(void);
 
+int8_t preset_checkPage(uint16_t number);
 int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer);
 void preset_saveCurrent(uint16_t number);
 
