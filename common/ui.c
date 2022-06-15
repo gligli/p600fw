@@ -746,7 +746,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			{
 				ui.retuneLastNotePressedMode=!ui.retuneLastNotePressedMode;
 			}
-			else if (button==pbRecord)
+			else if (button==pbRecord && !recordOverride) // when arp is running then patch mgmt mode cannot be entered.
 			{
 				ui.isInPatchManagement=1;
                 ui.digitInput=diStoreDecadeDigit; // the mode should start with expecting a number for single patch export
