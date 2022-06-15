@@ -518,6 +518,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 
 		readVar=storageRead8();
 		currentPreset.steppedParameters[spLFOSync]=(readVar>7)?0:readVar;
+
         for (i=0;i < 16; i++)
             currentPreset.patchName[i]=storageRead8();
 
@@ -690,6 +691,7 @@ LOWERCODESIZE void preset_loadDefault(int8_t makeSound)
         if (settings.panelLayout==0) currentPreset.continuousParameters[cpMixVolA]=UINT16_MAX;
 
 		currentPreset.steppedParameters[spBenderSemitones]=5;
+		currentPreset.steppedParameters[spModWheelRange]=1;
 		currentPreset.steppedParameters[spBenderTarget]=modAB;
 		currentPreset.steppedParameters[spChromaticPitch]=2; // octave
         currentPreset.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
