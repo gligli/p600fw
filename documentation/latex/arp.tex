@@ -23,11 +23,11 @@ It is possible to sync the LFO to the arpeggiator using the additional patch par
 
 \textbf{Latch mode}
 
-With all arpeggiator modes, press the \record button on the key pad to enter the arpeggiator latch mode where played notes are held, e.g. continue to be played after they are released. The LED of the \record button will light solid. Playing additional notes in this mode will add them as additional notes to the existing sequence, up to a maximum of 128 notes. To clear the notes from the sequence, press the \record button to switch the latch mode off. The LED of the Record button will go off.
+With all arpeggiator modes, press the \record button on the key pad to enter the arpeggiator latch mode where played notes are held, e.g. are sustained after the keys are released. The LED of the \record button will light solid. Playing additional notes in this mode will add them as additional notes to the existing sequence, up to a maximum of 128 notes. To clear the notes from the sequence, press the \record button to switch the latch mode off. The LED of the Record button will go off.
 
 The foot switch has the same function as pressing \record while the arpeggiator is running, e.g. it toggles the arpeggiator latch mode as indicated by the \record LED. 
 
-\textbf{Transpostion}
+\textbf{Transposition}
 
 The arpeggiator pattern can be transposed on the fly. To do so use the keyboard in \shiftmode or \shiftlock, see section \ref{transposition}.
 
@@ -37,7 +37,7 @@ It is possible to input notes into the arpeggiator via MIDI. The MIDI behaviour 
 
 \begin{itemize}
   \item \textit{local on}: Keys played on the keyboard are entered into the arpeggiator. Transposition works normally. MIDI notes sent to the Prophet 600 play normally, e.g. they are not sent to the arpeggiator but play  on top of the running arpeggiator.
-  \item \textit{local off}: Keys played on the keyboard are not entered into the arpeggiator but are sent out as MIDI in the normal way. Transposition works normally from the keyboard. MIDI notes sent to the Prophet 600 are input into the arpeggiator. MIDI cannot play normally on top of the arpeggiator. 
+  \item \textit{local off}: Keys played on the keyboard are not entered into the arpeggiator but are sent out as MIDI in the normal way. Transposition of the arpeggiator works from the keyboard and from external MIDI. MIDI notes sent to the Prophet 600 are input into the arpeggiator. MIDI cannot play normally on top of the arpeggiator. 
 \end{itemize}
 
 \textbf{Trouble shooting}

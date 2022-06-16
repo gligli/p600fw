@@ -2,7 +2,8 @@ For supporting the integration of the Prophet 600 in a studio or live environmen
 
 \begin{itemize}
   \item Note send and receive
-  \item Control of many parameters using MIDI CC
+  \item Pitch bend and modulation wheel actions
+  \item Receive of all patch parameters using MIDI CC
   \item Local on and local off modes
   \item SysEx support for patch management (for this see section \ref{patchmgmt})
 \end{itemize}
@@ -32,8 +33,8 @@ All of the events can also be received and executed with the following exception
 
 \begin{enumerate}
   \setlength\itemsep{0cm}
-  \item Unlike the internal key on/off events, in arpeggiator mode incoming MIDI key on/off are not entered into arpeggiator but play normally 
-  \item Unlike the internal key on/off events, in \shiftmode or \shiftlock incoming MIDI notes do no cause transpositions (but are ignored) 
+  \item In arpeggiator mode incoming MIDI note on/off events are not entered into arpeggiator but play normally when in \textit{local on}. To enter notes to the arpeggiator using MIDI you need to switch to \textit{local off} mode. 
+  \item In \shiftmode or \shiftlock incoming MIDI notes do no cause transpositions (but are ignored) in \textit{local on} mode. 
   \item External MIDI pitch bend is added to the pitch bend from the on-board bender 
   \item MIDI Hold Pedal events are also applied in unison/chord mode or running arpeggiator or sequencer where it has the effect of latching notes/chords
   \item MIDI program change messages are only applied in \presetmode and are ignored otherwise  
@@ -43,14 +44,18 @@ The instrument does not send MIDI CC (apart from modulation wheel and program ch
 
 \textbf{Local off mode}
 
-The Prophet 600 supports a \textit{local off} mode which is toggled using the setting at \numberbut{0}. In \textit{local off} mode various internal events (such as notes) are not executed in the Prophet 600 directly but they are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
+The Prophet 600 supports a \textit{local off} mode which is activated using \numberbut{0} with \shiftmode or \shiftlock. In \textit{local off} mode various internal events (such as notes) are not executed in the Prophet 600 directly but they are still sent as MIDI events. The typical setup would be to connect to a MIDI recorder and feed the recorded MIDI messages back to the instrument for replay. The \textit{local off} mode ensures that there is no doubling of events.
 
-Note that in \textit{local on} mode external MIDI does not play into the arpeggiator but plays over the arpeggiator while the local keyboard plays into the arpeggiator. Since the arpeggiator and the playing the external MIDI notes share the 6 voices this can lead to interference of the two, such as missed arpeggiator notes, depending on what play using MIDI. 
+Note that in \textit{local on} mode external MIDI does not play into the arpeggiator but plays over the arpeggiator while the local keyboard plays into the arpeggiator. Since the arpeggiator and the playing the external MIDI notes share the 6 voices this can lead to interference of the two, such as missed arpeggiator notes, depending on what play using MIDI. When in \textit{local off} mode MIDI notes play into the arpeggiator (if active) and in this mode you can also use external MIDI notes for transposition of arpeggiator and sequencer like you would with the internal keyboard (e.g. in \shiftmode or \shiftlock). However, transposition does never affect normal playing via MIDI in any mode. The reason is that the Prophet 600 sends MIDI notes with transposition already applied. For consistency reasons, incoming MIDI (which may in fact be a recording of MIDI notes from the Prophet 600) must therefore not be transposed again. If you need transposition from your external MIDI controller you would need to use whatever function the MIDI controlled provides to transpose the MIDI notes sent to the Prophet 600.
+
+\begin{samepage}
 
 \textbf{Overview of MIDI integration}
 
-\begin{table}[H]
-  \begin{tabular}{lcccccc}
+\nopagebreak
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}[l]{l|ccc|ccc}
      &
       \multicolumn{3}{c}{\textit{local on}} &
       \multicolumn{3}{c}{\textit{local off}} \\   \cline{2-7} 
@@ -60,11 +65,12 @@ Note that in \textit{local on} mode external MIDI does not play into the arpeggi
       Keys into arpeggiator	& Yes & Yes	& No\footnote{MIDI notes will play normally / freely on top of the running arpeggiator. note that voice sharing between arpeggiator and playing MIDI notes can lead to unwanted interference such as missed arpeggiator notes etc.} & No & Yes & Yes \\
       Keys into sequencer	& Yes & Yes	& Yes & No & Yes & Yes \\
       Modulation Wheel	& Yes & Yes	& Yes & No & Yes & Yes \\
-      Pitch Bend	& Yes & Yes	& Added & No & Yes & Yes \\
+      Pitch Bend	& Yes & Yes	& Yes\footnote{Internal and external pitch bends are added, see \ref{pitchbend}} & No & Yes & Yes \\
       Program Change	& Yes & Yes	& in preset mode & Yes & Yes & in preset mode \\
       Pedal Hold (Latch)	& Yes & No & No & Yes & No & No \\
       Pedal Hold (Sustain)	& Yes & Yes & Yes & No & Yes & Yes \\
-      Transpose & Yes & No & No & Yes & No & Yes \\
+      Transpose & Yes & No & No & Yes & No & Yes\footnote{You can transpose the sequencer and the arpeggiator by MIDI, but this has no effect on normal MIDI playing.} \\
       Other MIDI CC	& Yes & No & in preset mode & Yes & No & in preset mode \\
-  \end{tabular}
-\end{table}
+\end{longtable}
+
+\end{samepage}

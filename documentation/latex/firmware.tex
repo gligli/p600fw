@@ -1,32 +1,33 @@
 For performing the upgrade on a Prophet 600 with an original Z80 processor please refer to the GliGli modification instructions \cite{modinstructions}. The following section is for owners of a modified Prophet 600 with Teensy board and a prior version of the GliGli upgrade installed. If modifying a Prophet 600 for the time, you may directly flash the Teensy board with software version \version. It is not necessary to first install a lesser version and then upgrade.
 
-Firmware upgrades are provided as MIDI SysEx files (*.syx) and as Teensy code files (*.hex) for USB transfer to the Teensy board. 
+Firmware upgrades are provided as MIDI SysEx files (*.syx) and as code files (*.hex) for USB transfer to the Teensy board. 
 
 \textbf{Firmware upgrade via SysEx}
 
-In order to perform the upgrade follow to steps below.
+In order to perform the upgrade follow the steps below.
 
 \begin{enumerate}
   \setlength\itemsep{0cm}
   \item Store and save the patch bank and make a note of important settings
   \item Switch off the instrument
-  \item Switch on the instrument while holding down the buttons \totape and \fromtape. The display should show an "U" for upgrade on the left digit.
+  \item Connect your computer via a MIDI interface to the instrument (the only required data direction is from computer to the Prophet 600) 
+  Switch on the instrument while holding down the buttons \totape and \fromtape. The display should show an "U" for upgrade on the left digit.
   \item Send the firmware SysEx file to the instrument. This process takes a while. The display shows a spinning segment. Once the process is completed, the display shows an "S" for success. If the upgrade ends with “E” for error on the display, the upgrade has failed and the upgrade procedure must be repeated until it succeeds. It is not recommended to start the instrument in normal mode after a failed upgrade.
   \item Switch the instrument off and on again. The scrolled welcome message should state the firmware version 
 \end{enumerate}
 
 You are recommended to follow the MIDI SysEx part of the modification instructions \cite{modinstructions}. In particular, the "Delay between buffers" and the "delay after F7" should be set to at least 250ms.
 
-The settings and patch parameters stored on a unit are untouched when the firmware is done by SysEx. Patches sounds the same if the previously installed version is one for which backward compatibility is supported. This applies to version 2.0 and 2.1 RC3. Downgrading the firmware version is possible but preservation of settings and preset parameters is not guaranteed in that case.
+The settings and patch parameters stored on a unit are untouched when the firmware is done by MIDI. After the upgrade, the sound of patches will unchanged provided the previously installed version is one for which backward compatibility is supported. This applies to version 2.0 and 2.1 RC3. Downgrading the firmware version is technically possible but preservation of settings and patch parameters is not guaranteed in that case.
 
 \textbf{Firmware upgrade via USB}
 
-Loading the firmware code to the Teensy board via USB has advantages but several aspects need to be taken into consideration. Here are some of the most important differences.
+The Teensy board has a USB port which can be used to program the processor. Loading the firmware code to the Teensy board in this way via USB has a lot of advantages but several aspects need to be taken into consideration. Here are some of the most important differences.
 
 \begin{itemize}
-  \item While upgrade by SysEx works via the MIDI In socket, the USB transfer requires opening up the Prophet 600
-  \item USB transfer requires downloading and installing a pjrc software on a computer    
-  \item USB transfer erases all patch and settings data including tuning
+  \item While upgrading by by MIDI works via the MIDI In socket at the rear, the USB transfer requires opening up the Prophet 600
+  \item USB transfer requires downloading and installing a PJRCc software on a computer
+  \item USB transfer erases all patch and settings data
   \item USB transfer is very fast (seconds) and highly reliable
   \item Unless the Teensy board is temporarily removed for the upgrade procedure, the USB transfer requires access to the Teensy board from the side which is blocked by the storage battery of the Prophet 600
   \item Unless the Teensy board is temporarily removed for the upgrade procedure, the transfer has to be done with power switched on and with the Prophet 600 panel lid open in at least one task 
@@ -40,7 +41,7 @@ To reach the Teensy board, unscrew the top 2 screws on the wooden side panels on
   \end{minipage}
  }
 
-The most convenient method for upgrading the Teensy code via USB is to use the power supplied by the Prophet 600 when it is in the socket or to provide an alternative power source for example using a bread board. In both cases the procedure does not required that the 5V bridge in the Teensy modification be reconnected (see GliGli modification instructions \cite{modinstructions}).
+The most convenient method for upgrading the Teensy code via USB is to use the power supplied by the Prophet 600 when it is in the socket or to provide an alternative power source for example using a bread board. In both cases the procedure does not require that the 5V bridge in the Teensy modification be reconnected (see GliGli modification instructions \cite{modinstructions}).
 
 Method 1: Use the Prophet 600 as the power source. For this the Teensy 2.0++ board stays in place and the USB connected with the Teensy 2.0++ board in the unit. One practical problem is that the USB socket of the Teensy board in place is blocked by the battery. The battery is only needed to store patches when the Prophet 600 is operated with the Z80 in place. With the Teensy upgrade it is no longer needed. To solve the problem there are three possibilities: 1) remove the battery, 2) stack several 2x20 sockets on top of each other so that the Teensy board / the USB socket is above the battery or 3) implement a different solution for the battery for example a battery holder attached at a convenient place inside the Prophet and connected with wires to the proper $\pm$ connections. 
 
@@ -50,9 +51,9 @@ Method 2: Take the Teensy 2.0++ out of the Prophet 600 an place it onto a standa
   \item Download the *.hex file for the firmware version you want to install 
   \item Connect a USB cable to the USB socket of the Teensy on the side which faces the rear side of the unit. You need a USB cable with a type A plug for this. In method 2 this will need to be done with the panel lid open and power off 
   \item Connect the cable to your computer 
-  \item Download an install the Teensy software from pjrc \cite{teensyloader} and open the application 
+  \item Download an install the Teensy software from PJRC \cite{teensyloader} and open the application 
   \item Power up the Teensy 2.0++ board (in method 1 power up the Prophet 600, in method 2 switch on the voltage to the bread board) and then press the button on the Teensy board to activate code transfer mode. Follow the instructions provided with the Teensy loader software. 
   \item When the code transfer mode is active, select the *.hex file provided for the release version you want to install and click \textit{program}
-  \item If using method 1 simply switch the unit off and on again or click \textit{reboot}, if using method 2 refit the Teensy 2.0++ and then power up. Note that the Prophet 600 will always go into tuning which first started after USB firmware upgrade.   
+  \item If using method 1, simply click \textit{reboot}, if using method 2 refit the Teensy 2.0++ and then power up. Note that the Prophet 600 will always go into tuning when first started after USB firmware upgrade. Instead of rebooting your may also switch the unit off and on again.   
   \item After the tuning procedure is complete, the instrument is ready to play. All patch slots will be empty and the active patch in preset mode is the default patch. 
 \end{enumerate}

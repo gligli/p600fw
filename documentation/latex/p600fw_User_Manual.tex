@@ -1,6 +1,6 @@
 %\documentclass[draft,landscape, 11pt, oneside]{report}
-\documentclass[landscape, 11pt, oneside]{report}
-\usepackage[a4paper, left=2cm, right=2cm, top=2.5cm]{geometry}
+\documentclass[landscape, 11pt, oneside, twoside]{report}
+\usepackage[a4paper, left=1cm, right=1cm, top=2.5cm]{geometry}
 \usepackage{lmodern}
 \usepackage{hyperref}
 \usepackage{titlesec}
@@ -12,6 +12,7 @@
 \usepackage{longtable}
 \usepackage{ProphetTerms}
 \usepackage{float}
+\usepackage{setspace}
 %\usepackage[inline]{showlabels}
 \setmainfont[
  BoldFont={FiraSans-Bold}, 
@@ -19,27 +20,25 @@
  ]{FiraSans}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{1em}
-\setlength{\leftmargin}{-4cm}
+\setlength{\evensidemargin}{0cm}
+\setlength{\oddsidemargin}{2cm}
 \setlength{\paperheight}{210mm}
 \setlength{\paperwidth}{297mm}
-\setlength{\textwidth}{26cm}
+\setlength{\textwidth}{22cm}
 \setlength{\footskip}{2.5cm}
 %\input{defined_terms.tex}
-\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
+\newenvironment{flowtext}{\addmargin[0cm]{0cm}}{\endaddmargin} % standard text width (reduced for layout)
 \newcommand{\pp}[1]{} % patch parameter
 \newcommand{\app}[2]{} % additional patch parameter, 1: number, 2: name
 
 
-\title{[DRAFT] User Manual for the GliGli upgraded Prophet 600}
-\author{Florian Merz (Editor)}
-\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}
-\makeatletter
-\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
-\makeatother
+%%\title{[DRAFT] User Manual for the GliGli upgraded Prophet 600}
+%%\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}
+%%\makeatletter
+%%\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+%%\makeatother
 \titleformat{\chapter}[display]{\LARGE\bfseries}{}{0.0cm}{}
-%\titleformat{\chapter}[display]{\pagebreak\LARGE\bfseries}{}{0.0cm}{}
 \titlespacing{\chapter}{0pt}{*0}{*0}
-%\titleformat{\section}[display]{\Large\bfseries}{}{0.0cm}{}
 \titlespacing{\section}{0pt}{*0}{*0}
 
 
@@ -49,6 +48,12 @@
 
 
 \begin{document}
+
+\raggedbottom
+\singlespacing
+
+\begin{titlepage}
+\pagenumbering{gobble}
 
 % this it the title "Prophet 600"
   \begin{tikzpicture}[scale=0.8]
@@ -67,24 +72,40 @@
       \end{scope}
   \end{tikzpicture}
 
-\vspace{1cm}
+  \vspace{1cm}
+  
   
   \Huge
-  User Manual
+  User Manual \vspace{0.4cm} \\
+  \Large
+  Edition: version beta 2022-2 (16.6.2022) \vspace{0.3cm}\\
+  Firmware version: \version \vspace{0.3cm}\\
+  Editor / author: imogen / image-et-son 
   \normalsize
 
+\end{titlepage}
+
+
+\pagebreak
 \pagebreak
 
 %\maketitle
 \tableofcontents
 
 
+\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}
+\makeatletter
+\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+\makeatother
+
 \pagebreak
 \chapter{Introduction to the GliGli Prophet 600 Firmware Upgrade}
 
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
 \begin{flowtext}
 
-\section{What you can expect from the Firmware Upgrade}
 
 The original Sequential Circuits Prophet 600 from around 1982 is run by a Zilog Z80 processor. This processor (and the firmware written for it) is pushed beyond its limits for computing and applying the voltages, for scanning user inputs and managing MIDI events. The necessary compromises made the instrument steppy, glitchy and non-responsive. That is a pity, because the basic synth voice hardware of the Prophet 600 is good: unlike DCO synths which became popular and affordable at the time, the Prophet 600 is a 6 voice analog synthesizer driven by 2 voltage controlled oscillators (VCOs) and a 24db low pass filter per voice, all implemented using the renowned Curtis chips \cite{curtis}. The hardware also provides hard sync, frequency modulation and even modulation of cut-off by VCO. It is very versatile. The shortcomings of the original Prophet 600 were only due to the unfortunate circumstance that the selected and commonly available micro-processors at the time were not powerful enough for the Prophet 600. So the idea to make use of a more modern processor 30 years later was interesting. Around 2013 GliGli \cite{gligli} started reverse engineering the original firmware for the Z80 and found that the Z80 can be replaced by a (more) modern Teensy++ 2.0 USB programmable microprocessor \cite{teensy} (with some hardware modifications). This was the start of what is now know as the \textit{Prophet 600 GliGli firmware upgrade}. GliGli describes his motivation as follows:
 
@@ -105,6 +126,13 @@ The first stable version of the firmware upgrade was version 2.0 in 2014. An int
 While there is a realistic backlog of additional ideas to come in the future, the is a clear end of Prophet 600 upgrade story in sight because of ultimate hardware limitations. Firstly, PJRC (the manufacturer of the Teensy boards) has stopped producing the Teensy++ 2.0 board, so that it has become difficult to find them. Secondly, after extensive performance testing in the latest firmware developments efforts, it has become clear that the performance (smoothness and responsiveness of controls, timely and accurate processing of information) is finally limited by the built-in hardware, in particular the DAC (limited by voltage rise times) and multiplexer (limited by switching times). 
 
 If you own a Teensy++ 2.0 upgraded Prophet 600 you can still enjoy some exciting new developments. The following is a compact summary of the improved and the new features. The manual general refers to the latest version \version and differences between versions are marked or commented in the text for your information. Share the passion for analog synthesizers with the Prophet 600 upgrade story!  
+
+\begin{flushright}
+  \textit{imogen / image-et-son}
+\end{flushright}
+
+\pagebreak
+\section{What you can expect from the Firmware Upgrade}
 
 \textbf{General features compared to the original Z80 version}
   
@@ -165,7 +193,7 @@ If you own a Teensy++ 2.0 upgraded Prophet 600 you can still enjoy some exciting
 
 In addition to this, several more technical / advanced changes were made such as the possibility to switch between "round robin" and "first" voice assign logic, possibility to toggle a pulse width sync bug which has been introduced in the version 2.0 (and kept for compatibility in version 2.1 RC3), changes to remove the interference  of internal and external (MIDI) pitch bend by adding the two (as in the original SCI firmware), stabilization of the external analog clock input.
 
-\section{Versions of the firmware upgrade and compatibility}
+\section{On compatibility for those upgrading from 2.0 and 2.1 RC3}
 
 You can upgrade the firmware by SysEx or by directly loading the firmware onto the Teensy++ 2.0 board via USB (see section \ref{fwupgrade}). When upgrading by SysEx, both patch data and settings are preserved. Backward compatibility is ensured, e.g. patches created in prior firmware version (including Z80) still work properly on new firmware versions. Note that as a general principle, before performing any upgrade the safekeeping of patches is not only best practice but also strongly recommended. The following contains some remarks which are relevant if you are upgrading to version \version from version 2.0 or 2.1 RC3.
 
@@ -183,7 +211,11 @@ You can upgrade the firmware by SysEx or by directly loading the firmware onto t
 
 \section{Credits and license}
 
-The firmware upgrade project is an open source project. The GliGli code base (up to and including version 2.1 RC3) can be found in \cite{gligli} and the new code base of the latest development can be found in \cite{imogen}. When I first drafted this manual I hoped to put together a credits section by assembling a fair and comprehensive list of contributors. I have given up. There was no one who could, with authority, list and assess what came from where and who added what. From my research I can say that a \textbf{lot} of people have contributed and some have obviously spent considerable time to make this software as useful and consistent as possible. Let just give some highlights and do a round-up. First, I think that the original technical documentation of the Prophet 600 by Stanley Jungleib is great and such documentation helps. Then there is an elaborate blog "Prophet 600 Spirit" by \textit{minisystem} \cite{p600spirit} which is legacy by now but still available. It contains a lot more technical information, Prophet 600 hardware related ground work, I would call it and impression was that it significantly helped the project too. The contributors to the actual code can be obtained from the submit history of the code base on Github \cite{imogen}. Apart from GliGli I found \textit{snickell} and \textit{Ricard Wanderlof} with many commits. Then there is the community, especially (but certainly not exclusively) on Gearspace (formerly known as Gearslutz): testing, giving feedback, spreading the word, supporting the project by appreciation and enthusiasm. Since I started picking up the development in November 2021 I joined with a group of supporters and musicians loosely bound together by a forum thread on Gearspace. I neither want to list all, nor single someone out. Let me just say, that was real fun to jointly develop the new envelopes and to experiment with different and sometimes really tricky aspects of the Prophet 600 hardware and the firmware.
+The firmware upgrade project is an open source project. The GliGli code base (up to and including version 2.1 RC3) can be found in \cite{gligli} and the new code base of the latest development can be found in \cite{imogen}. When I first drafted this manual I hoped to put together a credits section by assembling a fair and comprehensive list of contributors. I have given up. There was no one who could, with authority, list and assess what came from where and who added what. From my research I can say that a \textbf{lot} of people have contributed and some have obviously spent considerable time to make this software as useful and consistent as possible. 
+
+Let me just give you some highlights and a brief roundup. First, I think that the original 77 page technical documentation of the Prophet 600 by Stanley Jungleib \cite{p600siservicemanual} is great and such  documentation is both helpful and more than one can expect. Then there is an elaborate blog "Prophet 600 Spirit" by \textit{minisystem} \cite{p600spirit} which is legacy by now but still available. It contains a lot more technical information, Prophet 600 hardware related ground work, I would call it. I had the impression that it also helped the project. The contributors to the actual code can be obtained from the submit history of the code base on Github \cite{imogen}. Apart from GliGli I found \textit{snickell} and \textit{Ricard Wanderlof} with many commits, although I haven't taken the time to disseminate their contributions. Then there is the community, especially (but certainly not exclusively) on Gearspace (formerly known as Gearslutz): testing, giving feedback, spreading the word, supporting the project by appreciation and enthusiasm. Since I started picking up the development in November 2021 I joined up with a group of supporters and musicians loosely bound together by a forum thread on Gearspace. A number of active users there have a nice job especially prioritizing features and testing. I neither want to list all, nor single someone out. Let me just say, that was real fun to jointly develop the new envelopes and to experiment with different and sometimes really tricky aspects of the Prophet 600 hardware and the firmware. 
+
+This user manual contains some texts and snippets written by other people. I compiled, merged, extended and in some case corrected the available information to an extend that makes it near impossible to trace everything back to its origins, let alone put in proper references. I just assume that all consent to the usage of their words. The overwhelming part of the text and the graphics are new.
 
 The firmware  is under GPL v3 license, except files / libraries / other open source components that have their own license in the header. The usage of the software and related documentation (including descriptions and references to descriptions for making modifications to hardware) are understood to be at the user's own risk. The firmware program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
@@ -209,6 +241,7 @@ The different controls and interfaces of the Prophet 600 are shown schematically
 \end{samepage}
 
 \begin{samepage}
+
   \textbf{Sequential Circuits panel layout}
   
   \nopagebreak
@@ -266,9 +299,13 @@ This pad has three usages depending on mode and selected functions:
   \item Selecting a parameter in the additional patch parameter menu (see section \ref{app}) in \presetpanel and in \livemode
 \end{itemize} 
 
+\pagebreak
+
 \textbf{Display}
 
 \input{display.tex}
+
+\pagebreak
 
 \textbf{Preset panel mode, live mode and additional patch parameters menu}\label{app}
 
@@ -314,7 +351,7 @@ The Prophet 600 operates in two modes, \presetmode and \livemode, see section \r
   \end{tikzpicture}
 }
 
-The following section describes how patch parameters are accessed and modified in live mode and in \presetpanel. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the \panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. There are \textit{continuous} parameters (numeric) and \textit{stepped} parameters (select options). Changing these parameters can only be done in \presetpanel or in \livemode. You must select the parameter first and then change the value using the \datadial. A parameter is selected by pressing the buttons 0...9 on the \termnumberpad (or pressing them twice or in some cases three times). If you select a new parameter, the respective parameter name is scrolled through the display. The display then shows the current value. Numeric values are shown permanently and choice settings are scrolled through the display. 
+The following section describes how patch parameters are accessed and modified in live mode and in \presetpanel. Patch parameters are - by definition - stored, exported and loaded per patch. Most patch parameters can be controlled using dials and switches on the panel (see section \ref{panel}). With the firmware upgrade the Prophet 600 provides a range of \textbf{Additional Patch Parameters}. There are \textit{continuous} parameters (numeric) and \textit{stepped} parameters (select options). Changing these parameters can only be done in \presetpanel or in \livemode. You must select the parameter first and then change the value using the \datadial. A parameter is selected by pressing the buttons 0...9 on the \termnumberpad (or pressing them twice or in some cases three times). If you select a new parameter, the respective parameter name is scrolled through the display. The display then shows the current value. Numeric values are shown permanently and choice settings are scrolled through the display. 
 
 Each parameter is explained in the respective functional context in the next chapter. For a quick reference of additional patch parameters please see section \ref{patchref}. 
 
@@ -385,6 +422,7 @@ A useful work flow of the upgraded Prophet 600 for creating or editing patches c
 
 Ideally, menu diving should be largely restricted to steps 1 and 3 so that uninterrupted hands-on and interactive work with the synthesizer is possible in step 2. 
 
+\pagebreak
 \chapter{Functionality}\label{function}
 
 \section{Operating modes: preset and live mode}\label{uimode}
@@ -398,6 +436,8 @@ Ideally, menu diving should be largely restricted to steps 1 and 3 so that unint
 \section{Oscillators and mix}\label{osc}
 
 \input{osc.tex}
+
+\pagebreak
 
 \section{Volume and master tune}
 
@@ -427,6 +467,8 @@ After power-up the instrument volume is always set to the value position of the 
 
 \input{polymod.tex}
 
+\pagebreak
+
 \section{Arpeggiator / sequencer clock and MIDI support}\label{sync}
 
 The Prophet 600 offers a polyphonic sequencer with two tracks and an arpeggiator with three distinct pattern types. The details of operation are explained in sections \ref{arp} (arpeggiator) and \ref{seq} (sequencer).
@@ -437,16 +479,19 @@ The sequencer and the arpeggiator share the same clock and on this clock the two
   \item \textit{MIDI}: the clock is synced to the MIDI clocked received on the MIDI receive channel as set in the  miscellaneous settings
   \item \textit{tape}: the clock is synced to a fraction of a pulse clock received via the Tape In input on the rear of the instrument. 
 \end{itemize}  
-
 When the clock source is set to external (either \textit{MIDI} or \textit{tape}) the \clock sets the clock divide. The values are: 192,168,144,128,96,72,48,36,24,18,12,9,6,4,3,2.
 
 It is also possible to sync the LFO to the sequencer / arpeggiator clock (internal or external). The menu parameter \lfosync provides the options \textit{off} (no sync, free running LFO) or one of the following \textit{1,2,3,4,5,6,8}. The latter sets the number of clock beats after which the LFO in reset.
 
 Note that you can operate the sequencer and/or arpeggiator also in unison mode with all features of that mode (see section \ref{poly-unison-voice}). However, the voices are not shared between the tracks and the arpeggiator. The priority is as follows: arpeggiator, sequencer track 2, sequencer track 1. E.g. if activated, the arpeggiator will use all voices in unison mode and when the sequencer track 1 and 2 have a note on the same beat, only track 2 will play. Unison mode should be activated before starting the sequencer or arpeggiator.
 
+\pagebreak
+
 \section{Arpeggiator}\label{arp}
 
 \input{arp.tex}
+
+\pagebreak
 
 \section{Sequencer}\label{seq}
 
@@ -466,15 +511,15 @@ Note that you can operate the sequencer and/or arpeggiator also in unison mode w
 
 \section{Glide}\label{glide}
 
-In the original Prophet 600 the glide setting (the glide time) has a dedicated dial, \glidepot. In the upgraded Prophet 600 in firmware versions 2.0 and 2.1 RC3 the dial has been re-designated to control the amplitude of OSC B. As a consequence the glide time has been moved to the menu patch parameter \glide. 
+In the original Prophet 600 the glide setting (the glide time) has a dedicated dial, \glidepot. In the upgraded Prophet 600 in firmware versions 2.0 and 2.1 RC3 the dial has been re-designated to control the amplitude of VCO B. As a consequence the glide time has been moved to the menu patch parameter \glide. 
 
-In the latest firmware the panel layout is switchable using the \miscsett \panelswitch. When the panel layout is set to \textit{GliGli} the menu parameter \glide becomes available which controls the glide time. When the panel layout is set to \textit{SCI} the menu parameter \glide is suppressed in the menu and instead the \glidepot dial on the panel controls the glide time. 
+In the latest firmware, the panel layout is switchable using the \miscsett \panelswitch. When the panel layout is set to \textit{GliGli} the menu parameter \glide becomes available. When the panel layout is set to \textit{SCI} the menu parameter \glide is suppressed in the menu and instead the \glidepot dial on the panel controls the glide time. 
 
 For details on the panel layout options see section \ref{panelswitch}.
 
 \section{Detune}\label{detune}
 
-The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect is used to make unison sounds broader and more lively. In fact, detune is only applied when unison is activated. The menu parameter for setting detune is \detune. The effect of the vintage spread (see section \ref{spreadsett}) is applied in all modes and is therefore added to detune in unison mode. 
+The upgraded Prophet 600 provides a method to detune the 6 voices against one another. This effect is used to make unison sounds broader and more lively. Detune is only applied when unison is activated. The menu parameter for setting detune is \detune. Note: the effect of the vintage spread (see section \ref{spreadsett}) is applied in all modes and is therefore added to detune in unison mode. 
 
 The detune functions has been changed in version \version. Compared to versions 2.0 and 2.1 RC3 the detune is scaled with pitch is less pronounced for higher pitches. This change is designed such that the perceived detune is constant (or at least more constant) over the available pitch range. 
 
@@ -494,7 +539,10 @@ One application of the external voltage control is that it is used in the popula
 
 The Prophet 600 is equipped with a non-weighted keyboard without support for velocity. However, when played via MIDI, the upgraded Prophet 600 supports velocity sensitivity of amplitude and filter cut-off frequency. The respective velocity amounts are configured using the two menu parameters \ampvel and \filvel.
 
-By default the \ampvel is set to half-way and the \filvel is set to zero.
+By default the \ampvel is set to half-way and the \filvel is set to zero. Amplitude and filter velocity are not supported in arpeggiator and sequencer.
+
+\pagebreak
+
 
 \chapter{Synthesizer setup and maintenance}\label{maintenance}
 
@@ -515,17 +563,17 @@ By default the \ampvel is set to half-way and the \filvel is set to zero.
 The upgraded Prophet 600 provides a method for switching single voices off. This can be useful to suppress a voice that is damaged or for troubleshooting, e.g. isolating voices for testing. The "voice masking" is configured using the miscellaneous settings with \numberbut{4} and \numberbut{5} in \shiftmode or \shiftlock as follows
 \begin{enumerate}
   \setlength\itemsep{0cm}
-  \item Pressing \numberbut{4} cycles through the 6 voice of the Prophet 600. This selection determines the functionality of the key \numberbut{5} in the setting menu.
-  \item \numberbut{5} toggles between on and off of the voice selected using \numberbut{4}. 
+  \item Press \numberbut{4} to cycle through the 6 voice of the Prophet 600. This selection determines the functionality of the key \numberbut{5} in the setting menu.
+  \item Press \numberbut{5} to toggle between on and off of the voice selected using \numberbut{4}. 
 \end{enumerate}
 
 Note: the voice masking is stored in the settings. E.g. it applies to all patches and all modes and it is retained through a power cycle. If you are missing a voice you should check the voice masking.
 
 \section{Transposition}\label{transposition}
 
-The upgraded Prophet 600 provides a method for transposing the keyboard on the fly. In \shiftmode or \shiftlock the last pressed key will define the transposition, the middle C3 being zero transposition. The transposition is also scrolled through the display for conformation. 
+In the upgraded Prophet 600 there are two types of transposition which you set in the same way. The first one is the transposition of the internal keyboard. The second is the on-the-fly transposition of the sequencer and arpeggiator. In \shiftmode or \shiftlock the last pressed key will define the transposition, the middle C3 being zero transposition. The transposition is also scrolled through the display for conformation. As stated above, adjusting the transposition affects both, playing from the internal keyboard and the sequencer and arpeggiator.
 
-Transposition also applies to arpeggiator and sequencer and the transposition procedure also works in the respective run and latch modes. Transposition by MIDI note input is \underline{not supported} in \textit{local on} mode, only in \textit{local off} mode. 
+You can transpose the sequencer and arpeggiator on-the-fly by MIDI too (play a MIDI note while in \shiftmode or \shiftlock) but only in \textit{local off} mode. Otherwise MIDI notes are ignored. Note that while transposition (from internal keyboard or from external MIDI) transposes playing from the internal keyboard, the transposition will never affect how notes from external MIDI are played. This is for consistency reasons because MIDI notes sent by the Prophet 600 already include any transposition, both for normal playing and for sequencer and arpeggiator. When this data is recorded and played back to the Prophet 600 the transposition must not be applied (again) to the incoming MIDI notes. The keyboard transposition should be thought of as a configuration of the internal keyboard rather than a transposition of the patch. If you need transposition from an external MIDI keyboard you have to rely on the functionalities of your MIDI keyboard. 
 
 \section{VCF limit}\label{limitsett}
 
@@ -545,6 +593,7 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
 
 \end{flowtext}
 
+\pagebreak
 \chapter{Reference}
 
 \begin{flowtext}
@@ -553,14 +602,17 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
 
 \input{patchref.tex}
 
+\pagebreak
 \section{Default patch}\label{defaultpatch}
 
 \input{defaultpatch.tex}
 
+\pagebreak
 \section{Settings parameter overview}\label{settingsref}
 
 \input{settingsref}
 
+\pagebreak
 \section{MIDI control implementation}\label{midiimplementation}
 
 \input{midiimplementation.tex}
@@ -571,7 +623,12 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
 
 \section{Operation modes}\label{modes}
 
+
+\begin{samepage}
+
 \textbf{Live mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -613,7 +670,13 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
+\end{samepage}
+
+\begin{samepage}
+
 \textbf{Preset panel mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -655,7 +718,13 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
+\end{samepage}
+
+\begin{samepage}
+
 \textbf{Preset patch mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -697,7 +766,13 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
+\end{samepage}
+
+\begin{samepage}
+
 \textbf{Record mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -739,7 +814,13 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
+\end{samepage}
+
+\begin{samepage}
+
 \textbf{Shift-lock mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -781,7 +862,13 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
+\end{samepage}
+
+\begin{samepage}
+
 \textbf{Sequencer editing mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -823,7 +910,13 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
+\end{samepage}
+
+\begin{samepage}
+
 \textbf{Patch management mode}
+
+\nopagebreak
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -865,8 +958,9 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
   \end{tikzpicture}
 }
 
-%\chapter{Troubleshooting}\label{faq}
-%\input{faq.tex}
+\end{samepage}
+
+\pagebreak
 
 \begin{thebibliography}{50} 
 
@@ -874,8 +968,7 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
 \bibitem{gligli}GliGli blog and project pages, http://gliglisynth.blogspot.com/, http://gligli.github.io/p600fw/
 \bibitem{imogen}Imogen Synth blog and project pages, https://prophet600revisited.blogspot.com/, https://github.com/image-et-son/p600fw
 \bibitem{curtis}Curtis Electro Music on Webarchive, https://web.archive.org/web/20130502132536/http://curtiselectromusic.com/Customers\_and\_Instruments.html
-\bibitem{modinstructions} Prophet600 Modification Instructions, see GliGli project pages and links above
-\bibitem{techmanual} Technical Manual for the upgraded Prophet (to be completed) 
+\bibitem{modinstructions} Prophet 600 Modification Instructions, see GliGli project pages and links above
 \bibitem{teensy}Teensy++ 2.0 manufacturer information: http://www.pjrc.com/teensy/index.html
 \bibitem{p600siownersmanual}Prophet 600 Owner's Manual, Sequential Circuits
 \bibitem{p600siservicemanual} Prophet 600 Service Manual, Sequential Circuits

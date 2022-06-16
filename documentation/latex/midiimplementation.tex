@@ -18,6 +18,9 @@ The Prophet 600 receives Continuous Controllers (CC) in \presetmode only.
 
 \begin{longtable}[l]{ p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{5cm}|p{2cm}|p{1cm}} 
 \textbf{Continuous Parameter} & \textbf{Type} & \textbf{CC Coarse} & \textbf{CC Fine} & \textbf{Stepped Parameter} & \textbf{Type} & \textbf{CC} \\ \hline
+\endfirsthead
+\textbf{Continuous Parameter} & \textbf{Type} & \textbf{CC Coarse} & \textbf{CC Fine} & \textbf{Stepped Parameter} & \textbf{Type} & \textbf{CC} \\ \hline
+\endhead 
 Osc A Frequency & Continuous & 16 & 80 & Osc A Saw & Stepped & 48 \\ \hline
 Osc A Volume & Continuous & 17 & 81 & Osc A Triangle & Stepped & 49 \\ \hline
 Osc A Pulse Width & Continuous & 18 & 82 & Osc A Square & Stepped & 50 \\ \hline
@@ -52,21 +55,22 @@ Vintage / Spread  &  Continuous  & 47 & 111 &  &  &   \\ \hline
  
 \end{longtable}
 
+\normalsize
+
 \textbf{Change in MIDI CC from version 2.1 RC3 to \version}
 
 The following MIDI CC have been changed.
 
 \begin{itemize}
-  \item The filter envelope release and decay and 2nd envelope release decay when envelope shape is set to linear: the value range has been rescaled. This is a necessary side effect of changing the strictly linear shapes to linear shapes with soft tails. The exponential envelopes are unaffected.
-  \item The LFO frequency has been totally rescaled. The stepped frequency range parameter has been omitted and the value range of  the LFO frequency now covers the entire frequency range. However, the value to frequency relation has also been changed to exponential (instead of linear)
-  \item MIDI CC 58 (up to version 7 this was the LFO Frequency Range): this parameter has been omitted. In order to avoid potential conflicts with MIDI tools developed for firmware versions 2.0 and 2.1 RC3, this MIDI CC has not been re-designated.
-  \item The value to frequency relation for the vibrato frequency has also been changed to exponential (instead of linear)   
-  \item The Mod Wheel Range has been reconfigured with new value which also produce different wheel actions.
+  \item For the filter envelope release and decay and the 2nd envelope release and decay the time value range has been rescaled for the \textit{linear} envelope shape. This was an unavoidable side effect of changing the strictly linear shapes to linear shapes with soft tails. The exponential envelopes are unaffected.
+  \item The \lfofreq has been totally rescaled. The stepped frequency range parameter has been omitted and the value range of the \lfofreq dial now covers the entire frequency range. However, the dial to frequency relation has also been changed from linear to exponential, making it much softer at low settings. Consequently, the MIDI CC support for the LFO frequency range (up to firmware version 2.1 RC3) has been omitted. In order to avoid potential conflicts with MIDI tools developed for firmware versions 2.0 and 2.1 RC3, the legacy MIDI CC 58 has not been re-designated. MIDI CC 58 is ignored.
+  \item The value to frequency relation for the \vibspeed has been changed from linear to exponential.   
+  \item The \modwheelrange has been reconfigured with new value which also produce different wheel actions.
 \end{itemize}
 
 \textbf{Other MIDI CC Settings}
 
-\begin{longtable}[l]{ p{5cm}|p{2cm}|p{2cm}|p{1cm}} 
+\begin{longtable}[l]{ p{6cm}|p{2.5cm}|p{1.5cm}|p{2cm}} 
 \textbf{Parameter} & \textbf{Type} & \textbf{CC} & \textbf{CC Fine} \\ \hline
 Toggle Live/Preset Mode & Stepped & 0 & \\ \hline
 Mod Wheel & Continuous & 1 & \\ \hline
