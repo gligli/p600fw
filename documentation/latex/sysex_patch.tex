@@ -52,9 +52,11 @@ The following table specifies the patch data storage up to and including storage
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
 
-\begin{longtable}[l]{|p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{2cm}|p{2.5cm}|} 
-\hline
+\begin{longtable}[l]{p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{2cm}|p{2.5cm}} 
 \textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} \\ \hline
+\endfirsthead
+\textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} \\ \hline
+\endhead 
 Patch Number & Technical & 1 & 1 & 1 & 0 \\ \hline
 Storage Key (aka MAGIC) & Technical & 4 & 1 & 4 & 0 \\ \hline
 Storage Version & Technical & 1 & 1 & 1 & 0 \\ \hline
@@ -121,7 +123,7 @@ External CV & Continuous & 2 & 1 & 2 & 8 \\ \hline
 Envelope Routing & Stepped & 1 & 1 & 1 & 8 \\ \hline
 Voice Assign & Stepped & 1 & 1 & 1 & 8 \\ \hline
 LFO Sync & Stepped & 1 & 1 & 1 & 8 \\ \hline
-Patch Name & Technical & 1 & 16 & 16 & 8 \\ \hline
+Patch Name & Technical & 1 & 16 & 16 & 8 \\
 \end{longtable}
 
 \textbf{Example}

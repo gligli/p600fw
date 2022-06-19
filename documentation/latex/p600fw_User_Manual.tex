@@ -123,7 +123,7 @@ Developing the software was a major effort with low-level functions and basic ha
 
 The first stable version of the firmware upgrade was version 2.0 in 2014. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 (2.1 RC3) has been available from September 5th 2015 on GliGli's webpages \cite{gligli}. The latest release version \version is the result of continued development between September 2021 and March 2022. It is meant as a celebration and revival of the original idea and it provides various new features and also significant improvements in core functions. The latest firmware version can be found on the project page\cite{newversion}.
 
-While there is a realistic backlog of additional ideas to come in the future, the is a clear end of Prophet 600 upgrade story in sight because of ultimate hardware limitations. Firstly, PJRC (the manufacturer of the Teensy boards) has stopped producing the Teensy++ 2.0 board, so that it has become difficult to find them. Secondly, after extensive performance testing in the latest firmware developments efforts, it has become clear that the performance (smoothness and responsiveness of controls, timely and accurate processing of information) is finally limited by the built-in hardware, in particular the DAC (limited by voltage rise times) and multiplexer (limited by switching times). 
+While there is a realistic backlog of additional ideas to come in the future, there is a clear end of Prophet 600 upgrade story in sight because of ultimate hardware limitations. Firstly, PJRC (the manufacturer of the Teensy boards) has stopped producing the Teensy++ 2.0 board, so that it has become difficult to find them. Secondly, after extensive performance testing in the latest firmware developments efforts, it has become clear that the performance (smoothness and responsiveness of controls, timely and accurate processing of information) is finally limited by the built-in hardware, in particular the DAC (limited by voltage rise times) and multiplexer (limited by switching times). 
 
 If you own a Teensy++ 2.0 upgraded Prophet 600 you can still enjoy some exciting new developments. The following is a compact summary of the improved and the new features. The manual general refers to the latest version \version and differences between versions are marked or commented in the text for your information. Share the passion for analog synthesizers with the Prophet 600 upgrade story!  
 
@@ -142,7 +142,7 @@ If you own a Teensy++ 2.0 upgraded Prophet 600 you can still enjoy some exciting
   \item Faster and smoother ADSR envelopes with support of two speed regimes (slow, fast) and two shapes (linear, exponential). The latest version \version has new linear shapes which were inspired by Prophet 5 rev 1/2 envelopes and designed to be more organic and musical than the former linear shapes.
   \item Positive and negative envelope amount settings for filter and poly-mod 
   \item A new LFO function generator with a wider frequency range from one cycle every 20 seconds to about 60Hz
-  \item Assignable, random and up/down arpeggiator, optionally sync-able to MIDI clock
+  \item Assignable, random and up/down arpeggiator, optionally sync-able to external MIDI and analog clock
   \item Multiple note assignment modes including last/low/high note priority
   \item Full MIDI In control including amplitude and filter velocity sensitivity with an external keyboard controller, continuous controllers (CC) of all sound parameters, program change (PC) to choose current preset
   \item A dedicated vibrato which can be controlled by the modulation wheel
@@ -201,7 +201,7 @@ You can upgrade the firmware by SysEx or by directly loading the firmware onto t
 
 \textbf{Vintage / Spread}: With 2.1 RC3 a "spread" switch was introduced as part of the global settings (not part of the patch). With version \version this has been removed as a settings and has been reintroduced as the patch parameter \textit{vintage spread}. It serves the same purpose, but it can be controlled continuously and it is more randomized than the former spread switch for more realistic results.
 
-\textbf{Detune}: The unison detune has undergone a scaling re-design in version \version: the detune is now less pronounced at higher frequencies. This has been done to achieve the same subjective detuning effect across the whole frequency range. This is a change to the sound of instrument and depending on how you use detune, your detuned unison patches may sound slightly different at higher registers compared to prior firmware versions. The idea is of course, that this is an agreeable change for everybody.
+\textbf{Detune}: The unison detune has undergone a scaling re-design in version \version: the detune is now less pronounced at higher frequencies. This has been done to achieve the same subjective detuning effect across the whole frequency range. This is a change to the sound of the instrument and depending on how you use detune, your detuned unison patches may sound slightly different at higher registers compared to prior firmware versions. The idea is of course, that this is an agreeable change for everybody.
 
 \textbf{Arpeggiator}: The arpeggiator patterns up/down and random have been changed in version \version
 
@@ -213,9 +213,9 @@ You can upgrade the firmware by SysEx or by directly loading the firmware onto t
 
 The firmware upgrade project is an open source project. The GliGli code base (up to and including version 2.1 RC3) can be found in \cite{gligli} and the new code base of the latest development can be found in \cite{imogen}. When I first drafted this manual I hoped to put together a credits section by assembling a fair and comprehensive list of contributors. I have given up. There was no one who could, with authority, list and assess what came from where and who added what. From my research I can say that a \textbf{lot} of people have contributed and some have obviously spent considerable time to make this software as useful and consistent as possible. 
 
-Let me just give you some highlights and a brief roundup. First, I think that the original 77 page technical documentation of the Prophet 600 by Stanley Jungleib \cite{p600siservicemanual} is great and such  documentation is both helpful and more than one can expect. Then there is an elaborate blog "Prophet 600 Spirit" by \textit{minisystem} \cite{p600spirit} which is legacy by now but still available. It contains a lot more technical information, Prophet 600 hardware related ground work, I would call it. I had the impression that it also helped the project. The contributors to the actual code can be obtained from the submit history of the code base on Github \cite{imogen}. Apart from GliGli I found \textit{snickell} and \textit{Ricard Wanderlof} with many commits, although I haven't taken the time to disseminate their contributions. Then there is the community, especially (but certainly not exclusively) on Gearspace (formerly known as Gearslutz): testing, giving feedback, spreading the word, supporting the project by appreciation and enthusiasm. Since I started picking up the development in November 2021 I joined up with a group of supporters and musicians loosely bound together by a forum thread on Gearspace. A number of active users there have a nice job especially prioritizing features and testing. I neither want to list all, nor single someone out. Let me just say, that was real fun to jointly develop the new envelopes and to experiment with different and sometimes really tricky aspects of the Prophet 600 hardware and the firmware. 
+Let me just give you some highlights and a brief roundup. First, I think that the original 77 page technical documentation of the Prophet 600 by Stanley Jungleib \cite{p600siservicemanual} is great and such  documentation is both helpful and more than one can expect. Then there is an elaborate blog "Prophet 600 Spirit" by \textit{minisystem} \cite{p600spirit} which is legacy by now but still available. It contains a lot more technical information, Prophet 600 hardware related ground work, I would call it. I had the impression that it also helped the project. The contributors to the actual code can be obtained from the submit history of the code base on Github \cite{imogen}. Apart from GliGli I found \textit{snickell} and \textit{Ricard Wanderlof} with many commits, although I haven't taken the time to disseminate their contributions. Then there is the community, especially (but certainly not exclusively) on Gearspace (formerly known as Gearslutz): testing, giving feedback, spreading the word, supporting the project by appreciation and enthusiasm. Since I started picking up the development in November 2021 I joined up with a group of supporters and musicians loosely bound together by a forum thread on Gearspace. A number of active users have done a nice job, especially prioritizing features, testing and proof reading. I neither want to list all of them, nor single someone out. Let me just say, that was real fun to jointly develop the new envelopes and to experiment with different and sometimes really tricky aspects of the Prophet 600 hardware and the firmware. 
 
-This user manual contains some texts and snippets written by other people. I compiled, merged, extended and in some case corrected the available information to an extend that makes it near impossible to trace everything back to its origins, let alone put in proper references. I just assume that all consent to the usage of their words. The overwhelming part of the text and the graphics are new.
+This user manual contains some texts and snippets written by other people. I compiled, merged, extended and in some case corrected the available information to an extent that makes it near impossible to trace everything back to its origins, let alone put in proper references. I just assume that all consent to the usage of their words. The overwhelming part of the text and the graphics are new.
 
 The firmware  is under GPL v3 license, except files / libraries / other open source components that have their own license in the header. The usage of the software and related documentation (including descriptions and references to descriptions for making modifications to hardware) are understood to be at the user's own risk. The firmware program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
@@ -260,7 +260,7 @@ The \datapad consists of the \display (2 two digit 7 segment display with one do
 
 \textbf{Function Buttons}
 
-The block of 9 \funcbuttons is the main control from where you activate and toogle the operation modes and functions of the Prophet 600. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below. (The \record button has a function of both.)
+The block of 9 \funcbuttons is the main control from where you activate and toggle the operation modes and functions of the Prophet 600. This block consists of an upper part (controlling essential functions) and a block of buttons relevant for the sequencer and arpeggiator, as shown below. (The \record button has a function of both.)
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -285,7 +285,7 @@ The \funcbuttons have LEDs which can be off, be on solid and on blinking. In the
   \end{tikzpicture}
 }
 
-The different functions of the buttons are described in the general modes description in section \ref{uimode} and throughout the chapter \ref{function} on functionality wherever the buttons are used for a specific function. 
+The different functions of the buttons are described in the general modes description in section \ref{uimode}, and throughout the chapter \ref{function} in the context of specific functions in which they are used.
 
 \textbf{Number Pad}
 
@@ -309,7 +309,7 @@ This pad has three usages depending on mode and selected functions:
 
 \textbf{Preset panel mode, live mode and additional patch parameters menu}\label{app}
 
-The Prophet 600 operates in two modes, \presetmode and \livemode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when you press the number pad buttons, as shows in the table below.
+The Prophet 600 operates in two modes, \presetmode and \livemode, see section \ref{uimode}. The mode of operation determines what the display shows and what functions are invoked when you press the number pad buttons, as shown in the table below.
 
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
@@ -360,7 +360,7 @@ Note 1: The parameter accessed using the number 0 is an exception. The parameter
 
 \textbf{Shift mode and miscellaneous settings}
 
-The \miscsett are patch independent instrument settings and functions. These settings are stored and re-loaded after a power cycle. The miscellaneous settings are accessed via the \termnumberpad in \shiftmode. To activate this mode either hold down the button \fromtape while selecting one of the additional functions or double click \fromtape to enter \shiftlock (permanent shift) indicated by a blinking \fromtape LED. To exit the mode push the button again. 
+The \miscsett are patch independent instrument settings and functions. These settings are stored and re-loaded after a power cycle. The miscellaneous settings are accessed via the \termnumberpad in \shiftmode. To activate this mode either hold down the button \fromtape while selecting one of the additional functions or double press \fromtape to enter \shiftlock (permanent shift) indicated by a blinking \fromtape LED. To exit the mode push the button again. 
 
 In \shiftmode the numbers 0...9 on the \termnumberpad as well as some of the function buttons let you access the \miscsett. The settings are edited by pressing the respective buttons repeatedly to cycle through values or to initiate actions. The first time a button is pressed the display scrolls the current value or mode. Pressing the same number key again cycles through the values of that setting or confirms a certain action or mode change. 
 
@@ -369,7 +369,7 @@ Some important functions which you access in \shiftmode and \shiftlock are ...
   \item ... the numbers 0...9 access MIDI setup, voice (de-)activation, panel layout, pitch bender calibration, panel layout switch, etc. 
   \item ... the keys on the keyboard are used to set the keyboard transposition (see section \ref{transposition}) 
   \item ... the \tune button activates the \pernote  (see section \ref{tuning}).
-  \item ... pressing the \record activates the \patchmgmt (see section \ref{patchmgmt})
+  \item ... pressing the \record button activates the \patchmgmt (see section \ref{patchmgmt})
   \item ... pressing the \preset (and confirmation) loads the default patch (see section \ref{defaultpatch})
 \end{itemize}
 
@@ -410,7 +410,7 @@ With the clearly laid out panel controls the Prophet 600 is both, a hands-on per
 
 However, the new functionalities of the upgrade required additional parameters and these had to be placed in new hidden menus. This has obvious disadvantages. Diving into menus interrupts the work flow. It is abstract and unsatisfying. It is only acceptable for parameters which are rarely used and certainly not suited for live tweaking. 
 
-Another important aspect is the preservation of the general user interface concept. In particular, for each function there should be a unique way to do it, not a mix of say, dials and menus. This is one reason why the upgrade also contains "only" one LFO and two envelopes even though one might have added more with the new processor. This corresponds to the layout of the Prophet 600 and anything more would have meant at least a partial dive into menus. There are some notable exceptions, such as the LFO shape, which is a mix of flipping a switch on the control panel and choosing options in the additional patch parameter menu. In most cases the additional patch parameter either have completely separate functions (such as the vibrato, which is fully controlled by menu parameters) or they modify the panel control behaviour in the sense of a configuration. 
+Another important aspect is the preservation of the general user interface concept. In particular, for each function there should be a unique way to do it, not a mix of say, dials and menus. This is one reason why the upgrade also contains "only" one LFO and two envelopes even though one might have added more with the new processor. This corresponds to the layout of the Prophet 600 and anything more would have meant at least a partial dive into menus. There are some notable exceptions, such as the LFO shape, which is a mix of flipping a switch on the control panel and choosing options in the additional patch parameter menu. In most cases an additional patch parameter either has completely separate function form what is available on the control panel (such as the vibrato, which is fully controlled by menu parameters) or it had the function to modify the panel control behavior (such as envelope ranges, etc.). 
 
 A useful work flow of the upgraded Prophet 600 for creating or editing patches could be as follows:
 
@@ -660,7 +660,7 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm){Start tuning procedure};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double click)};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double press)};
     \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {};
@@ -708,7 +708,7 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {Start tuning procedure};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double click)};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double press)};
     \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {Enter preset patch mode};
@@ -756,7 +756,7 @@ In the upgraded Prophet 600 it is possible to limit the cut-off frequency of the
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,15.75cm) {Start tuning procedure};
     \draw[line width=1pt]++(29cm,16.5cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,17.25cm) {From Tape};
-    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double click)};
+    \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,17.25cm) {Shift and shift-lock modes (double press)};
     \draw[line width=1pt]++(29cm,18cm)--++(30cm,0cm);  
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=8cm] at (29cm,18.75cm) {To Tape};
     \node[font=\fontsize{18}{22}\selectfont, align=left, outer sep=0.0mm, anchor = west, text width=22cm] at (36cm,18.75cm) {Enter preset panel mode};
