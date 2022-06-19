@@ -38,7 +38,7 @@ const struct uiParam_s uiParameters[] =
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
 	/*third press*/
 	/*0*/ {.type=ptCont,.number=0,.name="dummy"},
-	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo clk sync",.values={"off","1","2","3","4","5","6","8"}},
+	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo trig",.values={"off","key","1","2","3","4","5","6","8"}},
     /*2*/ {.type=ptStep,.number=spVibTarget,.name="Vib tgt",.values={"VCO","VCA","VCO A","VCO B"}},
 	/*3*/ {.type=ptStep,.number=spModWheelRange,.name="mod rng",.values={"touch","soft", "high", "full"}},
 	/*4*/ {.type=ptStep,.number=spPWMBug,.name="pulse bug",.values={"off","on"}},

@@ -550,7 +550,7 @@ static void refreshVibLFO(void)
 }
 
 
-static void refreshModulationDelay(int8_t refreshTickCount)
+static void refreshModDelayLFORetrigger(int8_t refreshDelayTickCount)
 {
     int8_t anyPressed, anyAssigned;
     static int8_t prevAnyPressed=0;
@@ -567,12 +567,16 @@ static void refreshModulationDelay(int8_t refreshTickCount)
     {
         synth.modulationDelayStart=currentTick;
         synth.dlyAmt=0;
+        if(currentPreset.steppedParameters[spLFOSync]==1) // this is retrigger on keyboard
+        {
+            lfo_resetPhase(&synth.lfo);
+        }
         refreshVibLFO();
     }
 
     prevAnyPressed=anyPressed;
 
-    if(refreshTickCount)
+    if(refreshDelayTickCount)
         synth.modulationDelayTickCount=exponentialCourse(UINT16_MAX-currentPreset.continuousParameters[cpModDelay],12000.0f,2500.0f);
 }
 
@@ -894,7 +898,7 @@ void refreshFilterMaxCV(void)
 
 void refreshFullState(void)
 {
-    refreshModulationDelay(1);
+    refreshModDelayLFORetrigger(1);
     refreshGates();
     refreshAssignerSettings();
     refreshLfoSettings();
@@ -1536,11 +1540,11 @@ void synth_timerInterrupt(void)
                 // sync of the LFO using the clockBar counter
 
                 synth.clockBar=(synth.clockBar+1)%0x9; // make sure the counter stays within the counter range, here 0...9
-                if (currentPreset.steppedParameters[spLFOSync]!=0)
+                if (currentPreset.steppedParameters[spLFOSync]>1)
                 {
                     if(seq_getMode(0)!=smOff || seq_getMode(1)!=smOff || arp_getMode()!=amOff)
                     {
-                        if ((synth.clockBar==8 && currentPreset.steppedParameters[spLFOSync]==7) || synth.clockBar==currentPreset.steppedParameters[spLFOSync])
+                        if ((synth.clockBar==8 && currentPreset.steppedParameters[spLFOSync]==8) || synth.clockBar+1==currentPreset.steppedParameters[spLFOSync])
                         {
                             synth.clockBar=0;
                             lfo_resetPhase(&synth.lfo);
@@ -1706,7 +1710,7 @@ void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t veloc
 
     // mod delay
 
-    refreshModulationDelay(0);
+    refreshModDelayLFORetrigger(0);
 
     // prepare CVs
 
