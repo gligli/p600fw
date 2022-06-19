@@ -1442,7 +1442,20 @@ void synth_timerInterrupt(void)
 
     lfo_update(&synth.lfo);
 
-    pitchALfoVal=pitchBLfoVal=synth.vibPitch;
+
+    pitchALfoVal=pitchBLfoVal=0;
+    if (currentPreset.steppedParameters[spVibTarget]==2) // VCO A
+    {
+        pitchALfoVal=synth.vibPitch;
+    }
+    if (currentPreset.steppedParameters[spVibTarget]==3) // VCO B
+    {
+        pitchBLfoVal=synth.vibPitch;
+    }
+    if (currentPreset.steppedParameters[spVibTarget]==0) // VCO A & B
+    {
+        pitchALfoVal=pitchBLfoVal=synth.vibPitch;
+    }
     ampLfoVal=synth.vibAmp;
     filterLfoVal=0;
 
@@ -1562,15 +1575,15 @@ void synth_timerInterrupt(void)
         break;
     case 2:
         lfo_update(&synth.vibrato);
-        if (currentPreset.steppedParameters[spVibTarget]==0) // VCO
-        {
-            synth.vibPitch=synth.vibrato.output>>2;
-            synth.vibAmp=UINT16_MAX;
-        }
-        else // VCA
+        if (currentPreset.steppedParameters[spVibTarget]==1) // VCA
         {
             synth.vibAmp=synth.vibrato.output+(UINT16_MAX-(synth.vibrato.levelCV>>1));
             synth.vibPitch=0;
+        }
+        else // VCO, A, B
+        {
+            synth.vibPitch=synth.vibrato.output>>2;
+            synth.vibAmp=UINT16_MAX;
         }
         refreshPulseWidth(currentPreset.steppedParameters[spLFOTargets]&mtPW);
         break;
@@ -1799,7 +1812,6 @@ void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t is
             if (currentPreset.steppedParameters[spModwheelTarget]==1 && currentPreset.steppedParameters[spVibTarget]==1)
             {
                 // full strength for vib VCA modulation
-                // synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/14000.0f )-1.0f)*613.12f));
                 synth.modwheelAmount=((uint16_t)((expf(((float)modulation)/30000.0f )-1.0f)*8310.08f));
 
             }
