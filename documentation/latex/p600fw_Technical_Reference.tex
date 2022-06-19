@@ -26,11 +26,11 @@
 %\input{defined_terms.tex}
 %\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
 
-\title{[DRAFT] Technical Reference for the GliGli upgraded Prophet 600}
+\title{[DRAFT] Technical Reference for the GliGli upgraded Prophet-600}
 \author{Florian Merz (Editor)}
-\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet 600}
+\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet-600}
 \makeatletter
-\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT]  Technical Reference for the GliGli upgraded Prophet-600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
 \makeatother
 \titleformat{\chapter}[display]{\LARGE\bfseries}{}{0.0cm}{}
 \titlespacing{\chapter}{0pt}{*0}{*0}
@@ -40,7 +40,7 @@
 \begin{document}
 
 
-% this it the title "Prophet 600"
+% this it the title "Prophet-600"
   \begin{tikzpicture}[scale=0.5]
     \begin{scope}[xslant=0.1]
         \SSGBit[1.5cm]{0,0}{12567}
@@ -73,16 +73,16 @@ The purpose of this technical reference is to ...
 
   \begin{itemize}
     \item ... provide software related information which should make it easier for people interested in the development project to understand the code structure and the mechanics of the firmware
-    \item ... provide reliable reference material for people implementing interfaces to/from the Prophet 600, for example a MIDI SysEx patch editor or a MIDI CC patch editor 
+    \item ... provide reliable reference material for people implementing interfaces to/from the Prophet-600, for example a MIDI SysEx patch editor or a MIDI CC patch editor 
   \end{itemize}
   
-If you use this document you should also read the upgraded firmware User Manual. Things documented in the User Manual are not repeated here. This manual is focussed on topics related specifically to the upgraded Teensy++ 2.0 firmware. Therefore, for anything related to the Prophet 600 hardware and Z80 firmware you should refer to the original Sequential Circuits Service Manual. Most of the original manual should be valid. Note that the procedure for scaling adjustments has changed. So the description in the original service manual is no longer valid unless you refit the original Z80. The new scaling adjustment procedure for the upgraded Prophet 600 is described in the User Manual for the upgraded Prophet 600. 
+If you use this document you should also read the upgraded firmware User Manual. Things documented in the User Manual are not repeated here. This manual is focussed on topics related specifically to the upgraded Teensy++ 2.0 firmware. Therefore, for anything related to the Prophet-600 hardware and Z80 firmware you should refer to the original Sequential Circuits Service Manual. Most of the original manual should be valid. Note that the procedure for scaling adjustments has changed. So the description in the original service manual is no longer valid unless you refit the original Z80. The new scaling adjustment procedure for the upgraded Prophet-600 is described in the User Manual for the upgraded Prophet-600. 
 
 This document come with no warranty for completeness and correctness. If you find that something is wrong or missing or if you have an idea what should be documented, please get in contact via github (https://github.com/image-et-son/p600fw).
 
 \chapter{MIDI SysEx Implementation}
 
-SysEx is supported in the Prophet 600 firmware to ...
+SysEx is supported in the Prophet-600 firmware to ...
 
 \begin{itemize}
   \item ... receive the firmware upgrade in upgrade mode
@@ -91,7 +91,7 @@ SysEx is supported in the Prophet 600 firmware to ...
 
 \section{MIDI bytes to full byte conversion}\label{midibyteconversion}
 
-The data section in Prophet 600 MIDI SysEx commands consist of blocks of 5 MIDI bytes encoding 4 full bytes\footnote{This encoding is commonly used but by no means universal. Still, I could find no reference or standard source for this encoding and also no commonly used designation.}. Each MIDI byte can hold values up to 127 (14 bit). 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first (lowest) 7 bits of the 4 bytes to be encoded. The 8th bits of the 4 bytes are encoded in the first (lowest) 4 bits of the 5th MIDI byte.   
+The data section in Prophet-600 MIDI SysEx commands consist of blocks of 5 MIDI bytes encoding 4 full bytes\footnote{This encoding is commonly used but by no means universal. Still, I could find no reference or standard source for this encoding and also no commonly used designation.}. Each MIDI byte can hold values up to 127 (14 bit). 4 full bytes are stored in 5 MIDI bytes as follows. The first 4 MIDI bytes contain the first (lowest) 7 bits of the 4 bytes to be encoded. The 8th bits of the 4 bytes are encoded in the first (lowest) 4 bits of the 5th MIDI byte.   
 
 Examples:
 
@@ -105,7 +105,7 @@ Examples:
  
 In this way, a sequence of $X$ MIDI blocks (5 MIDI bytes) is be converted to a bytes sequence of $4\dot X$ full bytes. Note, however, that double byte parameters (which is applies to most continuous patch parameters in the firmware) are sequenced such that in the full bytes sequence the least significant byte (LSB) comes before the most significant byte (MSB). 
 
-Note: patch parameters  consist only of single byte parameters (typically stepped parameters) or double byte parameters (all continuous parameters). However, in the patch structure overhead there are longer byte sequences: the unique Prophet 600 SysEx command identifier (3 byte hex value: 00 61 16) and the Prophet 600 storage page initialization number (4 byte hex value: 00 61 16 A5, referred to as \textit{Storage Magic} in the code). 
+Note: patch parameters  consist only of single byte parameters (typically stepped parameters) or double byte parameters (all continuous parameters). However, in the patch structure overhead there are longer byte sequences: the unique Prophet-600 SysEx command identifier (3 byte hex value: 00 61 16) and the Prophet-600 storage page initialization number (4 byte hex value: 00 61 16 A5, referred to as \textit{Storage Magic} in the code). 
 
 \section{Firmware SysEx structure}\label{sysex}
 
@@ -147,7 +147,7 @@ Note that the is a second interrupt, which is not triggered by time intervals bu
 
 \section{Multiplexer / DAC}\label{potmux}
 
-To convert digital representations of values in the software to real voltages which can then be applied to the analogue components, the Prophet 600 has a Digital Analog Converter (DAC). In order to set  control voltages the Prophet 600 uses 4 multiplexers of type 4051, each having a selection of 8 outputs. The resulting 32 control voltages covered in this way are: 6 for oscillator A frequency, 6 for oscillator B frequency,  6 for filter cut-off frequency, 6 for voice amplitude (VCA) and then 8 more controls (pulse width A and B, volume A and B, resonance, cross-modulation amount, master volume and the level of external filter CV). In the schematics for circuit board 4 the first 24 voltages are covered by the 3 multiplexers with component number 415-417 and the last 8 voltages are covered by the multiplexer 418. Note that while the first 24 voltages are voice specific, the latter 8 voltages are not - which is the reason why multi-timbrality is impossible on the Prophet 600 hardware.
+To convert digital representations of values in the software to real voltages which can then be applied to the analogue components, the Prophet-600 has a Digital Analog Converter (DAC). In order to set  control voltages the Prophet-600 uses 4 multiplexers of type 4051, each having a selection of 8 outputs. The resulting 32 control voltages covered in this way are: 6 for oscillator A frequency, 6 for oscillator B frequency,  6 for filter cut-off frequency, 6 for voice amplitude (VCA) and then 8 more controls (pulse width A and B, volume A and B, resonance, cross-modulation amount, master volume and the level of external filter CV). In the schematics for circuit board 4 the first 24 voltages are covered by the 3 multiplexers with component number 415-417 and the last 8 voltages are covered by the multiplexer 418. Note that while the first 24 voltages are voice specific, the latter 8 voltages are not - which is the reason why multi-timbrality is impossible on the Prophet-600 hardware.
 
 With the multiplexer approach you can only set one voltage at a time and so the firmware sets all voltages in cycle. However, neither the DAC nor the multiplexer respond instantaneously - there is a component specific delay. The function for setting voltages in defined in the sample and hold class \textit{sh.c}. There are two functions, a "normal" one \textit{updateCV(control, value)} and a fast one \textit{sh\_setCV\_FastPath(control, value)}. The fast one is used for the voltages through multiplexers 415-417 (voice controls) during normal operation and the "normal" one is used for all other voltages during normal operation and for voices controls (frequencies) during tuning and in scaling adjustment mode.
 
@@ -170,7 +170,7 @@ Note that overall the firmware version \version is more tuned and drives the har
 \begin{itemize}
   \item CD74HCT4051E (Texas Instruments): fast propagation and very fast switching. This is an excellent choice. 
   \item MC74HC4051N (Motorola): fast propagation and fast switching. This is also a very good choice.
-  \item CD4051BE (Texas Instruments): fast propagation but slow switching. This is what I think was the Prophet 600 factory standard. It gets the job done.  
+  \item CD4051BE (Texas Instruments): fast propagation but slow switching. This is what I think was the Prophet-600 factory standard. It gets the job done.  
   \item BU4051B (Rohm): medium propagation and slow switching. Not a good choice, appears to be acceptable for component 418.
   \item HCF4051BE (STMicroelectronics): slow propagation and slow switching. Not ideal, can produce glitches.
   \item MC14051B (Motorola): very slow propagation and slow switching. This is too slow in switching and creates significant glitches. Not recommended.

@@ -19,7 +19,7 @@ Due to extensions of the parameter scope for additional functions, the patch sto
   \item Firmware version \version: storage version 8  
 \end{itemize}
 
-For the implementation of an MIDI SysEx based patch editor it is crucial to take storage version into account. It is not recommended to try to convert a lower version SysEx file to a higher version, as several parameters have the value ranges changed. Instead one should always import a lower version SysEx patch file to the Prophet 600 with a newer firmware installed that uses the storage version you want and then export it again. The exported SysEx patch file will be properly converted. 
+For the implementation of an MIDI SysEx based patch editor it is crucial to take storage version into account. It is not recommended to try to convert a lower version SysEx file to a higher version, as several parameters have the value ranges changed. Instead one should always import a lower version SysEx patch file to the Prophet-600 with a newer firmware installed that uses the storage version you want and then export it again. The exported SysEx patch file will be properly converted. 
 
 Note: it would be possible to document the transformations / remappings between versions 7 and 8. If you feel you need this for what you are trying to do, please get in contact via https://github.com/image-et-son/p600fw.
 
@@ -29,17 +29,17 @@ The SysEx structure for patch data is as follows:
 
 \begin{enumerate}
   \item "F0": SysEx start
-  \item Prophet 600 SysEx command signature: "00 61 16"
-  \item Prophet 600 SysEx patch dump type: "01"
+  \item Prophet-600 SysEx command signature: "00 61 16"
+  \item Prophet-600 SysEx patch dump type: "01"
   \item Patch data section: series of MIDI data blocks, each consisting of 5 MIDI bytes (14 bit) 
   \item "F7": SysEx end
 \end{enumerate}
 
-The Prophet 600 ignores SysEx commands which do not carry the signature "00 61 16" with the exception of original Z80 produced SysEx files.
+The Prophet-600 ignores SysEx commands which do not carry the signature "00 61 16" with the exception of original Z80 produced SysEx files.
 
 The data part of the patch SysEx has the same underlying structure as the internal storage in the sense that the parameters are stored in exactly the same order. As described in section \ref{midibyteconversion} the storage of double  byte values is added to the MIDI byte sequence in the order \textit{LSB}, \textit{MSB}. E.g the lower byte comes first. This also applies if a double byte is split across two MIDI data blocks (e.g. the \textit{LSB} is the fourth byte of one MIDI data block and the \textit{MSB} is the first byte of the next MIDI data block. 
 
-The technical overhead inside the patch data section (item 4 in the list above) consists of another specific signature (\textit{Storage Magic}) and the stroage version. The signature is used to identify whether the data section of the SysEx represents a valid storage page of the Prophet 600. It should  always be present for any valid patch data independently from the storage version. If that signature is not present or differs the patch data will be ignored. The storage version should be used to identify the correct mapping of values.  
+The technical overhead inside the patch data section (item 4 in the list above) consists of another specific signature (\textit{Storage Magic}) and the stroage version. The signature is used to identify whether the data section of the SysEx represents a valid storage page of the Prophet-600. It should  always be present for any valid patch data independently from the storage version. If that signature is not present or differs the patch data will be ignored. The storage version should be used to identify the correct mapping of values.  
 
 Note that the MIDI SysEx patch data contains all parameters up to and including the last non-zero value. It therefore has variable a size. However, it always consists of complete MIDI blocks (5 MIDI bytes which convert into 4 data bytes).
 
@@ -132,7 +132,7 @@ Consider building the SysEx patch files for patch number 5 from storage in the l
 
 \subsection{Patch Name}
 
-Up to version \version the Prophet 600 does no display the patch name and offers no option the change the patch name. However, the patch name data is stored in the patch and is preserved when the patch is send to Prophet 600 via MIDI SysEx, then stored on the unit and then exported again in SysEx format. An external SysEx patch editor could therefore make use of the patch name.
+Up to version \version the Prophet-600 does no display the patch name and offers no option the change the patch name. However, the patch name data is stored in the patch and is preserved when the patch is send to Prophet-600 via MIDI SysEx, then stored on the unit and then exported again in SysEx format. An external SysEx patch editor could therefore make use of the patch name.
 
 The patch consists of 16 bytes and the enconding is UTF-8 with printable characters as follows:
 

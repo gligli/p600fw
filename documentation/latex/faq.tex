@@ -1,4 +1,4 @@
-This version of the firmware has been tested on many Prophet 600s.  Issues may still arise in an instrument manufactured over 30 years ago operating in varied environments; components age unevenly.  We invite you to submit issues and bugs but understand that in some cases issues might have to do more with the physical characteristics of the instrument than with software.  Here are couple of things to think about:
+This version of the firmware has been tested on many Prophet-600s.  Issues may still arise in an instrument manufactured over 30 years ago operating in varied environments; components age unevenly.  We invite you to submit issues and bugs but understand that in some cases issues might have to do more with the physical characteristics of the instrument than with software.  Here are couple of things to think about:
 
 \begin{enumerate}
   \setlength\itemsep{0cm}
@@ -7,11 +7,11 @@ This version of the firmware has been tested on many Prophet 600s.  Issues may s
   \item Check for a new hex file for an updated firmware version.
   \item How did the instrument operate before the upgrade?  If the instrument becomes unstable, restore the original Z80 and observe the behaviour.
   \item Power Supply: Unstable power supplies can cause a lot of issues with digital/analogue hybrid synthesisers.
-  \item Locked or unstable parameters: Pots can generate unstable voltages that toggle between two states.  This was not an issue when the resolution on the Prophet 600 was lower, say four or six bits.  However, with higher depth resolution, you might hear the artefacts of dirty or faulty pots causing slight wavering in the sound.  Particularly susceptible parameters include the Pulse Width and the Filter Cut-off with a high Resonance setting.  The solution is to clean the pot, change it or move the pot to a new location.  You can also use a MIDI controller to set values and then store them.   
+  \item Locked or unstable parameters: Pots can generate unstable voltages that toggle between two states.  This was not an issue when the resolution on the Prophet-600 was lower, say four or six bits.  However, with higher depth resolution, you might hear the artefacts of dirty or faulty pots causing slight wavering in the sound.  Particularly susceptible parameters include the Pulse Width and the Filter Cut-off with a high Resonance setting.  The solution is to clean the pot, change it or move the pot to a new location.  You can also use a MIDI controller to set values and then store them.   
   \item Keep abreast of changes and report issues at Github-Issues: https://github.com/gligli/p600fw/issues. 
     
 \end{enumerate}
 
-\textbf{My Prophet 600 lacks bass and sounds harsh}
+\textbf{My Prophet-600 lacks bass and sounds harsh}
 The electrolytic decoupling capacitors on the voices board may be dying. Try replacing them with slightly higher values (as it can't really hurt for decoupling ), 
 e.g. $1\mu F \to 3.3\mu F$, $2.2\mu F \to 4.7\mu F$. This may also improve the audio output level.

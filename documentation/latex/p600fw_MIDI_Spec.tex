@@ -26,10 +26,10 @@
 %\input{defined_terms.tex}
 %\newenvironment{flowtext}{\addmargin[0cm]{7cm}}{\endaddmargin} % standard text width (reduced for layout)
 
-\title{MIDI Specification for the 2022 upgraded Prophet 600}
-\pagestyle{myheadings}\markright{Technical Reference for the GliGli upgraded Prophet 600}
+\title{MIDI Specification for the 2022 upgraded Prophet-600}
+\pagestyle{myheadings}\markright{Technical Reference for the GliGli upgraded Prophet-600}
 \makeatletter
-\renewcommand\chapter{\pagestyle{myheadings}\markright{Technical Reference for the GliGli upgraded Prophet 600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+\renewcommand\chapter{\pagestyle{myheadings}\markright{Technical Reference for the GliGli upgraded Prophet-600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
 \makeatother
 \titleformat{\chapter}[display]{\LARGE\bfseries}{}{0.0cm}{}
 \titlespacing{\chapter}{0pt}{*0}{*0}
@@ -39,7 +39,7 @@
 \begin{document}
 
 
-% this it the title "Prophet 600"
+% this it the title "Prophet-600"
   \begin{tikzpicture}[scale=0.7]
     \begin{scope}[xslant=0.1]
         \SSGBit[1.5cm]{0,0}{12567}
@@ -49,7 +49,7 @@
         \SSGBit[1.5cm]{10cm,0}{3567}
         \SSGBit[1.5cm]{12.5cm,0}{14567}
         \SSGBit[1.5cm]{15cm,0}{4567}
-        \SSGBit[1.5cm]{17.5cm,0}{}
+        \SSGBit[1.5cm]{17.5cm,0}{7}
         \SSGBit[1.5cm]{20cm,0}{134567}
         \SSGBit[1.5cm]{22.5cm,0}{123456}
         \SSGBit[1.5cm]{25cm,0}{123456}
@@ -59,7 +59,7 @@
 \vspace{1cm}
   
   \Large
-  MIDI Specification for the Prophet 600 GliGli based firmware \vspace{0.4cm} \\
+  MIDI Specification for the Prophet-600 GliGli based firmware \vspace{0.4cm} \\
   \large
   Edition: 1.0 (17.6.2022) \vspace{0.3cm}\\
   Refers to firmware version: \version \vspace{0.3cm}\\
@@ -71,7 +71,7 @@
 
 \chapter{Preface}
 
-The purpose of this technical reference is to provide reliable reference material for people implementing interfaces to/from the Prophet 600, for example a MIDI SysEx patch editor or a MIDI CC patch editor. Although designed to be helpful and drafted with care, this document comes with no warranty for completeness and correctness. If you find that something is wrong or missing or if you have an idea what should be documented, please get in contact via github (https://github.com/image-et-son/p600fw).
+The purpose of this technical reference is to provide reliable reference material for people implementing interfaces to/from the Prophet-600, for example a MIDI SysEx patch editor or a MIDI CC patch editor. Although designed to be helpful and drafted with care, this document comes with no warranty for completeness and correctness. If you find that something is wrong or missing or if you have an idea what should be documented, please get in contact via github (https://github.com/image-et-son/p600fw).
 
 \pagebreak
 
@@ -79,7 +79,7 @@ The purpose of this technical reference is to provide reliable reference materia
 
 \section{MIDI bytes to full byte conversion}\label{midibyteconversion}
 
-The data stream embedded in Prophet 600 MIDI SysEx patch commands consist of blocks of 5 MIDI bytes which encode 4 full bytes\footnote{This encoding is commonly used but by no means universal. Still, I could find no reference or standard source for this encoding and also no commonly used designation.}. Each MIDI byte can hold values up to 127 since the 8th bit is reserved. In a MIDI data block of 5 bytes the first 4 MIDI bytes contain the first (lowest) 7 bits of the 4 data bytes to be encoded. The 8th bits of the 4 data bytes are encoded in the first (lowest) 4 bits of the 5th MIDI byte.   
+The data stream embedded in Prophet-600 MIDI SysEx patch commands consist of blocks of 5 MIDI bytes which encode 4 full bytes\footnote{This encoding is commonly used but by no means universal. Still, I could find no reference or standard source for this encoding and also no commonly used designation.}. Each MIDI byte can hold values up to 127 since the 8th bit is reserved. In a MIDI data block of 5 bytes the first 4 MIDI bytes contain the first (lowest) 7 bits of the 4 data bytes to be encoded. The 8th bits of the 4 data bytes are encoded in the first (lowest) 4 bits of the 5th MIDI byte.   
 
 Examples:
 
@@ -93,7 +93,7 @@ Examples:
  
 Note, however, that double byte parameters (which is applies to most continuous patch parameters in the firmware) are sequenced such that in the full bytes sequence the least significant byte (LSB) comes before the most significant byte (MSB). 
 
-Note: patch parameters  consist only of single byte parameters (typically stepped parameters) or double byte parameters (all continuous parameters). However, in the patch structure overhead there are longer byte sequences: the unique Prophet 600 SysEx command identifier (3 byte hex value: 00 61 16) and the Prophet 600 storage page initialization number (4 byte hex value: 00 61 16 A5, referred to as \textit{Storage Magic} in the code). 
+Note: patch parameters  consist only of single byte parameters (typically stepped parameters) or double byte parameters (all continuous parameters). However, in the patch structure overhead there are longer byte sequences: the unique Prophet-600 SysEx command identifier (3 byte hex value: 00 61 16) and the Prophet-600 storage page initialization number (4 byte hex value: 00 61 16 A5, referred to as \textit{Storage Magic} in the code). 
 
 \section{Patch SysEx structure}\label{sysexpatch}
 
@@ -101,7 +101,7 @@ Note: patch parameters  consist only of single byte parameters (typically steppe
 
 \section{Tools}
 
-The release comes with a Python script which converts Prophet 600 Patch MIDI SysEx to plain values. This is a specialist tool (which came in handy during the testing phase) but can also be the starting point for the development of a proper patch management tool. The following rfers to the (still rudimentary) version 1 of this tool.
+The release comes with a Python script which converts Prophet-600 Patch MIDI SysEx to plain values. This is a specialist tool (which came in handy during the testing phase) but can also be the starting point for the development of a proper patch management tool. The following rfers to the (still rudimentary) version 1 of this tool.
 
 The tool consists of the script \textit{syx\_converter\_v1.py} and the two configuration files \textit{storage\_7.spec} and \textit{storage\_8.spec}. The script expectes the two configuration files in the folder. To use the tool you need to have Python 3 installed. The command line usage would be \textit{>py syx\_converter\_v1.py <filename> [-p<patchnumber>]}. The filename (or path) must be provided. It is the SysEx File to be converted. The parameter \textit{p} is optional. When provided and \textit{<patchnumber>} ist between 0 and 99, then the script will try to extract that patch from the file. If the SysEx file does not contain that patch number the output is empty.
 
