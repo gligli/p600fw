@@ -395,13 +395,14 @@ static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t p
 
 	if(settings.presetMode && program<100  && program!=settings.presetNumber)
 	{
-		if(preset_loadCurrent(program,0))
+		if (preset_checkPage(program)) // ignore MIDI prog change if the page is not valid
 		{
+			preset_loadCurrent(program,0);
 			settings.presetNumber=program;
-			ui_setPresetModified(0);	
+			ui_setPresetModified(0);
 			refreshFullState();
-            ui_setNoActivePot(1);
-            ui.presetModified=0;
+			ui_setNoActivePot(1);
+			ui.presetModified=0;
 		}
 	}
 }
