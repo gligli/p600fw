@@ -364,7 +364,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
             }
         }
     }
-    else if(control==122) // All Local ON/OFF
+    else if(control==122) // Local Keyboard ON/OFF
     {
         if (value<=63) // local ON
         {

@@ -70,17 +70,21 @@ The following MIDI CC have been changed.
 
 \textbf{Other MIDI CC Settings}
 
-\begin{longtable}[l]{ p{6cm}|p{2.5cm}|p{1.5cm}|p{2cm}} 
-\textbf{Parameter} & \textbf{Type} & \textbf{CC} & \textbf{CC Fine} \\ \hline
-Toggle Live/Preset Mode & Stepped & 0 & \\ \hline
-Mod Wheel & Continuous & 1 & \\ \hline
-Master Volume & Continuous & 7 & \\ \hline
-Sequencer / arpeggiator clock & Continuous & 45 & 109 \\ \hline
-Hold Pedal & Stepped & 64 & \\ \hline
-Local On/Off & Stepped & 120 & \\ \hline
-All Notes Off & Stepped & 123 & \\ \hline
-\end{longtable}
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
 
+
+\begin{longtable}[l]{ p{6cm}|p{2.5cm}|p{1.5cm}|p{2cm}|p{7cm}} 
+\textbf{Parameter} & \textbf{Type} & \textbf{CC} & \textbf{CC Fine} & \textbf{Comment on CC value} \\ \hline
+Toggle Live/Preset Mode & Stepped & 0 & & 0 = live mode, 1 = preset mode \\ \hline
+Mod Wheel & Continuous & 1 & & \\ \hline
+Master Volume & Continuous & 7 & & \\ \hline
+Sequencer / arpeggiator clock & Continuous & 45 & 109 & \\ \hline
+Hold Pedal & Stepped & 64 & & 0 = release, >0 = hold/latch\\ \hline
+All Sound Off & Stepped & 120 & & 127 = sound off\\ \hline
+Local On/Off & Stepped & 122 & & <=63 = local on, >63 = local off \\ \hline
+All Notes Off & Stepped & 123 & & 0 = all notes off\\ \hline
+\end{longtable}
 
 
 \normalsize
