@@ -7,7 +7,7 @@ Patch parameters are stored as patches in each of the 100 slots on the Teensy++ 
   \item special data: patch name 
 \end{itemize}
 
-The SysEx MIDI data is build directly from the storage data, e.g. it has the same structure (order of parameters). 
+The SysEx MIDI data is build directly from the storage data. It therefore has the same structure (order of parameters). 
 
 \subsection{Storage version}
 
@@ -37,7 +37,7 @@ The SysEx structure for patch data is as follows:
 
 The Prophet-600 ignores SysEx commands which do not carry the signature "00 61 16" with the exception of original Z80 produced SysEx files.
 
-The data part of the patch SysEx has the same underlying structure as the internal storage in the sense that the parameters are stored in exactly the same order. As described in section \ref{midibyteconversion} the storage of double  byte values is added to the MIDI byte sequence in the order \textit{LSB}, \textit{MSB}. E.g the lower byte comes first. This also applies if a double byte is split across two MIDI data blocks (e.g. the \textit{LSB} is the fourth byte of one MIDI data block and the \textit{MSB} is the first byte of the next MIDI data block. 
+The data part of the patch SysEx has the same underlying structure as the internal storage in the sense that the parameters are stored in exactly the same order. As described in section \ref{midibyteconversion} the storage of double  byte values is added to the MIDI byte sequence in the order \textit{LSB}, \textit{MSB}. E.g the lower byte comes first. This also applies if a double byte is split across two MIDI data blocks (e.g. the \textit{LSB} is the fourth byte of one MIDI data block and the \textit{MSB} is the first byte of the next MIDI data block). 
 
 The technical overhead inside the patch data section (item 4 in the list above) consists of another specific signature (\textit{Storage Magic}) and the stroage version. The signature is used to identify whether the data section of the SysEx represents a valid storage page of the Prophet-600. It should  always be present for any valid patch data independently from the storage version. If that signature is not present or differs the patch data will be ignored. The storage version should be used to identify the correct mapping of values.  
 

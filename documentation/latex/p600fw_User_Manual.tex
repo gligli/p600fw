@@ -119,7 +119,7 @@ There are various modifications and modern CPU "implants" for some vintage analo
 
 The Teensy++ 2.0 offers completely new possibilities. Just looking at specs: the Z80 version of the Prophet-600 ran at 4 MHz while the ATMEL processor on the Teensy board is operated at 16 MHz. Also, the on-board flash memory provides much better storage and firmware handling possibilities compared to the EPROM which the Z80 uses. The firmware does not rely on a battery for keeping patch data in memory. With the replacement the obvious limitations of the original Prophet-600 could be overcome - but more than that, it opened the possibility for new and for enhanced features. 
 
-Developing the software was a major effort with low-level functions and basic hardware communication at the core, e.g. instruction to set voltages to the electronic components, MIDI (interrupt) implementation, multiplexer operations and DAC operations. On top of this there is the "musical" part of coding, e.g. envelopes, LFOs, modulations and sequencing functions as well as UI functions. Many people have contributed, most probably out of curiosity and passion for synthesizers and driven by the excitement that such a project could not only be conjured up but also be implemented and brought to life. 
+Developing the software was a major effort with low-level functions and basic hardware communication at the core, e.g. instruction to set voltages to the electronic components, MIDI (interrupt) implementation, multiplexer operations and DAC operations. On top of this there is the "musical" part of coding such as envelopes, LFOs, modulations and sequencing functions as well as UI functions. Many people have contributed, most probably out of curiosity and passion for synthesizers and driven by the excitement that such a project could not only be conjured up but also be implemented and brought to life. 
 
 The first stable version of the firmware upgrade was version 2.0 in 2014. An intermediate release (or at least something close to a release) version 2.1 Release Candidate 3 (2.1 RC3) has been available from September 5th 2015 on GliGli's webpages \cite{gligli}. The latest release version \version is the result of continued development between September 2021 and March 2022. It is meant as a celebration and revival of the original idea and it provides various new features and also significant improvements in core functions. The latest firmware version can be found on the project page\cite{newversion}.
 
@@ -195,7 +195,7 @@ In addition to this, several more technical / advanced changes were made such as
 
 \section{On compatibility for those upgrading from 2.0 and 2.1 RC3}
 
-You can upgrade the firmware by SysEx or by directly loading the firmware onto the Teensy++ 2.0 board via USB (see section \ref{fwupgrade}). When upgrading by SysEx, both patch data and settings are preserved. Backward compatibility is ensured, e.g. patches created in prior firmware version (including Z80) still work properly on new firmware versions. Note that as a general principle, before performing any upgrade the safekeeping of patches is not only best practice but also strongly recommended. The following contains some remarks which are relevant if you are upgrading to version \version from version 2.0 or 2.1 RC3.
+You can upgrade the firmware by SysEx or by directly loading the firmware onto the Teensy++ 2.0 board via USB (see section \ref{fwupgrade}). When upgrading by SysEx, both patch data and settings are preserved. Backward compatibility is ensured, i.e. patches created in prior firmware version (including Z80) still work properly on new firmware versions. Note that as a general principle, before performing any upgrade the safekeeping of patches is not only best practice but also strongly recommended. The following contains some remarks which are relevant if you are upgrading to version \version from version 2.0 or 2.1 RC3.
 
 \textbf{Panel}: If you have a synthgraphics overlay, there are some minor changes (also reflected in the figures in this manual). Firstly, the layout of the menu parameters has been changed - these are now grouped in themes and since there are more parameters, selecting a parameter requires three presses in some cases. So the "cheat sheet" that some users have attached to the left of the number pad is not correct any more. Secondly (and less significant), what was formerly the "amplitude envelope" is now referred to more generally as the "2nd envelope". There are additional envelope routing options so that this envelope has a more generalized role. 
 
@@ -205,9 +205,9 @@ You can upgrade the firmware by SysEx or by directly loading the firmware onto t
 
 \textbf{Arpeggiator}: The arpeggiator patterns up/down and random have been changed in version \version
 
-\textbf{MIDI CC}: Due to the change in menu parameters (obsolete parameters) and subsequent reshuffling (e.g. re-designation of the CC values for the legacy LFO frequency range), the specification of MIDI CC has changed slightly. As a result of rescaling of parameters the MIDI CC value to action has changed for LFO and vibrato frequencies and LFO and vibrato amounts as well as decay and release times of envelopes with linear shape. When loading older patches, the changes are taken into account to ensure compatibility.
+\textbf{MIDI CC}: Due to the change in menu parameters (obsolete parameters) and subsequent reshuffling (re-designation of the CC values for the legacy LFO frequency range), the specification of MIDI CC has changed slightly. As a result of rescaling of parameters the MIDI CC value to action has changed for LFO and vibrato frequencies and LFO and vibrato amounts as well as decay and release times of envelopes with linear shape. When loading older patches, the changes are taken into account to ensure compatibility.
 
-\textbf{Envelopes}: The linear envelope shape has been revised in version \version. It is now a linear shape with an exponential tail (e.g. a softer roll-off) for decay and release. It was a deliberate decision to replace the linear shape altogether. Note that the smooth roll-off required a rescaling of the envelope decay and release controls for linear shapes. When loading older patches, the changes are taken into account to ensure compatibility: the effective decay and release times are preserved. However, the application of MIDI CC values is different, so if you are controlling sound by MIDI CC you may need to make adjustments.
+\textbf{Envelopes}: The linear envelope shape has been revised in version \version. It is now a linear shape with an exponential tail (i.e. a softer roll-off) for decay and release. It was a deliberate decision to replace the linear shape altogether. Note that the smooth roll-off required a rescaling of the envelope decay and release controls for linear shapes. When loading older patches, the changes are taken into account to ensure compatibility: the effective decay and release times are preserved. However, the application of MIDI CC values is different, so if you are controlling sound by MIDI CC you may need to make adjustments.
 
 \section{Credits and license}
 
@@ -392,7 +392,7 @@ Two slightly different panel layouts are supported. In \textit{SCI} layout the p
   \item Glide dial (in Sequential Circuits panel layout only, see section \ref{glide})
 \end{itemize}
 
-These controls are all patch parameters, e.g. stored, loaded, imported and exported with a patch. The panel controls \mastertune and \mastervol to the very right of the panel are not part of the patch. These controls are always applied as they are. They are meant to adjust the instrument to the performance environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume). Also, you can always reliably start the instrument with volume turned to zero.
+These controls are all patch parameters, which means they are stored, loaded, imported and exported with a patch. The panel controls \mastertune and \mastervol to the very right of the panel are not part of the patch. These controls are always applied as they are. They are meant to adjust the instrument to the performance environment (e.g. spontaneous tuning to a band/ensemble and adjustment of the volume). Also, you can always reliably start the instrument with volume turned to zero.
 
 \section{Keyboard and performance section}
 
@@ -473,7 +473,7 @@ After power-up the instrument volume is always set to the value position of the 
 
 The Prophet-600 offers a polyphonic sequencer with two tracks and an arpeggiator with three distinct pattern types. The details of operation are explained in sections \ref{arp} (arpeggiator) and \ref{seq} (sequencer).
 
-The sequencer and the arpeggiator share the same clock and on this clock the two sequencer tracks and one of the arpeggiator patterns can run simultaneously. In order to be able to operate the sequencer and/or arpeggiator in sync with other instruments, the upgraded Prophet-600 provides three different clock source methods which are configured in the miscellaneous setting \clocksync.
+The sequencer and arpeggiator share the same clock, which can simultaneously run both sequencer tracks and one arpeggiator pattern. In order to be able to operate the sequencer and/or arpeggiator in sync with other instruments, the upgraded Prophet-600 provides three different clock source methods which are configured in the miscellaneous setting \clocksync.
 \begin{itemize}
   \item \textit{internal}: the internal clock is used. The \clock is edited like a menu patch parameter associated with number 0
   \item \textit{MIDI}: the clock is synced to the MIDI clocked received on the MIDI receive channel as set in the  miscellaneous settings
@@ -483,7 +483,7 @@ When the clock source is set to external (either \textit{MIDI} or \textit{tape})
 
 It is also possible to sync the LFO to the sequencer / arpeggiator clock (internal or external). The menu parameter \lfosync provides the options \textit{off} (no sync, free running LFO) or one of the following \textit{1,2,3,4,5,6,8}. The latter sets the number of clock beats after which the LFO in reset.
 
-Note that you can operate the sequencer and/or arpeggiator also in unison mode with all features of that mode (see section \ref{poly-unison-voice}). However, the voices are not shared between the tracks and the arpeggiator. The priority is as follows: arpeggiator, sequencer track 2, sequencer track 1. E.g. if activated, the arpeggiator will use all voices in unison mode and when the sequencer track 1 and 2 have a note on the same beat, only track 2 will play. Unison mode should be activated before starting the sequencer or arpeggiator.
+Note that you can also operate the sequencer and/or arpeggiator in unison mode with all features of that mode (see section \ref{poly-unison-voice}). However, the voices are not shared between the tracks and the arpeggiator. The priority is as follows: arpeggiator, sequencer track 2, sequencer track 1. If activated, the arpeggiator will use all voices in unison mode and when the sequencer tracks 1 and 2 have a note on the same beat, only track 2 will play. Unison mode should be activated before starting the sequencer or arpeggiator.
 
 \pagebreak
 
@@ -511,11 +511,9 @@ Note that you can operate the sequencer and/or arpeggiator also in unison mode w
 
 \section{Glide}\label{glide}
 
-In the original Prophet-600 the glide setting (the glide time) has a dedicated dial, \glidepot. In the upgraded Prophet-600 in firmware versions 2.0 and 2.1 RC3 the dial has been re-designated to control the amplitude of VCO B. As a consequence the glide time has been moved to the menu patch parameter \glide. 
+The Prophet-600 offers a glide function in polyphonic and unison mode. The way you set the glide time depends on the current active panel layout. When the panel layout is set to \textit{GliGli} you must use the menu parameter \glide to set the glide time. When the panel layout is set to \textit{SCI}, the menu parameter \glide is suppressed and the glide time is set by the \glidepot dial instead. 
 
-In the latest firmware, the panel layout is switchable using the \miscsett \panelswitch. When the panel layout is set to \textit{GliGli} the menu parameter \glide becomes available. When the panel layout is set to \textit{SCI} the menu parameter \glide is suppressed in the menu and instead the \glidepot dial on the panel controls the glide time. 
-
-For details on the panel layout options see section \ref{panelswitch}.
+For details on the panel layout options see section \ref{panelswitch}. 
 
 \section{Detune}\label{detune}
 
@@ -567,7 +565,7 @@ The upgraded Prophet-600 provides a method for switching single voices off. This
   \item Press \numberbut{5} to toggle between on and off of the voice selected using \numberbut{4}. 
 \end{enumerate}
 
-Note: the voice masking is stored in the settings. E.g. it applies to all patches and all modes and it is retained through a power cycle. If you are missing a voice you should check the voice masking.
+Note: the voice masking is stored in the settings. It therefore applies to all patches and all modes and it is retained through a power cycle. If you are missing a voice you should check the voice masking.
 
 \section{Transposition}\label{transposition}
 

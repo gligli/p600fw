@@ -123,10 +123,10 @@ The \textit{init} function of the firmware is overwritten such that upon power u
 
 Note that before starting into the main loop inside \textit{main()} the hardware and synth are initialized. The function \textit{synth\_init()} contains a test if the unit has been started in scaling adjustment mode (see User Manual) and the code for the scaling adjustment is called from there.
 
-The main operational loop is a continuous and call of the function \textit{synth\_update()} (defined in \textit{synth.c}). This function contains the scanning of user controls and updates for non time-critical voltages and variables, such as volume, ADSR settings, glide setting, LFO and vibrato frequencies etc. These are controls and operations which do not depend on time. For timed operations, e.g. operations which have to happen at well defined time intervals (such as envelope and LFO changes) the firmware relies on a timed interrupt of the main loop. This is the interrupt vector \textit{ISR(TIMER0\_COMPA\_vect)} defined in \textit{firmware.c}). It runs at 2kHz and each time the main loop is interrupted in this way, the function \textit{synth\_timerInterrupt()} in (defined in \textit{synth.c}) is called. The function \textit{synth\_timerInterrupt()} executes the following steps:
+The main operational loop is a continuous and call of the function \textit{synth\_update()} (defined in \textit{synth.c}). This function contains the scanning of user controls and updates for non time-critical voltages and variables, such as volume, ADSR settings, glide setting, LFO and vibrato frequencies etc. These are controls and operations which do not depend on time. For timed operations, i.e. operations which have to happen at well defined time intervals (such as envelope and LFO changes) the firmware relies on a timed interrupt of the main loop. This is the interrupt vector \textit{ISR(TIMER0\_COMPA\_vect)} defined in \textit{firmware.c}). It runs at 2kHz and each time the main loop is interrupted in this way, the function \textit{synth\_timerInterrupt()} in (defined in \textit{synth.c}) is called. The function \textit{synth\_timerInterrupt()} executes the following steps:
 
 \begin{itemize}
-  \item LFO incrementation (e.g. advancing the LFO by 0.5 milliseconds) 
+  \item LFO incrementation (advancing the LFO by 0.5 milliseconds) 
   \item 
   \item 6 times call function \textit{refreshVoice()}
   \subitem envelope incrementation (2 envelopes) 

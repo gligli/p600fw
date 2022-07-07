@@ -1,11 +1,11 @@
-Each of the six voices of the Prophet-600 has two voltage controlled oscillators (VCOs). VCO A and VCO B have dedicated sub-panels. The oscillators are basically identical. They offer three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The pulse width of the pulse shape can be adjusted using the corresponding \pulsewidth dial. All three shapes can be activated simultaneously. The figures below are for \textit{GliGli} panel layout and \textit{SCI} panel layout, which differ in the way you control the oscillator volumes.
+Each of the six voices of the Prophet-600 has two voltage controlled oscillators (VCOs). VCO A and VCO B have dedicated sub-panels. The oscillators are basically identical. They offer three waveforms: \textit{sawtooth}, \textit{triangle} and \textit{pulse}. The width of the pulse waveform can be adjusted using the corresponding \pulsewidth dial. All three shapes can be activated simultaneously. The figures below are for \textit{GliGli} panel layout and \textit{SCI} panel layout, which differ in the way you control the oscillator volumes.
 
 \textbf{Oscillators in GliGli panel layout}
 
 \begin{center}
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
-    \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter oscillator sets the units of the two oscillator frequency dials, e.g. \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
+    \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter oscillator sets the units of the two oscillator frequency dials: \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
     \oscapanelsci{0cm,9.5cm}
     \oscbpanelsci{0cm,0cm}
     \mixerpanel{31.9cm,0cm}
@@ -20,7 +20,7 @@ Each of the six voices of the Prophet-600 has two voltage controlled oscillators
 \begin{center}
 \scalebox{0.4}{
   \begin{tikzpicture}[scale=0.8]
-    \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter sets the units of the two oscillator frequency dials, e.g. \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
+    \addpar{-18cm,13cm}{\oscpitchmode \\ This menu parameter sets the units of the two oscillator frequency dials: \textit{free}, \textit{semi}, \textit{octave}, or mixed (different units for A and B.) };
     \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,15cm);
     \draw[line width = 2pt, dashed] (-4cm,15cm) -- (1cm,6cm);
     \oscapanelsci{0cm,9.5cm}
@@ -39,17 +39,17 @@ Each of the six voices of the Prophet-600 has two voltage controlled oscillators
 
 \textbf{Oscillator controls}
 
-Both oscillators have a \oscfreq dial which determines the frequency range of the oscillators when played from the keyboard or via MIDI.  You can choose the granularity of the frequency dials: 
+Both oscillators have a \oscfreq dial which determines the frequency range of the oscillators when played from the keyboard or via MIDI. Using the additional patch parameter \oscpitchmode you can choose the granularity of the frequency dials: 
 \begin{itemize}
   \item \textit{free}: the base frequency can be chosen freely. The dial value selection is continuous and the \display shows approximate values between 0 and 99 in the normal way
   \item \textit{semitone}: the base frequency can be selected in semitones. The dial value selection is discrete and the \display shows values from 0 to 63 (semitones).   
   \item \textit{octave}: the base frequency can be selected in octaves. The dial value selection is discrete and the \display shows values c0, c1, c2, c3, c4 or c5. 
 \end{itemize}  
-In addition there are mixed settings, e.g. \textit{octave-semitone}, \textit{semitone-octave}, \textit{octave-free} and \textit{free-octave} providing different granularity for oscillators A and B. The parameter to select the granularity is the additional patch parameter \oscpitchmode. 
+In addition there are also mixed options, \textit{octave-semitone}, \textit{semitone-octave}, \textit{octave-free} and \textit{free-octave}, which provide a different granularity for oscillators A and B. When the \oscsync switch is active, it may be more convenient to be able to choose the frequency range of oscillator A freely while oscillator B shold remain fixed on octaves. Depending on the patch design different choices of \oscpitchmode may be more convenient. 
 
-The additional \freqfine dial for oscillator B is bipolar and provides frequency fine tuning with a range of about $\pm 1$ semitone. The main purpose of separate frequency settings per oscillator is to be able to detune them against one another. This can be used to create thick and lively patches (when the pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of poly-mod, see section \ref{polymod}. To be able to tune the relative frequency very accurately, \freqfine has a very sensitive (e.g. slow changing) mid region between -1 and 1.
+The additional \freqfine dial for oscillator B is bipolar and provides frequency fine tuning with a range of about $\pm 1$ semitone. The main purpose of separate frequency settings per oscillator is to be able to detune them against one another. This can be used to create thick and lively patches (when the pitch difference is small), to create complex timbres with harmonics (when pitch difference is large, typically octaves) or even create intervals (for example fifths). The frequency setting is also an important aspect of poly-mod, see section \ref{polymod}. To be able to tune the relative frequency very accurately, \freqfine has a very sensitive (slow changing) mid region between -1 and 1.
 
-The oscillator A has an additional \oscsync switch. The hardware of the Prophet-600 offers hard sync of oscillator A to oscillator B, e.g. when \oscsync is activated, oscillator A is reset to the cycle start when oscillator B completes a cycle. 
+Oscillator A has an additional \oscsync switch. The hardware of the Prophet-600 offers hard sync of oscillator A to oscillator B: when \oscsync is activated, oscillator A is reset to the cycle start when oscillator B completes a cycle. 
 
 Finally, the outputs of both oscillators are mixed into one signal before entering the filter and output stages. The volume of oscillators A and B are either set by the \vola and \volb dials in GliGli panel layout or the \mixer and \drive parameters in SCI panel layout as described in the following. For details on switching the panel layout, see section \ref{panelswitch}.
 
