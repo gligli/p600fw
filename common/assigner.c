@@ -234,7 +234,8 @@ void assigner_allKeysOff(void)
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
-		if (!isVoiceDisabled(v) && assigner.allocation[v].gated && assigner.allocation[v].internalKeyboard)
+		//if (!isVoiceDisabled(v) && assigner.allocation[v].gated && assigner.allocation[v].internalKeyboard)
+		if (!isVoiceDisabled(v) && assigner.allocation[v].gated)
 		{
 			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
             assigner.allocation[v].gated=0;
