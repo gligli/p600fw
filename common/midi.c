@@ -286,7 +286,57 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
         synth_holdEvent(value, 0, 0); // the distinction between Unison and Poly mode will be handled there
 		return;
 	}
-	
+	else if(control==120) // All Sound off
+    {
+        if (value==127)
+        {
+            int8_t v;
+            for (v=0;v<SYNTH_VOICE_COUNT;++v)
+            {
+                assigner_voiceDone(v);
+            }
+        }
+    }
+    else if(control==122) // Local Keyboard ON/OFF
+    {
+        if (value<=63) // local ON
+        {
+            ui_setLocalMode(0);
+        }
+        else if (value>=64) // local OFF
+        {
+            ui_setLocalMode(1);
+        }
+    }
+    else if(control==123) // All Notes off
+    {
+        if (value==0) assigner_allKeysOff();
+    }
+    else if(control>=MIDI_BASE_COARSE_CC) // arp / seq clock coarse
+	{
+		if (control-MIDI_BASE_COARSE_CC==cpSeqArpClock)
+		{
+			if((settings.seqArpClock>>9)!=value)
+			{
+				settings.seqArpClock&=0x01fc;
+				settings.seqArpClock|=(uint16_t)value<<9;
+			}
+			return;
+		}
+	}
+	else if(control>=MIDI_BASE_FINE_CC) // arp / seq clock fine
+	{
+		if (control-MIDI_BASE_FINE_CC==cpSeqArpClock)
+		{
+			if(((settings.seqArpClock>>2)&0x7f)!=value)
+			{
+				settings.seqArpClock&=0xfe00;
+				settings.seqArpClock|=(uint16_t)value<<2;
+			}
+			return;
+		}
+	}
+
 	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
 		return;
 	
@@ -298,14 +348,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		{
 			currentPreset.continuousParameters[param]&=0x01fc;
 			currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-            if (param==cpSeqArpClock) // the arp / seq clock is a setttings parameter
-            {
-                settings.seqArpClock=currentPreset.continuousParameters[param];
-            }
-            else
-            {
-                change=1;
-            }
+			change=1;
 		}
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
@@ -316,14 +359,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		{
 			currentPreset.continuousParameters[param]&=0xfe00;
 			currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-            if (param==cpSeqArpClock) // the arp / seq clock is a setttings parameter
-            {
-                settings.seqArpClock=currentPreset.continuousParameters[param];
-            }
-            else
-            {
-                change=1;
-            }
+			change=1;
         }
 	}
 	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
@@ -356,32 +392,6 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 			assigner_getPattern(currentPreset.voicePattern,NULL);
 		}
 	}
-	else if(control==120) // All Sound off
-    {
-        if (value==127)
-        {
-            int8_t v;
-            for (v=0;v<SYNTH_VOICE_COUNT;++v)
-            {
-                assigner_voiceDone(v);
-            }
-        }
-    }
-    else if(control==122) // Local Keyboard ON/OFF
-    {
-        if (value<=63) // local ON
-        {
-            ui_setLocalMode(0);
-        }
-        else if (value>=64) // local OFF
-        {
-            ui_setLocalMode(1);
-        }
-    }
-    else if(control==123) // All Notes off
-    {
-        if (value==0) assigner_allKeysOff();
-    }
 
 
 	if(change)
