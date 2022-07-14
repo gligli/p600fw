@@ -1385,6 +1385,7 @@ void synth_update(void)
             sh_setCV(pcMVol,satAddU16S16(synth.masterVolume,synth.benderVolumeCV),SH_FLAG_IMMEDIATE);
             break;
         case 3:
+            sh_setCV(pcExtFil,(uint16_t)(0.4f*((float)currentPreset.continuousParameters[cpExternal])),SH_FLAG_IMMEDIATE); // max voltage on hardware is reached for about 0.4 of uint16_t. This sclaling optimizes the parameter travel
             sh_setCV(pcExtFil,currentPreset.continuousParameters[cpExternal],SH_FLAG_IMMEDIATE);
             break;
         case 4:
