@@ -162,7 +162,10 @@ static void sysexReceiveByte(uint8_t b)
 	case 0xF7: // End SysEx message
 		if(tempBuffer[0]==0x01 && tempBuffer[1]==0x02) // SCI P600 program dump
 		{
-			import_sysex(tempBuffer,sysexSize);
+			if (ui.isInPatchManagement)
+			{
+				import_sysex(tempBuffer,sysexSize);
+			}
 		}
 		else if(tempBuffer[0]==SYSEX_ID_0 && tempBuffer[1]==SYSEX_ID_1 && tempBuffer[2]==SYSEX_ID_2) // my sysex ID
 		{
