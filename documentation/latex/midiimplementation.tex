@@ -9,9 +9,9 @@ Two types of MIDI events are implemented in the ,upgraded Prophet-600:
   \item SysEx (for different purposes)
 \end{itemize}
 
-The Prophet-600 receives Continuous Controllers (CC) in \presetmode only. 
+The Prophet-600 receives Continuous Controllers (CC) which correspond to patch parameters in \presetmode only. 
 
-\textbf{MIDI CC Patch Parameters} 
+\section{MIDI CC Patch Parameters} 
 
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
@@ -31,14 +31,14 @@ Osc B Fine & Continuous & 22 & 86 & Sync & Stepped & 54 \\ \hline
 Cutoff & Continuous & 23 & 87 & Poly Mod Oscillator A Destination & Stepped & 55 \\ \hline
 Resonance & Continuous & 24 & 88 & Poly Mod Filter Destination & Stepped & 56 \\ \hline
 Filter Envelope Amount & Continuous & 25 & 89 & LFO Shape & Stepped & 57 \\ \hline
-Filter Release  &  Continuous  & 26 & 90 &  LFO Targets  &  Stepped  &  59 \\ \hline
+Filter Release  &  Continuous  & 26 & 90 &  LFO Targets  &  (see \ref{lfotarget})  &  59 \\ \hline
 Filter Sustain  &  Continuous  & 27 & 91 &  Keyboard Filter Tracking  &  Stepped  &  60 \\ \hline
 Filter Decay  &  Continuous  & 28 & 92 &  Filter Envelope Shape  &  Stepped  &  61 \\ \hline
 Filter Attack  &  Continuous  & 29 & 93 &  Filter Envelope Fast/Slow  &  Stepped  &  62 \\ \hline
 2nd Release  &  Continuous  & 30 & 94 &  2nd Envelope Shape  &  Stepped  &  63 \\ \hline
 2nd Sustain  &  Continuous  & 31 & 95 &  Unison  &  Stepped  &  65 \\ \hline
 2nd Decay  &  Continuous  & 32 & 96 &  Assigner Priority Mode  &  Stepped  &  66 \\ \hline
-2nd Attack  &  Continuous  & 33 & 97 &  Bender Range (semitones)  &  Stepped  &  67 \\ \hline
+2nd Attack  &  Continuous  & 33 & 97 &  Bender Range (semitones)  &  (see \ref{bendsemi})  &  67 \\ \hline
 Poly Mod Filter Amount  &  Continuous  & 34 & 98 &  Bender Target  &  Stepped  &  68 \\ \hline
 Poly Mod Osc B Amount  &  Continuous  & 35 & 99 &  Mod Wheel Range  &  Stepped  &  69 \\ \hline
 LFO Frequency  &  Continuous  & 36 & 100 &  Osc pitch mode  &  Stepped  &  70 \\ \hline
@@ -57,22 +57,11 @@ Vintage / Spread  &  Continuous  & 47 & 111 &  &  &   \\ \hline
 
 \normalsize
 
-\textbf{Change in MIDI CC from version 2.1 RC3 to \version}
+\section{MIDI CC Settings}
 
-The following MIDI CC have been changed.
+Unlike MIDI CC event for patch parameters, which are only applied in \presetmode, the following MIDI CC controls are always applied. 
 
-\begin{itemize}
-  \item For the filter envelope release and decay and the 2nd envelope release and decay the time value range has been rescaled for the \textit{linear} envelope shape. This was an unavoidable side effect of changing the strictly linear shapes to linear shapes with soft tails. The exponential envelopes are unaffected.
-  \item The \lfofreq has been totally rescaled. The stepped frequency range parameter has been omitted and the value range of the \lfofreq dial now covers the entire frequency range. However, the dial to frequency relation has also been changed from linear to exponential, making it much softer at low settings. Consequently, the MIDI CC support for the LFO frequency range (up to firmware version 2.1 RC3) has been omitted. In order to avoid potential conflicts with MIDI tools developed for firmware versions 2.0 and 2.1 RC3, the legacy MIDI CC 58 has not been re-designated. MIDI CC 58 is ignored.
-  \item The value to frequency relation for the \vibspeed has been changed from linear to exponential.   
-  \item The \modwheelrange has been reconfigured with new value which also produce different wheel actions.
-\end{itemize}
-
-\textbf{Other MIDI CC Settings}
-
-\footnotesize
 \renewcommand{\arraystretch}{1.3}
-
 
 \begin{longtable}[l]{ p{6cm}|p{2.5cm}|p{1.5cm}|p{2cm}|p{7cm}} 
 \textbf{Parameter} & \textbf{Type} & \textbf{CC} & \textbf{CC Fine} & \textbf{Comment on CC value} \\ \hline
@@ -85,6 +74,70 @@ All Sound Off & Stepped & 120 & & 127 = sound off\\ \hline
 Local On/Off & Stepped & 122 & & <=63 = local on, >63 = local off \\ \hline
 All Notes Off & Stepped & 123 & & 0 = all notes off\\ \hline
 \end{longtable}
+
+\section{Special parameters and technical information}
+
+\subsection*{LFO Targets (MIDI CC 59)}\label{lfotarget}
+
+MIDI CC 59 LFO Target is a stepped parameter. It combines the effects of the LFO panel controls (separate switches for targeting the VCO, the filter cutoff and the pulse width) with the additional patch parameter which provides further options (targeting VCA, targeting oscillators A and B separately). These options are encoded bitwise in the parameter as shown in the table below. Each bit represents \textit{off} or \textit{on} for the respective switch/option. 
+
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}[l]{p{1.2cm}|p{2cm}|p{4cm}} 
+\textbf{Bit} & \textbf{Value} & \textbf{Function} \\ \hline
+\endfirsthead
+\textbf{Bit} & \textbf{Value} & \textbf{Function} \\ \hline
+\endhead 
+1 & 1 & VCO \\ \hline 
+2 & 2 & Filter \\ \hline 
+3 & 4 & VCA \\ \hline 
+4 & 8 & Pulse Width \\ \hline 
+5 & 16 & Only A \\ \hline 
+6 & 32& Only B \\ \hline 
+\end{longtable}
+
+
+Example: if the filter and the VCO targets are active and the modulation is restricted to oscillator B then the parameter takes the following value:
+
+LFO Targets (MIDI CC 59) = 1 (VCO) + 2 (filter) + 32 (only B) = 35
+
+Note that the same parameter encoding is also used in the patch MIDI SysEx implementation. Not all combinations of bits are possible (at least when edited on the unit) and meaningful. Some can only be achieved using MIDI CC or SysEx.
+\begin{itemize}
+  \item The options "Only A" and "Only B" only affect the targets VCO and pulse width (VCA and filter are shared by the two oscillators)
+  \item When editing a patch from the Prophet-600 it is impossible to set bits 5 and 6 simultaneously. Technically the effect of setting both bits (by sending such a patch configuration to the Prophet-600 via SysEx or MIDI CC) would be that VCO and pulse width are modulated for neither oscillator even if those targets are activated. 
+  \item When editing a patch from the Prophet-600 it is impossible to activate the VCA target and at the same time restrict the VCO or pulse width modulation to one of the oscillators. This is purely due to user interface restrictions. It is perfectly possible to choose this option using MIDI CC or SysEx. 
+\end{itemize}
+
+
+\subsection*{Bender Range (semitones) (MIDI CC 67)}\label{bendsemi}
+
+The MIDI CC 67 parameter which controls the bender range behaves like a stepped parameter. However, unlike other stepped parameters whose value corresponds to the index of the selected option, the value of the bend range parameter contains the actual number of semitones. The allowed values and the corresponding option names as shown on the Prophet-600 display are as follows. 
+
+\renewcommand{\arraystretch}{1.3}
+
+\begin{longtable}[l]{p{1.2cm}|p{4cm}} 
+\textbf{Value} & \textbf{Text} \\ \hline
+\endfirsthead
+\textbf{Value} & \textbf{Text} \\ \hline
+\endhead 
+2 & 2nd \\ \hline 
+3 & 3rd \\ \hline 
+5 & 5th \\ \hline 
+8 & Octave \\ \hline 
+\end{longtable}
+
+No other values are allowed.
+
+\subsection*{Changes in MIDI CC implementation from version 2.1 RC3 to \version}
+
+The following MIDI CC have been changed.
+
+\begin{itemize}
+  \item For the filter envelope release and decay and the 2nd envelope release and decay the time value range has been rescaled for the \textit{linear} envelope shape. This was an unavoidable side effect of changing the strictly linear shapes to linear shapes with soft tails. The exponential envelopes are unaffected.
+  \item The \lfofreq has been totally rescaled. The stepped frequency range parameter has been omitted and the value range of the \lfofreq dial now covers the entire frequency range. However, the dial to frequency relation has also been changed from linear to exponential, making it much softer at low settings. Consequently, the MIDI CC support for the LFO frequency range (up to firmware version 2.1 RC3) has been omitted. In order to avoid potential conflicts with MIDI tools developed for firmware versions 2.0 and 2.1 RC3, the legacy MIDI CC 58 has not been re-designated. MIDI CC 58 is ignored.
+  \item The value to frequency relation for the \vibspeed has been changed from linear to exponential.   
+  \item The \modwheelrange has been reconfigured with new value which also produce different wheel actions.
+\end{itemize}
 
 
 \normalsize

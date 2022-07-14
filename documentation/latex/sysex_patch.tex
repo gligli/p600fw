@@ -52,83 +52,89 @@ The following table specifies the patch data storage up to and including storage
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
 
-\begin{longtable}[l]{p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{2cm}|p{2.5cm}} 
-\textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} \\ \hline
+\begin{longtable}[l]{p{5cm}|p{2cm}|p{1.5cm}|p{1.5cm}|p{2cm}|p{2.2cm}|p{5cm}} 
+\textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} & \textbf{Stepped value} \\ \hline
 \endfirsthead
-\textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} \\ \hline
+\textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} & \textbf{Stepped value} \\ \hline
 \endhead 
-Patch Number & Technical & 1 & 1 & 1 & 0 \\ \hline
-Storage Key (aka MAGIC) & Technical & 4 & 1 & 4 & 0 \\ \hline
-Storage Version & Technical & 1 & 1 & 1 & 0 \\ \hline
-Fequency A & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Volume A & Continuous & 2 & 1 & 2 & 1 \\ \hline
-PWA & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Fequency B & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Volume B & Continuous & 2 & 1 & 2 & 1 \\ \hline
-PWB & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Frequency Fine B & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Cutoof & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Resonance & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Filter Envelope Amount & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Filter Release & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Filter Sustain & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Filter Decay & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Filter Attack & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Amp Release & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Amp Sustain & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Amp Decay & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Amp Attack & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Poly Mod Envelope Amount & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Poly Mod OSC B & Continuous & 2 & 1 & 2 & 1 \\ \hline
-LFO Frequency & Continuous & 2 & 1 & 2 & 1 \\ \hline
-LFO Amount & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Glide & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Amp Velocity & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Filter Velocity & Continuous & 2 & 1 & 2 & 1 \\ \hline
-Saw A & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Tri A & Stepped & 1 & 1 & 1 & 1 \\ \hline
-SQR A & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Saw B & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Tri B & Stepped & 1 & 1 & 1 & 1 \\ \hline
-SQR B & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Sync & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Poly Mod Frequency A & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Poly Mod Filter & Stepped & 1 & 1 & 1 & 1 \\ \hline
-LFO Shape & Stepped & 1 & 1 & 1 & 1 \\ \hline
-(unused) & n/a  & 1 & 1 & 1 & n/a\footnote{This slot was used for \textit{LFO Frequency Range} from versions 1 to 7} \\ \hline
-LPF Targets & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Tracking Shift & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Filter Envelope Shape & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Filter Envelope Speed & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Amp Envelope Shape & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Amp Envelope Speed & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Unison & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Assigner Priority & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Bender Semitones & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Bender Target & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Mod Wheel Shift & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Chromatic Pitch & Stepped & 1 & 1 & 1 & 1 \\ \hline
-Modulation Delay & Continuous & 2 & 1 & 2 & 2 \\ \hline
-Vibrato Frequency & Continuous & 2 & 1 & 2 & 2 \\ \hline
-Vibrato Amount & Continuous & 2 & 1 & 2 & 2 \\ \hline
-Unison Detune & Continuous & 2 & 1 & 2 & 2 \\ \hline
-(unused) & n/a & 2 & 1 & 2 & n/a\footnote{This slot was used for arpeggiator/sequencer clock speed fro versions 1 to 7. From version 8 on clock speed is consistently implemented as a setting only.} \\ \hline
-Modulation Wheel Target & Stepped & 1 & 1 & 1 & 2 \\ \hline
-Vibrato Target & Stepped & 1 & 1 & 1 & 2 \\ \hline
-Voice Pattern (6 voices) & Special & 1 & 6 & 6 & 2 \\ \hline
-Tuning per Note (12 notes) & Special & 2 & 12 & 24 & 7 \\ \hline
-Sync Bug & Stepped & 1 & 1 & 1 & 8 \\ \hline
-Vintage (Spread) & Continuous & 2 & 1 & 2 & 8 \\ \hline
-External CV & Continuous & 2 & 1 & 2 & 8 \\ \hline
-Envelope Routing & Stepped & 1 & 1 & 1 & 8 \\ \hline
-Voice Assign & Stepped & 1 & 1 & 1 & 8 \\ \hline
-LFO Sync & Stepped & 1 & 1 & 1 & 8 \\ \hline
-Patch Name & Technical & 1 & 16 & 16 & 8 \\
+Patch Number & Technical & 1 & 1 & 1 & 0 &  \\ \hline
+Storage Key (aka MAGIC) & Technical & 4 & 1 & 4 & 0 &  \\ \hline
+Storage Version & Technical & 1 & 1 & 1 & 0 &  \\ \hline
+Fequency A & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Volume A & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+PWA & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Fequency B & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Volume B & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+PWB & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Frequency Fine B & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Cutoof & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Resonance & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Filter Envelope Amount & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Filter Release & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Filter Sustain & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Filter Decay & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Filter Attack & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Amp Release & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Amp Sustain & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Amp Decay & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Amp Attack & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Poly Mod Envelope Amount & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Poly Mod OSC B & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+LFO Frequency & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+LFO Amount & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Glide & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Amp Velocity & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Filter Velocity & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+Saw A & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Tri A & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+SQR A & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Saw B & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Tri B & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+SQR B & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Sync & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Poly Mod Frequency A & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Poly Mod Filter & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+LFO Shape & Stepped & 1 & 1 & 1 & 1 & Pulse, Triangle, Random, Sin, Noise, Saw\footnote{In the patch SysEx the combined effect of the LFO shape panel switch and the additional patch parameter for further LFO shape options is combined into this single stepped parameter with 6 options. An external editor could therefore use a single 6-way parameter for the LFO shape.} \\ \hline
+(unused) & n/a & 1 & 1 & 1 & n/a\footnote{This slot was used for \textit{LFO Frequency Range} from versions 1 to 7} &  \\ \hline
+LFO Targets & Stepped & 1 & 1 & 1 & 1 & see section \ref{lfotarget}  \\ \hline
+Tracking Shift & Stepped & 1 & 1 & 1 & 1 & Off, Half, Full \\ \hline
+Filter Envelope Shape & Stepped & 1 & 1 & 1 & 1 & Linear, Exponential \\ \hline
+Filter Envelope Speed & Stepped & 1 & 1 & 1 & 1 & Slow, Fast \\ \hline
+Amp Envelope Shape & Stepped & 1 & 1 & 1 & 1 & Linear, Exponential \\ \hline
+Amp Envelope Speed & Stepped & 1 & 1 & 1 & 1 & Slow, Fast \\ \hline
+Unison & Stepped & 1 & 1 & 1 & 1 & Off, On \\ \hline
+Assigner Priority & Stepped & 1 & 1 & 1 & 1 & Last, Low, High \\ \hline
+Bender Semitones & Stepped & 1 & 1 & 1 & 1 & 2nd, 3rd, 5th, Oct\footnote{Note that the numerical values for this option range are: 2, 3, 5 and 8, i.e. value corresponds to the actual semitones rather than the index of the selected option.} \\ \hline
+Bender Target & Stepped & 1 & 1 & 1 & 1 & Off, A \& B, VCF, Volume, B \\ \hline
+Mod Wheel Shift & Stepped & 1 & 1 & 1 & 1 & Touch, Soft, High, Full \\ \hline
+Chromatic Pitch & Stepped & 1 & 1 & 1 & 1 & Free, Semi,Octave, Octave-Semi, Semi-Octave, Octave-Free, Free-Octave \\ \hline
+Modulation Delay & Continuous & 2 & 1 & 2 & 2 &  \\ \hline
+Vibrato Frequency & Continuous & 2 & 1 & 2 & 2 &  \\ \hline
+Vibrato Amount & Continuous & 2 & 1 & 2 & 2 &  \\ \hline
+Unison Detune & Continuous & 2 & 1 & 2 & 2 &  \\ \hline
+(unused) & n/a & 2 & 1 & 2 & n/a\footnote{This slot was used for arpeggiator/sequencer clock speed fro versions 1 to 7. From version 8 on, clock speed is consistently implemented as a setting only.} &  \\ \hline
+Modulation Wheel Target & Stepped & 1 & 1 & 1 & 2 & LFO, Vibrato \\ \hline
+Vibrato Target & Stepped & 1 & 1 & 1 & 2 & VCO A \& B, VCA, VCO A, VCO B \\ \hline
+Voice Pattern (6 voices) & Special & 1 & 6 & 6 & 2 &  \\ \hline
+Tuning per Note (12 notes) & Special & 2 & 12 & 24 & 7 &  \\ \hline
+Sync Bug & Stepped & 1 & 1 & 1 & 8 & Off, On \\ \hline
+Vintage (Spread) & Continuous & 2 & 1 & 2 & 8 &  \\ \hline
+External CV & Continuous & 2 & 1 & 2 & 8 &  \\ \hline
+Envelope Routing & Stepped & 1 & 1 & 1 & 8 & Standard, Poly-Amp, Poly, Gate \\ \hline
+Voice Assign & Stepped & 1 & 1 & 1 & 8 & First, Cycle \\ \hline
+LFO Sync & Stepped & 1 & 1 & 1 & 8 & Off, Key, 1, 2, 3, 4, 5, 6, 8 \\ \hline
+Patch Name & Technical & 1 & 16 & 16 & 8 &  \\ \hline
+
+
+
+
 \end{longtable}
+
 
 \textbf{Example}
 
 Consider building the SysEx patch files for patch number 5 from storage in the latest version 8. The first 8 data bytes prior to conversion are: "05 00 61 16 A5 08 00 FF", where 05 is the patch number, "00 61 16 A5" is the \textit{Storage Magic}, "08" is the storage version and "00 FF" is an example value for the first real patch parameter which is frequency of oscillator A. These 8 data bytes are first rearranged into two blocks of 4 bytes like: "05 A5 16 61" "00 08 FF 00". Note that the order of bytes for each data block is reversed with \textit{LSB} first, etc. Then the conversion to 5 MIDI bytes leads to two blocks of 5 MIDI bytes like this: "05 25 16 61 02" "00 08 7F 00 04".
+
 
 \subsection{Patch Name}
 
