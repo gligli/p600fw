@@ -78,8 +78,8 @@
   \Huge
   User Manual \vspace{0.4cm} \\
   \Large
-  Edition: version beta 2022-2 (16.6.2022) \vspace{0.3cm}\\
-  Firmware version: \version \vspace{0.3cm}\\
+  Edition: version v2022 (RC1) (16.7.2022) \vspace{0.3cm}\\
+  Firmware version: GliGli \version (RC1) by imogen\vspace{0.3cm}\\
   Editor / author: imogen / image-et-son 
   \normalsize
 
@@ -93,9 +93,9 @@
 \tableofcontents
 
 
-\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet-600}
+\pagestyle{myheadings}\markright{(DRAFT) Prophet-600 \version User Manual }
 \makeatletter
-\renewcommand\chapter{\pagestyle{myheadings}\markright{[DRAFT] User Manual for the GliGli upgraded Prophet-600}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
+\renewcommand\chapter{\pagestyle{myheadings}\markright{(DRAFT) Prophet-600 \version User Manual}\global\@topnum\z@\@afterindentfalse\secdef\@chapter\@schapter}
 \makeatother
 
 \pagebreak
@@ -105,7 +105,6 @@
 \setcounter{page}{1}
 
 \begin{flowtext}
-
 
 The original Sequential Circuits Prophet-600 from around 1982 is run by a Zilog Z80 processor. This processor (and the firmware written for it) is pushed beyond its limits for computing and applying the voltages, for scanning user inputs and managing MIDI events. The necessary compromises made the instrument steppy, glitchy and non-responsive. That is a pity, because the basic synth voice hardware of the Prophet-600 is good: unlike DCO synths which became popular and affordable at the time, the Prophet-600 is a 6 voice analog synthesizer driven by 2 voltage controlled oscillators (VCOs) and a 24db low pass filter per voice, all implemented using the renowned Curtis chips \cite{curtis}. The hardware also provides hard sync, frequency modulation and even modulation of cut-off by VCO. It is very versatile. The shortcomings of the original Prophet-600 were due only to the unfortunate circumstance that the selected and commonly available micro-processors at the time were not powerful enough for the Prophet-600. So the idea to make use of a more modern processor 30 years later was interesting. Around 2013 GliGli \cite{gligli} started reverse engineering the original firmware for the Z80 and found that the Z80 can be replaced by a (more) modern Teensy++ 2.0 USB programmable microprocessor \cite{teensy} (with some hardware modifications). This was the start of what is now know as the \textit{Prophet-600 GliGli firmware upgrade}. GliGli describes his motivation as follows:
 
