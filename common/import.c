@@ -106,9 +106,9 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
 	p.continuousParameters[cpPModFilEnv]=HALF_RANGE+(zp->pmodFilEnv<<11);
 	p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
-	p.continuousParameters[cpLFOFreq]=(uint16_t)(0.708f*(float)(zp->lfoFreq<<10)); // from version 8 on rescaled according to legacy setting "slow"
-	p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;
-	p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0;
+	p.continuousParameters[cpLFOFreq]=(uint16_t)(0.615385f*(float)(zp->lfoFreq<<10))+8570; // from version 8 on rescaled according to legacy setting "slow"
+	p.continuousParameters[cpLFOAmt]=(currentPreset.continuousParameters[cpLFOAmt]<=512)?0:512+(uint16_t)(15000.0f*log((((float)((zp->lfoAmt<<4)-512))/870.0f)+1));
+	p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0; // this is not quite faithful compared to the Z80 (in this version glide time is longer)
 	p.continuousParameters[cpAmpVelocity]=0;
 	p.continuousParameters[cpFilVelocity]=0;
 
@@ -144,7 +144,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 		currentPreset=p;		
 		
 		preset_saveCurrent(presetNumber);
-		
+
 		currentPreset=savedP;
 	}
 }
