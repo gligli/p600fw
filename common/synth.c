@@ -80,7 +80,8 @@ struct synth_s
     struct lfo_s lfo,vibrato;
 
     // store slowly and on event changing partial results so that specific updates can be made faster
-    int32_t tunedBenderCVs[pcOsc6B-pcOsc1A+1];
+    int32_t tunedBenderCVs[pcFil6-pcOsc1A+1];
+    int32_t tunedOctaveCVs[pcOsc6B-pcOsc1A+1];
     uint16_t oscABaseCV[SYNTH_VOICE_COUNT];
     uint16_t oscBBaseCV[SYNTH_VOICE_COUNT];
     uint16_t filterBaseCV[SYNTH_VOICE_COUNT];
@@ -188,14 +189,16 @@ static void addWheelToTunedCVs(void) // this function is specific for the case i
 }
 
 
-static void computeTunedBenderCVs(void) // this function must always be called after tuning or after the semitones setting of the bender changes (inkl. preset change)
+static void computeTunedOffsetCVs(void) // this function must always be called after tuning or after the semitones setting of the bender changes (inkl. preset change)
 {
     p600CV_t cv;
-    for(cv=pcOsc1A; cv<=pcOsc6B; ++cv)
+    for(cv=pcOsc1A; cv<=pcFil6; ++cv)
     {
         synth.tunedBenderCVs[cv]=tuner_computeCVFromNote(currentPreset.steppedParameters[spBenderSemitones]*4,0,cv)-tuner_computeCVFromNote(0,0,cv);
+        if (cv<=pcOsc6B) synth.tunedOctaveCVs[cv]=(uint16_t)((tuner_computeCVFromNote(48,0,cv)-tuner_computeCVFromNote(0,0,cv))*2.5f);
     }
 }
+
 
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
@@ -463,7 +466,7 @@ void synth_updateBender(void) // this function must be called when the bender mi
 {
     bendDeadband.middle=settings.benderMiddle;
     precalcDeadband(&bendDeadband);
-    computeTunedBenderCVs();
+    computeTunedOffsetCVs();
     synth_wheelEvent(getAdjustedBenderAmount(),0,1,1,0);
 }
 
@@ -494,7 +497,7 @@ static void computeBenderCVs(void) // this function always needs to be called wh
     // compute new
     bend=currentPreset.steppedParameters[spBenderSemitones];
     bend*=satAddS16S16(synth.benderAmountInternal,synth.benderAmountExternal);
-    bend*=FULL_RANGE/12; // Fixed point /12 ...
+    bend*=FULL_RANGE/12;
 
     switch(currentPreset.steppedParameters[spBenderTarget])
     {
@@ -509,7 +512,9 @@ static void computeBenderCVs(void) // this function always needs to be called wh
             break;
         case modVCF:
             for(cv=pcFil1; cv<=pcFil6; ++cv)
+            {
                 synth.benderCVs[cv]=bend>>16; // ... after >>16
+            }
             break;
         case modVCA:
             synth.benderVolumeCV=bend>>16; // ... after >>16
@@ -905,7 +910,7 @@ void refreshFullState(void)
     ui.vibAmountChangePending=1;
     ui.vibFreqChangePending=1;
     refreshEnvSettings();
-    computeTunedBenderCVs();
+    computeTunedOffsetCVs();
     computeBenderCVs();
     refreshFilterMaxCV();
 
@@ -1090,21 +1095,20 @@ static FORCEINLINE void refreshVoice(int8_t v,int16_t oscEnvAmt,int16_t filEnvAm
         adsr_update(&synth.ampEnvs[v]);
         ampEnvVal =synth.ampEnvs[v].output;
 
-        va=pitchALfoVal;
-        vb=pitchBLfoVal;
-
         // osc B
 
+        vb=scaleU16S16(synth.tunedOctaveCVs[pcOsc1B+v],pitchBLfoVal);
         vb+=synth.oscBNoteCV[v];
         sh_setCV32Sat_FastPath(pcOsc1B+v,vb);
 
         // osc A
 
         if (currentPreset.steppedParameters[spEnvRouting]==0) // the normal case
-            va+=scaleU16S16(envVal,oscEnvAmt);
+            va=scaleU16S16(envVal,oscEnvAmt);
         else // all other cases
-            va+=scaleU16S16(ampEnvVal,oscEnvAmt);
+            va=scaleU16S16(ampEnvVal,oscEnvAmt);
 
+        va=scaleU16S16(synth.tunedOctaveCVs[v],va+pitchALfoVal);
         va+=synth.oscANoteCV[v];
         sh_setCV32Sat_FastPath(pcOsc1A+v,va);
 
@@ -1415,7 +1419,7 @@ void synth_update(void)
 void synth_tuneSynth(void)
 {
     tuner_tuneSynth();
-    computeTunedBenderCVs();
+    computeTunedOffsetCVs();
     synth_updateMasterVolume();
 }
 
@@ -1775,7 +1779,7 @@ static void retuneLastNotePressed(int16_t bend, uint16_t modulation, uint8_t mas
 
             numSemitones = (modulation * (1.0f / UINT16_MAX)) + (((double)scaleDegree)-0.5f);
             tuner_setNoteTuning(scaleDegree, numSemitones);
-            computeTunedBenderCVs();
+            computeTunedOffsetCVs();
             computeBenderCVs();
             computeTunedCVs(1,-1);
         }
