@@ -421,7 +421,6 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
             if (readVar==0) currentPreset.continuousParameters[cpLFOFreq]-=16635; // =0 used to be the slow setting
 
         }
-        else if (readVar<=7) currentPreset.steppedParameters[spLFOSync]=readVar; // from version 8 on
 
 		for(sp=spLFOTargets;sp<=spBenderTarget;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
