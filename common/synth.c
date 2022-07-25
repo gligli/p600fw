@@ -571,11 +571,16 @@ static void refreshModDelayLFORetrigger(int8_t refreshDelayTickCount)
     if(anyPressed && !prevAnyPressed) // restart the delay
     {
         synth.modulationDelayStart=currentTick;
-        synth.dlyAmt=0;
+        if (currentPreset.continuousParameters[cpModDelay]>=15000) // in order to allow for slowest synth_update cycle don't reset for shortest delay times
+        {
+            synth.dlyAmt=0;
+        }
+
         if(currentPreset.steppedParameters[spLFOSync]==1) // this is retrigger on keyboard
         {
             lfo_resetPhase(&synth.lfo);
         }
+
         refreshVibLFO();
     }
 
@@ -731,7 +736,8 @@ static void refreshDlyAmount(void)
     synth.dlyAmt=0;
     if(synth.modulationDelayStart!=UINT32_MAX)
     {
-        if(currentPreset.continuousParameters[cpModDelay]<POT_DEAD_ZONE)
+        //if(currentPreset.continuousParameters[cpModDelay]<POT_DEAD_ZONE)
+        if(currentPreset.continuousParameters[cpModDelay]<15000)
         {
             synth.dlyAmt=UINT16_MAX;
         }
@@ -762,16 +768,6 @@ static void refreshLfoSettings(void)
     lfo_setFreq(&synth.lfo,currentPreset.continuousParameters[cpLFOFreq]);
 
     refreshVibLFO();
-    /*if(currentPreset.steppedParameters[spModwheelTarget]==0) // targeting lfo?
-    {
-        lfo_setAmt(&synth.lfo, satAddU16U16(synth.lfoAmt, synth.modwheelAmount));
-        lfo_setAmt(&synth.vibrato, scaleU16U16(synth.vibAmt,synth.dlyAmt));
-    }
-    else // targeting vibrato
-    {
-        lfo_setAmt(&synth.lfo, scaleU16U16(synth.lfoAmt, synth.dlyAmt));
-        lfo_setAmt(&synth.vibrato, satAddU16U16(synth.vibAmt, synth.modwheelAmount));
-    }*/
 }
 
 
