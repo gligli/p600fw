@@ -40,6 +40,8 @@ The pick-me-up mechanism avoids discontinuous value changes and it provides a me
 
 There is no pick-up mechanism for switches on the panel\footnote{The attempt to do this was made, but surprisingly, the hardware is not reliable enough for this, in particular, the three-way tracking switch.}. The mechanism is also irrelevant for additional patch parameters as there is no conflict between physical controls and internally applied values. Furthermore, the logic applies only to patch parameters. It is not applied to \mastertune, \mastervol, \pitchbender and \modwheel.
 
+Note that the pick-up relies on that your dials can reach the maximum value. If your maximum value as shown on the display is less than 99 you may find that you cannot pick-up patch parameter values close to 99. In this case you should check the DAC gain to see if your instrument falls short of the required 4.9V which correspond to the maximum value. Please consult the service manual on this \cite{p600siservicemanual}. As a work around you can always switch to \presetpatch, change the dial in question and then return to \presetpanel.
+
 \textbf{Default Patch}
 
 Pressing the \preset button (with confirmation) in \shiftmode or \shiftlock loads a default patch (see section \ref{defaultpatch}). After loading the default patch the Prophet-600 is in \presetpatch.
