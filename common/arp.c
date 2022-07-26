@@ -142,10 +142,9 @@ void arp_assignNote(uint8_t note, int8_t on)
 	note-=SCANNER_BASE_NOTE;
 	if(on)
 	{
+
 		// if this is the first note, make sure the arp will start on it as as soon as we update
-		
-		if(isEmpty())
-			arp_resetCounter(settings.syncMode==smInternal);
+		if(isEmpty()) arp_resetCounter(settings.syncMode==smInternal);
 
 		// assign note			
 		
@@ -251,9 +250,13 @@ void arp_update(void)
             {
                 if (arp.notes[n]!=ASSIGNER_NO_NOTE) step++;
             }
-            // n is the random number of notes that will be skipped
-            n=random()%step;
-            n=(n==0 && step>1)?1:n; // don't play notes twice if there is more than one note
+            // n is the random number of notes that will be skipped. Step is always >0 if there is more than one note but alsoways =0 if there is exactly one note
+            n=0;
+            if (step>1)
+			{
+				n=(random()%(step-1))+1;
+			}
+			if (arp.noteIndex<0) arp.noteIndex=0;
             while(arp.notes[arp.noteIndex]==ASSIGNER_NO_NOTE || n>0)
             {
                 arp.noteIndex=(arp.noteIndex+1)%ARP_NOTE_MEMORY;
