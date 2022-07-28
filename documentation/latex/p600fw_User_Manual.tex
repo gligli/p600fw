@@ -454,7 +454,7 @@ After power-up the instrument volume is always set to the value position of the 
 
 \input{envelopes.tex}
 
-\section{Polyphonic, unison and chord mode, voice assignment priority}\label{poly-unison-voice}
+\section{Polyphonic, unison and chord mode, voice assigner priority}\label{poly-unison-voice}
 
 \input{poly-unison-voice.tex}
 
@@ -510,9 +510,13 @@ Note that you can also operate the sequencer and/or arpeggiator in unison mode w
 
 \section{Glide}\label{glide}
 
-The Prophet-600 offers a glide function in polyphonic and unison mode. The way you set the glide time depends on the current active panel layout. When the panel layout is set to \textit{GliGli} you must use the menu parameter \glide to set the glide time. When the panel layout is set to \textit{SCI}, the menu parameter \glide is suppressed and the glide time is set by the \glidepot dial instead. 
+The Prophet-600 offers a glide function in polyphonic and unison mode. Generally speaking, the glide time determines the how fast the pitch glides from the start note to the target (played) note. Glide is based on voice, i.e. once a note is assigned to a voice the glide start note will be the last note of that voice (rather than, for example, the last played note). 
+
+The way you set the glide time depends on the current active panel layout. When the panel layout is set to \textit{GliGli} you must use the menu parameter \glide to set the glide time. When the panel layout is set to \textit{SCI}, the menu parameter \glide is suppressed and the glide time is set by the \glidepot dial instead. 
 
 For details on the panel layout options see section \ref{panelswitch}. 
+
+Note that since glide is voice based, the voice assignment logic (as set using the parameter \assign, see \ref{poly-unison-voice}) has a strong impact on the behaviour of glide in polyphonic mode. The voice assignment logic determines the glide start note once a new note is played.
 
 \section{Detune}\label{detune}
 

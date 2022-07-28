@@ -23,6 +23,17 @@ The assigner priority of voice mode is a patch parameter -- i.e. it is stored wi
 
 Note on the return of "stolen" notes: when more than 6 notes are held in priority \textit{last}, only the newest 6 notes play. If one of those keys is released then this note is cut and a stolen note is re-assigned and will sound, i.e. it will re-appear. The note is not re-triggered in this case but rather takes over from the envelope positions of the note that was just released and cut. The note to re-appear is the oldest of the stolen notes. However, with the re-assignment this note becomes the newest assigned note. When another key is release the next note to re-appear will therefore be the one which originally the second oldest, and so forth. Glide is applied to re-appearing notes.
 
+\textbf{Voice assignment logic}
+
+As described above the assigner priority determines which notes are played or terminated once there are more notes to play than the available 6 voices (or less if one or more are deactivated). A separate part of the assigner logic is concerned with the selection of the target voice when a new note is to be assigned. There are two choices for this logic which you can toggle using the menu parameter \assign:
+
+\begin{itemize}
+  \item \textit{first}: the first free voice (in the sense of the fixed internal numbering of voices from 1 to 6) is selected. I.e. when only one note is played only the first voice is used.
+  \item \textit{cycle}: also known as "round robin", this logic always selects a new voice in order to distribute the load evenly among the voices. I.e. when only one note is played each voice will be used in turn.
+\end{itemize} 
+
+In practise the first logic this means that when a note is released and played again the same voice is used. Since voices can have different characteristics in analogue synthesizer such as the Prophet-600, this type of voice allocation logic favours more stable and consistent note sequences. Using the second logic, on the other hand, you can make deliberate use of the variations in voice characteristics to create more lively and animated sequences. This becomes very pronounced when vintage spread is activated (see section \ref{spreadsett}). Note also that glide is based on voice, i.e. once a note is assigned to a voice the glide start note will be the last note of that voice (rather than, for example, the last played note). Therefore the parameter \assign also has a strong impact on the behaviour of glide in polyphonic mode. For glide see section \ref{glide}.
+
 \textbf{Ideas for solo voices}
 
 You can use the assigner priority effectively in combination with the voice modes to customize solo voices. For example combine the priority \textit{high} (or \textit{low}) with ...
@@ -32,4 +43,3 @@ You can use the assigner priority effectively in combination with the voice mode
   \item ...\textit{chord} mode with octaves (hold down C3 plus C4 plus more if desired) for a more assertive mono solo voice   
 \end{itemize}
 
-In the default setup the voice allocation follows a "first voice found" logic. When a new key is played, the first free voice (first in the sense of the internal numbering of voices) will be allocated. In practise this means that when a note is released and played again the same voice is used. Since voices can have different characteristics in analogue synthesizer such as the Prophet-600, this type of voice allocation logic favours more stable and consistent note sequences. However, you can use the variations in voices deliberately to create more lively and animated sequences. This becomes very pronounced when vintage spread is activated (see section \ref{spreadsett}). In order to give you the choice, the advanced menu parameter \assign has been introduced which offers the choices \textit{first} and \textit{cycle}. The second option activates a "round robin" logic which always selects a new (free) voice for allocation. This distributes the voice assignments evenly among the 6 voices.   
