@@ -1,7 +1,7 @@
-Fequency A;1;2
+Frequency A;1;2
 Volume A;1;2
 PWA;1;2
-Fequency B;1;2
+Frequency B;1;2
 Volume B;1;2
 PWB;1;2
 Frequency Fine B;1;2
@@ -12,10 +12,10 @@ Filter Release;1;2
 Filter Sustain;1;2
 Filter Decay;1;2
 Filter Attack;1;2
-Amp Release;1;2
-Amp Sustain;1;2
-Amp Decay;1;2
-Amp Attack;1;2
+2nd Release;1;2
+2nd Sustain;1;2
+2nd Decay;1;2
+2nd Attack;1;2
 Poly Mod Envelope Amount;1;2
 Poly Mod OSC B;1;2
 LFO Frequency;1;2
