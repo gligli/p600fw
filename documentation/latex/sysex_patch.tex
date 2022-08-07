@@ -57,8 +57,9 @@ The following table specifies the patch data storage up to and including storage
 \endfirsthead
 \textbf{Patch Data} & \textbf{Type} & \textbf{Byte} & \textbf{Count} & \textbf{Total Bytes} & \textbf{From Version} & \textbf{Stepped value} \\ \hline
 \endhead 
+
 Patch Number & Technical & 1 & 1 & 1 & 0 &  \\ \hline
-Storage Key (aka MAGIC) & Technical & 4 & 1 & 4 & 0 &  \\ \hline
+Storage Key (aka MAGIC) & Technical & 4 & 1 & 4 & 0 & 00 61 16 a5 \\ \hline
 Storage Version & Technical & 1 & 1 & 1 & 0 &  \\ \hline
 Fequency A & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 Volume A & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
@@ -74,10 +75,10 @@ Filter Release & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 Filter Sustain & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 Filter Decay & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 Filter Attack & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
-Amp Release & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
-Amp Sustain & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
-Amp Decay & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
-Amp Attack & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+2nd Release & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+2nd Sustain & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+2nd Decay & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
+2nd Attack & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 Poly Mod Envelope Amount & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 Poly Mod OSC B & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
 LFO Frequency & Continuous & 2 & 1 & 2 & 1 &  \\ \hline
@@ -144,7 +145,7 @@ The patch consists of 16 bytes and the enconding is UTF-8 with printable charact
 
 \begin{itemize}
   \item 00: NULL character terminates the patch name
-  \item 01 - 0F: non-printable characters are interpreted as \textit{space}
+  \item 01 - 1F: non-printable characters are interpreted as \textit{space}
   \item 20 - 7E: standard UTF-8 printable charatcers from \textit{space} through number, letters and special characters up to \textasciitilde
   \item 7F - FF: DEL and following values are interpreted as a \textit{space}
 \end{itemize}
