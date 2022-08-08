@@ -1265,7 +1265,7 @@ void synth_init(void)
     // a nice welcome message, and we're ready to go :)
 
     //sevenSeg_scrollText("GliGli's P600 upgrade "VERSION,1);
-    sevenSeg_scrollText("GliGli version "VERSION" by imogen",1);
+    sevenSeg_scrollText("GliGli "VERSION" by imogen",1);
 }
 
 void synth_update(void)
