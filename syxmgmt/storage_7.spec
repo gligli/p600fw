@@ -1,7 +1,7 @@
-Fequency A;1;2
+Frequency A;1;2
 Volume A;1;2
 PWA;1;2
-Fequency B;1;2
+Frequency B;1;2
 Volume B;1;2
 PWB;1;2
 Frequency Fine B;1;2
