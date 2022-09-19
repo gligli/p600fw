@@ -436,7 +436,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         {
             // rescale the LFO amount as of version 8
             // this is the inverse of the scaling functions applied to the LFO and vib amounts to make it smoother (small difference to stay within uint16_t here)
-            currentPreset.continuousParameters[cpLFOAmt]=(currentPreset.continuousParameters[cpLFOAmt]<=512)?0:512+(uint16_t)(15000.0f*log((((float)(currentPreset.continuousParameters[cpLFOAmt]-512))/870.0f)+1));
+            currentPreset.continuousParameters[cpLFOAmt]=(currentPreset.continuousParameters[cpLFOAmt]<=512)?0:(512+(uint16_t)(15000.0f*log((((float)(currentPreset.continuousParameters[cpLFOAmt]-512))/870.0f)+1)));
 
             // remap the exponential release and decay times after the phase lookup was updated (made longer mapping theorectial 285 to new 256)
             if (currentPreset.steppedParameters[spAmpEnvShape]==1) // exponential
@@ -479,7 +479,14 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         {
             // rescale the vib amount as of version 8
             // this is the inverse of the scaling functions applied to the LFO and vib amounts to make it smoother (small difference to stay within uint16_t here)
-            currentPreset.continuousParameters[cpVibAmt]=(currentPreset.continuousParameters[cpVibAmt]<=512)?0:512+(uint16_t)(15000.0f*log((((float)(currentPreset.continuousParameters[cpVibAmt]-512))/870.0f)+1));
+			if (currentPreset.continuousParameters[cpVibAmt]<=2048)
+			{
+				currentPreset.continuousParameters[cpVibAmt]=0;
+			}
+			else
+			{
+				currentPreset.continuousParameters[cpVibAmt]=(uint16_t)(15000.0f*log((((float)(currentPreset.continuousParameters[cpVibAmt]-2048))/3480.0f)+1))+512;
+			}
             // rescale the vib frequency; the exponential factor (ratio) was changed from 13000 to 8000.
             currentPreset.continuousParameters[cpVibFreq]=(uint16_t)(0.615385f*(float)currentPreset.continuousParameters[cpVibFreq])+25205;
         }
