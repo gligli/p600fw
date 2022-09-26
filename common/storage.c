@@ -422,16 +422,10 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
 
         }
 
-		for(sp=spLFOTargets;sp<=spBenderTarget;++sp)
+		for(sp=spLFOTargets;sp<=spChromaticPitch;++sp)
 			currentPreset.steppedParameters[sp]=storageRead8();
 
-        readVar=storageRead8(); // this is legacy mod wheel strength re-designated LFO Sync
-        if (storage.version==8 && readVar<=3) currentPreset.steppedParameters[spModWheelRange]=readVar;
-
-        for(sp=spChromaticPitch;sp<=spChromaticPitch;++sp)
-			currentPreset.steppedParameters[sp]=storageRead8();
-
-        // remap of the sp values prior to version 8
+		// remap of the sp values prior to version 8
         if (storage.version<8)
         {
             // rescale the LFO amount as of version 8
