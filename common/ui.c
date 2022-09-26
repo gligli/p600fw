@@ -32,7 +32,7 @@ const struct uiParam_s uiParameters[] =
     /*3*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
 	/*4*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
 	/*5*/ {.type=ptCust,.number=2,.name="2nd shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
-    /*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
+    /*6*/ {.type=ptCust,.number=4,.name="bend rng",.values={"2nd","3rd","5th","Oct"}},
     /*7*/ {.type=ptStep,.number=spAssign,.name="assign",.values={"first","cycle"}},
     /*8*/ {.type=ptCont,.number=cpSpread,.name="vintage"},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
