@@ -408,7 +408,7 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
     //potmux_resetSpeedPot();
     ui_setNoActivePot(1);
 
-    if(ui.activeParamIdx!=prev || ui.lastActivePot!=ppNone) // shoudl be displayed either if
+    if(ui.activeParamIdx!=prev || ui.lastActivePot!=ppNone) // should be displayed either if
 	{
 		// display param name + value
 		displayUIParameter(ui.activeParamIdx);
@@ -790,7 +790,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
                     ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
                     ui.presetAwaitingNumber=-1;
                 }
-                else // stoage mode switch on
+                else // storage mode switch on
                 {
                     // ask for digit
                     ui.digitInput=diStoreDecadeDigit;

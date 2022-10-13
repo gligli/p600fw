@@ -1,0 +1,3 @@
+[codespell]
+skip = *.o,*.lst
+ignore-words-list = rcall

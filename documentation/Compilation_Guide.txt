@@ -1,6 +1,6 @@
 This document describes compile setup and procedures.
 
-Generall, the compilation requires
+Generally, the compilation requires
 1. AVR Tools
 2. Python
 
@@ -34,11 +34,11 @@ Note: the following is from original instructions - unchanged since May 2015 and
          will open [system property] window
     2.select [Advanced] tab > [Environment Variables..]
          will open [Environment Variables] window.
-    3.[System Variables] colum, select [Path] variable > Edit
+    3.[System Variables] column, select [Path] variable > Edit
     4. Add ";C:/MHV_AVR_Tools/lib;C:/MHV_AVR_Tools/bin;C:/Python27"
     
 6.Exec " MHV AVR Shell" 
-7.Now you stay "C:/users/yourname>". move to the source code directry.
+7.Now you stay "C:/users/yourname>". move to the source code directory.
   e.g. if you put source code in "d:/dev/p600fw"
   		C:/users/yourname>d:[enter]
   		d:/>cd /dev/p600fw/firmware[enter]
@@ -50,7 +50,7 @@ Note: the following is from original instructions - unchanged since May 2015 and
   	you will get "p600firmware.hex" and "p600firmware.syx"
   
   8.if you got  error  like as "[sizebefore] error"
-  	edit Makefile in firmware directry as follow as,.
+  	edit Makefile in firmware directory as follow as,.
   		LINE 423>all: begin gccversion sizebefore build sizeafter end
   		to	
   		LINE 423>all: begin gccversion  build  end

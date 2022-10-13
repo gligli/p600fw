@@ -171,7 +171,7 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	// the first. If seq.counter is closer to 0 than to seq.speed,
 	// then the second sequence was started just after the first had
 	// played its step, so we play the first step of the second sequence
-	// as fast as we can so it is heard (almost) simulatenously with
+	// as fast as we can so it is heard (almost) simultaneously with
 	// the step of the first sequence. Conversely, if seq.counter is closer
 	// to seq.speed, the second sequence was started slightly before
 	// the first had played its step (this only happens when the second

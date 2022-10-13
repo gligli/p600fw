@@ -23,7 +23,7 @@ static struct
 {
 	uint8_t notes[ARP_NOTE_MEMORY];
 	int16_t noteIndex;
-	int16_t previousIndex; // this is used to avoid muliple successive playing of notes (or indices) in random arp
+	int16_t previousIndex; // this is used to avoid multiple successive playing of notes (or indices) in random arp
 	uint8_t previousNote;
 	int8_t transpose,previousTranspose;
 

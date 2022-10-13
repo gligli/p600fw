@@ -205,7 +205,7 @@ void display_update(int8_t fullUpdate)
 		CYCLE_WAIT(1);
 		io_write(0x08,0x10<<display.activeCol); // for LEDs this one bit at position 5, for left digit + dot it is 6, for right digit + tune LED it is 7
 		CYCLE_WAIT(1);
-		io_write(0x09,display.activeRows[display.activeCol]); // push the 8 bits into the adress
+		io_write(0x09,display.activeRows[display.activeCol]); // push the 8 bits into the address
 	}
 
 	display.activeCol=(display.activeCol+1)%3;

@@ -15,7 +15,7 @@ my_id = '\x00\x61\x16'
 update_command = '\x6b'
 
 def checkCRC(message):
-    #CRC-16-CITT poly, the CRC sheme used by ymodem protocol
+    #CRC-16-CITT poly, the CRC scheme used by ymodem protocol
     poly = 0x1021
     #16bit operation register, initialized to zeros
     reg = 0x0000

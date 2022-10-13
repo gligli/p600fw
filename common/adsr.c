@@ -6,7 +6,7 @@
 ;  This program provides a versatile envelope generator on a single chip.
 ;  It is designed as a modern version of the CEM3312 or SSM2056 ICs.
 ;  Analogue output is provided as a PWM output, which requires LP
-;  filtering to be useable.
+;  filtering to be usable.
 ;
 ;  Hardware Notes:
 ;   PIC16F684 running at 20 MHz using external crystal

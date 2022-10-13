@@ -47,7 +47,7 @@
 #define PRODUCT_ID		0x0479
 
 
-// USB devices are supposed to implment a halt feature, which is
+// USB devices are supposed to implement a halt feature, which is
 // rarely (if ever) used.  If you comment this line out, the halt
 // code will be removed, saving 102 bytes of space (gcc 4.3.0).
 // This is not strictly USB compliant, but works with all major
@@ -166,7 +166,7 @@ static const uint8_t PROGMEM config1_descriptor[CONFIG1_DESC_SIZE] = {
 
 // If you're desperate for a little extra code memory, these strings
 // can be completely removed if iManufacturer, iProduct, iSerialNumber
-// in the device desciptor are changed to zeros.
+// in the device descriptor are changed to zeros.
 struct usb_string_descriptor_struct {
 	uint8_t bLength;
 	uint8_t bDescriptorType;
