@@ -570,7 +570,7 @@ extcoff: $(TARGET).elf
 .PRECIOUS : $(OBJ)
 %.elf: $(OBJ)
 	@echo $(MSG_LINKING) $@
-	$(CC) $(ALL_CFLAGS) $^ --output $@ $(LDFLAGS)
+	$(CC) $(patsubst -Wa%.o,,$(ALL_CFLAGS)) $^ --output $@ $(LDFLAGS)
 
 
 # Compile: create object files from C source files.
