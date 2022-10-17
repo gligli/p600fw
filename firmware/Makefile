@@ -538,7 +538,7 @@ extcoff: $(TARGET).elf
 	$(OBJCOPY) -O binary -R .eeprom -R .fuse -R .lock -R .signature -R .updater -R .nrww_misc -R .bootloader $< $@
 
 %.syx: %.bin
-	python2 ../fw2syx/fw2syx.py $< -o $@
+	python3 ../fw2syx/fw2syx.py $< -o $@
 
 %.eep: %.elf
 	@echo $(MSG_EEPROM) $@
