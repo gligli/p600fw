@@ -203,7 +203,7 @@ static void computeTunedOffsetCVs(void) // this function must always be called a
 static void computeTunedCVs(int8_t force, int8_t forceVoice)
 {
 
-    // with this function the folowing changes are reflected in the CVs
+    // with this function the following changes are reflected in the CVs
     // master Tune, fine Tune OSC B
     // filter cut-off, frequency settings of OSC A and B (inkl. mode setting)
     // Tracking setting
@@ -211,7 +211,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
     // Bender
     // assigned notes
     //
-    // --> all these are slowly changing, therefore the function can be called according to ressources
+    // --> all these are slowly changing, therefore the function can be called according to resources
     // --> for bender events there is separate, reduced and faster function, because there can be a lot of these events
 
     uint16_t cva,cvb,cvf;
@@ -414,7 +414,7 @@ static void computeTunedCVs(int8_t force, int8_t forceVoice)
 // division operation.
 // so instead of doing foo*=32768; foo/=factor; we precalculate
 // precalc=32768<<16/factor, and do foo*=precalc; foo>>=16; runtime.
-// when "rise" >0 then this is not a strict Deadband but rather als Slowband
+// when "rise" >0 then this is not a strict Deadband but rather a Slowband
 static void precalcDeadband(struct deadband *d)
 {
     uint16_t middleLow=d->middle-d->deadband;
@@ -1322,7 +1322,7 @@ void synth_update(void)
         }
     }
 
-    // immediate resonse the value changes
+    // immediate response the value changes
 
     if (potmux_hasChanged(ppMVol))
     {

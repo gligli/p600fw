@@ -164,7 +164,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	getPeriod();
 	
-	// flip flop stuff (CF sevice manual section 2-16)
+	// flip flop stuff (CF service manual section 2-16)
 		
 	while(periods)
 	{

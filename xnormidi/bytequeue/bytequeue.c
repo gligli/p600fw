@@ -1,6 +1,6 @@
 //this is a single reader [maybe multiple writer?] byte queue
 //Copyright 2008 Alex Norman
-//writen by Alex Norman 
+//written by Alex Norman 
 //
 //This file is part of avr-bytequeue.
 //

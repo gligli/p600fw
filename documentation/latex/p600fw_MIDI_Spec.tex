@@ -103,17 +103,17 @@ Note: patch parameters  consist only of single byte parameters (typically steppe
 
 The release comes with a Python script which converts Prophet-600 Patch MIDI SysEx to plain values. This is a specialist tool (which came in handy during the testing phase) but can also be the starting point for the development of a proper patch management tool. The following rfers to the (still rudimentary) version 1 of this tool.
 
-The tool consists of the script \textit{syx\_converter\_v1.py} and the two configuration files \textit{storage\_7.spec} and \textit{storage\_8.spec}. The script expectes the two configuration files in the folder. To use the tool you need to have Python 3 installed. The command line usage would be \textit{>py syx\_converter\_v1.py <filename> [-p<patchnumber>]}. The filename (or path) must be provided. It is the SysEx File to be converted. The parameter \textit{p} is optional. When provided and \textit{<patchnumber>} ist between 0 and 99, then the script will try to extract that patch from the file. If the SysEx file does not contain that patch number the output is empty.
+The tool consists of the script \textit{syx\_converter\_v1.py} and the two configuration files \textit{storage\_7.spec} and \textit{storage\_8.spec}. The script expects the two configuration files in the folder. To use the tool you need to have Python 3 installed. The command line usage would be \textit{>py syx\_converter\_v1.py <filename> [-p<patchnumber>]}. The filename (or path) must be provided. It is the SysEx File to be converted. The parameter \textit{p} is optional. When provided and \textit{<patchnumber>} is between 0 and 99, then the script will try to extract that patch from the file. If the SysEx file does not contain that patch number the output is empty.
 
 The script lists the parameters in the SysEx is a simple way as shown here for patch in slot 20 (only parts of the the result):
 
 \begin{itemize}
   \item[>] Patch Number:  20 
   \item[>] Storage version is 8
-  \item[>] Fequency A :  59776
+  \item[>] Frequency A :  59776
   \item[>] Volume A :  52224
   \item[>] PWA :  24000 
-  \item[>] Fequency B :  7408 
+  \item[>] Frequency B :  7408 
   \item[>] Volume B :  54528
   \item[>] PWB :  52416
   \item[>] Frequency Fine B :  40344
@@ -127,7 +127,7 @@ The script lists the parameters in the SysEx is a simple way as shown here for p
   \item[>] ...  
 \end{itemize}
 
-The continuous parameter have a value range of 0 to 65535 (16 bit resolution). Up to version 1 of the script, the values of stepped parameters are not name resolved but instead the index of the choice is displayed. In the example above, the bender semitones "3" means 3 semitones but the bender target value "1" means \textit{AB} (pitch bend of oscillators A and B) which is the second value in the choice list. The indexing always starts at "0". There are also some special parameters as decribed in this document.
+The continuous parameter have a value range of 0 to 65535 (16 bit resolution). Up to version 1 of the script, the values of stepped parameters are not name resolved but instead the index of the choice is displayed. In the example above, the bender semitones "3" means 3 semitones but the bender target value "1" means \textit{AB} (pitch bend of oscillators A and B) which is the second value in the choice list. The indexing always starts at "0". There are also some special parameters as described in this document.
  
 The SysEx specification for version 7 (corresponds to version 2.1 RC3) is supported.
 

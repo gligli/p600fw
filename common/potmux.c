@@ -76,8 +76,8 @@ static const int8_t response[POTMUX_POT_COUNT]=
     /*Poly-Mod OSC B*/3,
     /*LFO Frequency*/20,
     /*LFO Amount*/6,
-    /*Frequeny B*/3,
-    /*Frequeny A*/3,
+    /*Frequency B*/3,
+    /*Frequency A*/3,
     /*Frequency B Fine*/20,
 };
 

@@ -213,7 +213,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		settings.presetMode=0; // if no info, default start up is in live mode
 		settings.midiReceiveChannel=-1; // default is 'OMNI'
 		settings.voiceMask=0x3f; // default is: all on
-		settings.midiSendChannel=0; // deault is: 1
+		settings.midiSendChannel=0; // default is: 1
 		settings.syncMode=smInternal; // default is internal clock
 		settings.vcfLimit=0; // default is: no limit on the VCF
 		settings.midiMode=0; // normal mode
@@ -233,7 +233,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		if (settings.presetNumber>99) settings.presetNumber=0;
 	    settings.benderMiddle=storageRead16();
 		settings.presetMode=storageRead8();
-		// ensure that MIDI channel ist valid to void array out of bounds problems:
+		// ensure that MIDI channel is valid to void array out of bounds problems:
 		settings.midiReceiveChannel=storageReadS8();
 		if (settings.midiReceiveChannel<-1) settings.midiReceiveChannel=-1;
 		if (settings.midiReceiveChannel>15) settings.midiReceiveChannel=15;
@@ -244,7 +244,7 @@ LOWERCODESIZE int8_t settings_load(void)
 		// v2
 
 		settings.voiceMask=storageRead8();
-		// ensure that MIDI channel ist valid to void array out of bounds problems:
+		// ensure that MIDI channel is valid to void array out of bounds problems:
 		settings.midiSendChannel=storageReadS8();	     
 		if (settings.midiSendChannel<0) settings.midiSendChannel=0;
 		if (settings.midiSendChannel>15) settings.midiSendChannel=15;
@@ -391,7 +391,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         }
 
         // compatibility with previous versions require the ""Pulse Width Sync Bug""
-        // --> for loading from old stroage versions also override the default patch value "off"""
+        // --> for loading from old storage versions also override the default patch value "off"""
         currentPreset.steppedParameters[spPWMBug]=1; // == bug "on"" for compatibility
 
 		for(i=0;i<SYNTH_VOICE_COUNT;++i)
@@ -414,7 +414,7 @@ LOWERCODESIZE int8_t preset_loadCurrent(uint16_t number, uint8_t loadFromBuffer)
         if (storage.version<8)
         {
             // in this case readVar contains the legacy LFO speed range, where value 1 was "fast"
-            // rescale the LFO speed (the speed switch paramter was omitted from version 8 after)
+            // rescale the LFO speed (the speed switch parameter was omitted from version 8 after)
             // the exponential factor (ratio) was changed from 13000 to 8000
             currentPreset.continuousParameters[cpLFOFreq]=(uint16_t)(0.615385f*(float)currentPreset.continuousParameters[cpLFOFreq])+25205;
             // The slow LFO variant in version 7 / 2.1RC3 was made a factor of 8 slower comapred to the fast setting, so:
