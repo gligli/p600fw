@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="95">
+<configurationDescriptor version="100">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -12,6 +12,7 @@
       <itemPath>../common/display.h</itemPath>
       <itemPath>../common/hardware.h</itemPath>
       <itemPath>hardware_impl.h</itemPath>
+      <itemPath>iic_24lc512.h</itemPath>
       <itemPath>../common/import.h</itemPath>
       <itemPath>../common/lfo.h</itemPath>
       <itemPath>../common/map_to_7segment.h</itemPath>
@@ -24,7 +25,6 @@
       <itemPath>../common/sh.h</itemPath>
       <itemPath>../common/storage.h</itemPath>
       <itemPath>../common/synth.h</itemPath>
-      <itemPath>teensy_bootloader_hack.h</itemPath>
       <itemPath>../common/tuner.h</itemPath>
       <itemPath>../common/uart_6850.h</itemPath>
       <itemPath>../common/ui.h</itemPath>
@@ -43,6 +43,7 @@
       <itemPath>../common/assigner.c</itemPath>
       <itemPath>../common/dac.c</itemPath>
       <itemPath>../common/display.c</itemPath>
+      <itemPath>iic_24lc512.c</itemPath>
       <itemPath>../common/import.c</itemPath>
       <itemPath>../common/lfo.c</itemPath>
       <itemPath>../common/midi.c</itemPath>
@@ -169,6 +170,10 @@
       </item>
       <item path="hardware_impl.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="iic_24lc512.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="iic_24lc512.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="mult16x16.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="mult32x16.h" ex="false" tool="3" flavor2="0">
@@ -178,8 +183,6 @@
       <item path="print.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="print.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="teensy_bootloader_hack.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="usb_debug_only.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -284,6 +287,10 @@
       </item>
       <item path="hardware_impl.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="iic_24lc512.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="iic_24lc512.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="mult16x16.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="mult32x16.h" ex="false" tool="3" flavor2="0">
@@ -293,8 +300,6 @@
       <item path="print.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="print.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="teensy_bootloader_hack.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="usb_debug_only.c" ex="false" tool="0" flavor2="0">
       </item>

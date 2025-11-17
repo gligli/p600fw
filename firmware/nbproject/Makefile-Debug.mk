@@ -35,24 +35,25 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/1270477542/adsr.o \
-	${OBJECTDIR}/_ext/1270477542/arp.o \
-	${OBJECTDIR}/_ext/1270477542/assigner.o \
-	${OBJECTDIR}/_ext/1270477542/dac.o \
-	${OBJECTDIR}/_ext/1270477542/display.o \
-	${OBJECTDIR}/_ext/1270477542/import.o \
-	${OBJECTDIR}/_ext/1270477542/lfo.o \
-	${OBJECTDIR}/_ext/1270477542/midi.o \
-	${OBJECTDIR}/_ext/1270477542/potmux.o \
-	${OBJECTDIR}/_ext/1270477542/scanner.o \
-	${OBJECTDIR}/_ext/1270477542/seq.o \
-	${OBJECTDIR}/_ext/1270477542/sh.o \
-	${OBJECTDIR}/_ext/1270477542/storage.o \
-	${OBJECTDIR}/_ext/1270477542/synth.o \
-	${OBJECTDIR}/_ext/1270477542/tuner.o \
-	${OBJECTDIR}/_ext/1270477542/uart_6850.o \
-	${OBJECTDIR}/_ext/1270477542/ui.o \
-	${OBJECTDIR}/_ext/1270477542/utils.o \
+	${OBJECTDIR}/_ext/b4460d1a/adsr.o \
+	${OBJECTDIR}/_ext/b4460d1a/arp.o \
+	${OBJECTDIR}/_ext/b4460d1a/assigner.o \
+	${OBJECTDIR}/_ext/b4460d1a/dac.o \
+	${OBJECTDIR}/_ext/b4460d1a/display.o \
+	${OBJECTDIR}/_ext/b4460d1a/import.o \
+	${OBJECTDIR}/_ext/b4460d1a/lfo.o \
+	${OBJECTDIR}/_ext/b4460d1a/midi.o \
+	${OBJECTDIR}/_ext/b4460d1a/potmux.o \
+	${OBJECTDIR}/_ext/b4460d1a/scanner.o \
+	${OBJECTDIR}/_ext/b4460d1a/seq.o \
+	${OBJECTDIR}/_ext/b4460d1a/sh.o \
+	${OBJECTDIR}/_ext/b4460d1a/storage.o \
+	${OBJECTDIR}/_ext/b4460d1a/synth.o \
+	${OBJECTDIR}/_ext/b4460d1a/tuner.o \
+	${OBJECTDIR}/_ext/b4460d1a/uart_6850.o \
+	${OBJECTDIR}/_ext/b4460d1a/ui.o \
+	${OBJECTDIR}/_ext/b4460d1a/utils.o \
+	${OBJECTDIR}/iic_24lc512.o \
 	${OBJECTDIR}/p600firmware.o \
 	${OBJECTDIR}/print.o \
 	${OBJECTDIR}/usb_debug_only.o
@@ -82,107 +83,112 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/_ext/1270477542/adsr.o: ../common/adsr.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/adsr.o: ../common/adsr.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/adsr.o ../common/adsr.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/adsr.o ../common/adsr.c
 
-${OBJECTDIR}/_ext/1270477542/arp.o: ../common/arp.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/arp.o: ../common/arp.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/arp.o ../common/arp.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/arp.o ../common/arp.c
 
-${OBJECTDIR}/_ext/1270477542/assigner.o: ../common/assigner.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/assigner.o: ../common/assigner.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/assigner.o ../common/assigner.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/assigner.o ../common/assigner.c
 
-${OBJECTDIR}/_ext/1270477542/dac.o: ../common/dac.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/dac.o: ../common/dac.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/dac.o ../common/dac.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/dac.o ../common/dac.c
 
-${OBJECTDIR}/_ext/1270477542/display.o: ../common/display.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/display.o: ../common/display.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/display.o ../common/display.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/display.o ../common/display.c
 
-${OBJECTDIR}/_ext/1270477542/import.o: ../common/import.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/import.o: ../common/import.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/import.o ../common/import.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/import.o ../common/import.c
 
-${OBJECTDIR}/_ext/1270477542/lfo.o: ../common/lfo.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/lfo.o: ../common/lfo.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/lfo.o ../common/lfo.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/lfo.o ../common/lfo.c
 
-${OBJECTDIR}/_ext/1270477542/midi.o: ../common/midi.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/midi.o: ../common/midi.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/midi.o ../common/midi.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/midi.o ../common/midi.c
 
-${OBJECTDIR}/_ext/1270477542/potmux.o: ../common/potmux.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/potmux.o: ../common/potmux.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/potmux.o ../common/potmux.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/potmux.o ../common/potmux.c
 
-${OBJECTDIR}/_ext/1270477542/scanner.o: ../common/scanner.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/scanner.o: ../common/scanner.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/scanner.o ../common/scanner.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/scanner.o ../common/scanner.c
 
-${OBJECTDIR}/_ext/1270477542/seq.o: ../common/seq.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/seq.o: ../common/seq.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/seq.o ../common/seq.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/seq.o ../common/seq.c
 
-${OBJECTDIR}/_ext/1270477542/sh.o: ../common/sh.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/sh.o: ../common/sh.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/sh.o ../common/sh.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/sh.o ../common/sh.c
 
-${OBJECTDIR}/_ext/1270477542/storage.o: ../common/storage.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/storage.o: ../common/storage.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/storage.o ../common/storage.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/storage.o ../common/storage.c
 
-${OBJECTDIR}/_ext/1270477542/synth.o: ../common/synth.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/synth.o: ../common/synth.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/synth.o ../common/synth.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/synth.o ../common/synth.c
 
-${OBJECTDIR}/_ext/1270477542/tuner.o: ../common/tuner.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/tuner.o: ../common/tuner.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/tuner.o ../common/tuner.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/tuner.o ../common/tuner.c
 
-${OBJECTDIR}/_ext/1270477542/uart_6850.o: ../common/uart_6850.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/uart_6850.o: ../common/uart_6850.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/uart_6850.o ../common/uart_6850.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/uart_6850.o ../common/uart_6850.c
 
-${OBJECTDIR}/_ext/1270477542/ui.o: ../common/ui.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/ui.o: ../common/ui.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/ui.o ../common/ui.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/ui.o ../common/ui.c
 
-${OBJECTDIR}/_ext/1270477542/utils.o: ../common/utils.c 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1270477542
+${OBJECTDIR}/_ext/b4460d1a/utils.o: ../common/utils.c
+	${MKDIR} -p ${OBJECTDIR}/_ext/b4460d1a
 	${RM} "$@.d"
-	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/1270477542/utils.o ../common/utils.c
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/_ext/b4460d1a/utils.o ../common/utils.c
 
-${OBJECTDIR}/p600firmware.o: p600firmware.c 
+${OBJECTDIR}/iic_24lc512.o: iic_24lc512.c
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/iic_24lc512.o iic_24lc512.c
+
+${OBJECTDIR}/p600firmware.o: p600firmware.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/p600firmware.o p600firmware.c
 
-${OBJECTDIR}/print.o: print.c 
+${OBJECTDIR}/print.o: print.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/print.o print.c
 
-${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c 
+${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.c) -g -D__AVR_AT90USB1286__ -I../common -I. -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/usb_debug_only.o usb_debug_only.c
@@ -193,7 +199,6 @@ ${OBJECTDIR}/usb_debug_only.o: usb_debug_only.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/firmware.exe
 
 # Subprojects
 .clean-subprojects:

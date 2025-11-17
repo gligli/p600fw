@@ -6,7 +6,7 @@
 #include <string.h>
 #include "usb_debug_only.h"
 #include "print.h"
-#include "teensy_bootloader_hack.h"
+#include "iic_24lc512.h"
 
 #include "synth.h"
 
@@ -258,277 +258,17 @@ static FORCEINLINE void hardware_init(int8_t ints)
 	}
 	
 	hardware_read(0,0); // init r/w system
+	
+	
+	iic_init();
 }
-
-#define NRWW_SECTION(sec) __attribute__((section (sec))) __attribute__((noinline)) __attribute__((optimize ("O1"))) __attribute__((used))
-
-void NRWW_SECTION(".bootloader") blHack_program_page (uint32_t page, uint8_t *buf)
-{
-	uint16_t i;
-	uint8_t sreg;
-
-	// Disable interrupts.
-
-	sreg = SREG;
-	cli();
-
-	eeprom_busy_wait ();
-
-	blHack_page_erase (page);
-	boot_spm_busy_wait ();      // Wait until the memory is erased.
-
-	for (i=0; i<SPM_PAGESIZE; i+=2)
-	{
-		// Set up little-endian word.
-
-		uint16_t w = *buf++;
-		w += (*buf++) << 8;
-
-		blHack_page_fill (page + i, w);
-	}
-
-	blHack_page_write (page);     // Store buffer in flash page.
-	boot_spm_busy_wait();       // Wait until the memory is written.
-
-	// Re-enable RWW-section again. We need this if we want to jump back
-	// to the application after bootloading.
-
-	blHack_rww_enable ();
-
-	// Re-enable interrupts (if they were ever enabled).
-
-	SREG = sreg;
-}
-
-
-static int16_t NRWW_SECTION(".nrww_misc") getMidiByte(void)
-{
-	uint8_t data,status;
-
-	CYCLE_WAIT(4);
-
-	while(PINC&0x10) // wait for NMI
-		CYCLE_WAIT(1);
-	
-	status=hardware_read(0,0xe000); // read UART status
-	CYCLE_WAIT(4);
-
-	if ((status&0b10110001)!=0b10000001) // detect errors
-		return -1;
-
-	data=hardware_read(0,0xe001); // get byte
-	CYCLE_WAIT(4);
-	
-	return data;
-}
-
-static uint16_t NRWW_SECTION(".nrww_misc") updateCRC(uint16_t crc,uint8_t data)
-{
-	return _crc_xmodem_update(crc,data);
-}
-
-#define UPDATER_GET_BYTE { b=getMidiByte(); if(b<0) break; }
-#define UPDATER_WAIT_BYTE(waited) { UPDATER_GET_BYTE; if(b!=(waited)) break; }
-#define UPDATER_CRC_BYTE { UPDATER_GET_BYTE; crc=updateCRC(crc,b); }
-
-void NRWW_SECTION(".updater") updater_main(void)
-{
-	int8_t i,needUpdate,success=0;
-	uint8_t seg=1;
-	int16_t b;
-	uint16_t crc,pageIdx,pageSize,crcSent,byteIdx;
-	uint8_t awaiting[4];
-	static uint8_t page[SPM_PAGESIZE];
-	
-	// power supply still ramping up voltage	
-	
-	_delay_ms(100); // actual delay 800 ms
-
-	// no interrupts while we update
-	
-	cli();
-	
-	// initialize low level
-
-	hardware_init(0);
-	
-	// check if we need to go to update mode ("from tape" & "to tape" pressed)
-	
-	hardware_write(1,0x08,0x01);
-	CYCLE_WAIT(10);
-	needUpdate=(hardware_read(1,0x0a)&0xc0)==0xc0;
-	CYCLE_WAIT(10);
-	needUpdate&=(hardware_read(1,0x0a)&0xc0)==0xc0;
-	CYCLE_WAIT(10);
-	
-	if(!needUpdate)
-		return;
-	
-	// select left 7seg 
-	
-	hardware_write(1,0x08,0x20);
-	CYCLE_WAIT(8);
-	
-	// show 'U'
-	
-	hardware_write(1,0x09,0x3e);
-	CYCLE_WAIT(8);
-	
-	// unclear NMI (UART IRQ)
-	
-	hardware_write(1,0x0e,0b00110001);
-	CYCLE_WAIT(8);
-
-	// init 6850
-	
-	hardware_write(0,0x6000,0b00000011); // master reset
-	MDELAY(1);
-	
-	hardware_write(0,0x6000,0b10010101); // clock/16 - 8N1 - receive int
-	CYCLE_WAIT(8);
-	
-	hardware_read(0,0xe000); // read status & data to start the device
-	CYCLE_WAIT(4);
-	hardware_read(0,0xe001);
-	CYCLE_WAIT(4);
-
-	// main loop
-	
-	for(;;)
-	{
-		// init
-		crc=0;
-		
-		// wait for sysex begin
-		UPDATER_GET_BYTE;
-		if(b!=0xf0) // "F0" is the SysEx start byte, so loop until that arrives
-			continue;
-		
-		// check for my ID
-		UPDATER_WAIT_BYTE(SYSEX_ID_0)
-		UPDATER_WAIT_BYTE(SYSEX_ID_1)
-		UPDATER_WAIT_BYTE(SYSEX_ID_2) 
-		
-		// check for update command
-		UPDATER_WAIT_BYTE(SYSEX_COMMAND_UPDATE_FW) 
-		
-		// get page size, 0 indicates end of transmission
-		UPDATER_CRC_BYTE
-		pageSize=(b&0x7f)<<7;
-		UPDATER_CRC_BYTE
-		pageSize|=b&0x7f;
-		
-		if(pageSize!=SPM_PAGESIZE) // the last SysEx block comes with pagesize =0 and marks the end of the firmware stream
-		{
-			success=pageSize==0;
-			break;
-		}
-		
-		// get page ID
-		UPDATER_CRC_BYTE
-		pageIdx=(b&0x7f)<<7;
-		UPDATER_CRC_BYTE
-		pageIdx|=b&0x7f;
-		
-		// get data
-		byteIdx=0;
-		for(i=0;i<SPM_PAGESIZE/sizeof(awaiting);++i)
-		{
-			// get low 7bits of 4 bytes
-			UPDATER_CRC_BYTE
-			awaiting[0]=b&0x7f;
-			UPDATER_CRC_BYTE
-			awaiting[1]=b&0x7f;
-			UPDATER_CRC_BYTE
-			awaiting[2]=b&0x7f;
-			UPDATER_CRC_BYTE
-			awaiting[3]=b&0x7f;
-
-			// msbs of 4 bytes
-			UPDATER_CRC_BYTE
-			awaiting[0]|=(b&1)<<7;
-			awaiting[1]|=(b&2)<<6;
-			awaiting[2]|=(b&4)<<5;
-			awaiting[3]|=(b&8)<<4;
-
-			// copy to page
-			page[byteIdx++]=awaiting[0];
-			page[byteIdx++]=awaiting[1];
-			page[byteIdx++]=awaiting[2];
-			page[byteIdx++]=awaiting[3];
-		}
-		
-		// check crc
-		UPDATER_GET_BYTE
-		crcSent=(b&0x7f)<<9;
-		UPDATER_GET_BYTE
-		crcSent|=(b&0x7f)<<2;
-		UPDATER_GET_BYTE
-		crcSent|=b&0x03;
-		
-		if(crcSent!=crc)
-			break;
-		
-		// sysex termination
-		UPDATER_WAIT_BYTE(0xf7)
-		
-		// spinning 7seg
-		
-		seg<<=1;
-		if(seg>=0x40)
-			seg=1;
-		
-		hardware_write(1,0x09,seg);
-		CYCLE_WAIT(8);
-
-		// program page
-		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE,page);
-	}
-	
-	// show 'S' or 'E' on the 7seg, depending on success or error
-	hardware_write(1,0x09,(success)?0x6d:0x79);
-
-	// loop infinitely
-	for(;;);
-}
-
-// override __init function to call updater, so that we can check if we need to go to update mode.
-// if we don't, go back to the regular init process
-// this function is in the vectors section to ensure it stays in the first SPM_PAGESIZE block of flash
-void __attribute__((section(".vectors"),naked,used)) __init(void)
-{
-	asm volatile
-	(
-		// init status reg
-		"clr r1 \n\t"
-		"out 0x3f,r1 \n\t" // SREG
-		// init stack
-		"ldi r28,lo8(__stack) \n\t"
-		"ldi r29,hi8(__stack) \n\t"
-		"out 0x3e,r29 \n\t" // SPH
-		"out 0x3d,r28 \n\t" // SPL
-		// call updater
-		"call 0x1e000 \n\t"
-		// back to regular init
-		"jmp __do_clear_bss \n\t"
-	);
-}
-
-// just before the nrww zone
-
-#define STORAGE_ADDR (0x1e000-STORAGE_SIZE)
 
 void storage_write(uint32_t pageIdx, uint8_t *buf)
 {
 	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
 	{
-		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR,buf);
-
-		// Somewhere R16 appears to get clobbered even though the
-		// compiler is not aware of it, possibly in the SPM routine
-		// called by blHack_call_SPM. So to avoid potential problems
-		// in callers higher up in the stack we mark R16 as clobbered here.
-		CLOBBERED("r16");
+		iic_send_page(pageIdx, 0, &buf[0]);
+		iic_send_page(pageIdx, IIC_PAGE_SIZE, &buf[IIC_PAGE_SIZE]);
 	}
 }
 
@@ -536,13 +276,8 @@ void storage_read(uint32_t pageIdx, uint8_t *buf)
 {
 	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
 	{
-		int16_t i;
-		int32_t base=pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR;
-		
-		for(i=0;i<STORAGE_PAGE_SIZE;++i)
-		{
-			buf[i]=pgm_read_byte_far(base+i);
-		}
+		iic_receive_page(pageIdx, 0, &buf[0]);
+		iic_receive_page(pageIdx, IIC_PAGE_SIZE, &buf[IIC_PAGE_SIZE]);
 	}
 }
 
@@ -565,7 +300,7 @@ int main(void)
 
 	print("p600firmware\n");
 #endif
-
+	
 	// no interrupts while we init
 	
 	cli();

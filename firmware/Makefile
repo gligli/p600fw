@@ -56,6 +56,7 @@ SRC = \
 	$(TARGET).c \
 	usb_debug_only.c \
 	print.c \
+	iic_24lc512.c \
 	../common/display.c \
 	../common/scanner.c \
 	../common/dac.c \
@@ -538,7 +539,7 @@ extcoff: $(TARGET).elf
 	$(OBJCOPY) -O binary -R .eeprom -R .fuse -R .lock -R .signature -R .updater -R .nrww_misc -R .bootloader $< $@
 
 %.syx: %.bin
-	python3 ../fw2syx/fw2syx.py $< -o $@
+	python ../fw2syx/fw2syx.py $< -o $@
 
 %.eep: %.elf
 	@echo $(MSG_EEPROM) $@
