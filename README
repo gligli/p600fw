@@ -113,9 +113,9 @@ To keep your patches:
 2) Install V2.5.
 3) In V2.5 press "from tape" + "record", send the recorded sysex, press "record". Each V2.34 patch is converted to V2.5.
 
-Install with the Teensy Loader (p600firmware V2.5.hex): this is the safest way. Count on it erasing presets, settings and sequences. Tune after.
+Coming from V2.34 or any older version: install with the Teensy Loader (p600firmware V2.5.hex). Do not use sysex for this first install: the old updater in the Teensy (sysex updates never replace it) can stop near the end, leaving a blank display; the Teensy Loader still works then. Count on the Teensy Loader erasing presets, settings and sequences. Tune after.
 
-Or by sysex (p600firmware V2.5.syx): hold "from tape" + "to tape" while switching on, send the file, wait for "S" on the display, switch off and on. If it shows "E", start again (send slower if it repeats). Settings, tuning, sequences and the manual patch are kept; V2.34 presets 96-99 show up as 0-3 and the rest are empty until you send your dump.
+From V2.5 on, sysex updates work (V2.5 installs its own updater) (p600firmware V2.5.syx): hold "from tape" + "to tape" while switching on, send the file, wait for "S" on the display, switch off and on. If it shows "E", start again (send slower if it repeats). Settings, tuning, sequences and the manual patch are kept; V2.34 presets 96-99 show up as 0-3 and the rest are empty until you send your dump.
 
 Fixed in V2.5 (Teensy part):
 The startup code could skip setting the initial values of the variables, depending on the compiler version.
