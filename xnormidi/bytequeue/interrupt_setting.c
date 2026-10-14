@@ -1,5 +1,5 @@
 //Copyright 20010 Alex Norman
-//writen by Alex Norman 
+//written by Alex Norman 
 //
 //This file is part of avr-bytequeue.
 //

@@ -324,7 +324,15 @@ static int16_t NRWW_SECTION(".nrww_misc") getMidiByte(void)
 
 static uint16_t NRWW_SECTION(".nrww_misc") updateCRC(uint16_t crc,uint8_t data)
 {
-	return _crc_xmodem_update(crc,data);
+	// V2.5: local copy of _crc_xmodem_update() (same CRC-16/XMODEM, polynomial 0x1021). The library version was compiled as a
+	// separate function in the APPLICATION area (at 0x61a in V2.34), so the updater, which a sysex update never replaces, called
+	// into code that the update itself overwrites. It worked as long as that function stayed at the same address; with V2.5 it
+	// would not. Ported from the Flat-Labs build ("updater no longer calls into the application").
+	uint8_t i;
+	crc^=(uint16_t)data<<8;
+	for(i=0;i<8;i++)
+		crc=(crc&0x8000)?(uint16_t)((crc<<1)^0x1021):(uint16_t)(crc<<1);
+	return crc;
 }
 
 #define UPDATER_GET_BYTE { b=getMidiByte(); if(b<0) break; }
@@ -510,7 +518,12 @@ void __attribute__((section(".vectors"),naked,used)) __init(void)
 		// call updater
 		"call 0x1e000 \n\t"
 		// back to regular init
-		"jmp __do_clear_bss \n\t"
+		// V2.5: jump to the start of the regular init code (.init2, right after the constructor table) instead of __do_clear_bss.
+		// The old jump skipped __do_copy_data (the initial values of all initialised variables, e.g. the menu texts) whenever the
+		// toolchain places __do_copy_data before __do_clear_bss, as avr-gcc 7.3 does; it only worked with toolchains that place
+		// __do_clear_bss first (the V2.34 hex in the repo was built with one). From __ctors_end the stack is set again (harmless)
+		// and both __do_copy_data and __do_clear_bss run, in whatever order the linker put them.
+		"jmp __ctors_end \n\t"
 	);
 }
 

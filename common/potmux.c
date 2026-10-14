@@ -4,21 +4,81 @@
 
 #include "potmux.h"
 #include "dac.h"
+#include "midi.h"
 
-#define PRIORITY_POT_COUNT 4
 #define CHANGE_DETECT_THRESHOLD 4
 
 static const int8_t potBitDepth[POTMUX_POT_COUNT]=
 {
-	/*Mixer*/8,/*Cutoff*/12,/*Resonance*/8,/*FilEnvAmt*/10,/*FilRel*/8,/*FilSus*/8,
-	/*FilDec*/8,/*FilAtt*/8,/*AmpRel*/8,/*AmpSus*/8,/*AmpDec*/8,/*AmpAtt*/8,
-	/*Glide*/8,/*BPW*/10,/*MVol*/8,/*MTune*/12,/*PitchWheel*/12,0,0,0,0,0,/*ModWheel*/8,
-	/*Speed*/12,/*APW*/10,/*PModFilEnv*/10,/*LFOFreq*/10,/*PModOscB*/10,/*LFOAmt*/10,/*FreqB*/12,/*FreqA*/12,/*FreqBFine*/8
+    /*Vol A / Mixer*/8,
+    /*Cutoff*/12,
+    /*Resonance*/8,
+    /*FilEnvAmt*/10,
+    /*FilRel*/8,
+    /*FilSus*/10,
+    /*FilDec*/8,
+    /*FilAtt*/8,
+    /*AmpRel*/8,
+    /*AmpSus*/10,
+    /*AmpDec*/8,
+    /*AmpAtt*/8,
+    /*Vol B / Glide*/8,
+    /*BPW*/10,
+    /*MVol*/8,
+    /*MTune*/12,
+    /*PitchWheel*/12,
+    0,
+    0,
+    0,
+    0,
+    0,
+    /*ModWheel*/8,
+    /*Speed*/12,
+    /*APW*/10,
+    /*PModFilEnv*/10,
+    /*LFOFreq*/10,
+    /*PModOscB*/10,
+    /*LFOAmt*/12,
+    /*FreqB*/12,
+    /*FreqA*/12,
+    /*FreqBFine*/12,
+
 };
 
-static const p600Pot_t priorityPots[PRIORITY_POT_COUNT]=
+static const int8_t response[POTMUX_POT_COUNT]=
 {
-	ppCutoff,ppPitchWheel,ppFreqA,ppFreqB
+    /*Vol A*/6,
+    /*Cutoff*/4,
+    /*Resonance*/3,
+    /*Fil Env Amt*/6,
+    /*Filter Release */35,
+    /*Filter Sustain*/6,
+    /*Filter Decay*/35,
+    /*Filter Attack*/35,
+    /*Amp Release*/35,
+    /*Amp Sustain*/6,
+    /*Amp Decay*/35,
+    /*Amp Attack*/35,
+    /*Vol B*/6,
+    /*BPW*/7,
+    /*Master Vol*/6,
+    /*Master Tune*/11,
+    /*Pitch Bender*/1, // was 3: sampled every 6th pass made the wheel steppy; now every 2nd
+    0,
+    0,
+    0,
+    0,
+    0,
+    /*Mod Wheel*/3,
+    /*Data Dial*/8,
+    /*APW*/7,
+    /*Poly-Mod Env*/8,
+    /*Poly-Mod OSC B*/3,
+    /*LFO Frequency*/20,
+    /*LFO Amount*/6,
+    /*Frequency B*/3,
+    /*Frequency A*/3,
+    /*Frequency B Fine*/20,
 };
 
 
@@ -28,17 +88,23 @@ static struct
 	uint8_t changeDetect[POTMUX_POT_COUNT];
 
 	uint16_t pots[POTMUX_POT_COUNT];
+	uint8_t potExcited[POTMUX_POT_COUNT];
+	uint8_t potcounter[POTMUX_POT_COUNT];
 	int8_t currentRegularPot;
-	p600Pot_t lastChanged;
+	int8_t lastChanged;
+	int8_t lastInAction;
+
 } potmux;
 
-static void updatePot(p600Pot_t pot)
+static void updatePot(int8_t pot)
 {
 	int8_t i,lower;
-	uint8_t mux,bitDepth,cdv;
+	uint8_t mux,bitDepth,cdv,diff;
 	uint16_t estimate,badMask;
 	uint16_t bit;
-	
+
+    if (pot<0) return;
+
 	BLOCK_INT
 	{
 		// successive approximations using DAC and comparator
@@ -46,7 +112,7 @@ static void updatePot(p600Pot_t pot)
 			// select pot
 
 		mux=(pot&0x0f)|(0x20>>(pot>>4));
-		io_write(0x0a,mux);
+		io_write(CSO2,mux);
 		CYCLE_WAIT(4);
 
 			// init values
@@ -62,13 +128,13 @@ static void updatePot(p600Pot_t pot)
 
 		for(i=0;i<=bitDepth;++i)
 		{
-			dac_write(estimate);				
+			dac_write(estimate);
 
 			// let comparator get correct voltage (don't remove me!)
 			CYCLE_WAIT(2);
 
 			// is DAC value lower than pot value?
-			lower=(io_read(0x09)&0x08)!=0;
+			lower=(io_read(CSO1)&0x08)!=0;
 
 			// adjust estimate
 			if (lower)
@@ -82,23 +148,34 @@ static void updatePot(p600Pot_t pot)
 
 			// unselect
 
-		io_write(0x0a,0xff);
+		io_write(CSO2,0xff);
 		CYCLE_WAIT(4);
 
+        // suppress the bits beyond the measurement accuracy
 		estimate&=badMask;
-		potmux.pots[pot]=estimate;
-		
-		// change detector
-		
+
+        // change detector
 		cdv=estimate>>8;
-		
-		if(abs(potmux.changeDetect[pot]-cdv)>CHANGE_DETECT_THRESHOLD)
+        diff = abs(potmux.changeDetect[pot]-cdv);
+		if (potmux.lastInAction!=pot) potmux.potExcited[pot]=0;
+		if(diff>CHANGE_DETECT_THRESHOLD || (potmux.potExcited[pot] && pot!=ppPitchWheel))
 		{
 			potmux.changeDetect[pot]=cdv;
 			potmux.potChanged|=(uint32_t)1<<pot;
-			potmux.lastChanged=pot;
+            potmux.potExcited[pot]=1;
+            potmux.lastChanged=pot; // this is reset in every cycle, this is used to decide which value to show on the display
+            potmux.lastInAction=pot; // this stays and is only reset for a change of mode
 		}
-	}
+
+        if (estimate>=0xFC00)
+        {
+            potmux.pots[pot]=badMask; // choose max value above the threshold UINT16_t - CHANGE_DETECT_THRESHOLD
+        }
+        else
+        {
+            potmux.pots[pot]=estimate;
+        }
+    }
 }
 
 FORCEINLINE uint16_t potmux_getValue(p600Pot_t pot)
@@ -108,7 +185,7 @@ FORCEINLINE uint16_t potmux_getValue(p600Pot_t pot)
 
 FORCEINLINE int8_t potmux_hasChanged(p600Pot_t pot)
 {
-	return (potmux.potChanged&((uint32_t)1<<pot))!=0;
+	return ((((uint8_t*)&potmux.potChanged)[pot>>3]>>(pot&7))&1)!=0; // byte access: avoids a 32 bit variable shift (slow on AVR)
 }
 
 FORCEINLINE p600Pot_t potmux_lastChanged(void)
@@ -122,31 +199,60 @@ FORCEINLINE void potmux_resetChanged(void)
 	potmux.lastChanged=ppNone;
 }
 
-int8_t potmux_isPotZeroCentered(p600Pot_t pot)
+void potmux_resetChangedFull(void)
 {
-	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel;
+    potmux_resetChanged();
+    potmux.lastInAction=ppNone;
+    uint8_t i=0;
+    for (i=0;i<POTMUX_POT_COUNT;i++)
+    {
+        potmux.potExcited[i]=0;
+    }
 }
 
-inline void potmux_update(uint8_t regularPotCount)
+
+FORCEINLINE void potmux_resetSpeedPot(void)
+{
+    uint32_t mask=1;
+	potmux.potChanged&=(~(mask<<ppSpeed)); // remove the bit of the speed pot
+	if (potmux.lastChanged==ppSpeed) potmux.lastChanged=ppNone;
+    potmux.potExcited[ppSpeed]=0;
+
+}
+
+int8_t potmux_isPotZeroCentered(p600Pot_t pot, uint8_t layout)
+{
+	return pot==ppFilEnvAmt || pot==ppPModFilEnv || pot==ppFreqBFine || pot==ppMTune || pot==ppPitchWheel || (pot==ppMixer && layout==1);
+}
+
+inline void potmux_update(uint8_t updateAll)
 {
 	int16_t i;
-	
-	for(i=0;i<regularPotCount;++i)
-	{
-		updatePot(potmux.currentRegularPot);
 
-		if(potmux.currentRegularPot==ppPitchWheel)
-			potmux.currentRegularPot=ppModWheel; // hole in the enum between those 2
-		else
-			potmux.currentRegularPot=(potmux.currentRegularPot+1)%POTMUX_POT_COUNT;
-	}
-
-	for(i=0;i<PRIORITY_POT_COUNT;++i)
-		updatePot(priorityPots[i]);
+    for(i=0;i<POTMUX_POT_COUNT;++i)
+    {
+        uint8_t m=2*response[i]; // avoids a 16 bit division per pot (AVR has no hardware divider)
+        if (m!=0)
+        {
+            if (potmux.potcounter[i]==0 || potmux.potExcited[i] || updateAll)
+            {
+                updatePot(i);
+            }
+            uint8_t c=potmux.potcounter[i]+1;
+            while(c>=m) c-=m; // same result as c%m
+            potmux.potcounter[i]=c;
+        }
+    }
 }
 
 void potmux_init(void)
 {
 	memset(&potmux,0,sizeof(potmux));
-	potmux.lastChanged=ppNone;
+    potmux_resetChangedFull();
+    uint8_t i;
+
+    for (i=0;i<POTMUX_POT_COUNT;++i)
+    {
+        potmux.potcounter[i]=i; // distribute the pots as evenly as possible
+    }
 }

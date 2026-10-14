@@ -114,9 +114,9 @@ void midi_send_aftertouch(MidiDevice * device, uint8_t chan, uint8_t note_num, u
  *
  * @param device the device to use for sending
  * @param chan the channel to send on, 0-15
- * @param amt the bend amount range: -8192..8191, 0 means no bend
+ * @param amt the bend amount range between INT16_MIN (full bend down) to INT16_MAX (full bend up). The subsequent 14 bit MIDI range is -8192 to 8191.
 */
-void midi_send_pitchbend(MidiDevice * device, uint8_t chan, int16_t amt); //range -8192, 8191
+void midi_send_pitchbend(MidiDevice * device, uint8_t chan, int16_t amt);
 
 /**
  * @brief Send a program change message via the given device.

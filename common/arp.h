@@ -11,6 +11,7 @@ typedef enum
 
 void arp_init(void);
 void arp_update(void);
+void arp_clockTick(void); // call once per clock unit, before the clock is updated: plays an arp step that swing has delayed
 
 void arp_setMode(arpMode_t mode, int8_t hold);
 void arp_setSpeed(uint16_t speed);
@@ -20,11 +21,6 @@ int8_t arp_getHold(void);
 void arp_resetCounter(int8_t beatReset);
 
 void arp_assignNote(uint8_t note, int8_t on);
-
-
-/*JAM utility functions for new UP/DOWN mode calculation */
-uint8_t arp_get_lowest(void);
-uint8_t arp_get_highest(void);
 
 #endif	/* ARP_H */
 

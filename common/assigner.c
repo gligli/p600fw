@@ -25,8 +25,9 @@ static struct
 	uint8_t patternOffsets[SYNTH_VOICE_COUNT];
 	assignerPriority_t priority;
 	uint8_t voiceMask;
-	int8_t mono;
-	int8_t hold;
+	int8_t mono; // this state variable says if we're in unison mode (mono=1) of poly (mono=0)
+	int8_t hold; // this state variable says, if notes are held (sustained)
+    int8_t latch; // this state variable say, if in unison mode the latch is on (foot down)
 } assigner;
 
 static const uint8_t bit2mask[8] = {1,2,4,8,16,32,64,128};
@@ -76,7 +77,7 @@ static inline int8_t isVoiceDisabled(int8_t voice)
 
 static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 {
-	int8_t v,oldestVoice=-1,sameNote=-1;
+	int8_t v,findVoice=-1,sameNote=-1;
 	uint32_t oldestTimestamp=UINT32_MAX;
 
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
@@ -98,20 +99,31 @@ static inline int8_t getAvailableVoice(uint8_t note, uint32_t timestamp)
 		}
 		else
 		{
-			// else use oldest voice, if there is one
+            // else use first free voice, if there's one
 
-			if (assigner.allocation[v].timestamp<oldestTimestamp)
-			{
-				oldestTimestamp=assigner.allocation[v].timestamp;
-				oldestVoice=v;
-			}
+            if (currentPreset.steppedParameters[spAssign]==0) // classic first logic
+            {
+                if(findVoice<0)
+                    findVoice=v;
+            }
+            else
+            {
+
+                // else use oldest voice, if there is one
+
+                if (assigner.allocation[v].timestamp<oldestTimestamp)
+                {
+                    oldestTimestamp=assigner.allocation[v].timestamp;
+                    findVoice=v;
+                }
+            }
 		}
 	}
 	
 	if(sameNote>=0)
 		return sameNote;
 	else
-		return oldestVoice;
+		return findVoice;
 }
 
 static inline int8_t getDispensableVoice(uint8_t note)
@@ -178,16 +190,19 @@ static inline int8_t getDispensableVoice(uint8_t note)
 	
 void assigner_voiceDone(int8_t voice)
 {
-	if (voice<0||voice>SYNTH_VOICE_COUNT)
+	if (voice<0||voice>=SYNTH_VOICE_COUNT)
 		return;
 
 	assigner.allocation[voice].assigned=0;
 	assigner.allocation[voice].keyPressed=0;
 	assigner.allocation[voice].note=ASSIGNER_NO_NOTE;
 	assigner.allocation[voice].rootNote=ASSIGNER_NO_NOTE;
+    //assigner.allocation[voice].timestamp=0;
+
 }
 
-static void voicesDone(int8_t releaseNotes)
+
+void voicesDone(int8_t releaseNotes)
 {
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
@@ -203,6 +218,13 @@ static void voicesDone(int8_t releaseNotes)
 		memset(assigner.noteStates, 0, sizeof(assigner.noteStates));
 }
 
+
+void assigner_allVoicesDone(void)
+{
+	voicesDone(1);
+}
+
+
 // This is different from voicesDone() in that it does not silence
 // the voice immediately but lets it go through its release phase as usual.
 // Also, only voices corresponding to keys that are down on the keyboard
@@ -212,12 +234,12 @@ void assigner_allKeysOff(void)
 	int8_t v;
 	for(v=0;v<SYNTH_VOICE_COUNT;++v)
 	{
-		if (!isVoiceDisabled(v) && assigner.allocation[v].gated &&
-		    assigner.allocation[v].internalKeyboard)
+		//if (!isVoiceDisabled(v) && assigner.allocation[v].gated && assigner.allocation[v].internalKeyboard)
+		if (!isVoiceDisabled(v) && assigner.allocation[v].gated)
 		{
 			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
-		    	assigner.allocation[v].gated=0;
-		    	assigner.allocation[v].keyPressed=0;
+            assigner.allocation[v].gated=0;
+            assigner.allocation[v].keyPressed=0;
 		}
 	}
 	// Release all keys and future holds too. This avoids potential
@@ -326,15 +348,15 @@ reassign:
 		{
 			// just handle legato & priority
 			
-			v=0;
+			v=0; // in mono mode the note is always associated with voice 0 in the assigner (.allocation)
 
 			if(assigner.priority!=apLast)
 				for(n=0;n<128;++n)
 					if(n!=note && getNoteState(n))
 					{
-						if (note>n && assigner.priority==apLow)
+						if (note>n && assigner.priority==apLow) // ignore higher notes is priority low
 							return;
-						if (note<n && assigner.priority==apHigh)
+						if (note<n && assigner.priority==apHigh) // ignore lower notes is priority high
 							return;
 						
 						legato=1;
@@ -401,7 +423,7 @@ reassign:
 					if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==n)
 						break;
 
-				if(v==SYNTH_VOICE_COUNT)
+				if(v==SYNTH_VOICE_COUNT) // note not assigned to a voice but marked as active
 				{
 					restoredNote=n;
 					oldVel=getNoteVelocity(n);
@@ -418,7 +440,7 @@ reassign:
 				if(assigner.allocation[v].assigned && assigner.allocation[v].rootNote==note)
 				{
 					assigner.allocation[v].keyPressed=0;
-					if(!assigner.hold)
+					if(!assigner.hold || assigner.mono) // in unison mode there is no "hold" --> always release
 					{
 						assigner.allocation[v].gated=0;
 						synth_assignerEvent(assigner.allocation[v].note,0,v,velocity,0);
@@ -486,13 +508,15 @@ void assigner_getPattern(uint8_t * pattern, int8_t * mono)
 		*mono=assigner.mono;
 }
 
-LOWERCODESIZE void assigner_latchPattern(void)
+LOWERCODESIZE void assigner_latchPattern(uint8_t retrigger) // this enters unison mode
 {
 	int16_t i;
 	int8_t count;
 	uint8_t pattern[SYNTH_VOICE_COUNT];	
 	count=0;
-	
+
+    assigner_holdEvent(0); // in unison mode hold no longer applies
+    //assigner.hold=0;
 	memset(pattern,ASSIGNER_NO_NOTE,SYNTH_VOICE_COUNT);
 	
 	for(i=0;i<128;++i)
@@ -510,6 +534,10 @@ LOWERCODESIZE void assigner_latchPattern(void)
 		}
 
 	assigner_setPattern(pattern,1);
+
+    // now trigger the lowest note
+    // imogen: maybe this should be made dependent on assigner priority
+    if (pattern[0]!=ASSIGNER_NO_NOTE && retrigger) assigner_assignNote(pattern[0], 1, HALF_RANGE, 1);
 }
 
 LOWERCODESIZE void assigner_setPoly(void)
@@ -533,7 +561,7 @@ void assigner_holdEvent(int8_t hold)
 		if (!isVoiceDisabled(v) && 
 		    assigner.allocation[v].gated &&
 		    !assigner.allocation[v].keyPressed) {
-			synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
+                synth_assignerEvent(assigner.allocation[v].note,0,v,assigner.allocation[v].velocity,0);
 		    	assigner.allocation[v].gated=0;
 		}
 	}

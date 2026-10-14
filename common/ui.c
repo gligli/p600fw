@@ -3,6 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "ui.h"
+#include "lfo.h"
 #include "storage.h"
 #include "seq.h"
 #include "arp.h"
@@ -10,44 +11,66 @@
 #include "display.h"
 #include "potmux.h"
 #include "midi.h"
+#include "stdio.h"
 
 const struct uiParam_s uiParameters[] =
 {
 	/*first press*/
 	/*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
-	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"puls-tri","rnd-sin","nois-saw","step8-revsaw","seq-step4","bit_tri-bit_sine"}}, // Added new LFO waveforms
-    /*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
-	/*3*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
-	/*4*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
-	/*5*/ {.type=ptCust,.number=2,.name="amp shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol","PW","Vco-b"}},  // added VcoB "Vol","PW",
-	/*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
+	/*1*/ {.type=ptCust,.number=0,.name="lfo shp",.values={"tri-puls","sin-rnd","saw-nois","revsaw-step8","step4-seq","bsine-btri"}}, // the pairs are (shape with the LFO shape button on)-(shape with it off). The last three pairs are new
+	/*2*/ {.type=ptCont,.number=cpVibFreq,.name="Vib spd"},
+	/*3*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},
+	/*4*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct", "oct-semi", "semi-oct", "oct-free", "free-oct"}},
+	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
+    /*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","ab","Vcf","Vol","b","pw"}}, // pw (new) = the pulse width of oscillator A
+    /*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},
 	/*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
 	/*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
 	/*second press*/
-    /*0*/ {.type=ptCont,.number=cpNoiseLevel,.name="noise"}, //for Noise
+	// second press of button 0 used to repeat "spd"; it now selects the arp Euclidean rhythm (the first press still sets the speed)
+	/*0*/ {.type=ptStep,.number=spArpEuclid,.name="euclid",.values={"off","3-8","5-8","7-8","5-16","7-16","9-16","11-16"}},
 	/*1*/ {.type=ptCust,.number=1,.name="lfo tgt",.values={"ab","a","b","ab-Vca"}},
-	/*2*/ {.type=ptStep,.number=spLFOShift,.name="lfo ran",.values={"low","high"}},
-	/*3*/ {.type=ptCust,.number=5,.name="mod ran",.values={"min","low","high","full"}},
-	/*4*/ {.type=ptStep,.number=spModwheelTarget,.name="mod tgt",.values={"lfo","Vib"}},  //Modwheel target lfo freq ,"lfoFreq"
-	/*5*/ {.type=ptCust,.number=3,.name="fil shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-	/*6*/ {.type=ptCust,.number=4,.name="bend ran",.values={"2nd","3rd","5th","Oct"}},
-	/*7*/ {.type=ptStep,.number=spAssignerPriority,.name="prio",.values={"last","low","high"}},	
-	/*8*/ {.type=ptStep,.number=spChromaticPitch,.name="pitch",.values={"free","semi","oct"}},
+	/*2*/ {.type=ptCont,.number=cpVibAmt,.name="Vib amt"},
+    /*3*/ {.type=ptCont,.number=cpModDelay,.name="mod dly"},
+	/*4*/ {.type=ptCont,.number=cpExternal,.name="ext volt"},
+	/*5*/ {.type=ptCust,.number=2,.name="2nd shp",.values={"lin-slo","exp-slo","lin-fast","exp-fast"}},
+    /*6*/ {.type=ptCust,.number=4,.name="bend rng",.values={"2nd","3rd","5th","Oct"}},
+    /*7*/ {.type=ptStep,.number=spAssign,.name="assign",.values={"first","cycle"}},
+    /*8*/ {.type=ptCont,.number=cpSpread,.name="vintage"},
 	/*9*/ {.type=ptCont,.number=cpFilVelocity,.name="fil Vel"},
-    /*third press*/ //added V2.25
-    /*0*/ {.type=ptCont,.number=cpSeqArpClock,.name="spd"},
-    /*1*/ {.type=ptStep,.number=spVibShape,.name="vib shp",.values={"puls","tri","rnd","sin","nois","saw","step8","revsaw","seq","step4","bit_tri","bit_sine"}}, // added V2.25
-    /*2*/ {.type=ptStep,.number=spVibTargets,.name="vib tgt",.values={"ab","a","b","ab-Vca","noise","reso","detune","PMod-VcoB"}},  // added new vib targets V2.33 added detune target and polymod->VCO B
-    /*3*/ {.type=ptStep,.number=spVibShift,.name="vib ran",.values={"low","high"}},  //added new vib range   add spVibShift to ui.H and to storage
-    /*4*/ {.type=ptStep,.number=spPolyModEnv,.name="poly-mod env tgt",.values={"vco-a","vco-b","vco","Pw-a","Pw-b"}}, //added V2.28 polymod env to both pitches - V2.33 added polymod PWM
-    /*5*/ {.type=ptCust,.number=2,.name="amp shp",.values={"fast-exp","fast-lin","slo-exp","slo-lin"}},
-    /*6*/ {.type=ptStep,.number=spBenderTarget,.name="bend tgt",.values={"off","Vco","Vcf","Vol","PW","Vco-b"}},
+	/*third press*/
+	// third press of button 0 (was an unused placeholder): the arp step probability
+	/*0*/ {.type=ptStep,.number=spArpProbability,.name="prob",.values={"100","90","80","70","60","50","35","20"}},
+	/*1*/ {.type=ptStep,.number=spLFOSync,.name="lfo trig",.values={"off","key","1","2","3","4","5","6","8"}},
+    /*2*/ {.type=ptStep,.number=spVibTarget,.name="Vib tgt",.values={"VCO","VCA","VCO A","VCO B","noise","reso","detune","pm amt"}}, // the last four are new: noise level (ext volt), resonance, detune (the voices move against each other) and the poly-mod amount of oscillator B
+	/*3*/ {.type=ptStep,.number=spModWheelRange,.name="mod rng",.values={"touch","soft", "high", "full"}},
+	/*4*/ {.type=ptStep,.number=spPWMBug,.name="pulse bug",.values={"off","on"}},
+	/*5*/ {.type=ptStep,.number=spEnvRouting,.name="route",.values={"std","poly-amp","poly","gate"}},
+	/*6*/ {.type=ptCont,.number=0,.name="dummy"},
     /*7*/ {.type=ptCont,.number=cpGlide,.name="glide"},
-    /*8*/ {.type=ptCont,.number=cpUnisonDetune,.name="detune"},
-    /*9*/ {.type=ptCont,.number=cpAmpVelocity,.name="amp Vel"},
-    
+    /*8*/ {.type=ptCont,.number=cpDrive,.name="drive"},
+	// fourth press of button 0: the arp swing (stored behind the regular entries, see UI_PARAM)
+	/*29*/ {.type=ptStep,.number=spArpSwing,.name="swing",.values={"off","54","58","62","66","70","75","80"}},
+	// fifth press of button 0: the arp resolution (1/16, 1/16 triplet, 1/32, 1/32 triplet)
+	/*30*/ {.type=ptStep,.number=spArpResolution,.name="res",.values={"16","16t","32","32t"}},
+	// sixth and seventh press of button 0: the arp ratchet (hits per step) and the chance that a step is ratcheted
+	/*31*/ {.type=ptStep,.number=spArpRatchet,.name="ratchet",.values={"off","2","3","4"}},
+	/*32*/ {.type=ptStep,.number=spArpRatchetProb,.name="rat prob",.values={"100","80","65","50","40","30","20","10"}},
+	// fourth press of button 2 (next to the vibrato speed, amount and target): the ensemble vibrato, off / small / wide spread of the vibrato phase between the voices
+	/*33*/ {.type=ptStep,.number=spEnsemble,.name="ens",.values={"off","small","wide"}},
+	// fourth press of button 5 (after "route"): where the poly-mod envelope goes. VCO A is the original behaviour, the rest are VCO B, both VCOs and the pulse widths
+	/*34*/ {.type=ptStep,.number=spPolyModEnv,.name="pm env",.values={"vco-a","vco-b","vco","pw-a","pw-b","pw"}},
+	// fifth and sixth press of button 2 (after the vibrato speed, amount, target and ensemble): the vibrato shape and the vibrato speed range
+	/*35*/ {.type=ptLfoShape,.number=spVibShape,.name="vib shp"},
+	/*36*/ {.type=ptStep,.number=spVibRange,.name="vib ran",.values={"high","low"}}, // high = the speed range the vibrato always had, low = 8 times slower
 };
+
+// Table entry of a menu index (button + 10 * press). The first three presses of every button are entries 0..29 in order.
+// The fourth to seventh press of button 0 (index 30, 40, 50 and 60) are the four entries stored behind them, at table index 29 to 32.
+// Menu index 32 (fourth press of button 2, the ensemble vibrato) is the entry stored behind them, at table index 33. Index 32 is checked first because it would otherwise fall into the ">=30" case.
+// Menu index 35 (fourth press of button 5, the poly-mod envelope target) is the last entry, at table index 34. It is checked first for the same reason.
+// Menu index 42 and 52 (fifth and sixth press of button 2, the vibrato shape and range) are the entries at table index 35 and 36. They are checked first for the same reason.
+#define UI_PARAM(idx) (((idx)==42)?&uiParameters[35]:((idx)==52)?&uiParameters[36]:((idx)==35)?&uiParameters[34]:((idx)==32)?&uiParameters[33]:(&uiParameters[((idx)>=60)?32:(((idx)>=50)?31:(((idx)>=40)?30:(((idx)>=30)?29:(idx))))]))
 
 struct ui_s ui;
 
@@ -59,63 +82,64 @@ static void refreshPresetButton(p600Button_t button)
 {
 	uint8_t bitState;
 	int8_t change=1;
-	
+
 	bitState=scanner_buttonState(button)?1:0;
 	
 	switch(button)
-	{
-	case pbASaw:
-		currentPreset.steppedParameters[spASaw]=bitState;
-		break;
-	case pbATri:
-		currentPreset.steppedParameters[spATri]=bitState;
-		break;
-	case pbASqr:
-		currentPreset.steppedParameters[spASqr]=bitState;
-		break;
-	case pbBSaw:
-		currentPreset.steppedParameters[spBSaw]=bitState;
-		break;
-	case pbBTri:
-		currentPreset.steppedParameters[spBTri]=bitState;
-		break;
-	case pbBSqr:
-		currentPreset.steppedParameters[spBSqr]=bitState;
-		break;
-	case pbSync:
-		currentPreset.steppedParameters[spSync]=bitState;
-		break;
-	case pbPModFA:
-		currentPreset.steppedParameters[spPModFA]=bitState;
-		break;
-	case pbPModFil:
-		currentPreset.steppedParameters[spPModFil]=bitState;
-		break;
-	case pbUnison:
-		currentPreset.steppedParameters[spUnison]=bitState;
-		break;
-	case pbLFOShape:
-		currentPreset.steppedParameters[spLFOShape]&=~1;
-		currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
-		break;
-	case pbLFOFreq:
-	case pbLFOPW:
-	case pbLFOFil:
-		currentPreset.steppedParameters[spLFOTargets]=
-			(currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
-			(scanner_buttonState(pbLFOFreq)?mtVCO:0) |
-			(scanner_buttonState(pbLFOPW)?mtPW:0) |
-			(scanner_buttonState(pbLFOFil)?mtVCF:0);
-		break;
-	case pbFilFull:
-	case pbFilHalf:
-		currentPreset.steppedParameters[spTrackingShift]=
-			(scanner_buttonState(pbFilHalf)?1:0) |
-			(scanner_buttonState(pbFilFull)?2:0);
-		break;
-	default:
-		change=0;
+    {
+        case pbASaw:
+            currentPreset.steppedParameters[spASaw]=bitState;
+            break;
+        case pbATri:
+            currentPreset.steppedParameters[spATri]=bitState;
+            break;
+        case pbASqr:
+            currentPreset.steppedParameters[spASqr]=bitState;
+            break;
+        case pbBSaw:
+            currentPreset.steppedParameters[spBSaw]=bitState;
+            break;
+        case pbBTri:
+            currentPreset.steppedParameters[spBTri]=bitState;
+            break;
+        case pbBSqr:
+            currentPreset.steppedParameters[spBSqr]=bitState;
+            break;
+        case pbSync:
+            currentPreset.steppedParameters[spSync]=bitState;
+            break;
+        case pbPModFA:
+            currentPreset.steppedParameters[spPModFA]=bitState;
+            break;
+        case pbPModFil:
+            currentPreset.steppedParameters[spPModFil]=bitState;
+            break;
+        case pbUnison:
+            currentPreset.steppedParameters[spUnison]=bitState;
+            break;
+        case pbLFOShape:
+            currentPreset.steppedParameters[spLFOShape]&=~1;
+            currentPreset.steppedParameters[spLFOShape]|=scanner_buttonState(pbLFOShape)?1:0;
+            break;
+        case pbLFOFreq:
+        case pbLFOPW:
+        case pbLFOFil:
+            currentPreset.steppedParameters[spLFOTargets]=
+                (currentPreset.steppedParameters[spLFOTargets]&(mtOnlyA|mtOnlyB|mtVCA)) | // keep those as-is
+                (scanner_buttonState(pbLFOFreq)?mtVCO:0) |
+                (scanner_buttonState(pbLFOPW)?mtPW:0) |
+                (scanner_buttonState(pbLFOFil)?mtVCF:0);
+            break;
+        case pbFilFull:
+        case pbFilHalf:
+            currentPreset.steppedParameters[spTrackingShift]=
+                (scanner_buttonState(pbFilHalf)?1:0) |
+                (scanner_buttonState(pbFilFull)?2:0);
+            break;
+        default:
+            change=0;
 	}
+
 	
 	if(change)
 	{
@@ -123,6 +147,7 @@ static void refreshPresetButton(p600Button_t button)
 		refreshFullState();
 	}
 }
+
 
 LOWERCODESIZE void refreshAllPresetButtons(void)
 {
@@ -135,77 +160,82 @@ LOWERCODESIZE void refreshAllPresetButtons(void)
 // further printouts (e.g. init patch).
 static int8_t changeMiscSetting(p600Button_t button)
 {
-	uint8_t v;
-
 	switch(button)
 	{
-	case pb1: // midi receive channel
-		settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
-		settings_save();
-		return 0;
-            
-	case pb2: // midi send channel
-		settings.midiSendChannel=(settings.midiSendChannel+1)%16;
-		settings_save();
-		return 0;
-            
-	case pb3: // pitch wheel calibration
-		settings.benderMiddle=potmux_getValue(ppPitchWheel);
-		settings_save();
-		synth_updateBender(); // immediate update
-		sevenSeg_scrollText("bender calibrated",1);
-		return 1;
-            
-	case pb4: // voice selection
-		ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
-		return 0;
-            
-	case pb5: // selected voice defeat
-		settings.voiceMask^=(1<<ui.voice);
-		settings_save();
-		refreshFullState();
-		return 0;
-            
-	case pb6: // preset dump
-		midi_dumpPresets();
-		sevenSeg_scrollText("presets dumped",1);
-		refreshPresetMode();
-		refreshFullState();
-		return 1;
-/*
-    case pb7: // built in keyboard velocity added V2.24 JRS
-        settings.kbdVel=((settings.kbdVel+2)%17)-1;
-        //sevenSeg_scrollText("local keyboard velocity",1);
-        settings_save();
-        refreshFullState();
-        return 0;
-*/
-	case pb8: // sync mode
-		settings.syncMode=(settings.syncMode+1)%3;
-		settings_save();
-		refreshFullState();
-		return 0;
-            
-	case pb9: // spread / vcf limit
-		v=(settings.spread?1:0)+(settings.vcfLimit?2:0);
-		v=(v+1)%4;
-		settings.spread=v&1;
-		settings.vcfLimit=(v>>1)&1;
-		settings_save();
-		refreshFullState();
-		return 0;
-            
-	case pb0: // reset to a basic patch
-		preset_loadDefault(1);
-		ui.presetModified=1;
-		sevenSeg_scrollText("basic patch",1);
-		refreshFullState();
-		return 1;
-	default:
+        case pb1: // midi receive channel
+            settings.midiReceiveChannel=((settings.midiReceiveChannel+2)%17)-1;
+            settings_save();
+            return 0;
+        case pb2: // midi send channel
+            settings.midiSendChannel=(settings.midiSendChannel+1)%16;
+            settings_save();
+            return 0;
+        case pb3: // pitch wheel calibration
+            settings.benderMiddle=potmux_getValue(ppPitchWheel);
+            settings_save();
+            synth_updateBender(); // immediate update
+            sevenSeg_scrollText("bender calibrated",1);
+            return 1;
+        case pb4: // voice selection
+            ui.voice=(ui.voice+1)%SYNTH_VOICE_COUNT;
+            return 0;
+        case pb5: // selected voice defeat
+            settings.voiceMask^=(1<<ui.voice);
+            settings_save();
+            refreshFullState();
+            return 0;
+        case pb6: //
+            settings.panelLayout=((settings.panelLayout+1)%2);
+            mixer_updatePanelLayout(settings.panelLayout);
+            // reset the pick-up status of the two pots
+            currentPreset.contParamPotStatus[cpMixVolA]=0;
+            currentPreset.contParamPotStatus[cpGlideVolB]=0;
+            settings_save();
+            return 0;
+        case pb7: // power-up light show on/off
+            settings.bootLightShow=settings.bootLightShow?0:1; // only on or off
+            settings_save();
+            return 0; // 0 = show the new state on the display
+        case pb8: // sync mode
+            settings.syncMode=(settings.syncMode+1)%3;
+            settings_save();
+            refreshFullState();
+            return 0;
+        case pb9: // spread / vcf limit
+            settings.vcfLimit=(settings.vcfLimit?0:1); // only on or off
+            settings_save();
+            refreshFullState();
+            return 0;
+        case pb0: // MIDI mode, e.g. local on/off
+            settings.midiMode=((settings.midiMode+1)%2);
+            settings_save();
+            if (settings.midiMode==1)
+                synth_resetForLocalOffMode();
+            return 0;
+        case pbPreset: // reset to a basic patch
+            preset_loadDefault(1);
+            ui.presetModified=1;
+            sevenSeg_scrollText("basic patch",1);
+            // go directly into preset panel mode
+            settings.presetMode=1;
+            ui.digitInput=diSynth;
+            ui.lastActivePot=ppNone;
+            refreshFullState();
+            return 1;
+// Flat
+ 		case pbSeq1: // resets settings
+			settings_reset();
+            sevenSeg_scrollText("settings reset",1);
+            // go directly into preset panel mode
+//            settings.presetMode=1;
+            ui.digitInput=diSynth;
+            ui.lastActivePot=ppNone;
+            refreshFullState();
+            return 1;
+       default:
 		break;
 	}
 	return 0;
-    
 }
 
 static LOWERCODESIZE void handleMiscAction(p600Button_t button)
@@ -213,8 +243,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 	const char * chs[17]={"omni","ch1","ch2","ch3","ch4","ch5","ch6","ch7","ch8","ch9","ch10","ch11","ch12","ch13","ch14","ch15","ch16"};
 	char s[50];
 	int8_t nothingToDisplay=0;
-    //const char * kbdVelList[9]={"0","15","31","47","63","79","95","111","127"}; // added in V2.24 for keyboard velocity From Tape + 7 ... may not need
-    
+
 	if (button==ui.prevMiscButton ||
 		button==pb4 || // pb4 is for voice selection, this one should be immediate
 		(button==pb5 && ui.prevMiscButton==pb4)) // pb5 voice defeat after pb4 should be immediate too
@@ -230,7 +259,6 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		strcat(s," recv");
 		sevenSeg_scrollText(s,1);
 		break;
-            
 	case pb2: // midi send channel
 		strcpy(s,chs[settings.midiSendChannel+1]);
 		strcat(s," send");
@@ -239,6 +267,7 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		break;
 	case pb3: // pitch wheel calibration
 		sevenSeg_scrollText("again calibrates bender",1);
+        synth_wheelEvent(0,0,1,0,0); // kill external MIDI pitch bend
 		break;
 	case pb4: // voice selection
 	case pb5: // selected voice defeat
@@ -250,19 +279,20 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 		s[2]='1'+ui.voice;
 		sevenSeg_scrollText(s,1);
 		break;
-            
-	case pb6: // preset dump
-		sevenSeg_scrollText("again dumps presets",1);
+	case pb6:
+        if (settings.panelLayout==0)
+            strcpy(s,"GliGli Layout");
+        else
+            strcpy(s,"SCI Layout");
+
+		sevenSeg_scrollText(s,1);
 		break;
-   /*
-      // added in V2.24 for keyboard velocity From Tape + 7
-    case pb7: // local keyboard velocity
-        strcpy(s,kbdVelList[settings.kbdVel+16]);
-        strcat(s," kbd Vel ");
-        sevenSeg_scrollText(s,1);
-        break;
-    */
-            
+	case pb7: // power-up light show. Note: on some instruments this key does not register while From Tape is held down
+		// (a keyboard matrix effect), in that case use it in double click mode (press From Tape twice quickly, then 7)
+		strcpy(s,"Lite show ");
+		strcat(s,settings.bootLightShow?"on":"off");
+		sevenSeg_scrollText(s,1);
+		break;
 	case pb8: // sync mode
 		switch(settings.syncMode)
 		{
@@ -277,21 +307,8 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 				break;
 		}
 		break;
-            
-	case pb9: // spread / vcf limit
-		strcpy(s,"spread ");
-
-		if(settings.spread)
-		{
-			strcat(s,"on");
-		}
-		else
-		{
-			strcat(s,"off");
-		};
-		
-		strcat(s," / Vcf lim ");
-		
+	case pb9: // vcf limit
+		strcpy(s,"Vcf lim ");
 		if(settings.vcfLimit)
 		{
 			strcat(s,"on");
@@ -303,29 +320,44 @@ static LOWERCODESIZE void handleMiscAction(p600Button_t button)
 
 		sevenSeg_scrollText(s,1);
 		break;
-	case pb0: // reset to a basic patch
+	case pb0: // local on/off
+		if (settings.midiMode==0)
+		{
+			sevenSeg_scrollText("Local on",1);
+		}
+		else
+		{
+			sevenSeg_scrollText("Local off",1);
+		}
+		break;
+	case pbPreset: // reset to a basic patch
 		sevenSeg_scrollText("again sets basic patch",1);
 		break;
-	case pbTune:
-		ui.retuneLastNotePressedMode = !ui.retuneLastNotePressedMode;
-       
-		
-#ifdef DEBUG
-		print("retuneLastNotePressedMode=");
-		phex(ui.retuneLastNotePressedMode);
-		print("\n");
-#endif
-		
+	// Flat
+	case pbSeq1: // reset settings an tune
+		sevenSeg_scrollText("again resets settings",1);
 		break;
 	default:
 		break;
 	}
 }
 
+void ui_setLocalMode(uint8_t on)
+{
+    if (on==0)
+    {
+        settings.midiMode=0;
+
+    }
+    else
+    {
+        settings.midiMode=1;
+    }
+}
+
 static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 {
 	int8_t br[]={2,4,7,12};
-	int8_t mr[]={5,3,1,0};
 
 	switch(num)
 	{
@@ -342,57 +374,54 @@ static LOWERCODESIZE void setCustomParameter(int8_t num, int32_t data)
 			currentPreset.steppedParameters[spLFOTargets]|=mtVCA;
 		break;					
 	case 2: // amp shape
-		currentPreset.steppedParameters[spAmpEnvExpo]=1-(data&1);
-		currentPreset.steppedParameters[spAmpEnvSlow]=(data&2)>>1;
+        currentPreset.steppedParameters[spAmpEnvShape]=(data&1);
+		currentPreset.steppedParameters[spAmpEnvSlow]=1-((data&2)>>1);
 		break;
-	case 3: // fil shape 
-		currentPreset.steppedParameters[spFilEnvExpo]=1-(data&1);
-		currentPreset.steppedParameters[spFilEnvSlow]=(data&2)>>1;
+	case 3: // fil shape
+        currentPreset.steppedParameters[spFilEnvShape]=(data&1);
+		currentPreset.steppedParameters[spFilEnvSlow]=1-((data&2)>>1);
 		break;
 	case 4: // bend range 
 		currentPreset.steppedParameters[spBenderSemitones]=br[data];
 		synth_updateBender(); // immediate update
 		break;
-	case 5: // mod range
-		currentPreset.steppedParameters[spModwheelShift]=mr[data];
-		break;
-   
 	}
 }
 
 static LOWERCODESIZE void displayUIParameter(int8_t num)
 {
 	int8_t i;
-	char s[20]; // was s[20]
-	const struct uiParam_s * prm = &uiParameters[ui.activeParamIdx];
+	char s[20];
+	const struct uiParam_s * prm = UI_PARAM(ui.activeParamIdx); // see UI_PARAM: the fourth press of button 0 is stored behind the other entries
 
-	ui_setNoActivePot();
-	
 	strcpy(s,prm->name);
 	strcat(s,"= ");
 	
 	switch(prm->type)
 	{
-	case ptCont:
-		s[strlen(s)-1]='\0'; // remove trailing space
-		ui.lastActivePotValue=ui.adjustedLastActivePotValue=currentPreset.continuousParameters[prm->number];
-		break;
-	case ptStep:
-		strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
-		break;
-	case ptCust:
-		// reverse lookup for uiParam value (assumes only steppedParameters will be modified)
-		memcpy(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters));
-		for(i=0;i<4;++i)
-		{
-			setCustomParameter(prm->number,i);
-			if(!memcmp(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters)))
-			{
-				strcat(s,prm->values[i]);
-				break;
-			}
-		}
-		break;
+        case ptCont:
+            s[strlen(s)-1]='\0'; // remove trailing space
+            ui.lastActivePotValue=ui.adjustedLastActivePotValue=currentPreset.continuousParameters[prm->number]; // this is only for menu parameters, not pots
+            break;
+        case ptStep:
+            strcat(s,prm->values[currentPreset.steppedParameters[prm->number]]);
+            break;
+        case ptCust:
+            // reverse lookup for uiParam value (assumes only steppedParameters will be modified)
+            memcpy(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters));
+            for(i=0;i<8 && prm->values[i]!=NULL;++i) // all the choices of the parameter (this used to stop at 4, the LFO shape has 6)
+            {
+                setCustomParameter(prm->number,i);
+                if(!memcmp(tempBuffer,currentPreset.steppedParameters,sizeof(currentPreset.steppedParameters)))
+                {
+                    strcat(s,prm->values[i]);
+                    break;
+                }
+            }
+            break;
+        case ptLfoShape:
+            strcat(s,lfo_shapeName(currentPreset.steppedParameters[prm->number]));
+            break;
 	}
 	
 	sevenSeg_scrollText(s,1);
@@ -411,26 +440,51 @@ static LOWERCODESIZE void handleSynthPage(p600Button_t button)
 		if (prev==new)
 			ui.activeParamIdx+=10;
 		else if (prev==new+10)
-            ui.activeParamIdx+=10;// add new menu options V2.25
-			// ui.activeParamIdx-=10; // remmed out for new menu items
-        else if (prev==new+20)// maybe add new menu options V2.25
-            ui.activeParamIdx-=20;// added new menu options V2.25
+			{if (new==pb0||new==pb1||new==pb2||new==pb3||new==pb4||new==pb5||(new==pb8 && settings.panelLayout==1) || (new==pb7 && settings.panelLayout==0)) // parameters on third press (button 0: arp probability), include Drive (8) only in SCI panel layout, include Glide (7) only in Gligli layout
+				{ui.activeParamIdx+=10;}
+			else
+				ui.activeParamIdx-=10;}
+		else if (prev==new+20)
+			{if (new==pb0 || new==pb2 || new==pb5) // third press of button 0 -> fourth press (arp swing); third press of button 2 (vibrato target) -> fourth press (ensemble vibrato); third press of button 5 (route) -> fourth press (poly-mod envelope target)
+				{ui.activeParamIdx+=10;}
+			else
+				ui.activeParamIdx-=20;}
+		else if (prev==new+30)
+			{if (new==pb0 || new==pb2) // fourth press of button 0 -> fifth press (arp resolution); fourth press of button 2 (ensemble vibrato) -> fifth press (vibrato shape)
+				{ui.activeParamIdx+=10;}
+			else
+				ui.activeParamIdx-=30;}
+		else if (prev==new+40)
+			{if (new==pb0 || new==pb2) // fifth press of button 0 -> sixth press (arp ratchet); fifth press of button 2 (vibrato shape) -> sixth press (vibrato range)
+				{ui.activeParamIdx+=10;}
+			else
+				ui.activeParamIdx-=40;}
+		else if (prev==new+50)
+			{if (new==pb0) // sixth press of button 0 -> seventh press (arp ratchet probability)
+				{ui.activeParamIdx+=10;}
+			else
+				ui.activeParamIdx-=50;}
+		else if (prev==new+60) // seventh press: back to the first press
+			ui.activeParamIdx-=60;
 		else
 			ui.activeParamIdx=new;
-		ui.previousData=-1;
+
+        ui.previousData=-1;
 	}
-	
-	if(ui.activeParamIdx!=prev)
+
+    //potmux_resetSpeedPot();
+    ui_setNoActivePot(1);
+
+    if(ui.activeParamIdx!=prev || ui.lastActivePot!=ppNone) // should be displayed either if
 	{
 		// display param name + value
-		
 		displayUIParameter(ui.activeParamIdx);
 		
-		// save manual preset
-		
-		if(!settings.presetMode)
-			preset_saveCurrent(MANUAL_PRESET_PAGE);
+		// set flag for enabling storage of manual preset if that new parameter is changed
+        ui.menuParamSelectChange=1;
 	}
+
+
 }
 
 static LOWERCODESIZE void handleSequencerPage(p600Button_t button)
@@ -459,11 +513,19 @@ static LOWERCODESIZE void handleSequencerPage(p600Button_t button)
 	}
 }
 
-void ui_setNoActivePot(void)
+void ui_setNoActivePot(uint8_t fullPotmuxReset)
 {
-	potmux_resetChanged();
+	if (fullPotmuxReset)
+    {
+        potmux_resetChangedFull();
+    }
+    else
+    {
+        potmux_resetChanged();
+    }
 	ui.lastActivePot=ppNone;
 	ui.lastActivePotValue=-1;
+
 }
 
 FORCEINLINE void ui_setPresetModified(int8_t modified)
@@ -475,129 +537,180 @@ void ui_checkIfDataPotChanged(void)
 {
 	ui.lastActivePot = potmux_lastChanged() != ppNone ? potmux_lastChanged() : ui.lastActivePot;
 	
-	if(ui.lastActivePot!=ppSpeed)
+	if(ui.lastActivePot!=ppSpeed || ui.isInPatchManagement)
 		return;
 	
-	// handle our "data" pot
-	
-	if(ui.activeParamIdx>=0)
+    int32_t data,valCount;
+    data=potmux_getValue(ppSpeed);
+
+    if (ui.isShifted && settings.presetMode && (ui.digitInput==diLoadUnitDigit || ui.digitInput==diLoadDecadeDigit)) // this is preset load patch - we want the data dial to work as selector
+    {
+        // map dial onto 0...99
+        // if in local off mode we can still change the program because the incoming MIDI would have no effect
+        uint16_t selectedPatch;
+        //char s[50];
+        selectedPatch=(data*100)>>16; // this divides the total range (16 bits) into 0...99 range using effectively a floor() function
+
+        if (selectedPatch==settings.presetNumber) return;
+
+        if(preset_loadCurrent(selectedPatch,0))
+        {
+            midi_sendProgChange(settings.presetNumber); // only send when new prog is selected
+            refreshFullState();
+            ui.presetModified=0;
+        }
+        settings.presetNumber=selectedPatch;
+        // override the already selected unit input
+        ui.digitInput=diLoadDecadeDigit;
+        ui.presetAwaitingNumber=-1;
+        return;
+    }
+
+    // handle our "data" pot
+    if(ui.activeParamIdx>=0) 	// normal parameter selection
 	{
-		int32_t data,valCount;
 		struct uiParam_s prm;
-		
-		data=potmux_getValue(ppSpeed);
 		
 		if(data==ui.lastActivePotValue) // prevent slowdown caused by unwanted updates
 			return;
 		
-		prm=uiParameters[ui.activeParamIdx];
+		prm=*UI_PARAM(ui.activeParamIdx);
 		
 		switch(prm.type)
 		{
-		case ptCont:
-			currentPreset.continuousParameters[prm.number]=data;
-			break;
-		case ptStep:
-		case ptCust:
-			ui_setNoActivePot();
-			
-			valCount=0;
-			//while(valCount<4 && prm.values[valCount]!=NULL)
-            while(valCount<12 && prm.values[valCount]!=NULL) // changed to 5 for VCOB bender target and Pwm  //V2.25 changed to valcount<12 from valcount<6
-				++valCount;
-			
-			data=(data*valCount)>>16;
+            case ptCont:
+                if (prm.number==cpSeqArpClock) // special treatment of the seq/arp speed --> part of settings, but display uses preset params, so update both
+                    settings.seqArpClock=data;
+                if (prm.number==cpVibAmt) ui.vibAmountChangePending=1;
+                if (prm.number==cpVibFreq) ui.vibFreqChangePending=1;
+                currentPreset.continuousParameters[prm.number]=data;
+                break;
+            case ptStep:
+            case ptCust:
+            case ptLfoShape:
+                ui_setNoActivePot(0);
 
-			if(data!=ui.previousData)
-				sevenSeg_scrollText(prm.values[data],1);
+                valCount=0;
+                if(prm.type==ptLfoShape)
+                    valCount=LFO_SHAPE_COUNT; // the names are not in the table
+                else
+                    while(valCount<8 && prm.values[valCount]!=NULL) // 8 is the current max of choices
+                        ++valCount;
 
-			if(prm.type==ptStep)
-			{
-				currentPreset.steppedParameters[prm.number]=data;
-			}
-			else
-			{
-				setCustomParameter(prm.number,data);
-			}
+                data=(data*valCount)>>16; // this divides the total range (16 bits) into valCount pieces using effectively a floor() function
 
-			ui.previousData=data;
-			break;
+                if(data!=ui.previousData && ui.digitInput==diSynth)
+                    sevenSeg_scrollText((prm.type==ptLfoShape)?lfo_shapeName(data):prm.values[data],1);
+
+                if(prm.type==ptStep || prm.type==ptLfoShape)
+                {
+                    currentPreset.steppedParameters[prm.number]=data;
+                }
+                else
+                {
+                    setCustomParameter(prm.number,data);
+                }
+
+                ui.previousData=data;
+                break;
 		}
-		ui.presetModified=1;
+
+        if (ui.menuParamSelectChange==1) // this make sure the the MANUAL_PRESET_PAGE is only stored the first time a NEW menu parameter is CHANGED
+        {
+            if(!settings.presetMode)
+                preset_saveCurrent(MANUAL_PRESET_PAGE);
+        }
+        ui.menuParamSelectChange=0; // ensures that no storage is possible until a new menu parameter is selected
+        if (prm.number==spModWheelRange || prm.number==spModwheelTarget) synth_wheelEvent(0,potmux_getValue(ppModWheel),2,1,0); // take effect immediately
+        if (prm.number!=cpSeqArpClock) ui.presetModified=1;
 		
 		refreshFullState();
 	}
 }
 
-void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
+// noinline: keeps this function's large stack frame out of the scanner (scanner_updateSlice), which runs in the timer interrupt on every tick
+void LOWERCODESIZE __attribute__((noinline)) ui_handleButton(p600Button_t button, int pressed)
 {
 	int8_t recordOverride=0;
+    char s[15];
 
 	// button press might change current preset
 
-	refreshPresetButton(button);		
+	refreshPresetButton(button);
 
 	// sequencer
 	
-	if(pressed && (button==pbSeq1 || button==pbSeq2))
+	if(pressed && (button==pbSeq1 || button==pbSeq2) && !ui.isInPatchManagement)
 	{
 		int8_t track=(button==pbSeq2)?1:0;
 		
 		switch(seq_getMode(track))
 		{
-		case smOff:
-			if(ui.digitInput==diStoreDecadeDigit)
-			{
-				// go directly to record mode when record was previously pressed
-				seq_setMode(track,smRecording);
-				// seq mode
-				ui.digitInput=diSequencer;
-			}
-			else
-			{
-				seq_setMode(track,ui.isShifted?smWaiting:smPlaying);
-			}
-			break;
-		case smRecording:
-			// cancel seq mode
-			ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-			// fall through
-		case smWaiting:
-			seq_setMode(track,smPlaying);
-			break;
-		case smPlaying:
-			seq_setMode(track,smOff);
-			break;
+            case smOff:
+                if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
+                {
+                    // go directly to record mode when record was previously pressed
+                    seq_setMode(track,smRecording);
+                    // seq mode
+                    ui.digitInput=diSequencer;
+                }
+                else
+                {
+                    seq_setMode(track,ui.isShifted?smWaiting:smPlaying);
+                }
+                break;
+            case smRecording:
+                // cancel seq mode
+                ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+                // fall through to start playing
+            case smWaiting:
+                seq_setMode(track,smPlaying);
+                break;
+            case smPlaying:
+                seq_setMode(track,smOff);
+                break;
 		}
 	}
 	
 	// arp
 	
-	if(pressed && button==pbArpUD)
-	{
-		arp_setMode((arp_getMode()==amUpDown)?amOff:amUpDown,arp_getHold());
-	}
-	else if(pressed && button==pbArpAssign)
-	{
-		switch(arp_getMode())
-		{
-		case amOff:
-		case amUpDown:
-			arp_setMode(amAssign,arp_getHold());
-			break;
-		case amAssign:
-			arp_setMode(amRandom,arp_getHold());
-			break;
-		case amRandom:
-			arp_setMode(amOff,arp_getHold());
-			break;
-		}
-	}
+	if (pressed && !ui.isInPatchManagement && seq_getMode(0)!=smRecording && seq_getMode(1)!=smRecording)
+    {
+        if(button==pbArpUD)
+        {
+            if (arp_getMode()==amUpDown)
+            {
+                arp_setMode(amOff,arp_getHold());
+            }
+            else
+            {
+                ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth; // cancel special mode (if any)
+                arp_setMode(amUpDown,arp_getHold());
+            }
+        }
+        else if(button==pbArpAssign)
+        {
+            switch(arp_getMode())
+            {
+                case amOff:
+                    ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth; // cancel special mode (if any)
+                case amUpDown:
+                    arp_setMode(amAssign,arp_getHold());
+                    break;
+                case amAssign:
+                    arp_setMode(amRandom,arp_getHold());
+                    break;
+                case amRandom:
+                    arp_setMode(amOff,arp_getHold());
+                    break;
+            }
+        }
+    }
 	
-	if(arp_getMode()!=amOff && pressed && button==pbRecord)
+	if(arp_getMode()!=amOff && pressed && button==pbRecord && !ui.isInPatchManagement)
 	{
 		arp_setMode(arp_getMode(),arp_getHold()?0:1);
-		recordOverride=1; // override normal record action
+		recordOverride=1; // override normal record action for the rest of the function, already used up for toggling arp hold
 	}
 
 	// assigner
@@ -606,7 +719,7 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	{
 		if(pressed)
 		{
-			assigner_latchPattern();
+			assigner_latchPattern(0);
 		}
 		else
 		{
@@ -622,19 +735,27 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 
 	// digit buttons use
 	
-	if(pressed && button==pbToTape && settings.presetMode)
+	if(pressed && button==pbToTape && settings.presetMode && !ui.isInPatchManagement)
 	{
-		if(ui.digitInput!=diSynth)
+		if(ui.digitInput!=diSynth) // preset select or store mode, sequencer mode
 		{
-			ui.digitInput=diSynth;
+			ui.digitInput=diSynth; // parameter select mode
 		}
-		else
+		else // parameter select mode
 		{
-			ui.digitInput=diLoadDecadeDigit;
+			if (seq_getMode(0)==smRecording || seq_getMode(1)==smRecording)
+			{
+				ui.digitInput=diSequencer;
+			}
+			else
+			{
+				ui.digitInput=diLoadDecadeDigit; // mode wait for first digit of preset selection
+			}
 		}
+		ui_setNoActivePot(1); // no active pot status should be carried over to the new state
 	}
 
-	// shidted state (keyboard transposition, ...)
+	// shifted state (keyboard transposition, ...)
 	
 	if(button==pbFromTape)
 	{
@@ -651,11 +772,17 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 			{
 				ui.doubleClickTimer=0; // reset timer
 				ui.isDoubleClicked=1;
+				assigner_allKeysOff(); // make sure that voice are finished, as key events will be used for transposition
 			}
 			else
+            {
 				ui.doubleClickTimer = 63; // 1 second
+            }
 		}
 		ui.isShifted=pressed;
+        // when shifted or unshifted the speed pot changes its function, so make sure the pot value is not applied
+        if (ui.lastActivePot==ppSpeed) ui.lastActivePot=ppNone;
+        potmux_resetSpeedPot();
 		// reset Misc Settings to 'display only' whenever
 		// pbFromTape is pressed (or released).
 		ui.prevMiscButton=-1;
@@ -665,88 +792,149 @@ void LOWERCODESIZE ui_handleButton(p600Button_t button, int pressed)
 	
 	if(pressed)
 	{
-		if(scanner_buttonState(pbFromTape) && ((button>=pb0 && button<=pb9) || button==pbTune))
+		if (ui.isInPatchManagement && button==pbRecord)
+        {
+            ui.isInPatchManagement=0;
+            ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+        }
+        else if (ui.isInPatchManagement && button==pbPreset)
+        {
+            // dump the patch bank
+            midi_dumpPresets();
+            sevenSeg_scrollText("presets dumped",1);
+            refreshPresetMode();
+            ui.digitInput=diStoreDecadeDigit;
+        }
+	// Flat
+    //  else if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset || button==pbRecord))
+        else if ((ui.isShifted || ui.isDoubleClicked) && ((button>=pb0 && button<=pb9) || button==pbTune || button==pbPreset || button==pbRecord || button==pbSeq1))
+		// these are the special function buttons in shift mode
 		{
 			// Disable double click mode which might confuse
-			// user if he presses FROM TAPE within the double
+			// user if she/he presses FROM TAPE within the double
 			// click interval while fiddling with the misc params.
 			ui.doubleClickTimer=0; // reset timer
-			ui.isDoubleClicked=0;
-			handleMiscAction(button);
+			// ui.isDoubleClicked=0; // maybe not?? Let's try without
+
+			if (button==pbTune)
+			{
+				ui.retuneLastNotePressedMode=!ui.retuneLastNotePressedMode;
+			}
+			else if (button==pbRecord && !recordOverride) // when arp is running then patch mgmt mode cannot be entered.
+			{
+				ui.isInPatchManagement=1;
+                ui.digitInput=diStoreDecadeDigit; // the mode should start with expecting a number for single patch export
+                ui.presetAwaitingNumber=-1;
+                ui.isDoubleClicked=0; // switch this off to avoid confusion with the function of the number pad
+                sevenSeg_setAscii(' ',' ');
+			}
+			else if (!ui.isInPatchManagement) // otherwise this would potentially go into the shifted function of those keys
+            {
+                handleMiscAction(button);
+            }
 		}
 		else if(button==pbTune)
 		{
-			tuner_tuneSynth();
-            synth_updateMasterVolume(); // V2.26 to fix tuner volume issue
-		}
-		else if(button==pbPreset)
-		{
-			// save manual preset
-			if(!settings.presetMode)
-				preset_saveCurrent(MANUAL_PRESET_PAGE);
-
-			settings.presetMode=settings.presetMode?0:1;
-			settings_save();
-			refreshPresetMode();
-			refreshFullState();
-		}
-		else if(button==pbRecord && !recordOverride)
-		{
-			if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit)
+			if (!ui.retuneLastNotePressedMode)
 			{
-				ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
-				ui.presetAwaitingNumber=-1;	
+				synth_tuneSynth();
 			}
 			else
 			{
-				// ask for digit
-				ui.digitInput=diStoreDecadeDigit;
+				ui.retuneLastNotePressedMode=0;
 			}
 		}
+		else if(button==pbPreset) // toggle between live mode and preset mode
+		{
+            // save manual preset to recall it later
+            if(!settings.presetMode) // switch to preset mode
+            {
+                preset_saveCurrent(MANUAL_PRESET_PAGE);
+            }
+
+            settings.presetMode=settings.presetMode?0:1;
+            settings_save();
+            refreshPresetMode();
+            refreshFullState();
+		}
+		else if(button==pbRecord && !recordOverride) // patch storage mode on/off
+        {
+                if(ui.digitInput==diStoreDecadeDigit || ui.digitInput==diStoreUnitDigit) // storage mode switched off
+                {
+                    ui.digitInput=(settings.presetMode)?diLoadDecadeDigit:diSynth;
+                    ui.presetAwaitingNumber=-1;
+                }
+                else // storage mode switch on
+                {
+                    // ask for digit
+                    ui.digitInput=diStoreDecadeDigit;
+                }
+		}
 		else if(ui.digitInput==diSequencer)
-		{
-			handleSequencerPage(button);
-		}
-		else if(ui.digitInput==diSynth)
-		{
-			handleSynthPage(button);
-		}
+        {
+            handleSequencerPage(button);
+        }
+        else if(ui.digitInput==diSynth)
+        {
+            // parameter selection and display shows last touched control value
+            handleSynthPage(button);
+        }
 		else if(ui.digitInput>=diLoadDecadeDigit && button>=pb0 && button<=pb9)
 		{
-			// preset number input 
+			// preset number input for load an store
 			switch(ui.digitInput)
 			{
-			case diLoadDecadeDigit:
-				ui.presetAwaitingNumber=button-pb0;
-				ui.digitInput=diLoadUnitDigit;
-				break;
-			case diStoreDecadeDigit:
-				ui.presetAwaitingNumber=button-pb0;
-				ui.digitInput=diStoreUnitDigit;
-				break;
-			case diLoadUnitDigit:
-			case diStoreUnitDigit:
-				ui.presetAwaitingNumber=ui.presetAwaitingNumber*10+(button-pb0);
+                case diLoadDecadeDigit: // this is the first press of the preset select
+                    ui.presetAwaitingNumber=button-pb0;
+                    ui.digitInput=diLoadUnitDigit;
+                    break;
+                case diStoreDecadeDigit: // this is the first press of the prese store
+                    ui.presetAwaitingNumber=button-pb0;
+                    ui.digitInput=diStoreUnitDigit;
+                    break;
+                case diLoadUnitDigit: // this is the first press of the preset select
+                case diStoreUnitDigit: // this is the second press of the preset store
+                    ui.presetAwaitingNumber=ui.presetAwaitingNumber*10+(button-pb0);
 
-				// store?
-				if(ui.digitInput==diStoreUnitDigit)
-				{
-					preset_saveCurrent(ui.presetAwaitingNumber);
-				}
+                    if(!ui.isInPatchManagement)
+                    {
+                        // store?
+                        if(ui.digitInput==diStoreUnitDigit)
+                        {
+                            if (!settings.presetMode) preset_saveCurrent(MANUAL_PRESET_PAGE); // make sure that the latest parameters are stored for live mode
+                            preset_saveCurrent(ui.presetAwaitingNumber);
+                        }
+                        // if in local off mode we can still change the program because the incoming MIDI would have no effect
+                        // also: always try to load/reload preset
+                        if(preset_loadCurrent(ui.presetAwaitingNumber,0))
+                        {
+                            settings.presetNumber=ui.presetAwaitingNumber;
+                            if(ui.digitInput!=diStoreUnitDigit) // only send MIDI and store selection when new prog is selected, not when it is reloaded after storage
+                            {
+                                midi_sendProgChange(settings.presetNumber);
+                                settings_save();
+                            }
+                        }
 
-				// always try to load/reload preset
-				if(preset_loadCurrent(ui.presetAwaitingNumber))
-				{
-					settings.presetNumber=ui.presetAwaitingNumber;
-					settings_save();		
-				}
+                        refreshPresetMode();
+                        refreshFullState();
+                    }
+                    else
+                    {
+                        sevenSeg_setAscii(' ',' ');
+                        ui.digitInput=diStoreDecadeDigit;
+                        if (midi_dumpPreset(ui.presetAwaitingNumber)) // dump that patch
+                        {
+                            sprintf(s, "patch %u dumped", ui.presetAwaitingNumber);
+                            sevenSeg_scrollText(s,1);
+                        }
+                    }
 
-				ui.presetAwaitingNumber=-1;
-				
-				refreshPresetMode();
-				break;
-			default:
-				;
+                    ui.presetAwaitingNumber=-1;
+
+                    break;
+                default:
+                    ;
 			}
 		}
 	}
@@ -760,13 +948,14 @@ void ui_init(void)
 {
 	memset(&ui,0,sizeof(ui));
 		
-	ui.digitInput=diSynth;
 	ui.presetAwaitingNumber=-1;
-	ui.lastActivePot=ppNone;
 	ui.lastActivePotValue=-1;
-	ui.presetModified=1;
-	ui.activeParamIdx=-1;
+	ui.presetModified=0;
+    settings.presetMode=1; // start in preset mode
+	ui.digitInput=diSynth; // panel mode
+	ui.activeParamIdx=0; // select clock/speed
 	ui.prevMiscButton=-1;
+    ui.menuParamSelectChange=0;
 }
 
 // Called at 63Hz

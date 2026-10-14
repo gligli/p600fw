@@ -9,7 +9,7 @@ email and we can discuss alternatively licensing and payment.
 
 Please send me bug info, bug fixes, general improvements, etc.  alex at x37v.info
 
-This code has only been tested on a few micrcontrollers including:
+This code has only been tested on a few microcontrollers including:
    atmega32u2, various teensy based projects, whatever is included in the missing link. [all avr based]
 
 REQUIREMENTS

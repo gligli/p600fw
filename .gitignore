@@ -8,3 +8,11 @@
 .DS_Store
 .DS_Store
 .DS_Store
+# V2.5: build products of firmware/ (the releases are copied to the repo root as "p600firmware V2.x.hex/.syx")
+firmware/p600firmware.bin
+firmware/p600firmware.elf
+firmware/p600firmware.hex
+firmware/p600firmware.lss
+firmware/p600firmware.map
+firmware/p600firmware.syx
+firmware/.dep/
