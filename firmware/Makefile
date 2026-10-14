@@ -147,6 +147,10 @@ CSTANDARD = -std=gnu99
 
 # Place -D or -U options here for C sources
 CDEFS = -DF_CPU=$(F_CPU)UL
+# V2.5: 'make DIAG=1' builds the diagnostic version (start-up step codes on the display, see diag_step in common/synth.c)
+ifdef DIAG
+CDEFS += -DDIAG
+endif
 
 
 # Place -D or -U options here for ASM sources

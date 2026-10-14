@@ -1403,6 +1403,28 @@ static void handleBitInputs(void)
 // P600 main code
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef DIAG
+// V2.5 diagnostic build (make DIAG=1): shows a step code on the left digit at each step of the start-up, with interrupts off, written straight to the
+// display latches like the updater does, and waits 0.4 s so it can be read. The last code seen tells where the start-up stops.
+void diag_step(uint8_t code)
+{
+    static const uint8_t seg[16]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71}; // 0-9 A b C d E F
+    uint8_t i;
+    BLOCK_INT
+    {
+        io_write(0x09,0x00);
+        io_write(0x08,0x20); // left digit
+        io_write(0x09,seg[code&15]);
+        io_read(0x0a); // completes the write (see display_restoreColumn)
+    }
+    for(i=0;i<40;++i)
+        MDELAY(10);
+}
+#define DIAG_STEP(c) diag_step(c)
+#else
+#define DIAG_STEP(c)
+#endif
+
 void synth_init(void)
 {
     int8_t i;
@@ -1410,14 +1432,18 @@ void synth_init(void)
     // init
 
     memset(&synth,0,sizeof(synth));
+    DIAG_STEP(1);
 
     scanner_init();
     display_init();
     sh_init();
     potmux_init();
+    DIAG_STEP(2);
     tuner_init();
     assigner_init();
+    DIAG_STEP(3);
     uart_init();
+    DIAG_STEP(4);
     seq_init();
     arp_init();
     ui_init();
@@ -1436,11 +1462,13 @@ void synth_init(void)
     //for NOISE stop Noise waveform
     sh_setCV(pcExtFil,0,SH_FLAG_IMMEDIATE);
 
+    DIAG_STEP(5);
     // go in scaling adjustment mode if needed
 
     if(io_read(CSI0)&16)
         tuner_scalingAdjustment();
 
+    DIAG_STEP(6);
     // load settings from storage; tune when they are bad
 
     if(!settings_load())
@@ -1452,11 +1480,13 @@ void synth_init(void)
 #endif
     }
 
+    DIAG_STEP(7);
     // power-up light show (about 3.2 seconds, interrupts are still off here); it can be switched off in the From Tape menu (keypad 7).
     // This is after the settings are loaded because the choice is stored there.
     if(settings.bootLightShow)
         display_bootShow();
 
+    DIAG_STEP(8);
     // initialize manual preset page if needed
 
     if(!preset_loadCurrent(MANUAL_PRESET_PAGE,0))
@@ -1465,6 +1495,7 @@ void synth_init(void)
         preset_saveCurrent(MANUAL_PRESET_PAGE);
     }
 
+    DIAG_STEP(9);
     sh_setCV(pcMVol,HALF_RANGE,SH_FLAG_IMMEDIATE);
 
     // dead band pre calculation
@@ -1477,14 +1508,17 @@ void synth_init(void)
 
     scanner_update(1);
     potmux_update(1); // init all
+    DIAG_STEP(10);
 
     // load last preset & do a full refresh
     refreshPresetMode();
     refreshFullState();
     computeTunedCVs(-1,-1); // force init CV's for all voices
+    DIAG_STEP(11);
     ui_setNoActivePot(1);
     settings_save();
 
+    DIAG_STEP(12);
     // set the volume to the current pot value
     synth.masterVolume=potmux_getValue(ppMVol);
 

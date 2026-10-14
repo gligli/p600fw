@@ -589,7 +589,13 @@ int main(void)
 
 	// initialize synth code
 
+#ifdef DIAG
+	{ extern void diag_step(uint8_t code); diag_step(0); } // V2.5 diagnostic build: 0 = main() reached
+#endif
 	synth_init();
+#ifdef DIAG
+	{ extern void diag_step(uint8_t code); diag_step(13); } // d = synth_init() done, interrupts go on next
+#endif
 	
 	// all inited, enable ints and do periodical updates
 	
