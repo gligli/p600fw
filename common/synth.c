@@ -1932,18 +1932,16 @@ void synth_timerInterrupt(void)
     case 3:
         if(hz250)
         {
+            // V2.5 (Teensy): keys/buttons and display as in V2.34 (scan, then display, at 250Hz; the buttons at 63Hz). The Flat-Labs
+            // build scanned 2 bytes on every tick and switched the display column on again after each scan (scanner_updateSlice and
+            // display_restoreColumn); on the Teensy the display then stayed dark and the buttons did not react.
+            scanner_update(hz63);
             display_update(hz63);
             if (hz63)
                 ui_update();
         }
         break;
     }
-
-    // buttons+keys: 2 of the 16 scanner bytes on every tick, so every byte is scanned every 8th tick (250Hz, debounce time kept in scanner.c).
-    // Doing all 16 at once made every 8th tick much longer than the others; 2 per tick keeps the worst case tick short.
-    scanner_updateSlice(frc);
-    // the scanner has just used the CSO0 latch, which also holds the display column enable: switch the column on again (otherwise the display and LEDs stay dark)
-    display_restoreColumn();
 
     ++frc;
 

@@ -7,7 +7,7 @@
 #define SCANNER_BYTES 16
 #define SCANNER_KEYS_START 64
 #define SCANNER_DEBOUNCE_TIMEOUT 5
-#define SCANNER_BUTTON_DEBOUNCE_TIMEOUT 20 // buttons are scanned 4x as often now: keep the original ~80 ms debounce
+#define SCANNER_BUTTON_DEBOUNCE_TIMEOUT 5 // V2.5 (Teensy): the buttons are scanned at 63Hz again as in V2.34 (the Flat-Labs build scanned them 4x as often and used 20), so V2.34's 5 = ~80 ms
 
 static struct
 {
