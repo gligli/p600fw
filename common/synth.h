@@ -5,8 +5,21 @@
 #include "print.h"
 #include "hardware.h"
 
-//#define DEBUG 
-#define RELEASE "Ver 2.34 jrs"
+//#define DEBUG
+
+// Flat
+#define RELEASE "Ver 2.5" // V2.5: the Flat-Labs/Imogen feature set ported to the Teensy++ 2.0 (V2.34 base)
+
+// Chip select addresses labelled as in the schematics (Flat)
+#define CSO0	0x08	// Display, switches & keyboard
+#define CSO1	0x09	// Display  
+#define CSO2	0x0A	// Potmuxes
+#define CSO3	0x0B	// Waveform & gates latch
+#define CS05	0x0D	// S&H latch
+#define CS06	0x0E	// Tune circuit
+
+#define CSI0	0x09	// Enables read FF status(D1), Tune counter, (D2) ADC_CPR (D3), TP301 (D4), Footswitch (D5)
+#define CSI1	0x0A	// Enables read switches and keyboard
 
 #define UART_USE_HW_INTERRUPT // this needs an additional wire that goes from pin C4 to pin E4
 
@@ -14,11 +27,12 @@
 	#ifdef RELEASE
 		#define VERSION RELEASE
 	#else
-		#define VERSION " alpha "__DATE__
+		#define VERSION "alpha "__DATE__
 	#endif
 #else
-	#define VERSION " debug "__DATE__ " " __TIME__
+	#define VERSION "debug "__DATE__ " " __TIME__
 #endif
+
 
 #define SYNTH_VOICE_COUNT 6
 
@@ -43,14 +57,22 @@
 #define HALF_RANGE (FULL_RANGE/2+1)
 #define HALF_RANGE_L (65536UL*HALF_RANGE) // i.e. HALF_RANGE<<16, as uint32_t
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // Prophet 600 definitions
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef enum
 {
-	plSeq1=0,plSeq2=1,plArpUD=2,plArpAssign=3,plPreset=4,plRecord=5,plToTape=6,plFromTape=7,plTune=8,plDot=9
+	plSeq1=0,
+	plSeq2=1,
+	plArpUD=2,
+	plArpAssign=3,
+	plPreset=4,
+	plRecord=5,
+	plToTape=6,
+	plFromTape=7,
+	plTune=8,
+	plDot=9
 } p600LED_t;
 
 typedef enum
@@ -87,7 +109,7 @@ typedef enum
 
 typedef enum
 {
-	modOff=0,modVCO=1,modVCF=2,modVCA=3,modPW=4,modVCOB=5 //added VCOB V2.20 JRS
+	modOff=0,modAB=1,modVCF=2,modVCA=3,modB=4,modPW=5 // modPW (bender only): the pulse width of oscillator A
 } modulation_t;
 
 typedef enum
@@ -101,19 +123,31 @@ typedef enum
 } syncMode_t;
 
 void synth_buttonEvent(p600Button_t button, int pressed);
-void synth_keyEvent(uint8_t key, int pressed);
+void synth_keyEvent(uint8_t key, int pressed, int fromKeyboard, uint16_t velocity);
 void synth_assignerEvent(uint8_t note, int8_t gate, int8_t voice, uint16_t velocity, int8_t legato); // voice -1 is unison
 void synth_uartEvent(uint8_t data);
-void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t outputToMidi);
-void synth_volEvent(uint16_t value);//to add MIDI volume V2.24JRS
+void synth_wheelEvent(int16_t bend, uint16_t modulation, uint8_t mask, int8_t isInternal, int8_t outputToMidi);
+void synth_aftertouchEvent(uint8_t value); // MIDI channel aftertouch, acts like the mod wheel (same range and target), added to it
+void synth_polyAftertouchEvent(uint8_t note, uint8_t value); // MIDI poly aftertouch, opens the filter of the voice playing the note
 void synth_updateBender(void);
 void synth_updateMasterVolume(void); // to fix volume bug in 2.25
 void synth_realtimeEvent(uint8_t midiEvent);
+void synth_resetClockBar(void);
+void synth_tuneSynth(void);
+void synth_resetForLocalOffMode(void);
+void synth_holdEvent(int8_t hold, int8_t sendMidi, uint8_t isInternal);
+void refreshPresetMode(void);
+void synth_volEvent(uint16_t value);
 
 void synth_init(void);
 void synth_update(void);
 void synth_timerInterrupt(void);
 void synth_uartInterrupt(void);
+
+uint16_t mixer_volumeFromMixAndDrive(uint16_t mix, uint16_t drive);
+uint16_t mixer_mixFromVols(uint16_t volA, uint16_t volB);
+uint16_t mixer_driveFromVols(uint16_t volA, uint16_t volB);
+void mixer_updatePanelLayout(uint8_t layout);
 
 extern volatile uint32_t currentTick; // 500hz
 extern uint8_t tempBuffer[TEMP_BUFFER_SIZE]; // general purpose chunk of RAM

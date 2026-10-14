@@ -17,8 +17,12 @@
 #define MAX_SYSEX_SIZE TEMP_BUFFER_SIZE
 
 #define MIDI_BASE_STEPPED_CC 48
-#define MIDI_BASE_COARSE_CC 16 
+#define MIDI_BASE_COARSE_CC 16
 #define MIDI_BASE_FINE_CC 80
+// the vibrato shape and range are stepped parameters 38 and 39, which would be CC 86 and 87, but those belong to the fine CC range (CC 80..114),
+// so they get their own CC numbers (115 to 119 are not used by anything else here)
+#define MIDI_CC_VIB_SHAPE 115
+#define MIDI_CC_VIB_RANGE 116
 
 static MidiDevice midi;
 static int16_t sysexSize;
@@ -27,8 +31,6 @@ static uint8_t sendQueueData[32];
 
 extern void refreshFullState(void);
 extern void refreshPresetMode(void);
-
-static uint8_t OldPitchBendValue=0;
 
 static void sendEnqueue(uint8_t b)
 {
@@ -110,7 +112,7 @@ typedef struct {
 	uint8_t semitone_fraction_two;
 } semitone_t;
 
-static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size)
+static void mtsReceiveBulkTuningDump(uint8_t * buf, int16_t size) // imogen: this function is not used anf there is no clear use case for it - maybe it should be removed
 {
 	if (size!=402) {
 #ifdef DEBUG
@@ -164,7 +166,10 @@ static void sysexReceiveByte(uint8_t b)
 	case 0xF7: // End SysEx message
 		if(tempBuffer[0]==0x01 && tempBuffer[1]==0x02) // SCI P600 program dump
 		{
-			import_sysex(tempBuffer,sysexSize);
+			if (ui.isInPatchManagement)
+			{
+				import_sysex(tempBuffer,sysexSize);
+			}
 		}
 		else if(tempBuffer[0]==SYSEX_ID_0 && tempBuffer[1]==SYSEX_ID_1 && tempBuffer[2]==SYSEX_ID_2) // my sysex ID
 		{
@@ -181,7 +186,7 @@ static void sysexReceiveByte(uint8_t b)
 				break;
 			}
 		}
-		else if(tempBuffer[0]==SYSEX_ID_UNIVERSAL_NON_REALTIME)
+		else if(tempBuffer[0]==SYSEX_ID_UNIVERSAL_NON_REALTIME) // imogen: if SysEx tuning data usage is removed (see above), this part will be obsolete as well  
 		{
 			switch(tempBuffer[2])
 			{
@@ -232,7 +237,7 @@ static void midi_noteOnEvent(MidiDevice * device, uint8_t channel, uint8_t note,
 	print("\n");
 #endif
 
-	assigner_assignNote(note,velocity!=0,(((uint32_t)velocity+1)<<9)-1,0);
+    synth_keyEvent(note, velocity!=0, 0, (((uint32_t)velocity+1)<<9)-1);
 }
 
 static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t velocity)
@@ -246,7 +251,7 @@ static void midi_noteOffEvent(MidiDevice * device, uint8_t channel, uint8_t note
 	print("\n");
 #endif
 
-	assigner_assignNote(note,0,0,0);
+    synth_keyEvent(note,0,0,0);
 }
 
 static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, uint8_t value)
@@ -274,44 +279,68 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 	}
 	else if(control==1) // modwheel
 	{
-		synth_wheelEvent(0,value<<9,2,0);
+		synth_wheelEvent(0,value<<9,2,0,0);
 	}
-    
-    else if(control==7) // added midi volume V2.24 JRS
+	else if(control==7) // added midi volume
     {
-        synth_volEvent(value<<9);
+        synth_volEvent(((uint16_t)value)<<9);
     }
-	
-    else if(control==64) // hold pedal
+	else if(control==64) // hold pedal
 	{
-		assigner_holdEvent(value);
+        synth_holdEvent(value, 0, 0); // the distinction between Unison and Poly mode will be handled there
 		return;
 	}
-    else if(control==120) // All Sound off  V2.25
+	else if(control==120) // All Sound Off. Per the MIDI spec the data byte is not used (it is normally 0), so any value silences all voices at once
     {
-        if (value==127)
+        // (an earlier version only reacted to a value of 127, which a controller that sends the standard value 0 never triggered)
+        int8_t v;
+        for (v=0;v<SYNTH_VOICE_COUNT;++v)
         {
-        int8_t i;
-        for (i=0;6;++i)
-        {
-        assigner_voiceDone(i);
+            assigner_voiceDone(v);
         }
-           }
-        return;
     }
-    else if(control==122) // All Local ON/OFF  V2.25
+    else if(control==122) // Local Keyboard ON/OFF
     {
-       //0=OFF  127=local ON need to add code maybe add a static local on/off flag
-        
-        return;
+        if (value<=63) // local ON
+        {
+            ui_setLocalMode(0);
+        }
+        else if (value>=64) // local OFF
+        {
+            ui_setLocalMode(1);
+        }
     }
-    else if(control==123) // All Notes off  V2.25
+    else if(control==123) // All Notes Off. Per the MIDI spec the data byte is not used (it is normally 0), so any value releases all held notes
     {
-        if (value==127)
-            assigner_allKeysOff();
-        return;
+        // (an earlier version only reacted to a value of 0, so a controller that sent 127 was ignored). The notes are released, so the release
+        // envelopes still play out, and the hold pedal state is cleared too, see assigner_allKeysOff
+        assigner_allKeysOff();
     }
-    
+    else if(control>=MIDI_BASE_COARSE_CC) // arp / seq clock coarse
+	{
+		if (control-MIDI_BASE_COARSE_CC==cpSeqArpClock)
+		{
+			if((settings.seqArpClock>>9)!=value)
+			{
+				settings.seqArpClock&=0x01fc;
+				settings.seqArpClock|=(uint16_t)value<<9;
+			}
+			return;
+		}
+	}
+	else if(control>=MIDI_BASE_FINE_CC) // arp / seq clock fine
+	{
+		if (control-MIDI_BASE_FINE_CC==cpSeqArpClock)
+		{
+			if(((settings.seqArpClock>>2)&0x7f)!=value)
+			{
+				settings.seqArpClock&=0xfe00;
+				settings.seqArpClock|=(uint16_t)value<<2;
+			}
+			return;
+		}
+	}
+
 	if(!settings.presetMode) // in manual mode CC changes would only conflict with pot scans...
 		return;
 	
@@ -323,7 +352,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		{
 			currentPreset.continuousParameters[param]&=0x01fc;
 			currentPreset.continuousParameters[param]|=(uint16_t)value<<9;
-			change=1;	
+			change=1;
 		}
 	}
 	else if(control>=MIDI_BASE_FINE_CC && control<MIDI_BASE_FINE_CC+cpCount)
@@ -334,15 +363,21 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		{
 			currentPreset.continuousParameters[param]&=0xfe00;
 			currentPreset.continuousParameters[param]|=(uint16_t)value<<2;
-			change=1;	
-		}
+			change=1;
+        }
 	}
-	else if(control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount)
+	else if((control>=MIDI_BASE_STEPPED_CC && control<MIDI_BASE_STEPPED_CC+spCount) || control==MIDI_CC_VIB_SHAPE || control==MIDI_CC_VIB_RANGE)
 	{
-		param=control-MIDI_BASE_STEPPED_CC;
-		uint8_t v;
+		if(control==MIDI_CC_VIB_SHAPE) // (these two have their own CC numbers, see above)
+			param=spVibShape;
+		else if(control==MIDI_CC_VIB_RANGE)
+			param=spVibRange;
+		else
+			param=control-MIDI_BASE_STEPPED_CC;
+		uint8_t v, prev;
 		
-		v=value>>(7-steppedParametersBits[param]);
+        prev=currentPreset.steppedParameters[param];
+        v=(((uint16_t)value)*steppedParameterRange[param])>>7;
 		
 		if(currentPreset.steppedParameters[param]!=v)
 		{
@@ -352,11 +387,12 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 		
 		// special case for unison (pattern latch)
 		
-		if(param==spUnison)
+		if(param==spUnison) // the switch to unison
 		{
-			if(v)
+			if(v && !prev)
 			{
-				assigner_latchPattern();
+                // only execute changes into unison mode, not additional latches
+				assigner_latchPattern(0);
 			}
 			else
 			{
@@ -365,6 +401,7 @@ static void midi_ccEvent(MidiDevice * device, uint8_t channel, uint8_t control, 
 			assigner_getPattern(currentPreset.voicePattern,NULL);
 		}
 	}
+
 
 	if(change)
 	{
@@ -380,60 +417,48 @@ static void midi_progChangeEvent(MidiDevice * device, uint8_t channel, uint8_t p
 
 	if(settings.presetMode && program<100  && program!=settings.presetNumber)
 	{
-		if(preset_loadCurrent(program))
+		if (preset_checkPage(program)) // ignore MIDI prog change if the page is not valid
 		{
+			preset_loadCurrent(program,0);
 			settings.presetNumber=program;
-			ui_setPresetModified(0);	
-			settings_save();		
+			ui_setPresetModified(0);
 			refreshFullState();
+			ui_setNoActivePot(1);
+			ui.presetModified=0;
 		}
 	}
 }
 
-// aftertouch JS August 2020 note: need to add note selectivity
+// Poly aftertouch (A0): pressure of one note, it opens the filter of the voice that plays this note (see synth_polyAftertouchEvent)
 static void midi_aftertouchEvent(MidiDevice * device, uint8_t channel, uint8_t note, uint8_t value)
 {
-    if(!midiFilterChannel(channel))
-        return;
-#ifdef DEBUG_
-    print("midi poly aftertouch ");
-    print(" value ");
-    phex(value);
-    print("\n");
-#endif
-    synth_wheelEvent(0,value<<9,2,0);
+	if(!midiFilterChannel(channel))
+		return;
+
+	synth_polyAftertouchEvent(note,value);
 }
 
-// aftertouch JS August 2020
+// Channel aftertouch (D0): works like the mod wheel, same target and range (see synth_aftertouchEvent)
 static void midi_chanpressureEvent(MidiDevice * device, uint8_t channel, uint8_t value)
 {
-    if(!midiFilterChannel(channel))
-        return;
-#ifdef DEBUG_
-    print("midi chan pressure ");
-    print(" value ");
-    phex(value);
-    print("\n");
-#endif
-    synth_wheelEvent(0,value<<9,2,0);
+	if(!midiFilterChannel(channel))
+		return;
+
+	synth_aftertouchEvent(value);
 }
 
 static void midi_pitchBendEvent(MidiDevice * device, uint8_t channel, uint8_t v1, uint8_t v2)
 {
 	if(!midiFilterChannel(channel))
 		return;
-// Added V2.30JS for filtering Pitchbend messages if >old+10 && <old-10
-    if(v2!=OldPitchBendValue){
+
 	int16_t value;
- 
-        value=midiCombineBytes(v1,v2);
-        value-=0x2000;
-        value<<=2;
-        
-        synth_wheelEvent(value,0,1,0);
-        OldPitchBendValue=v2;
-    }
-    
+	
+	value=midiCombineBytes(v1,v2);
+	value-=0x2000;
+	value<<=2;
+	
+	synth_wheelEvent(value,0,1,0,0);
 }
 
 static void midi_sysexEvent(MidiDevice * device, uint16_t count, uint8_t b0, uint8_t b1, uint8_t b2)
@@ -478,10 +503,10 @@ void midi_init(void)
 	midi_register_cc_callback(&midi,midi_ccEvent);
 	midi_register_progchange_callback(&midi,midi_progChangeEvent);
 	midi_register_pitchbend_callback(&midi,midi_pitchBendEvent);
+	midi_register_aftertouch_callback(&midi,midi_aftertouchEvent); // poly aftertouch
+	midi_register_chanpressure_callback(&midi,midi_chanpressureEvent); // channel aftertouch
 	midi_register_sysex_callback(&midi,midi_sysexEvent);
 	midi_register_realtime_callback(&midi,midi_realtimeEvent);
-    midi_register_aftertouch_callback(&midi,midi_aftertouchEvent);
-    midi_register_chanpressure_callback(&midi,midi_chanpressureEvent);
 	
 	sysexSize=0;
 	
@@ -507,15 +532,20 @@ void midi_newData(uint8_t data)
 	midi_device_input(&midi,1,&data);
 }
 
-void midi_dumpPreset(int8_t number)
+uint8_t midi_dumpPreset(int8_t number)
 {
 	int16_t size=0;
 	
 	if(number<0 || number>99)
-		return;
-	
-	storage_export(number,tempBuffer,&size);
-	sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
+		return 0;
+
+    if(preset_checkPage(number))
+    {
+        storage_export(number,tempBuffer,&size);
+        sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
+		return 1;
+    }
+    return 0;
 }
 
 void midi_dumpPresets(void)
@@ -525,7 +555,7 @@ void midi_dumpPresets(void)
 
 	for(i=0;i<100;++i)
 	{
-		if(preset_loadCurrent(i))
+		if(preset_loadCurrent(i,0))
 		{
 			storage_export(i,tempBuffer,&size);
 			sysexSend(SYSEX_COMMAND_PATCH_DUMP,size);
@@ -541,15 +571,34 @@ void midi_sendNoteEvent(uint8_t note, int8_t gate, uint16_t velocity)
 		midi_send_noteoff(&midi,settings.midiSendChannel,note,velocity>>9);
 }
 
+void midi_sendProgChange(uint8_t prog)
+{
+    midi_send_programchange(&midi, settings.midiSendChannel, prog);
+}
+
+
 void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 {
 	static int16_t lastBend=0;
 	static uint16_t lastMod=0;
 	
-	if(mask&1 && (bend&0xfffc)!=(lastBend&0xfffc))
+	if(mask&1 && (bend&0xfffc)!=(lastBend&0xfffc)) // this avois too many events, e.g. only change or more than 3 (out 8192) triggers an event
 	{
-		midi_send_pitchbend(&midi,settings.midiSendChannel,bend);
+		//midi_send_pitchbend(&midi,settings.midiSendChannel,bend);
 		lastBend=bend;
+
+        uint16_t uAmt;
+        uint8_t lsb, msb;
+
+        uAmt=(bend-INT16_MIN); // shifts to range 0 ... UNIT16_MAX
+        uAmt=uAmt>>2; // bitshift makes it a 14bit number, right shift is of logic type on UNIT
+        //uAmt&=0x3FFF; // force the two highest bits to zero
+
+        lsb=uAmt;
+        lsb&=0x7F; // LSB: project onto the lowest 7 bits
+        msb=(uAmt>>7); // MSB: shift down by 7 bits
+
+        midi.send_func(&midi, 3, MIDI_PITCHBEND | (settings.midiSendChannel & MIDI_CHANMASK), lsb, msb); // midi_var_byte_func_t with count 3
 	}
 
 	if(mask&2 && (modulation&0xfe00)!=(lastMod&0xfe00))
@@ -562,4 +611,14 @@ void midi_sendWheelEvent(int16_t bend, uint16_t modulation, uint8_t mask)
 void midi_sendSustainEvent(int8_t on)
 {
 	midi_send_cc(&midi,settings.midiSendChannel,64,on?0x7f:0x00);
+}
+
+void midi_sendThreeBytes(uint8_t mdchn, uint16_t val)
+{
+    uint8_t lsb, msb;
+
+    lsb=val&0x7F;
+    msb=(val>>7)&0x7F;
+
+    midi.send_func(&midi, 3, MIDI_PITCHBEND | (mdchn & MIDI_CHANMASK), lsb, msb);
 }

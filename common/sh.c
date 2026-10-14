@@ -12,19 +12,32 @@ static struct
 	uint32_t immediateBits;
 	uint16_t cvs[SH_CV_COUNT];
 	uint8_t gateBits;
+	uint16_t sent[SH_CV_COUNT]; // last value actually sent to each S&H channel
+	uint8_t tick; // incremented once per timer tick
 } sh;
+
+// Fast path S&H updates are skipped when the value is unchanged, but every channel is still re-sent
+// at least once every SH_REFRESH_PERIOD timer ticks (power of 2, 4 ticks = 2 ms) so the hold capacitors stay refreshed.
+#define SH_REFRESH_PERIOD 4
+
+void sh_nextTick(void)
+{
+	sh.tick++;
+}
 
 static inline void updateGates(void)
 {
 	BLOCK_INT
 	{
-		io_write(0x0b,sh.gateBits);
+		io_write(CSO3,sh.gateBits);
 	}
 }
 
 static inline void updateCV(p600CV_t cv, uint16_t cvv)
 {
 	uint8_t dmux1,dmux2;
+	
+	sh.sent[cv]=cvv; // keep the cache coherent when the slow path (tuner, sh_update) sends a value
 	
 	dmux1=(cv&0x07)|0xf8;
 	dmux2=dmux1&~(0x08<<(cv>>3));
@@ -34,22 +47,24 @@ static inline void updateCV(p600CV_t cv, uint16_t cvv)
 		dac_write(cvv);
 	
 		// prepare S&H
-		io_write(0x0d,dmux1);
+		io_write(CS05,dmux1);
 		
 		// for DAC rise time
-		CYCLE_WAIT(4);   // was 4 V2.33
+		CYCLE_WAIT(4);
+		//CYCLE_WAIT(1);
 
 		// select current CV
-		io_write(0x0d,dmux2);
+		io_write(CS05,dmux2);
 
 		// 2 us to let S&H get very precise voltage, some P600s need it apparently
-		CYCLE_WAIT(4);   //was 8 V2.33
-		
+		CYCLE_WAIT(8);
+		//CYCLE_WAIT(1);
+
 		// deselect it
-		io_write(0x0d,dmux1);
+		io_write(CS05,dmux1);
 
 		// 2 more us to let analog hardware stabilize
-		CYCLE_WAIT(8);  //was 8 V2.33
+		CYCLE_WAIT(8);
 	}
 }
 
@@ -78,6 +93,11 @@ inline void sh_setCV32Sat(p600CV_t cv,int32_t value, uint8_t flags)
 FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 {
 	uint8_t dmux1,dmux2;
+
+	// nothing changed and this channel is not due for its periodic refresh: skip the 5 bus cycles
+	if (sh.sent[cv]==value && ((uint8_t)(sh.tick+cv)&(SH_REFRESH_PERIOD-1)))
+		return;
+	sh.sent[cv]=value;
 	
 	dmux1=(cv&0x07)|0xf8;
 	dmux2=dmux1&~(0x08<<(cv>>3));
@@ -85,19 +105,23 @@ FORCEINLINE void sh_setCV_FastPath(p600CV_t cv,uint16_t value)
 	dac_write(value);
 
 	// prepare S&H
-	io_write(0x0d,dmux1);
+	io_write(CS05,dmux1);
 
 	// for DAC rise time
 	CYCLE_WAIT(1);
 
 	// select current CV
-	io_write(0x0d,dmux2);
+	io_write(CS05,dmux2);
 
 	// let S&H get very precise voltage (cf tohk issue)
-	CYCLE_WAIT(1)
+	CYCLE_WAIT(1);
 	
 	// deselect it
-	io_write(0x0d,dmux1);
+	io_write(CS05,dmux1);
+
+    // let analog hardware stabilize
+    // CYCLE_WAIT(1);
+
 }
 
 FORCEINLINE void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value)

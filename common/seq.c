@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
-// Multitack step sequencer
+// Polyphonic multitrack step sequencer
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "seq.h"
@@ -47,7 +47,7 @@ static void finishPreviousNotes(struct track *tp)
 {	
 	uint8_t s,n;
 
-	if(!tp->eventCount||tp->prevEventIndex<0)
+	if(!tp->eventCount||tp->prevEventIndex<0) // return if no events or no previous event
 		return;
 
 	s=tp->events[tp->prevEventIndex];
@@ -61,10 +61,11 @@ static void finishPreviousNotes(struct track *tp)
 		n=s+SCANNER_BASE_NOTE+tp->previousTranspose;
 
 		// send note to assigner, velocity at half (MIDI value 64)
+		// is it ok to always send that, even in local off mode  what's the side effect?
 		assigner_assignNote(n,0,0,0);
 
-		// pass to MIDI out
-		midi_sendNoteEvent(n,0,0);
+		// pass to MIDI out but not in local off mode
+		if (settings.midiMode==0) midi_sendNoteEvent(n,0,0);
 
 		tp->prevEventIndex=(tp->prevEventIndex+1)%tp->eventCount;
 		s=tp->events[tp->prevEventIndex];
@@ -103,17 +104,15 @@ static FORCEINLINE void playStep(int8_t track)
 			n=s+SCANNER_BASE_NOTE+seq.transpose;
 
 			// send note to assigner, velocity at half (MIDI value 64)
-			assigner_assignNote(n,1,HALF_RANGE,0);
-            //assigner_assignNote(n,1,MY_VELOCITY,0); // revised per RDP velocity code
+            assigner_assignNote(n,1,HALF_RANGE,0);
 
-			// pass to MIDI out
-			midi_sendNoteEvent(n,1,HALF_RANGE);
-            //midi_sendNoteEvent(n,1,MY_VELOCITY); // revised per RDP velocity code
+			// pass to MIDI out but not in local off mode
+			if (settings.midiMode==0) midi_sendNoteEvent(n,1,HALF_RANGE);
 
 		}
-		tp->eventIndex=(tp->eventIndex+1)%tp->eventCount;
+		tp->eventIndex=(tp->eventIndex+1)%tp->eventCount; // this cycles through the number of events by mod(counter)
 		s=tp->events[tp->eventIndex];
-	} while(s&SEQ_CONT);
+	} while(s&SEQ_CONT); // all notes with this bit set are part of the same "chord", e.g. which ae the continuation flag set 
 }
 
 inline void seq_setMode(int8_t track, seqMode_t mode)
@@ -124,7 +123,7 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	seqMode_t oldMode=tp->mode;
 
 	if(mode==oldMode)
-		return;
+		return; // this function only deals with sequencer mode changes
 
 	alreadyPlaying=anyTrackPlaying();
 
@@ -172,7 +171,7 @@ inline void seq_setMode(int8_t track, seqMode_t mode)
 	// the first. If seq.counter is closer to 0 than to seq.speed,
 	// then the second sequence was started just after the first had
 	// played its step, so we play the first step of the second sequence
-	// as fast as we can so it is heard (almost) simulatenously with
+	// as fast as we can so it is heard (almost) simultaneously with
 	// the step of the first sequence. Conversely, if seq.counter is closer
 	// to seq.speed, the second sequence was started slightly before
 	// the first had played its step (this only happens when the second
@@ -200,8 +199,12 @@ FORCEINLINE void seq_resetCounter(int8_t track, int8_t beatReset)
 	seq_silence(track);
 	seq.tracks[track].eventIndex=0; // reinit
 	seq.tracks[track].prevEventIndex=-1;
-	if(beatReset&&!anyTrackPlaying()&&arp_getMode()==amOff)
-		clock_reset(); // start immediately
+	if (!anyTrackPlaying()&&arp_getMode()==amOff) // it's a fresh start
+	{ 
+		synth_resetClockBar(); // reset the LFO sync counter
+		if(beatReset) // the sync is to internal, so we should rest the clock
+			clock_reset(); // start immediately
+	}
 }
 
 FORCEINLINE seqMode_t seq_getMode(int8_t track)
@@ -242,7 +245,7 @@ static FORCEINLINE void inputNote(struct track *tp, uint8_t note, uint8_t presse
 	if(tp->mode!=smRecording)
 		return;
 
-	if(note==SEQ_NOTE_CLEAR)
+	if(note==SEQ_NOTE_CLEAR) // this 'note' resets the entire track
 	{
 		tp->eventCount=0;
 		tp->stepCount=0;
@@ -261,7 +264,7 @@ static FORCEINLINE void inputNote(struct track *tp, uint8_t note, uint8_t presse
 			seq.addTies--;
 			return;
 		}
-		// erase all events back to previous one
+		// erase all events which belong to the same SEQ_CONT block back to previous one
 		while(tp->eventCount)
 		{
 			uint8_t s=tp->events[--tp->eventCount];

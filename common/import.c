@@ -83,6 +83,18 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	print("\n");
 #endif	
 
+	// start from the default preset values: p is a local variable that is not cleared, so every parameter that is not given below (the ones that did not exist
+	// on the original instrument: arpeggiator, ensemble, modulation wheel, vibrato...) would be stored with whatever is on the stack. These are the values of preset_loadDefault.
+	memset(&p,0,sizeof(p));
+	p.continuousParameters[cpVibFreq]=HALF_RANGE;
+	p.continuousParameters[cpSeqArpClock]=settings.seqArpClock;
+	if (settings.panelLayout==1) p.continuousParameters[cpDrive]=HALF_RANGE;
+	if (settings.panelLayout==0) p.continuousParameters[cpMixVolA]=UINT16_MAX;
+	p.steppedParameters[spModWheelRange]=1;
+	memset(p.voicePattern,ASSIGNER_NO_NOTE,sizeof(p.voicePattern));
+	for (i=0; i<TUNER_NOTE_COUNT; i++)
+		p.perNoteTuning[i] = i * TUNING_UNITS_PER_SEMITONE;
+
 	// import patch
 
 	tmp=zp->mixer<<10;
@@ -106,12 +118,11 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.continuousParameters[cpAmpAtt]=z80EnvCV[zp->ampAtk]<<8;
 	p.continuousParameters[cpPModFilEnv]=HALF_RANGE+(zp->pmodFilEnv<<11);
 	p.continuousParameters[cpPModOscB]=zp->pmodOscB<<9;
-	p.continuousParameters[cpLFOFreq]=zp->lfoFreq<<10;
-	p.continuousParameters[cpLFOAmt]=zp->lfoAmt<<4;
-	p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0;
+	p.continuousParameters[cpLFOFreq]=(uint16_t)(0.615385f*(float)(zp->lfoFreq<<10))+8570; // from version 8 on rescaled according to legacy setting "slow"
+	p.continuousParameters[cpLFOAmt]=(currentPreset.continuousParameters[cpLFOAmt]<=512)?0:512+(uint16_t)(15000.0f*log((((float)((zp->lfoAmt<<4)-512))/870.0f)+1));
+	p.continuousParameters[cpGlide]=(zp->glide)?(0xc000+(zp->glide<<10)):0; // this is not quite faithful compared to the Z80 (in this version glide time is longer)
 	p.continuousParameters[cpAmpVelocity]=0;
 	p.continuousParameters[cpFilVelocity]=0;
-    p.continuousParameters[cpNoiseLevel]=0;// for Noise
 
 	p.steppedParameters[spASaw]=zp->sawA;
 	p.steppedParameters[spATri]=zp->triA;
@@ -123,26 +134,26 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 	p.steppedParameters[spPModFA]=zp->pmodFreqA;
 	p.steppedParameters[spPModFil]=zp->pmodFil;
 	p.steppedParameters[spLFOShape]=zp->lfoShape;
-	p.steppedParameters[spLFOShift]=0;
+	p.steppedParameters[spEnvRouting]=0;
 	p.steppedParameters[spLFOTargets]=zp->lfoPitch | (zp->lfoPW<<1) | (zp->lfoFil<<2);
 	p.steppedParameters[spTrackingShift]=(zp->trackHalf?1:0) + (zp->trackFull?2:0);
-	p.steppedParameters[spFilEnvExpo]=0;
+	p.steppedParameters[spFilEnvShape]=0;
 	p.steppedParameters[spFilEnvSlow]=1;
-	p.steppedParameters[spAmpEnvExpo]=0;
+	p.steppedParameters[spAmpEnvShape]=0;
 	p.steppedParameters[spAmpEnvSlow]=1;
 	p.steppedParameters[spUnison]=zp->unison;
 	p.steppedParameters[spAssignerPriority]=apLast;
 	p.steppedParameters[spBenderSemitones]=3;
-	p.steppedParameters[spBenderTarget]=modVCO;
-	p.steppedParameters[spModwheelShift]=2;
+	p.steppedParameters[spBenderTarget]=modAB;
+	p.steppedParameters[spLFOSync]=0;
 	p.steppedParameters[spChromaticPitch]=1;
 
-    // added 2.25 JRS
-    p.steppedParameters[spVibShape]=1;
-    p.steppedParameters[spVibShift]=0;
-    p.steppedParameters[spVibTargets]=0;
-    // Added 2.29 JRS
-    p.steppedParameters[spPolyModEnv]=0;
+	// the settings that did not exist on the original instrument (p is not cleared, so they must be given here or they would be stored with whatever is on the stack):
+	// the vibrato is a normal triangle vibrato, the poly-mod envelope goes to VCO A and the ensemble vibrato is off
+	p.steppedParameters[spVibShape]=VIB_SHAPE_DEFAULT;
+	p.steppedParameters[spVibRange]=0;
+	p.steppedParameters[spEnsemble]=0;
+	p.steppedParameters[spPolyModEnv]=0;
 
 	// save it
 	
@@ -152,7 +163,7 @@ LOWERCODESIZE void import_sysex(uint8_t * buf, int16_t size)
 		currentPreset=p;		
 		
 		preset_saveCurrent(presetNumber);
-		
+
 		currentPreset=savedP;
 	}
 }

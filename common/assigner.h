@@ -2,6 +2,8 @@
 #define	ASSIGNER_H
 
 #include "synth.h"
+#include "storage.h"
+
 
 #define ASSIGNER_NO_NOTE UINT8_MAX
 
@@ -25,8 +27,9 @@ void assigner_allKeysOff(void);
 void assigner_setPattern(uint8_t * pattern, int8_t mono);
 void assigner_getPattern(uint8_t * pattern, int8_t * mono);
 void assigner_setPoly(void);
-void assigner_latchPattern(void);
+void assigner_latchPattern(uint8_t retrigger);
 void assigner_holdEvent(int8_t hold);
+void assigner_allVoicesDone(void);
 
 void assigner_init(void);
 

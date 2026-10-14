@@ -14,6 +14,7 @@ void sh_setCV32Sat_FastPath(p600CV_t cv,int32_t value);
 
 void sh_setGate(p600Gate_t gate,int8_t on);
 
+void sh_nextTick(void); // call once per timer tick (drives the periodic S&H refresh)
 void sh_init(void);
 void sh_update(void);
 

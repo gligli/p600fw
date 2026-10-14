@@ -26,7 +26,7 @@
 
 #define TUNER_OSC_INIT_OFFSET 5000.0
 #define TUNER_OSC_INIT_SCALE (65536.0/10.66)
-#define TUNER_OSC_PRECISION -3 // higher is preciser but slower was 3
+#define TUNER_OSC_PRECISION -3 // higher is preciser but slower
 #define TUNER_OSC_NTH_C_LO 3
 #define TUNER_OSC_NTH_C_HI 6
 
@@ -78,7 +78,7 @@ static NOINLINE void ffMask(uint8_t set,uint8_t clear)
 	ff_state|=set;
 	ff_state&=~clear;
 	
-	io_write(0x0e,ff_state);
+	io_write(CS06,ff_state);
 	CYCLE_WAIT(4);
 	
 	++ff_step;
@@ -90,7 +90,7 @@ static NOINLINE void ffDoTimeout(void)
 #ifdef DEBUG
 	print("bad flip flop status : ");
 	phex(ff_step);
-	phex(io_read(0x9));
+	phex(io_read(CSI0));
 	print(" timeout count : ");
 	phex(ff_timeoutCount);
 	print("\n");
@@ -104,7 +104,7 @@ static void ffWaitStatus(uint8_t status)
 	uint32_t timeout=STATUS_TIMEOUT;
 
 	do{
-		s=io_read(0x9);
+		s=io_read(CSI0);
 		--timeout;
 	}while(((s>>1)&0x01)!=status && timeout);
 
@@ -118,7 +118,7 @@ static void ffWaitCounter(uint8_t status)
 	uint32_t timeout=STATUS_TIMEOUT;
 
 	do{
-		s=io_read(0x9);
+		s=io_read(CSI0);
 		--timeout;
 	}while(((s>>2)&0x01)!=status && timeout);
 
@@ -151,7 +151,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	// display / start maintainting CVs
 	
-	for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly -- was 25
+	for(int8_t i=0;i<25;++i) // lower this and eg. filter tuning starts behaving badly
 		whileTuning();
 			
 	// prepare flip flop
@@ -164,7 +164,7 @@ static NOINLINE uint32_t measureAudioPeriod(uint8_t periods) // in 2Mhz ticks
 	
 	getPeriod();
 	
-	// flip flop stuff (CF sevice manual section 2-16)
+	// flip flop stuff (CF service manual section 2-16)
 		
 	while(periods)
 	{
@@ -384,6 +384,27 @@ LOWERCODESIZE static void prepareSynth(void)
 
 }
 
+uint16_t tuner_computeCVPerOct(uint8_t note, p600CV_t cv)
+{
+	uint8_t loOct,hiOct;
+	uint16_t loOctVal,hiOctVal;
+
+	loOct=note/12;
+	hiOct=loOct+1;
+
+	if(loOct<TUNER_OCTAVE_COUNT)
+		loOctVal=settings.tunes[loOct][cv];
+	else
+		loOctVal=extapolateUpperOctavesTunes(loOct,cv);
+
+	if(hiOct<TUNER_OCTAVE_COUNT)
+		hiOctVal=settings.tunes[hiOct][cv];
+	else
+		hiOctVal=extapolateUpperOctavesTunes(hiOct,cv);
+
+    return (hiOctVal-loOctVal);
+}
+
 NOINLINE uint16_t tuner_computeCVFromNote(uint8_t note, uint8_t nextInterp, p600CV_t cv)
 {
 	uint8_t loOct,hiOct;
@@ -505,8 +526,6 @@ LOWERCODESIZE void tuner_tuneSynth(void)
 		display_clear();
 		
 		settings_save();
-        
-        sh_setCV(pcMVol,20000,0);// v 2.26 set volume to max after tune
 	}
 }
 
@@ -523,11 +542,11 @@ LOWERCODESIZE void tuner_scalingAdjustment(void)
 	{
 		BLOCK_INT
 		{
-			io_write(0x08,0);
+			io_write(CSO1,0);
 
 			CYCLE_WAIT(10);
 
-			ps=io_read(0x0a);
+			ps=io_read(CSI1);
 		}
 
 		if(ps&2) //pb1
@@ -556,7 +575,7 @@ LOWERCODESIZE void tuner_scalingAdjustment(void)
 		sh_setCV(pcVolB,cv>=pcOsc1B&&cv<pcFil1?UINT16_MAX:0,0);
 		sh_setGate(pgBSaw,cv>=pcOsc1B&&cv<pcFil1?UINT16_MAX:0);
 
-		if(cv<pcFil1)
+		if(cv<pcFil1) // oscillator frequencies, first 6 OSCA and 6 OSCB
 		{
 			sh_setCV(cv,TUNER_OSC_INIT_OFFSET+3*TUNER_OSC_INIT_SCALE,0);
 			lo=measureAudioPeriod(8);

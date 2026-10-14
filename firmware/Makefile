@@ -409,6 +409,8 @@ LST = $(SRC:%.c=$(OBJDIR)/%.lst) $(CPPSRC:%.cpp=$(OBJDIR)/%.lst) $(ASRC:%.S=$(OB
 
 # Compiler flags to generate dependency files.
 GENDEPFLAGS = -MMD -MP -MF .dep/$(@F).d
+# V2.5: create the dependency directory (it is not in git, the build failed without it)
+$(shell mkdir -p .dep)
 
 
 # Combine all necessary flags and optional flags.
@@ -425,7 +427,8 @@ ALL_ASFLAGS = -mmcu=$(MCU) -I. -x assembler-with-cpp $(ASFLAGS)
 all: begin gccversion build end
 
 # Change the build target to build a HEX file or a library.
-build: elf hex syx lss
+# V2.5: storagecheck stops the build if the program would reach the preset area of the flash (see STORAGE_SIZE in common/hardware.h)
+build: elf storagecheck hex syx lss
 #build: lib
 
 
@@ -537,8 +540,17 @@ extcoff: $(TARGET).elf
 	@echo $(MSG_FLASH) $@
 	$(OBJCOPY) -O binary -R .eeprom -R .fuse -R .lock -R .signature -R .updater -R .nrww_misc -R .bootloader $< $@
 
+# V2.5: page 6 last and no end message, so the sysex update also works with the updater of V2.34 and older (see fw2syx.py and the README)
 %.syx: %.bin
-	python ../fw2syx/fw2syx.py $< -o $@
+	python3 ../fw2syx/fw2syx.py --last-page 6 --no-end $< -o $@
+
+# V2.5: the presets start at 0x1e000-STORAGE_SIZE = 0x16000 (common/hardware.h, firmware/p600firmware.c STORAGE_ADDR). The program and
+# its initialised data (they end at __data_load_end) must stay below, otherwise flashing it would overwrite presets (or the presets the code).
+STORAGE_START = 0x16000
+storagecheck: $(TARGET).elf
+	@end=$$($(NM) $(TARGET).elf | awk '$$3=="__data_load_end"{print $$1}'); \
+	if [ $$((0x$$end)) -ge $$(($(STORAGE_START))) ]; then echo "ERROR: program ends at 0x$$end, inside the storage area (from $(STORAGE_START))"; exit 1; \
+	else echo "Program ends at 0x$$end, below the storage area at $(STORAGE_START): $$(( $(STORAGE_START) - 0x$$end )) bytes free"; fi
 
 %.eep: %.elf
 	@echo $(MSG_EEPROM) $@
@@ -634,5 +646,5 @@ clean_list :
 
 # Listing of phony targets.
 .PHONY : all begin finish end sizebefore sizeafter gccversion \
-build elf hex bin syx eep lss sym coff extcoff \
+build elf storagecheck hex bin syx eep lss sym coff extcoff \
 clean clean_list program debug gdb-config
