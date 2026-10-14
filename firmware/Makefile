@@ -151,6 +151,9 @@ CDEFS = -DF_CPU=$(F_CPU)UL
 ifdef DIAG
 CDEFS += -DDIAG
 endif
+ifdef DIAGTIME
+CDEFS += -DDIAGTIME
+endif
 
 
 # Place -D or -U options here for ASM sources

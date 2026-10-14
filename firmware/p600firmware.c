@@ -589,6 +589,23 @@ int main(void)
 
 	// initialize synth code
 
+#ifdef DIAGTIME
+	// V2.5 timing test (make DIAG=1 DIAGTIME=1): nothing but a counter on the left digit, 0..F, one step every 0.5 s, interrupts off,
+	// no synth code at all. If it stops counting after some seconds, something outside the program (a reset) stops it.
+	{
+		static const uint8_t seg[16]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};
+		uint8_t n=0,dot=0;
+		for(;;)
+		{
+			hardware_write(1,0x09,0x00); CYCLE_WAIT(8);
+			hardware_write(1,0x08,0x20); CYCLE_WAIT(8);
+			hardware_write(1,0x09,seg[n&15]|dot); CYCLE_WAIT(8);
+			hardware_read(1,0x0a); CYCLE_WAIT(8);
+			_delay_ms(500);
+			if(++n==16) { n=0; dot^=0x80; } // the dot changes every 8 s, so a full round of 16 s is visible
+		}
+	}
+#endif
 #ifdef DIAG
 	{ extern void diag_step(uint8_t code); diag_step(0); } // V2.5 diagnostic build: 0 = main() reached
 #endif
