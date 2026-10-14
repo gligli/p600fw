@@ -1937,6 +1937,12 @@ void synth_timerInterrupt(void)
             // display_restoreColumn); on the Teensy the display then stayed dark and the buttons did not react.
             scanner_update(hz63);
             display_update(hz63);
+            // V2.5: complete the last display write now (a write reaches its latch only when the next bus access starts, see
+            // display_restoreColumn). The light show only became visible on the Teensy with this read after each refresh.
+            BLOCK_INT
+            {
+                io_read(CSI1);
+            }
             if (hz63)
                 ui_update();
         }
