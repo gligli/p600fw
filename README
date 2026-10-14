@@ -34,99 +34,7 @@ History
 - V2.32 JS - tried to speed up volume knob
 - V2.33 JS - Polymod env target PWM VCOA and VCOB, fixed bug introduced in V2.32 causing volume to drop over time
 - V2.34 JS - JAM revised Arp to remove double notes and added new random mode (Thanks!!) The new random mode prevent notes to play several times in a row; each note is always different than the previous one (except if only one note is played, obviously).
-- V2.5 - the Imogen/Flat-Labs firmware with all the fixes and features of the Flat-Labs fork (arp Euclid/probability/swing/resolution/ratchets, ensemble vibrato, 12 LFO shapes, vibrato shape/range/8 targets, poly-mod envelope targets, aftertouch, speed work, preset validation) on the Teensy++ 2.0. Loads V2.34 patches (see "V2.5" below)
-
-
-V2.5
-====
-
-V2.5 is the firmware of the Flat-Labs Z80P600 fork (Imogen's 2022 firmware plus the fork's fixes and features) running on the Teensy++ 2.0,
-with V2.34's Teensy hardware layer (pins, USB, flash storage, sysex updater). Everything V2.34 added is in it as well (12 LFO shapes, vibrato
-shape/range/targets, noise level, bender PW and VCO B, poly-mod envelope to VCO A/B/both/PW, aftertouch, CC7/120/123, JAM's random arp).
-NOTHING OF THIS WAS TESTED ON A REAL INSTRUMENT. It was tested in a simulator that runs the real firmware on an emulated AT90USB1286 (see the end).
-
-What is different from V2.34
-----------------------------
-- The menus are Imogen's. The parameter of a keypad changes with every press of that keypad (To Tape + keypad in preset mode):
-
-  | Key | 1st press | 2nd press | 3rd press | more presses |
-  |-----|-----------|-----------|-----------|--------------|
-  | 0 | arp/seq speed | arp Euclid rhythm | arp probability | 4 swing, 5 resolution, 6 ratchet, 7 ratchet probability |
-  | 1 | LFO shape (pairs) | LFO target | LFO trigger/sync | |
-  | 2 | vibrato speed | vibrato amount | vibrato target (8) | 4 ensemble, 5 vibrato shape, 6 vibrato range |
-  | 3 | mod wheel target | mod delay | mod wheel range | |
-  | 4 | pitch (free/semi/oct...) | ext volt (= V2.34 "noise") | pulse bug | |
-  | 5 | filter env shape | 2nd env shape | env routing | 4 poly-mod env target |
-  | 6 | bender target | bender range | | |
-  | 7 | assigner priority | assign mode | glide (GliGli panel layout) | |
-  | 8 | unison detune | vintage (spread) | drive (SCI panel layout) | |
-  | 9 | amp velocity | filter velocity | | |
-
-  V2.34's "To Tape + 1/2/3 three times" (vibrato shape, range, targets) are now To Tape + 2 (press 5, 6 and 3).
-- From Tape functions: 0 local on/off, 1 MIDI receive channel, 2 MIDI send channel, 3 bender calibration, 4/5 voice select/defeat,
-  6 panel layout (GliGli or SCI), 7 boot light show on/off, 8 sync mode, 9 VCF limit, Preset = basic patch, Seq1 = reset the settings (retunes).
-  **From Tape + 6 no longer dumps the presets.** Patch management is From Tape + Record: then Preset dumps all presets, Record leaves.
-- MIDI CC numbers are the ones of the Flat-Labs fork (cc_list_v34_vs_now.md has the full list). Different from V2.34: CC 48-50 are mix vol A /
-  glide-vol B / drive, CC 57 LFO shape (12 values), CC 58 unused, CC 66-79 follow the new parameter order, vibrato shape is CC 115 and vibrato
-  range CC 116 (V2.34: CC 74/75). The Ctrlr panel for V2.34 does not match V2.5.
-- LFO shapes: step4 and step8 run at the speed of saw (V2.34: 4x and 8x slower), step4 has 4 levels (V2.34: 2), bit sine 16 levels (V2.34: 64).
-
-Storage on the Teensy
----------------------
-V2.5 is about 77 KB of program. V2.34 kept presets in flash from 0x10000 (64 KB) up, which V2.5 needs for its code, so the storage area is now
-0x16000-0x1dfff (128 pages): presets 0-99, sequencer 104-105, manual preset 123, settings 124-125. The sequencer pages, the manual preset and the
-settings (with the tuning) are at the SAME flash addresses as in V2.34. The Makefile stops the build if the program would reach 0x16000
-(about 12.6 KB are free now).
-
-Getting your V2.34 patches into V2.5
-------------------------------------
-V2.5 recognises V2.34 patches (also V2.20-V2.33) and converts them when they are loaded or received by sysex:
-1. On V2.34, dump all presets: From Tape + 6, record the sysex on the computer.
-2. Install V2.5 (below).
-3. On V2.5: From Tape + Record (patch management), send the recorded sysex, press Record to leave.
-   Each patch is converted and stored in V2.5's format.
-The conversion: the shared part (oscillators, filter, envelopes, LFO, voice pattern, per-note tuning) is read like a GliGli 2.1 patch, which also
-converts the LFO speed/amount, vibrato speed/amount and envelope times to Imogen's curves. Then: noise level -> ext volt (same voltage), vibrato
-shape, range and target, poly-mod envelope target, bender target (V2.34 PW and VCO B have other numbers here), mod wheel range (V2.34 stored a shift),
-pitch mode 3 (CC only) -> oct, pulse bug off (V2.34 behaviour). Patches made before V2.25 get a triangle vibrato at normal range (GliGli's vibrato),
-not pulse/low as V2.34 played them. A V2.34 patch is recognised by data V2.34 writes twice; a V2.5 patch with mod delay, vibrato speed/amount,
-detune, external level, spread, routing, assign, LFO trigger and name all zero could in theory be taken for one, nothing else.
-
-Installing
-----------
-- **Teensy Loader (USB), recommended**: flash "p600firmware V2.5.hex". Count on the presets, settings and sequences being erased (dump the presets first). Tune after.
-  It also installs the new updater (see below).
-- **Sysex update from V2.34**: power on with From Tape + To Tape held, send "p600firmware V2.5.syx". The display stops spinning when the
-  transfer is done, it does NOT show 'S' (see below): wait until your MIDI program has sent everything, then switch off and on.
-  Kept: settings and tuning, sequences, manual preset (converted). Lost: presets 0-95 (V2.5's code is where they were). V2.34's presets 96-99
-  appear as V2.5 presets 0-3, the rest are empty until you send your dump (above).
-- Why no 'S': the updater in the Teensy is never replaced by a sysex update, and V2.34's updater computes its checksum with a function
-  inside the program it is replacing (at 0x61a). The .syx sends that page last and leaves out the end message, so the old function is used
-  until the end. A .syx in the usual order makes V2.34's updater crash in the middle and write garbage (simulator), and the Teensy then
-  needs the Teensy Loader. V2.5's own updater (installed with the Teensy Loader) has its own checksum function and works with both orders.
-
-Fixes in the Teensy part
-------------------------
-- Startup: the code that runs before main() jumped over the copy of the initial values of variables (menu texts, tables) when the compiler
-  puts that copy first (avr-gcc 7.3 does; the V2.34 hex was built with a compiler that does not). It now runs the normal startup.
-- Updater: own CRC function (above).
-- A sysex patch dump for a number above 99 is ignored (on the Teensy those pages are the sequencer, manual preset and settings).
-
-Tested (simulator only)
------------------------
-simavr with an AT90USB1286 core and the P600 bus decoded from the Teensy pins, flash writes through the Teensy bootloader SPM call, a 6850 UART at
-MIDI speed. The V2.34 data was made by the real V2.34 firmware in the same simulator.
-- Boots, main loop and 2 kHz interrupt run; interrupt load idle 5296 of 8000 cycles (Flat-Labs board 5295), 6 voices + LFO + vibrato 6840 (7010),
-  unison + wide ensemble + LFO to VCO/VCF/PW worst tick 8581 (8771): this case still overruns the tick slot, as on the Flat-Labs board.
-- 12 scenarios compared with the Flat-Labs build (288000 S&H values): equal except start-up transients and the bender-to-VCA volume, which the
-  main loop writes and whose timing differs between the boards.
-- V2.34 dump of 24 patches sent over MIDI: all parameters as expected by an independent model. Sysex update from V2.34 image: settings/tuning,
-  manual preset, presets 96-99 and both sequencer tracks as expected. 300 random V2.5 patches (and as versions 8-12): none taken for V2.34.
-- Sysex update with V2.34's updater: program identical to V2.5, storage unchanged; with the usual order it fails (as explained above).
-  V2.5's updater: both orders work, shows 'S'. The V2.5 program after the update boots and runs.
-- Menu texts/cycles (65 checks), all stepped CCs, save/load roundtrip, vibrato/LFO targets and ranges (141 checks).
-- 13 deliberate faults in the new code (converter mappings, recognition, page guard, startup jump): every one makes a test fail.
-Not tested: anything on hardware (sound, timing of the real bus, the display, the Teensy bootloader call, MIDI hardware).
+- V2.5 JS - "Matrix edition". Moved to Imogen's firmware (through the Flat-Labs Z80P600 fork) and carried all V2.34 features over to it. New: arp Euclidean rhythms, step probability, swing, triplets and 32nds, ratchets; ensemble vibrato; vibrato can use all 12 LFO shapes; 8 vibrato targets; poly-mod env to PW A, PW B or both; faster panel scanning; V2.34 patches load and are converted
 
 
 V2.25 includes -
@@ -154,6 +62,75 @@ To use vibrato range "to tape" + 2 three times
 To use vibrato targets "to tape" + 3 three times
 
 To use the New Random Mode Arp: press assign button twice
+
+Note: the button presses above are the ones of V2.34. In V2.5 the menus are Imogen's, see "V2.5 includes" below.
+
+
+V2.5 includes -
+V2.5 is built on Imogen's version of the firmware (as used in the Flat-Labs Z80P600 board) instead of GliGli V2.1 RC3. Everything from V2.34 is still there: the 12 LFO waveforms, the noise level control, vibrato waveforms, range and targets, the bender targets PW and VCO B, poly-mod env to VCO A, VCO B or both, channel and poly aftertouch, CC7, CC120, CC123 and the random arp mode.
+
+Changed from V2.34:
+Step4 and Step8 now run at the same speed as Saw (they were 4 and 8 times slower), Step4 has 4 steps (it had 2) and Bit_Sine has 16 steps (it had 64).
+Poly aftertouch opens the filter of the voice playing that note (up to 3 octaves).
+Patches made before V2.25 get a triangle vibrato at normal speed.
+
+New in V2.5:
+Arpeggiator: Euclidean rhythms (3-8, 5-8, 7-8, 5-16, 7-16, 9-16, 11-16), step probability, swing, resolution (16ths, 16th triplets, 32nds, 32nd triplets), ratchets (2, 3 or 4 hits per step) and ratchet probability. Off or 100% is the old arp.
+Ensemble vibrato: in unison each voice gets its own vibrato phase (small or wide).
+Vibrato targets: VCO, VCA, VCO A, VCO B, noise, resonance, detune and poly-mod amount (VCO B).
+Poly-mod env targets: VCO A, VCO B, both, PW A, PW B, both PW.
+From Imogen's firmware: vintage (voice spread), drive and mix (SCI panel layout), env routing, LFO trigger and sync, assign mode, pot pick-up, local on/off, more pitch modes, polyphonic sequencer, mod wheel range curves.
+Faster: the panel and keyboard scan and the S&H updates use less of the CPU, the pitch bender is read twice as often.
+Presets and settings are checked when they are loaded, so a damaged patch can not crash the synth.
+Boot light show (switch it off with "from tape" + 7) and the welcome text "P600 Matrix edition Ver 2.5".
+
+To use (preset mode: press "to tape" first, then the number; pressing the same number again goes to the next parameter of that number):
+"to tape" + 0: speed, Euclid, probability, swing, resolution, ratchet, ratchet probability
+"to tape" + 1: LFO shape, LFO target, LFO trigger
+"to tape" + 2: vibrato speed, vibrato amount, vibrato target, ensemble, vibrato shape, vibrato range
+"to tape" + 3: mod wheel target, mod delay, mod wheel range
+"to tape" + 4: pitch mode, noise (shown as "ext volt"), pulse bug
+"to tape" + 5: filter env shape, 2nd env shape, env routing, poly-mod env target
+"to tape" + 6: bender target, bender range
+"to tape" + 7: priority, assign mode, glide
+"to tape" + 8: detune, vintage, drive (SCI layout only)
+"to tape" + 9: amp velocity, filter velocity
+
+"from tape" + number: 0 local on/off, 1 MIDI in channel, 2 MIDI out channel, 3 bender calibration, 4 and 5 voice select and voice off, 6 panel layout (GliGli or SCI), 7 light show on/off, 8 sync, 9 VCF limit, "preset" basic patch, "seq 1" reset settings (and retune).
+
+To dump all presets: "from tape" + "record" (patch management), then "preset". "record" leaves patch management. (In V2.34 this was "from tape" + 6.)
+
+To use the random arp: press assign button twice (same as V2.34).
+
+MIDI CCs: stepped parameters are CC 48 + parameter number, as before, but the parameter order is Imogen's, so some numbers changed: vibrato shape is now CC115 and vibrato range CC116 (were CC74 and CC75), CC57 LFO shape, CC68 bender target, CC72 vibrato target, CC78 arp Euclid, CC79 arp probability. CC48-50 are mix, glide/vol B and drive. The V2.34 Ctrlr panels need updating for V2.5.
+
+
+Updating from V2.34 -
+V2.5 is about 77 KB, so it does not fit below the 64 KB mark where V2.34 kept the presets. The presets have moved. Settings (your tuning), sequences and the manual patch stay where they were.
+
+To keep your patches:
+1) In V2.34 dump all presets ("from tape" + 6) and record the sysex.
+2) Install V2.5.
+3) In V2.5 press "from tape" + "record", send the recorded sysex, press "record". Each V2.34 patch is converted to V2.5.
+
+Install with the Teensy Loader (p600firmware V2.5.hex): this is the safest way. Count on it erasing presets, settings and sequences. Tune after.
+
+Or by sysex (p600firmware V2.5.syx): hold "from tape" + "to tape" while switching on, send the file. The display does NOT show "S" at the end; when the file is sent, switch off and on. Settings, tuning, sequences and the manual patch are kept; V2.34 presets 96-99 show up as 0-3 and the rest are empty until you send your dump.
+Only use the V2.5 .syx file: the updater in the Teensy is never replaced by sysex, and the V2.34 updater would crash with a .syx made the usual way.
+
+Fixed in V2.5 (Teensy part):
+The startup code could skip setting the initial values of the variables, depending on the compiler version.
+The sysex updater no longer calls into the program it is replacing.
+
+Status: tested in a simulator that runs the real firmware, not yet on a real Prophet 600.
+
+
+Thanks -
+GliGli: none of this exists without GliGli's firmware. Replacing the Z80 with a Teensy and rewriting the whole P600 firmware brought presets, arpeggiator, sequencer, MIDI, unison, auto tuning and so much more to the Prophet 600. http://gligli.github.io/p600fw/
+
+Imogen: Imogen's version is a massive rework and extension of GliGli's code, with new envelopes and routing, LFO sync, the polyphonic sequencer, vintage spread, the SCI panel layout, pot pick-up, patch management and many fixes. V2.5 is built on it. https://github.com/image-et-son/p600fw
+
+Also thanks to Flat-Labs (Z80P600 board and firmware port), JHHL (new LFO shapes), JAM (arp up/down and random mode) and Overcycler (RevSaw).
 
 
 License

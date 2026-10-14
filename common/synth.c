@@ -1491,7 +1491,8 @@ void synth_init(void)
     // a nice welcome message, and we're ready to go :)
 
     //sevenSeg_scrollText("GliGli's P600 upgrade "VERSION,1);
-    sevenSeg_scrollText("P600 MoGliFied "VERSION,1);
+    //sevenSeg_scrollText("P600 MoGliFied "VERSION,1); // (Imogen's welcome text)
+    sevenSeg_scrollText("P600 Matrix edition "VERSION,1); // V2.5: "P600 Matrix edition Ver 2.5" (V2.34 showed "GliGli's P600 upgrade Noise mod Ver 2.34 jrs")
 }
 
 // Keyboard -> MIDI out is queued here by the timer interrupt and sent from the main loop.
