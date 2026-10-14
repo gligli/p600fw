@@ -1405,7 +1405,7 @@ static void handleBitInputs(void)
 
 #ifdef DIAG
 // V2.5 diagnostic build (make DIAG=1): shows a step code on the left digit at each step of the start-up, with interrupts off, written straight to the
-// display latches like the updater does, and waits 0.4 s so it can be read. The last code seen tells where the start-up stops.
+// display latches like the updater does, shows it for 0.4 s and switches it off again. The last code seen tells where the start-up stops.
 void diag_step(uint8_t code)
 {
     static const uint8_t seg[16]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71}; // 0-9 A b C d E F
@@ -1419,6 +1419,13 @@ void diag_step(uint8_t code)
     }
     for(i=0;i<40;++i)
         MDELAY(10);
+    // switch the digit off again, so the display/scanner latches are as they would be without this diagnostic (the code stays visible for 0.4 s)
+    BLOCK_INT
+    {
+        io_write(0x09,0x00);
+        io_write(0x08,0x00);
+        io_read(0x0a);
+    }
 }
 #define DIAG_STEP(c) diag_step(c)
 #else
@@ -1466,7 +1473,10 @@ void synth_init(void)
     // go in scaling adjustment mode if needed
 
     if(io_read(CSI0)&16)
+    {
+        DIAG_STEP(15); // F = the scaling adjustment mode was entered (TP301 read as set)
         tuner_scalingAdjustment();
+    }
 
     DIAG_STEP(6);
     // load settings from storage; tune when they are bad
