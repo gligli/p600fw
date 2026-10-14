@@ -1501,9 +1501,13 @@ void synth_init(void)
 
     if(!preset_loadCurrent(MANUAL_PRESET_PAGE,0))
     {
+        DIAG_STEP(0x85); // "5." the manual preset page is empty or damaged: a default is saved next (flash write)
         preset_loadDefault(1);
         preset_saveCurrent(MANUAL_PRESET_PAGE);
+        DIAG_STEP(0x86); // "6." flash write done
     }
+    else
+        DIAG_STEP(0x84); // "4." the manual preset loaded
 
     DIAG_STEP(9);
     sh_setCV(pcMVol,HALF_RANGE,SH_FLAG_IMMEDIATE);
@@ -1529,6 +1533,7 @@ void synth_init(void)
     computeTunedCVs(-1,-1); // force init CV's for all voices
     DIAG_STEP(11);
     ui_setNoActivePot(1);
+    DIAG_STEP(0x87); // "7." the settings are saved next (flash write)
     settings_save();
 
     DIAG_STEP(12);

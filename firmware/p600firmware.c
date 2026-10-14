@@ -607,7 +607,7 @@ int main(void)
 	}
 #endif
 #ifdef DIAG
-	{ extern void diag_step(uint8_t code); diag_step(0); } // V2.5 diagnostic build: 0 = main() reached
+	{ extern void diag_step(uint8_t code); uint8_t r=MCUSR; MCUSR=0; diag_step(0x80|(r&0x0f)); diag_step(0); } // V2.5 diagnostic build: first the reset cause with a dot (1. power on, 2. reset pin, 4. brown-out, 8. watchdog; a sum if several), then 0 = main() reached
 #endif
 	synth_init();
 #ifdef DIAG
