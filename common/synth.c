@@ -1435,6 +1435,7 @@ void diag_step(uint8_t code)
 void synth_init(void)
 {
     int8_t i;
+    int8_t settingsWereLoaded; // V2.5
 
     // init
 
@@ -1481,7 +1482,8 @@ void synth_init(void)
     DIAG_STEP(6);
     // load settings from storage; tune when they are bad
 
-    if(!settings_load())
+    settingsWereLoaded=settings_load(); // V2.5: remembered, see the settings_save at the end
+    if(!settingsWereLoaded)
     {
         settings_loadDefault(); // first startup: panel mode, GilGi panel layout, basic init tuning, MIDI OMNI receive, bend middle position
 
@@ -1534,7 +1536,10 @@ void synth_init(void)
     DIAG_STEP(11);
     ui_setNoActivePot(1);
     DIAG_STEP(0x87); // "7." the settings are saved next (flash write)
-    settings_save();
+    // V2.5: save the settings at start-up only when they had to be made new (V2.34 never saved at start-up). A flash write at every
+    // start-up wears the flash and, on the Teensy, goes through the bootloader each time the synth is switched on.
+    if(!settingsWereLoaded)
+        settings_save();
 
     DIAG_STEP(12);
     // set the volume to the current pot value

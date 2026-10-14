@@ -556,7 +556,12 @@ void storage_write(uint32_t pageIdx, uint8_t *buf)
 		// compiler is not aware of it, possibly in the SPM routine
 		// called by blHack_call_SPM. So to avoid potential problems
 		// in callers higher up in the stack we mark R16 as clobbered here.
-		CLOBBERED("r16");
+		// V2.5: mark ALL registers that a function must keep (r2-r17, r28, r29) as clobbered, so that storage_write saves and
+		// restores every one of them. The routine in the Teensy bootloader is not ours, and blHack_program_page in the NRWW area
+		// is whatever build was last installed with the Teensy Loader (a sysex update never replaces it), so which registers get
+		// changed depends on the Teensy, not on this build. V2.5 keeps values in more registers across calls than V2.34 did.
+		// r1 must be zero for compiled code; it is cleared again too.
+		__asm__ __volatile__ ("clr r1" : : : "r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","r13","r14","r15","r16","r17","r28","r29","memory");
 	}
 }
 
