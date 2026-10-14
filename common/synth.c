@@ -1414,7 +1414,7 @@ void diag_step(uint8_t code)
     {
         io_write(0x09,0x00);
         io_write(0x08,0x20); // left digit
-        io_write(0x09,seg[code&15]);
+        io_write(0x09,seg[code&15]|(code&0x80)); // bit 7 of the code = the dot (sub-steps)
         io_read(0x0a); // completes the write (see display_restoreColumn)
     }
     for(i=0;i<40;++i)
@@ -1507,16 +1507,19 @@ void synth_init(void)
 
     DIAG_STEP(9);
     sh_setCV(pcMVol,HALF_RANGE,SH_FLAG_IMMEDIATE);
+    DIAG_STEP(0x81); // "1." volume CV set
 
     // dead band pre calculation
     precalcDeadband(&panelDeadband);
     bendDeadband.middle=settings.benderMiddle;
     precalcDeadband(&bendDeadband);
     precalcDeadband(&freqFineDeadband);
+    DIAG_STEP(0x82); // "2." dead bands done, the first full keyboard/button scan is next
 
     // initial input state
 
     scanner_update(1);
+    DIAG_STEP(0x83); // "3." keyboard/button scan done, reading all pots is next
     potmux_update(1); // init all
     DIAG_STEP(10);
 

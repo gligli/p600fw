@@ -39,8 +39,14 @@ FORCEINLINE int8_t scanner_buttonState(p600Button_t button)
 	return scanner_state(button);
 }
 
+#ifdef DIAG
+extern void diag_step(uint8_t code);
+#endif
 static FORCEINLINE void scanner_event(uint8_t key, int8_t pressed)
 {
+#ifdef DIAG
+	{ static uint8_t shown=0; if(shown<4){ ++shown; diag_step(0x8e); } } // "E." (at most 4 times): a key or button event, e.g. a key that reads as pressed at power-on
+#endif
 	if (key<SCANNER_KEYS_START)
 		synth_buttonEvent(key,pressed);
 	else
