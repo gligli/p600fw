@@ -66,6 +66,20 @@ To use the New Random Mode Arp: press assign button twice
 Note: the button presses above are the ones of V2.34. In V2.5 the menus are Imogen's, see "V2.5 includes" below.
 
 
+IMPORTANT - save your patches before you update -
+Before you install a new firmware (V2.5 or any later version), dump all your presets to the computer, and send them back after the update.
+The update can erase the presets (the Teensy Loader always does), and V2.5 keeps them in a different place than V2.34.
+1) Dump: start recording sysex on the computer (any sysex program, e.g. SysEx Librarian or MIDI-OX), then
+   in V2.34 and older: press "from tape" + 6 ("presets dumped" scrolls by),
+   in V2.5: press "from tape" + "record" (patch management, the preset LED lights), then "preset" (dumps all presets), then "record" to leave.
+   Stop recording and save the file.
+2) Install the new firmware (see "Updating from V2.34" below).
+3) Restore: press "from tape" + "record" (patch management), send the saved sysex file, wait until it is sent (the display shows the number of each
+   patch as it arrives), then press "record" to leave. V2.34 patches are converted to V2.5 automatically.
+4) Recall: press "preset", then the two digit number.
+Important: patch management must be on while you send. If it is off, the patches are only played, not stored.
+
+
 V2.5 includes -
 V2.5 is built on Imogen's version of the firmware (as used in the Flat-Labs Z80P600 board) instead of GliGli V2.1 RC3. Everything from V2.34 is still there: the 12 LFO waveforms, the noise level control, vibrato waveforms, range and targets, the bender targets PW and VCO B, poly-mod env to VCO A, VCO B or both, channel and poly aftertouch, CC7, CC120, CC123 and the random arp mode.
 
@@ -83,6 +97,8 @@ From Imogen's firmware: vintage (voice spread), drive and mix (SCI panel layout)
 Faster: the panel and keyboard scan and the S&H updates use less of the CPU, the pitch bender is read twice as often.
 Presets and settings are checked when they are loaded, so a damaged patch can not crash the synth.
 Boot light show (switch it off with "from tape" + 7) and the welcome text "P600 Matrix edition Ver 2.5".
+
+Pictures: documentation/V2.5 LFO waveforms.pdf (all 12 LFO and vibrato shapes) and documentation/V2.5 arp Euclidean rhythms.pdf (the 8 rhythms).
 
 To use (preset mode: press "to tape" first, then the number; pressing the same number again goes to the next parameter of that number):
 "to tape" + 0: speed, Euclid, probability, swing, resolution, ratchet, ratchet probability
@@ -108,18 +124,21 @@ MIDI CCs: stepped parameters are CC 48 + parameter number, as before, but the pa
 Updating from V2.34 -
 V2.5 is about 77 KB, so it does not fit below the 64 KB mark where V2.34 kept the presets. The presets have moved. Settings (your tuning), sequences and the manual patch stay where they were.
 
-To keep your patches:
-1) In V2.34 dump all presets ("from tape" + 6) and record the sysex.
-2) Install V2.5.
-3) In V2.5 press "from tape" + "record", send the recorded sysex, press "record". Each V2.34 patch is converted to V2.5.
+To keep your patches: dump them first and restore them after the update, see "IMPORTANT - save your patches before you update" above.
 
-Coming from V2.34 or any older version: install with the Teensy Loader (p600firmware V2.5.hex). Do not use sysex for this first install: the old updater in the Teensy (sysex updates never replace it) can stop near the end, leaving a blank display; the Teensy Loader still works then. Count on the Teensy Loader erasing presets, settings and sequences. Tune after.
+By sysex (p600firmware V2.5.syx): hold "from tape" + "to tape" while switching on, send the file, wait for "S" on the display, switch off and on.
+If it shows "E", start again (send slower if it repeats). Settings, tuning, sequences and the manual patch are kept; the presets are empty
+(V2.34 presets 96-99 show up as 0-3) until you restore your dump.
 
-From V2.5 on, sysex updates work (V2.5 installs its own updater) (p600firmware V2.5.syx): hold "from tape" + "to tape" while switching on, send the file, wait for "S" on the display, switch off and on. If it shows "E", start again (send slower if it repeats). Settings, tuning, sequences and the manual patch are kept; V2.34 presets 96-99 show up as 0-3 and the rest are empty until you send your dump.
+With the Teensy Loader (p600firmware V2.5.hex): press the button on the Teensy and load the file. This erases presets, settings and sequences:
+restore your dump and press "tune" afterwards. Use this if a sysex update does not start any more.
 
 Fixed in V2.5 (Teensy part):
 The startup code could skip setting the initial values of the variables, depending on the compiler version.
 The sysex updater no longer calls into the program it is replacing.
+Saving to flash goes through the Teensy bootloader; the registers the program needs are now kept across it (a save crashed the synth) and the watchdog is switched off.
+The settings are only saved at power on when they had to be made new (as in V2.34).
+Keys, buttons and display are scanned as in V2.34 (the Flat-Labs way left the display and LEDs dark on the Teensy).
 
 
 Thanks -
