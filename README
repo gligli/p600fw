@@ -122,8 +122,6 @@ Fixed in V2.5 (Teensy part):
 The startup code could skip setting the initial values of the variables, depending on the compiler version.
 The sysex updater no longer calls into the program it is replacing.
 
-Status: tested in a simulator that runs the real firmware, not yet on a real Prophet 600.
-
 
 Thanks -
 GliGli: none of this exists without GliGli's firmware. Replacing the Z80 with a Teensy and rewriting the whole P600 firmware brought presets, arpeggiator, sequencer, MIDI, unison, auto tuning and so much more to the Prophet 600. http://gligli.github.io/p600fw/
