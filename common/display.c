@@ -267,6 +267,13 @@ static void showFrame(uint16_t leds, uint8_t segLeft, uint8_t segRight, uint8_t 
 		for(c=0;c<3;++c)
 		{
 			display_update(1);
+			// V2.5: a write to the display only reaches its latch when the NEXT bus access starts (see display_restoreColumn), so
+			// without this read the last write (the segments/LEDs of the column) arrived only at the next display_update, just before
+			// it was switched off again: the light show stayed dark. The read of the key matrix completes the write and changes nothing.
+			BLOCK_INT
+			{
+				io_read(CSI1);
+			}
 			// 4 ms = 64000 clock cycles at 16 MHz. CYCLE_WAIT(x) waits 4*x cycles and the 4*x must fit into a 16 bit int (max 32767),
 			// so it is done in two halves (CYCLE_WAIT(16000) would overflow and give a wrong, much shorter delay)
 			CYCLE_WAIT(8000);

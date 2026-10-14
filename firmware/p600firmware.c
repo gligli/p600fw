@@ -3,6 +3,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 #include <util/crc16.h>
+#include <avr/wdt.h>
 #include <string.h>
 #include "usb_debug_only.h"
 #include "print.h"
@@ -515,6 +516,15 @@ void __attribute__((section(".vectors"),naked,used)) __init(void)
 		"ldi r29,hi8(__stack) \n\t"
 		"out 0x3e,r29 \n\t" // SPH
 		"out 0x3d,r28 \n\t" // SPL
+		// V2.5: keep the reset cause in GPIOR0 (for the diagnostic build), clear it and switch the watchdog off. On a Teensy where
+		// a flash write through the bootloader leaves the watchdog running, the synth was reset again and again (diagnostic: reset
+		// cause 8 = watchdog); after a watchdog reset the watchdog stays on until the reset flag is cleared and it is switched off.
+		"in r24,0x34 \n\t" // MCUSR
+		"out 0x1e,r24 \n\t" // GPIOR0
+		"out 0x34,r1 \n\t" // MCUSR = 0 (clears WDRF, which would keep the watchdog on)
+		"ldi r24,0x18 \n\t" // WDCE | WDE: timed sequence to change the watchdog
+		"sts 0x60,r24 \n\t" // WDTCSR
+		"sts 0x60,r1 \n\t" // WDTCSR = 0: watchdog off
 		// call updater
 		"call 0x1e000 \n\t"
 		// back to regular init
@@ -536,6 +546,11 @@ void storage_write(uint32_t pageIdx, uint8_t *buf)
 	if(pageIdx<(STORAGE_SIZE/STORAGE_PAGE_SIZE))
 	{
 		blHack_program_page(pageIdx*STORAGE_PAGE_SIZE+STORAGE_ADDR,buf);
+
+		// V2.5: the flash write goes through code in the Teensy bootloader. On at least one Teensy++ 2.0 the watchdog was running
+		// afterwards and reset the synth (diagnostic build: stop right after the write, then reset cause 8 = watchdog). Switch it off.
+		MCUSR&=~(1<<WDRF);
+		wdt_disable();
 
 		// Somewhere R16 appears to get clobbered even though the
 		// compiler is not aware of it, possibly in the SPM routine
@@ -607,7 +622,7 @@ int main(void)
 	}
 #endif
 #ifdef DIAG
-	{ extern void diag_step(uint8_t code); uint8_t r=MCUSR; MCUSR=0; diag_step(0x80|(r&0x0f)); diag_step(0); } // V2.5 diagnostic build: first the reset cause with a dot (1. power on, 2. reset pin, 4. brown-out, 8. watchdog; a sum if several), then 0 = main() reached
+	{ extern void diag_step(uint8_t code); uint8_t r=GPIOR0; diag_step(0x80|(r&0x0f)); diag_step(0); } // (GPIOR0: the reset cause saved by __init) // V2.5 diagnostic build: first the reset cause with a dot (1. power on, 2. reset pin, 4. brown-out, 8. watchdog; a sum if several), then 0 = main() reached
 #endif
 	synth_init();
 #ifdef DIAG
